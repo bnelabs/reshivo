@@ -116,8 +116,14 @@ def main(argv=None):
     demo.add_argument("--out", type=Path)
     check = commands.add_parser("evaluate", help="Recompute a previously exported design")
     check.add_argument("design", type=Path)
+    serve_parser = commands.add_parser("serve", help="Start the local design workbench")
+    serve_parser.add_argument("--port", type=int, default=8797)
     args = parser.parse_args(argv)
     try:
+        if args.command == "serve":
+            from .server import serve
+            serve(port=args.port)
+            return 0
         if args.command == "ingest":
             path = write_catalog()
             materials = load_materials(include_controls=True)
