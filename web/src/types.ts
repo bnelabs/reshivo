@@ -198,3 +198,60 @@ export type MixMassResult = {
   physical_product_tested: false
   batch_consistency_established: false
 }
+
+export type TestedLevelSource = {
+  title: string
+  url: string
+  doi: string
+  license: string
+  license_url?: string
+  process: string
+  test_method: string
+}
+export type TestedInputSeries = {
+  id: string
+  virgin_host: string
+  input_name: string
+  input_unit: string
+  input_levels: number[]
+  condition_ids: string[]
+  constant_source_context: string
+  shared_endpoint_note: string
+}
+export type TargetSeriesCatalog = {
+  result_kind: 'source_measurements'
+  source: TestedLevelSource
+  property: { name: 'yield_stress'; label: string; unit: 'MPa' }
+  series: TestedInputSeries[]
+  limits: string[]
+}
+export type TestedLevelResult = {
+  result_kind: 'source_measurements'
+  comparison_scope: 'recorded_specimens_only'
+  source: TestedLevelSource
+  property: { name: 'yield_stress'; label: string; unit: 'MPa' }
+  series: TestedInputSeries
+  target_min_MPa: number
+  target_max_MPa: number
+  levels: {
+    condition_id: string
+    pcrpe_wt_percent: number
+    n: number
+    source_min_MPa: number
+    source_max_MPa: number
+    source_mean_MPa: number
+    values_in_target: number
+    all_values_in_target: boolean
+    observations: {
+      measurement_id: string
+      value: number
+      source_cell: string
+      specimen_index?: number
+    }[]
+  }[]
+  matching_tested_levels_wt_percent: number[]
+  limits: string[]
+  physical_product_tested: false
+  batch_consistency_established: false
+  interpolation_used: false
+}

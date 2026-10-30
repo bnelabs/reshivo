@@ -113,6 +113,24 @@ class WorkbenchService:
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
 
+    def target_series(self):
+        from .products import ProductDataError
+        from .target_checks import target_series
+        try:
+            return target_series(self.root)
+        except ProductDataError as error:
+            raise ServiceError("source_unavailable", str(error), 503) from None
+
+    def target_check(self, request):
+        from .products import ProductDataError, ProductInputError
+        from .target_checks import target_check
+        try:
+            return target_check(request, self.root)
+        except ProductDataError as error:
+            raise ServiceError("source_unavailable", str(error), 503) from None
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
     def _parameters(self, request, names, allow_all=False):
         _allowed(request, names, "request")
         material_id = request.get("material_id", "04441PP-REG(1)-1E1")

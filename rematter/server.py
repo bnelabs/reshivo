@@ -121,6 +121,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 self._json(application.health())
             elif path == "/api/products/catalog":
                 self._json(application.product_catalog())
+            elif path == "/api/products/target-series":
+                self._json(application.target_series())
             elif path.startswith("/api/experiments/"):
                 segments = path.split("/")
                 if len(segments) == 4:
@@ -169,7 +171,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         try:
             self._guard()
             path = unquote(urlsplit(self.path).path)
-            routes = {"/api/experiments": self.server.application.run_experiment, "/api/evaluate": self.server.application.evaluate_candidate, "/api/proposals": self.server.application.propose, "/api/products/counterweight": self.server.application.counterweight, "/api/products/my-mix": self.server.application.my_mix_mass}
+            routes = {"/api/experiments": self.server.application.run_experiment, "/api/evaluate": self.server.application.evaluate_candidate, "/api/proposals": self.server.application.propose, "/api/products/counterweight": self.server.application.counterweight, "/api/products/my-mix": self.server.application.my_mix_mass, "/api/products/target-check": self.server.application.target_check}
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)
             body = self._body()

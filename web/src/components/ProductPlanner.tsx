@@ -3,9 +3,10 @@ import { api } from '../api'
 import type { ProductCatalog } from '../types'
 import { MyMixPlanner } from './MyMixPlanner'
 import { PublishedExample } from './PublishedExample'
+import { TestedLevels } from './TestedLevels'
 
 export function ProductPlanner() {
-  const [mode, setMode] = useState<'my_mix' | 'published'>('my_mix')
+  const [mode, setMode] = useState<'my_mix' | 'published' | 'tested_levels'>('my_mix')
   const [catalog, setCatalog] = useState<ProductCatalog | null>(null)
   const [catalogAttempt, setCatalogAttempt] = useState(0)
   const [catalogError, setCatalogError] = useState('')
@@ -43,6 +44,13 @@ export function ProductPlanner() {
         >
           Published polyethylene example
         </button>
+        <button
+          type="button"
+          aria-pressed={mode === 'tested_levels'}
+          onClick={() => setMode('tested_levels')}
+        >
+          Tested input levels
+        </button>
       </div>
       <section hidden={mode !== 'my_mix'} aria-label="My mix planner">
         <MyMixPlanner active={mode === 'my_mix'} />
@@ -66,6 +74,9 @@ export function ProductPlanner() {
             <p className="helper">My mix remains available without these published data.</p>
           </div>
         )}
+      </section>
+      <section hidden={mode !== 'tested_levels'} aria-label="Tested input levels">
+        <TestedLevels active={mode === 'tested_levels'} />
       </section>
       {catalog && (
         <section className="collected-measurements">

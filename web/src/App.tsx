@@ -134,7 +134,9 @@ export default function App() {
             PP tests
           </button>
         </nav>
-        <span className="simulation-label">Simulation</span>
+        <span className="simulation-label">
+          {tab === 'product' ? 'Prototype' : tab === 'evidence' ? 'Source measurements' : 'Simulation'}
+        </span>
       </header>
       {error && (
         <div className="error-banner" role="alert">
