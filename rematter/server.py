@@ -155,7 +155,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             if path == "/" or not Path(path).suffix:
                 file = self.server.web_root / "index.html"
             if not file.is_file():
-                raise ServiceError("not_found", "The workbench frontend is not built yet", 404)
+                raise ServiceError("not_found", "Build the app before opening it", 404)
         data = file.read_bytes()
         content_type = mimetypes.guess_type(file.name)[0] or "application/octet-stream"
         self._headers(200, content_type, len(data))
@@ -194,7 +194,7 @@ def build_server(host="127.0.0.1", port=8797, service=None, web_root=None):
 
 def serve(host="127.0.0.1", port=8797):
     server = build_server(host, port)
-    print(f"ReMatter workbench: http://127.0.0.1:{server.server_port}")
+    print(f"ReMatter: http://127.0.0.1:{server.server_port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

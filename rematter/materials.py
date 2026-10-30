@@ -36,7 +36,7 @@ class Material:
             "name": name,
             "modulus_MPa": e,
             "yield_stress_MPa": strength,
-            "interpretation": "Reported means" if not multiplier else "Mean minus twice reported specimen SD; a sensitivity case, not a confidence interval or batch reliability bound",
+            "interpretation": "Measured averages" if not multiplier else "Uses the measured average minus twice the test-piece standard deviation (SD). This explores lower values; it is not a confidence interval or a prediction of variation between batches.",
         }
 
     def to_dict(self):
@@ -45,7 +45,7 @@ class Material:
             "source_url": SOURCE_URL,
             "source_license": "CC-BY-4.0",
             "named_formulation": None,
-            "formulation_mapping_status": "Not verified; original condition code preserved",
+            "formulation_mapping_status": "The additive recipe has not been matched to this test code yet; the original code is used",
             "density_kg_m3": None,
             "independent_batch_variability": None,
             "missing": ["density", "Poisson ratio", "creep", "fatigue", "solid-state damping", "validated multiaxial failure model"],

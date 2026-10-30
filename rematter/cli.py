@@ -13,13 +13,13 @@ from .mechanics import Requirements, Section, evaluate, polygon_properties
 from .search import SearchSpace, search
 
 LIMITS = [
-    "Simulation of an idealized straight member under a short-duration static transverse tip load.",
-    "Perfect clamp and homogeneous linear material are assumptions; joints and print-induced anisotropy are not modeled.",
-    "Shear deformation, local buckling, lateral torsion, stress concentrations, creep, fatigue and impact are excluded.",
-    "Thickness/slenderness filters and the yield divisor are declared screening assumptions, not validated design allowables.",
-    "Reported specimen spread is not an independent-batch uncertainty distribution.",
-    "Density is missing: output is material volume, not mass or environmental benefit.",
-    "No new formulation, manufacturing-ready product, or Meta-generated candidate has been demonstrated.",
+    "The model calculates a straight beam under a short, static sideways load at its free end. The designs have not been physically tested.",
+    "It assumes a perfect clamp and uniform, linear material behavior. Connections and the effect of 3D-printing direction are not modeled.",
+    "It does not include shear deformation, local buckling, lateral torsion, stress concentrations, creep, fatigue or impact.",
+    "Thickness, slenderness and strength-factor checks are chosen for this study. They are not tested design limits.",
+    "Variation between test pieces does not tell us how separate recycled-material batches vary.",
+    "Without density data, results show material volume. Weight and environmental savings cannot be calculated.",
+    "This file describes calculated geometry, not a new material recipe or a ready-to-manufacture product.",
 ]
 
 
@@ -75,48 +75,50 @@ def export_design(folder, material, result, requirements):
 
 
 def report_text(results, requirements, scenario):
+    scenario_label = "Measured averages" if scenario == "nominal" else "Lower estimate"
     lines = [
-        "# ReMatter core experiment", "",
-        "**Computational verification exercise. Physical product performance is untested.**", "",
-        f"Static transverse end load: {requirements.tip_force_N:g} N. Span: {requirements.span_mm:g} mm. Fixed interface width: {requirements.width_mm:g} mm. Height limit: {requirements.max_height_mm:g} mm. Tip-deflection limit: {requirements.max_tip_deflection_mm:g} mm.", "",
-        f"Material scenario: `{scenario}`. A lower sensitivity case uses mean minus twice the reported within-condition specimen SD; this is not a confidence interval or a batch reliability bound.", "",
-        "Both section families are searched on the stated finite dimensional grid. The rectangle baseline is optimized too. These are familiar beam shapes used to check the pipeline; this result is not a scientific novelty or AI advantage claim.", "",
-        "| Source material condition | Section | Volume (mm³) | Tip deflection (mm) | Root bending stress (MPa) | Evaluations |",
+        "# ReMatter design results", "",
+        "**Calculated with a bending model. The designs have not been physically tested.**", "",
+        f"Load at tip: {requirements.tip_force_N:g} N. Length: {requirements.span_mm:g} mm. Width: {requirements.width_mm:g} mm. Maximum height: {requirements.max_height_mm:g} mm. Maximum tip movement: {requirements.max_tip_deflection_mm:g} mm.", "",
+        f"Material values: {scenario_label}. The lower estimate uses the measured average minus twice the test-piece standard deviation (SD). This explores lower values; it is not a confidence interval or a prediction of variation between batches.", "",
+        "ReMatter searches both beam shapes across the selected size range and step sizes. The rectangular comparison is optimized too. These familiar shapes help check the calculations. This result does not show a new design method or an advantage from AI.", "",
+        "| Material | Beam shape | Volume (mm³) | Tip movement (mm) | Stress at fixed end (MPa) | Designs checked |",
         "|---|---|---:|---:|---:|---:|",
     ]
     for result in results:
         for name, family in result["families"].items():
+            shape_label = "I-section" if name == "i" else "Rectangle"
             best = family["best"]
             if best:
                 e = best["evaluation"]
-                lines.append(f"| {result['material_id']} | {name} | {e['volume_mm3']:.1f} | {e['tip_deflection_mm']:.4f} | {e['root_bending_stress_MPa']:.4f} | {family['evaluated']} |")
+                lines.append(f"| {result['material_id']} | {shape_label} | {e['volume_mm3']:.1f} | {e['tip_deflection_mm']:.4f} | {e['root_bending_stress_MPa']:.4f} | {family['evaluated']} |")
             else:
-                lines.append(f"| {result['material_id']} | {name} | No candidate passed | — | — | {family['evaluated']} |")
-    lines.extend(["", "## Interpreting the output", ""])
+                lines.append(f"| {result['material_id']} | {shape_label} | No design met the requirements | — | — | {family['evaluated']} |")
+    lines.extend(["", "## What the results mean", ""])
     for result in results:
         reduction = result["i_volume_reduction_vs_optimized_rectangle_percent"]
         if reduction is not None:
-            lines.append(f"- `{result['material_id']}`: the selected I-section uses {reduction:.2f}% less modeled volume than the optimized rectangle within these restricted section families and declared screens.")
-    lines.extend(["", "STL files are unitless; coordinates must be interpreted as millimetres. Each has companion JSON with material condition, dimensions, calculation and geometric checks. No manufacturing or service-life qualification is implied.", "", "## Limits", ""])
+            lines.append(f"- `{result['material_id']}`: the selected I-section uses {reduction:.2f}% less calculated material volume than the optimized rectangle, for these two beam shapes and the selected design checks.")
+    lines.extend(["", "Open STL files in millimetres; the file format does not store units. Each design includes a JSON file with its material sample, dimensions, calculations and geometry checks. The model does not establish how to manufacture the part or how long it will last.", "", "## What this model covers", ""])
     lines.extend("- " + item for item in LIMITS)
-    lines.extend(["", "## Evidence", "", "[Measured source data, CC BY 4.0](https://zenodo.org/records/19370161). Source condition codes are retained because mapping to named stabilizer formulations has not yet been verified.", "", "[MIT Euler–Bernoulli beam reference](https://ocw.mit.edu/courses/2-002-mechanics-and-materials-ii-spring-2004/bc25a56b5a91ad29ca5c7419616686f7_lec2.pdf).", ""])
+    lines.extend(["", "## Material data and calculations", "", "[Material test data, CC BY 4.0](https://zenodo.org/records/19370161). The original sample codes are used because we do not yet know which named stabilizer recipe each code represents.", "", "[MIT guide to Euler–Bernoulli beam calculations](https://ocw.mit.edu/courses/2-002-mechanics-and-materials-ii-spring-2004/bc25a56b5a91ad29ca5c7419616686f7_lec2.pdf).", ""])
     return "\n".join(lines)
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="ReMatter: documented materials and computational geometry")
+    parser = argparse.ArgumentParser(description="ReMatter: recycled-material data and calculated designs")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("ingest", help="Verify source hashes and rebuild the material catalog")
-    catalog = commands.add_parser("catalog", help="List measured material conditions")
+    catalog = commands.add_parser("catalog", help="List tested material options")
     catalog.add_argument("--include-controls", action="store_true")
-    demo = commands.add_parser("demo", help="Run the idealized support-member experiment")
+    demo = commands.add_parser("demo", help="Run the support-beam comparison")
     demo.add_argument("--config", type=Path, default=ROOT / "examples/support-member.json")
-    demo.add_argument("--material", default="04441PP-REG(1)-1E1", help="Source condition code or all")
+    demo.add_argument("--material", default="04441PP-REG(1)-1E1", help="Material ID or all")
     demo.add_argument("--scenario", choices=["nominal", "lower_sensitivity"], default="lower_sensitivity")
     demo.add_argument("--out", type=Path)
     check = commands.add_parser("evaluate", help="Recompute a previously exported design")
     check.add_argument("design", type=Path)
-    serve_parser = commands.add_parser("serve", help="Start the local design workbench")
+    serve_parser = commands.add_parser("serve", help="Start the local app")
     serve_parser.add_argument("--port", type=int, default=8797)
     args = parser.parse_args(argv)
     try:
@@ -152,7 +154,7 @@ def main(argv=None):
         config, requirements, space = load_config(args.config)
         chosen = materials if args.material == "all" else [by_id[args.material]] if args.material in by_id else []
         if not chosen:
-            raise ValueError("Unknown material condition; run catalog to list supported IDs")
+            raise ValueError("This material is not available; run catalog to list material IDs")
         results = [search(m, requirements, space, args.scenario) for m in chosen]
         folder = args.out or ROOT / "outputs" / ("core-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))
         if folder.exists():
@@ -163,7 +165,7 @@ def main(argv=None):
             exports.extend(export_design(folder, material, result, requirements))
         output = {
             "schema_version": 1,
-            "claim_scope": "Idealized static bending simulation, not physically validated product design",
+            "claim_scope": "Static bending simulation; the designs have not been physically tested",
             "meta_model_used": False,
             "requirements": asdict(requirements),
             "search_space": asdict(space),
@@ -176,11 +178,11 @@ def main(argv=None):
         }
         (folder / "results.json").write_text(json.dumps(output, indent=2, allow_nan=False) + "\n")
         (folder / "report.md").write_text(report_text(results, requirements, args.scenario))
-        print(f"Experiment saved: {folder.resolve()}")
+        print(f"Design run saved: {folder.resolve()}")
         for result in results:
             value = result["i_volume_reduction_vs_optimized_rectangle_percent"]
             print(result["material_id"] + (f": modeled volume reduction {value:.2f}% vs optimized rectangle" if value is not None else ": no comparable feasible pair"))
-        print("Simulation only. No Meta model used. See report.md for omitted physics and evidence.")
+        print("Simulation only. No Meta model used. See report.md for the material data and what the model covers.")
         return 0 if exports else 1
     except (ValueError, TypeError, KeyError, OSError, zipfile.BadZipFile) as exc:
         print(f"ReMatter: {exc}", file=sys.stderr)

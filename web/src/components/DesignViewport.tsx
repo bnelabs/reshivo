@@ -167,15 +167,15 @@ export default function DesignViewport({
       {(!design || design.outline.length < 3 || unavailable) && (
         <div className="viewport-message">
           {unavailable
-            ? '3D preview unavailable in this browser. Geometry downloads remain available.'
+            ? 'This browser can’t show the 3D preview. You can still download the design.'
             : design
-              ? 'Invalid geometry · preview unavailable'
+              ? 'These dimensions don’t form a valid shape.'
               : emptyMessage}
         </div>
       )}
       {design && !unavailable && (
         <>
-          <span className="span-dimension">{span} mm span</span>
+          <span className="span-dimension">{span} mm length</span>
           <span className="section-dimension">
             {design.section.height_mm} mm height
             <br />
@@ -189,7 +189,7 @@ export default function DesignViewport({
           <span className="orbit-hint">Drag to rotate · scroll to zoom</span>
         </>
       )}
-      {dirty && <span className="stale-viewport">Previous geometry</span>}
+      {dirty && <span className="stale-viewport">Previous design</span>}
     </div>
   )
 }

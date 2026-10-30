@@ -69,7 +69,7 @@ def finite_json(text):
     try:
         return json.loads(text, parse_constant=lambda value: (_ for _ in ()).throw(ValueError()))
     except (ValueError, TypeError, UnicodeError):
-        raise MetaValidationError("Meta returned invalid or non-finite JSON") from None
+        raise MetaValidationError("Meta's response could not be read or contains invalid numbers") from None
 
 
 class MetaClient:
@@ -85,7 +85,7 @@ class MetaClient:
         payload = {
             "model": self.model,
             "messages": [
-                {"role": "system", "content": "You propose bounded mechanical geometry candidates. Numerical code determines their performance. Never invent measured material properties, chemical recipes, experimental validation or scientific novelty. Do not claim design-code compliance, certification, service qualification or manufacturing readiness. These are declared numerical screens only."},
+                {"role": "system", "content": "You propose bounded mechanical geometry candidates. Numerical code determines their performance. Never invent measured material properties, chemical recipes, experimental validation or scientific novelty. Do not claim design-code compliance, certification, service qualification or manufacturing readiness. These checks cover only the specified bending model. Write short, plain design names and explain the geometry in everyday language. Avoid compliance jargon in user-facing explanations."},
                 {"role": "user", "content": prompt},
             ],
             "response_format": {"type": "json_schema", "json_schema": {"name": "geometry_candidates", "strict": True, "schema": schema}},
@@ -100,24 +100,24 @@ class MetaClient:
         except urllib.error.HTTPError as error:
             code = error.code
             error.close()
-            raise MetaAPIError(f"Meta request failed with HTTP {code}. No substitute response was generated.") from None
+            raise MetaAPIError(f"Meta could not generate designs (HTTP {code}). Try again.") from None
         except (urllib.error.URLError, TimeoutError, OSError):
-            raise MetaAPIError("Meta could not be reached within the request limit. No substitute response was generated.") from None
+            raise MetaAPIError("Could not reach Meta. Check the connection and try again.") from None
         if len(raw) > 512_000:
             raise MetaValidationError("Meta response exceeded the size limit")
         body = finite_json(raw)
         if not isinstance(body, dict):
-            raise MetaValidationError("Meta returned an invalid response envelope")
+            raise MetaValidationError("Meta's response could not be read")
         try:
             choice = body["choices"][0]
             if choice.get("finish_reason") == "length":
-                raise MetaValidationError("Meta reached its output limit; request fewer candidates")
+                raise MetaValidationError("Meta's response was cut short. Request fewer design ideas.")
             message = choice["message"]
             if message.get("refusal"):
-                raise MetaValidationError("Meta did not provide geometry candidates")
+                raise MetaValidationError("Meta did not return any design ideas")
             content = message["content"]
             if not isinstance(content, str) or not content.strip():
-                raise MetaValidationError("Meta returned no candidate content")
+                raise MetaValidationError("Meta returned an empty design response")
         except (KeyError, IndexError, TypeError):
             raise MetaValidationError("Meta returned an incomplete response") from None
         source_usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}
@@ -145,10 +145,10 @@ def proposal_schema(max_candidates):
 
 def propose_and_evaluate(material, requirements, scenario_name="lower_sensitivity", max_candidates=4, client=None):
     if isinstance(max_candidates, bool) or not isinstance(max_candidates, int) or not 1 <= max_candidates <= 6:
-        raise MetaValidationError("Request one to six candidates")
+        raise MetaValidationError("Request between 1 and 6 design ideas")
     state = material.scenario(scenario_name)
     prompt = json.dumps({
-        "task": f"Propose up to {max_candidates} distinct support-member cross sections. Seek small material volume while meeting the declared bending screens. Include a conservative option and lighter alternatives. Use the same fixed interface width. Rectangles need null flange/web; I-sections need positive flange/web, twice flange < height, web <= width. Geometry will be evaluated; do not put predicted performance into the response.",
+        "task": f"Propose up to {max_candidates} distinct support-member cross sections. Seek small material volume while meeting the selected bending checks. Include a conservative option and lighter alternatives. Use the same fixed interface width. Rectangles need null flange/web; I-sections need positive flange/web, twice flange < height, web <= width. Geometry will be evaluated; do not put predicted performance into the response.",
         "material_condition": material.id,
         "material_inputs": state,
         "requirements": asdict(requirements),
@@ -158,16 +158,16 @@ def propose_and_evaluate(material, requirements, scenario_name="lower_sensitivit
     generated = (client or MetaClient()).generate(prompt, proposal_schema(max_candidates), max_candidates)
     data = generated.data
     if not isinstance(data, dict) or set(data) != {"candidates"}:
-        raise MetaValidationError("Meta response does not match the candidate schema")
+        raise MetaValidationError("Meta's design response has an unexpected format")
     rows = data["candidates"]
     if not isinstance(rows, list) or not 1 <= len(rows) <= max_candidates:
-        raise MetaValidationError("Meta returned an invalid candidate count")
+        raise MetaValidationError("Meta returned an unexpected number of design ideas")
     candidates = []
     for index, row in enumerate(rows):
         if not isinstance(row, dict) or set(row) != {"name", "rationale", "section"}:
-            raise MetaValidationError("Meta returned unsupported candidate fields")
+            raise MetaValidationError("Meta's design idea has unexpected fields")
         if not isinstance(row["name"], str) or not 1 <= len(row["name"]) <= 100 or not isinstance(row["rationale"], str) or len(row["rationale"]) > 2000:
-            raise MetaValidationError("Meta returned invalid candidate text")
+            raise MetaValidationError("Meta's design name or explanation could not be used")
         dimensions = row["section"]
         keys = {"shape", "width_mm", "height_mm", "flange_mm", "web_mm"}
         if not isinstance(dimensions, dict) or set(dimensions) != keys or dimensions["shape"] not in {"rectangle", "i"}:
@@ -191,5 +191,5 @@ def propose_and_evaluate(material, requirements, scenario_name="lower_sensitivit
         "usage": generated.usage, "request_id": generated.request_id, "elapsed_ms": generated.elapsed_ms,
         "material_id": material.id, "material_scenario": state, "requirements": asdict(requirements),
         "candidates": candidates,
-        "limits": ["Generated proposals are evaluated by a bending-only model, not physically tested.", "Generated explanations are unverified and cannot establish code compliance or certification.", "Comparison with exhaustive search is a reference, not a matched-budget AI-advantage claim.", "Material composition and independent batch reliability are not inferred."],
+        "limits": ["Each idea is checked with a bending model. No physical test has been performed.", "Model explanations are suggestions, not test results. A passing design still needs further engineering and physical testing.", "The comparison shows the full-grid search result. It does not show whether AI performs better with the same time or number of calculations.", "The model does not determine a material recipe or predict differences between recycled-material batches."],
     }

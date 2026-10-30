@@ -7,6 +7,24 @@ export const format = (value: number | undefined, digits = 3) =>
         maximumFractionDigits: digits,
         minimumFractionDigits: digits,
       })
+
+const checkMessages: Record<string, string> = {
+  fixed_width: 'Width does not match your setting',
+  height_envelope: 'Too tall',
+  deflection_target: 'Tip moves too far',
+  stress_screen: 'Bending stress is too high',
+  small_bending_strain: 'Stretch is beyond this model’s range',
+  small_deflection: 'Bending is beyond this model’s range',
+  beam_slenderness_screen: 'Beam is too short for its height in this model',
+  minimum_feature: 'A section is too thin',
+  web_ratio_screen: 'Web is too tall for its thickness',
+  flange_ratio_screen: 'Flange extends too far for its thickness',
+  invalid_geometry: 'Shape dimensions do not work together',
+}
+
+export const describeChecks = (checks: string[]) =>
+  checks.map((check) => checkMessages[check] ?? check.replaceAll('_', ' ')).join(' · ')
+
 function FileIcon({ download = false }: { download?: boolean }) {
   return (
     <svg
@@ -49,8 +67,8 @@ export function ResultsPanel({
   const e = design?.evaluation
   const section = design?.section
   return (
-    <aside className="results-rail" aria-label="Calculation result">
-      <h2>{reference ? 'Reference result' : 'Candidate result'}</h2>
+    <aside className="results-rail" aria-label="Design results">
+      <h2>{reference ? 'Rectangle results' : 'Design results'}</h2>
       <div className="metric">
         <strong>
           {format(e?.volume_mm3 === undefined ? undefined : e.volume_mm3 / 1000, 1)}{' '}
@@ -62,13 +80,13 @@ export function ResultsPanel({
         <strong>
           {format(e?.tip_deflection_mm)} <small>mm</small>
         </strong>
-        <span>Tip deflection</span>
+        <span>Tip movement</span>
       </div>
       <div className="metric">
         <strong>
           {format(e?.root_bending_stress_MPa)} <small>MPa</small>
         </strong>
-        <span>Root bending stress</span>
+        <span>Stress at the fixed end</span>
       </div>
       {e && (
         <div
@@ -77,16 +95,14 @@ export function ResultsPanel({
         >
           <span>{e.passes_declared_screens ? '✓' : '!'}</span>
           {dirty
-            ? 'Previous result · inputs changed'
+            ? 'Settings changed · update the design'
             : e.passes_declared_screens
-              ? 'Passes declared screens'
-              : 'Does not pass declared screens'}
+              ? 'Passes design checks'
+              : 'Needs changes'}
         </div>
       )}
       {e && !e.passes_declared_screens && (
-        <p className="failed-reasons">
-          {e.failed_screens.map((s) => s.replaceAll('_', ' ')).join(', ')}
-        </p>
+        <p className="failed-reasons">{describeChecks(e.failed_screens)}</p>
       )}
       <dl className="section-dimensions">
         <dt>Section</dt>
@@ -122,14 +138,14 @@ export function ResultsPanel({
           download
         >
           <FileIcon />
-          Experiment report
+          Design report
         </a>
       </div>
       <section className="evidence-summary">
-        <h2>Evidence &amp; limits</h2>
-        <p>Measured: stiffness and yield</p>
-        <p>Assumed: perfect clamp</p>
-        <p>Unknown: creep and fatigue</p>
+        <h2>About this design</h2>
+        <p>Uses measured stiffness and yield strength.</p>
+        <p>Assumes a perfectly fixed end.</p>
+        <p>Doesn’t cover creep or fatigue.</p>
       </section>
     </aside>
   )

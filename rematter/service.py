@@ -69,7 +69,7 @@ class WorkbenchService:
         try:
             return load_materials(self.root)
         except (ValueError, OSError, KeyError):
-            raise ServiceError("source_unavailable", "Material source data are unavailable or failed verification", 503) from None
+            raise ServiceError("source_unavailable", "The material data could not be loaded or did not match the saved source files", 503) from None
 
     def bootstrap(self):
         return {
@@ -93,17 +93,17 @@ class WorkbenchService:
         _allowed(request, names, "request")
         material_id = request.get("material_id", "04441PP-REG(1)-1E1")
         if not isinstance(material_id, str):
-            raise ServiceError("invalid_request", "material_id must be a source condition ID")
+            raise ServiceError("invalid_request", "Choose a material from the list")
         materials = self._materials()
         if allow_all and material_id == "all":
             chosen = materials
         else:
             chosen = [material for material in materials if material.id == material_id]
         if not chosen:
-            raise ServiceError("invalid_request", "Unknown material condition")
+            raise ServiceError("invalid_request", "This material is not available")
         scenario = request.get("scenario", "lower_sensitivity")
         if scenario not in ("nominal", "lower_sensitivity"):
-            raise ServiceError("invalid_request", "Unsupported material scenario")
+            raise ServiceError("invalid_request", "Choose measured averages or a lower estimate")
         requirements = _numeric_values(request.get("requirements", {}), Requirements, asdict(self.default_requirements), "requirements")
         return chosen, scenario, requirements
 
@@ -181,7 +181,7 @@ class WorkbenchService:
         materials, scenario, requirements = self._parameters(request, {"material_id", "scenario", "requirements", "max_candidates"})
         count = request.get("max_candidates", 4)
         if isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= 6:
-            raise ServiceError("invalid_request", "max_candidates must be an integer from 1 to 6")
+            raise ServiceError("invalid_request", "Request between 1 and 6 design ideas")
         if self.proposal_fn is not None:
             result = self.proposal_fn(materials[0], requirements, scenario, max_candidates=count)
             return self._save_proposals(result, materials[0], requirements)
@@ -205,7 +205,7 @@ class WorkbenchService:
         folder.mkdir(parents=True, exist_ok=False)
         names = ["report.md", "results.json"]
         prefix = f"/api/experiments/{identity}/artifacts/"
-        lines = ["# ReMatter Meta proposals", "", "Computational proposals evaluated with the declared bending-only model. Physical performance is untested.", "", f"Model: {result['model']}. Live generation: {result['live']}.", "", f"Material condition: {material.id}. [Source measurements, CC BY 4.0]({SOURCE_URL}).", "", result["material_scenario"]["interpretation"], ""]
+        lines = ["# ReMatter Meta design ideas", "", "Generated ideas checked with a bending model. The designs have not been physically tested.", "", f"Model: {result['model']}. Generated in this run: {result['live']}.", "", f"Material: {material.id}. [Material test data, CC BY 4.0]({SOURCE_URL}).", "", result["material_scenario"]["interpretation"], ""]
         for candidate in result["candidates"]:
             evaluation = candidate["evaluation"]
             if evaluation["passes_declared_screens"]:
@@ -215,7 +215,7 @@ class WorkbenchService:
                 candidate["stl_url"] = prefix + quote(entry["stl"], safe="")
                 candidate["design_url"] = prefix + quote(entry["design"], safe="")
             lines.extend([f"## {candidate['name']}", "", candidate["rationale"], "", "```json", json.dumps({"section": candidate["section"], "evaluation": evaluation}, indent=2), "```", ""])
-        lines.extend(["## Limits", ""] + ["- " + item for item in result["limits"]])
+        lines.extend(["## What this model covers", ""] + ["- " + item for item in result["limits"]])
         result.update({"id": identity, "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "meta_model_used": bool(result["live"]), "report_url": prefix + "report.md", "results_url": prefix + "results.json"})
         (folder/"report.md").write_text("\n".join(lines) + "\n")
         (folder/"results.json").write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
@@ -227,10 +227,10 @@ class WorkbenchService:
             if str(uuid.UUID(identity)) != identity:
                 raise ValueError
         except (ValueError, TypeError, AttributeError):
-            raise ServiceError("not_found", "Experiment not found", 404) from None
+            raise ServiceError("not_found", "Design run not found", 404) from None
         folder = (self.output_root / identity).resolve()
         if folder.parent != self.output_root or not folder.is_dir():
-            raise ServiceError("not_found", "Experiment not found", 404)
+            raise ServiceError("not_found", "Design run not found", 404)
         return folder
 
     def get_experiment(self, identity):
@@ -238,17 +238,17 @@ class WorkbenchService:
         try:
             return json.loads((folder / "results.json").read_text())
         except (OSError, ValueError):
-            raise ServiceError("not_found", "Experiment not found", 404) from None
+            raise ServiceError("not_found", "Design run not found", 404) from None
 
     def get_artifact(self, identity, filename):
         folder = self._folder(identity)
         if filename != Path(filename).name or filename in {"", ".", ".."} or "\\" in filename:
-            raise ServiceError("not_found", "Artifact not found", 404)
+            raise ServiceError("not_found", "Download not found", 404)
         try:
             manifest = json.loads((folder / "artifact_manifest.json").read_text())
         except (OSError, ValueError):
-            raise ServiceError("not_found", "Artifact not found", 404) from None
+            raise ServiceError("not_found", "Download not found", 404) from None
         path = (folder / filename).resolve()
         if filename not in manifest.get("files", []) or path.parent != folder or not path.is_file():
-            raise ServiceError("not_found", "Artifact not found", 404)
+            raise ServiceError("not_found", "Download not found", 404)
         return path

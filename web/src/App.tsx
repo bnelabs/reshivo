@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { api } from './api'
 import type { Bootstrap, Design, Experiment, Proposals, Requirements } from './types'
 import { RequirementsPanel } from './components/RequirementsPanel'
-import { ResultsPanel, format } from './components/ResultsPanel'
+import { ResultsPanel, format, describeChecks } from './components/ResultsPanel'
 import { MaterialEvidence } from './components/MaterialEvidence'
 
 const DesignViewport = lazy(() => import('./components/DesignViewport'))
@@ -41,7 +41,7 @@ export default function App() {
         setExperiment(result)
       } catch (e) {
         if (!controller.signal.aborted)
-          setError(e instanceof Error ? e.message : 'Workbench unavailable')
+          setError(e instanceof Error ? e.message : 'ReMatter could not load')
       } finally {
         if (!controller.signal.aborted) setBusy(false)
       }
@@ -123,15 +123,15 @@ export default function App() {
         <a className="wordmark" href="/">
           ReMatter
         </a>
-        <nav aria-label="Workbench navigation">
+        <nav aria-label="Main navigation">
           <button className={tab === 'design' ? 'selected' : ''} onClick={() => setTab('design')}>
-            Design workbench
+            Design
           </button>
           <button
             className={tab === 'evidence' ? 'selected' : ''}
             onClick={() => setTab('evidence')}
           >
-            Material evidence
+            Materials
           </button>
         </nav>
         <span className="simulation-label">Simulation</span>
@@ -146,11 +146,9 @@ export default function App() {
       )}
       {!bootstrap ? (
         <main className="startup-state">
-          <h1>ReMatter design workbench</h1>
+          <h1>ReMatter</h1>
           <p>
-            {error
-              ? 'Start the local service and reload this page.'
-              : 'Loading measured material data…'}
+            {error ? 'Start the local service and reload this page.' : 'Loading material data…'}
           </p>
           {error && (
             <button className="primary" onClick={() => location.reload()}>
@@ -179,26 +177,26 @@ export default function App() {
           />
           <main className="design-main">
             <div className="design-heading">
-              <h1>Support member</h1>
+              <h1>Support beam</h1>
               <div className="segmented" aria-label="Displayed geometry">
                 <button
                   className={view !== 'rectangle' ? 'active' : ''}
                   onClick={() => setView(candidateView)}
                 >
-                  Candidate
+                  Design
                 </button>
                 <button
                   className={view === 'rectangle' ? 'active' : ''}
                   onClick={() => setView('rectangle')}
                 >
-                  Reference
+                  Rectangle
                 </button>
               </div>
             </div>
             <Suspense
               fallback={
                 <div className="viewport">
-                  <div className="viewport-message">Loading geometry viewer…</div>
+                  <div className="viewport-message">Loading 3D preview…</div>
                 </div>
               }
             >
@@ -210,31 +208,28 @@ export default function App() {
                   busy
                     ? 'Calculating the design…'
                     : experiment
-                      ? 'No feasible geometry in the selected family.'
-                      : 'Run a design search to preview geometry.'
+                      ? 'No design of this shape fits your settings.'
+                      : 'Find a design to see it here.'
                 }
               />
             </Suspense>
             {!busy && experiment?.exports.length === 0 && (
               <div className="infeasible-message" role="status">
-                <h2>No design passes these requirements</h2>
+                <h2>No design fits these settings</h2>
                 <p>
-                  Reduce the load, increase the available height or relax the deflection target. No
-                  geometry was exported.
+                  Try a smaller load, more height or a higher tip movement limit. There’s no design
+                  to download yet.
                 </p>
               </div>
             )}
             <section className="volume-comparison">
               <div className="comparison-heading">
-                <h2>Modeled volume</h2>
-                <span>Optimized fixed-width rectangle</span>
+                <h2>Compare volume</h2>
+                <span>Same load and size limits</span>
               </div>
               {[
-                [
-                  candidateView.startsWith('meta:') ? 'Meta candidate' : 'Candidate',
-                  comparisonCandidate,
-                ],
-                ['Reference', reference],
+                [candidateView.startsWith('meta:') ? 'Meta design' : 'Design', comparisonCandidate],
+                ['Rectangle', reference],
               ].map(([label, item]) => {
                 const design = item as Design | undefined
                 const value = design?.evaluation.volume_mm3
@@ -248,7 +243,7 @@ export default function App() {
                     <span>{label as string}</span>
                     <div className="bar-track">
                       <div
-                        className={`bar ${label === 'Reference' ? 'reference' : ''}`}
+                        className={`bar ${label === 'Rectangle' ? 'reference' : ''}`}
                         style={{
                           width: value === undefined ? 0 : `${Math.min(100, (value / max) * 100)}%`,
                         }}
@@ -261,14 +256,14 @@ export default function App() {
             </section>
             {proposals && (
               <section className="proposal-results">
-                <h2>Meta proposals</h2>
+                <h2>Design ideas from Meta</h2>
                 <p className="helper">
-                  {proposals.model} · {proposals.live ? 'live generation' : 'test response'} ·
-                  independently calculated
+                  {proposals.model} · {proposals.live ? 'generated now' : 'test response'} ·
+                  calculated by ReMatter
                 </p>
                 <p className="helper">
-                  Generated explanations are unverified. Passing these screens does not establish
-                  design-code compliance.
+                  Meta’s explanations can be wrong. The results below come from ReMatter’s bending
+                  model.
                 </p>
                 <div className="proposal-list">
                   {proposals.candidates.map((c, i) => (
@@ -283,23 +278,23 @@ export default function App() {
                       <span>{c.name}</span>
                       <small>
                         {c.evaluation.passes_declared_screens
-                          ? `${format((c.evaluation.volume_mm3 || 0) / 1000, 1)} cm³ · passes screens`
-                          : `Rejected · ${c.evaluation.failed_screens.map((x) => x.replaceAll('_', ' ')).join(', ')}`}
+                          ? `${format((c.evaluation.volume_mm3 || 0) / 1000, 1)} cm³ · passes design checks`
+                          : `Needs changes · ${describeChecks(c.evaluation.failed_screens)}`}
                       </small>
                       <p>{c.rationale}</p>
                     </button>
                   ))}
                 </div>
                 <p className="helper">
-                  Exhaustive-grid I-section reference:{' '}
+                  Best I-section from the design search:{' '}
                   {format(
                     candidate?.evaluation.volume_mm3 === undefined
                       ? undefined
                       : candidate.evaluation.volume_mm3 / 1000,
                     1,
                   )}{' '}
-                  cm³. This is a numerical reference, not a matched-budget AI comparison. An AI
-                  advantage has not been established.
+                  cm³. The search checks many sizes; Meta suggests a few ideas. They use different
+                  amounts of computation, so this is not a test of which method is more efficient.
                 </p>
               </section>
             )}
@@ -313,7 +308,7 @@ export default function App() {
           />
         </div>
       )}
-      <footer>Computational candidate. Physical performance is untested.</footer>
+      <footer>Simulated results. These designs haven’t been physically tested.</footer>
     </>
   )
 }

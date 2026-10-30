@@ -1,11 +1,11 @@
 import type { Material, Requirements } from '../types'
 
 const fields = [
-  ['tip_force_N', 'End load', 'N'],
-  ['span_mm', 'Span', 'mm'],
-  ['width_mm', 'Interface width', 'mm'],
-  ['max_height_mm', 'Height limit', 'mm'],
-  ['max_tip_deflection_mm', 'Deflection limit', 'mm'],
+  ['tip_force_N', 'Load at tip', 'N'],
+  ['span_mm', 'Length', 'mm'],
+  ['width_mm', 'Width', 'mm'],
+  ['max_height_mm', 'Max height', 'mm'],
+  ['max_tip_deflection_mm', 'Max tip movement', 'mm'],
 ]
 export const shortCondition = (id: string) => id.split('-').at(-1) || id
 
@@ -27,8 +27,8 @@ type Props = {
 export function RequirementsPanel(p: Props) {
   const selected = p.materials.find((m) => m.id === p.materialId)
   return (
-    <aside className="requirements-rail" aria-label="Design requirements">
-      <h2>Design requirements</h2>
+    <aside className="requirements-rail" aria-label="Design setup">
+      <h2>Design setup</h2>
       <label className="stacked">
         Material
         <select
@@ -43,16 +43,16 @@ export function RequirementsPanel(p: Props) {
           ))}
         </select>
       </label>
-      <p className="helper">{selected?.specimens ?? '—'} specimens · measured condition</p>
+      <p className="helper">Based on {selected?.specimens ?? '—'} tested samples</p>
       <label className="stacked scenario">
-        Scenario
+        Material values
         <select
           disabled={p.busy || p.metaBusy}
           value={p.scenario}
           onChange={(e) => p.onScenario(e.target.value)}
         >
-          <option value="lower_sensitivity">Lower sensitivity</option>
-          <option value="nominal">Measured means</option>
+          <option value="lower_sensitivity">Lower estimate</option>
+          <option value="nominal">Measured averages</option>
         </select>
       </label>
       <div className="numeric-fields">
@@ -75,34 +75,36 @@ export function RequirementsPanel(p: Props) {
         ))}
       </div>
       <button className="primary run-button" onClick={p.onRun} disabled={p.busy}>
-        {p.busy ? 'Calculating…' : 'Run design search'}
+        {p.busy ? 'Calculating…' : 'Find a design'}
       </button>
       {p.dirty && (
         <p className="pending-note" role="status">
-          Inputs changed. Run the search to update results.
+          Your settings changed. Find a design to update the results.
         </p>
       )}
       <section className="meta-action">
-        <h2>Meta candidates</h2>
+        <h2>Design with Meta</h2>
         <button
           className="outline-button"
           disabled={!p.connected || p.busy || p.metaBusy || p.dirty}
           onClick={p.onMeta}
         >
-          {p.metaBusy ? 'Evaluating Meta proposals…' : 'Ask Meta for candidates'}
+          {p.metaBusy ? 'Generating and checking…' : 'Suggest designs'}
         </button>
         <p className="helper">
-          {p.connected ? 'Meta configured · live proposals on request.' : 'Meta is not connected.'}
+          {p.connected ? 'Generate a few ideas, then compare them.' : 'Meta is not connected.'}
         </p>
       </section>
       <details className="model-details">
-        <summary>Calculation assumptions</summary>
+        <summary>How the model works</summary>
         <p>
-          Static bending, a perfect clamp and a homogeneous linear material. Local buckling, creep,
-          fatigue and impact are unverified.
+          Calculates bending under a steady load, with one end held perfectly still and the same
+          material properties throughout. Buckling, creep, fatigue and impact are not included.
         </p>
         <p>
-          The lower scenario uses mean minus twice specimen SD. It is not a batch reliability bound.
+          Lower estimate subtracts twice the sample standard deviation from the measured averages.
+          It explores lower stiffness and strength; it cannot predict how another waste batch will
+          behave.
         </p>
       </details>
     </aside>

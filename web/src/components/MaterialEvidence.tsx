@@ -4,21 +4,22 @@ import { shortCondition } from './RequirementsPanel'
 export function MaterialEvidence({ data }: { data: Bootstrap }) {
   return (
     <main className="material-page">
-      <h1>Material evidence</h1>
+      <h1>Materials</h1>
       <p className="evidence-intro">
-        Eight measured conditions from one recycled-PP study. These are not eight suppliers or
-        independent waste batches.
+        Recycled polypropylene (PP), tested in eight conditions in one study. Each row includes five
+        samples from the same condition. The study does not compare suppliers or separate waste
+        batches.
       </p>
       <div className="table-scroll">
         <table>
           <thead>
             <tr>
-              <th>Condition</th>
-              <th>Specimens</th>
-              <th>Modulus (MPa)</th>
-              <th>Reported SD</th>
-              <th>Yield (MPa)</th>
-              <th>Reported SD</th>
+              <th>Test condition</th>
+              <th>Samples</th>
+              <th>Stiffness (MPa)</th>
+              <th>Variation (SD)</th>
+              <th>Yield strength (MPa)</th>
+              <th>Variation (SD)</th>
             </tr>
           </thead>
           <tbody>
@@ -37,25 +38,28 @@ export function MaterialEvidence({ data }: { data: Bootstrap }) {
       </div>
       <div className="evidence-notes">
         <section>
-          <h2>What is measured</h2>
+          <h2>Where the numbers come from</h2>
           <p>
-            Tensile stiffness, yield and ductility, with five specimen measurements for each
-            condition. Each property remains linked to its original condition.
+            The study measures stiffness, yield strength and stretch before breaking. Each value
+            stays linked to its test condition. SD means standard deviation: the spread between
+            samples.
           </p>
           <a href={data.source.url} target="_blank" rel="noreferrer">
-            Open experimental dataset ↗
+            View the original test data ↗
           </a>
           <p>Source license: {data.source.license}</p>
         </section>
         <section>
-          <h2>What remains unknown</h2>
+          <h2>What’s missing</h2>
           <p>
-            Named additive-to-condition mappings, density, Poisson ratio, independent batch
-            variation, creep and fatigue. Formulation percentages are not inferred.
+            The additive recipes haven’t been matched to these test codes yet. We also lack density,
+            Poisson’s ratio, differences between waste batches, creep and fatigue data. These
+            numbers cannot tell us the recipe for a new blend.
           </p>
           <p>
-            The lower sensitivity scenario uses specimen spread for a numerical sensitivity check.
-            It is not a confidence interval or a batch prediction.
+            Lower estimate subtracts twice the sample standard deviation from each average. It helps
+            explore lower stiffness and strength. This setting does not give a statistical
+            confidence range or predict another waste batch.
           </p>
         </section>
       </div>
