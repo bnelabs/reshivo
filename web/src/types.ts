@@ -68,3 +68,59 @@ export type Proposals = {
   report_url?: string
   limits: string[]
 }
+
+export type DensityCase = {
+  id: string
+  label: string
+  source_url: string
+  source_title: string
+  license: string
+  material: string
+  process: string
+  method: string
+  test_temperature_C: number
+  n: number
+  repetition_level: string
+  density_values_g_cm3: number[]
+  density_mean_g_cm3: number
+  density_min_g_cm3: number
+  density_max_g_cm3: number
+  source_cells: string[]
+  limitations: string[]
+}
+
+export type ProductCatalog = {
+  label: 'source_measurements'
+  density_cases: DensityCase[]
+  source_groups: {
+    id: string
+    title: string
+    summary: string
+    can_answer: string
+    cannot_answer: string[]
+    source_url: string
+    license: string
+  }[]
+  limits: string[]
+}
+
+export type CounterweightResult = {
+  result_kind: 'simulation'
+  product_name: string
+  condition: DensityCase
+  volume_cm3: number
+  target_min_kg: number
+  target_max_kg: number
+  mean_density_mass_kg: number
+  source_scenarios_kg: number[]
+  observed_source_mass_min_kg: number
+  observed_source_mass_max_kg: number
+  source_scenarios_in_target: number
+  source_scenario_count: number
+  all_source_scenarios_in_target: boolean
+  suggested_volume_cm3: number
+  volume_interval_for_source_range_cm3: { min: number; max: number } | null
+  assumptions: string[]
+  physical_product_tested: false
+  batch_consistency_established: false
+}

@@ -4,6 +4,7 @@ import type { Bootstrap, Design, Experiment, Proposals, Requirements } from './t
 import { RequirementsPanel } from './components/RequirementsPanel'
 import { ResultsPanel, format, describeChecks } from './components/ResultsPanel'
 import { MaterialEvidence } from './components/MaterialEvidence'
+import { ProductPlanner } from './components/ProductPlanner'
 
 const DesignViewport = lazy(() => import('./components/DesignViewport'))
 
@@ -16,7 +17,7 @@ export default function App() {
   const [proposals, setProposals] = useState<Proposals | null>(null)
   const [view, setView] = useState('i')
   const [candidateView, setCandidateView] = useState('i')
-  const [tab, setTab] = useState('design')
+  const [tab, setTab] = useState('product')
   const [busy, setBusy] = useState(true)
   const [metaBusy, setMetaBusy] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -29,16 +30,6 @@ export default function App() {
         setBootstrap(data)
         setRequirements(data.config.requirements)
         setMaterialId(data.materials[0].id)
-        const result = await api<Experiment>(
-          '/api/experiments',
-          {
-            material_id: data.materials[0].id,
-            requirements: data.config.requirements,
-            search: data.config.search,
-          },
-          controller.signal,
-        )
-        setExperiment(result)
       } catch (e) {
         if (!controller.signal.aborted)
           setError(e instanceof Error ? e.message : 'ReMatter could not load')
@@ -124,14 +115,23 @@ export default function App() {
           ReMatter
         </a>
         <nav aria-label="Main navigation">
-          <button className={tab === 'design' ? 'selected' : ''} onClick={() => setTab('design')}>
-            Design
+          <button className={tab === 'product' ? 'selected' : ''} onClick={() => setTab('product')}>
+            Product
+          </button>
+          <button
+            className={tab === 'design' ? 'selected' : ''}
+            onClick={() => {
+              setTab('design')
+              if (!experiment) void run()
+            }}
+          >
+            Software check
           </button>
           <button
             className={tab === 'evidence' ? 'selected' : ''}
             onClick={() => setTab('evidence')}
           >
-            Materials
+            PP tests
           </button>
         </nav>
         <span className="simulation-label">Simulation</span>
@@ -144,7 +144,9 @@ export default function App() {
           </button>
         </div>
       )}
-      {!bootstrap ? (
+      {tab === 'product' ? (
+        <ProductPlanner />
+      ) : !bootstrap ? (
         <main className="startup-state">
           <h1>ReMatter</h1>
           <p>
@@ -193,6 +195,9 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <p className="check-note">
+              This beam checks the software calculations. It is not the selected upcycled product.
+            </p>
             <Suspense
               fallback={
                 <div className="viewport">
@@ -308,7 +313,10 @@ export default function App() {
           />
         </div>
       )}
-      <footer>Simulated results. These designs haven’t been physically tested.</footer>
+      <footer>
+        Calculations are simulations. Published measurements apply only to their tested
+        configurations.
+      </footer>
     </>
   )
 }

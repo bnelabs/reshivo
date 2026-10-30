@@ -4,7 +4,7 @@ import { shortCondition } from './RequirementsPanel'
 export function MaterialEvidence({ data }: { data: Bootstrap }) {
   return (
     <main className="material-page">
-      <h1>Materials</h1>
+      <h1>PP tensile tests</h1>
       <p className="evidence-intro">
         Recycled polypropylene (PP), tested in eight conditions in one study. Each row includes five
         samples from the same condition. The study does not compare suppliers or separate waste

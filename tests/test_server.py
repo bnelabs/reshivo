@@ -88,6 +88,22 @@ class ServerTests(unittest.TestCase):
     def test_proposal_validation_without_paid_calls(self):
         self.assertEqual(self.request("/api/proposals", {"max_candidates": 99})[0], 400)
 
+    def test_source_linked_mass_api_and_unmatched_material(self):
+        status, raw, _ = self.request("/api/products/catalog")
+        self.assertEqual(status, 200)
+        self.assertEqual(len(json.loads(raw)["density_cases"]), 17)
+        self.assertNotIn(b"MODEL_API_KEY", raw)
+        body = {"condition_id": "CECON21-PCRPE100", "product_name": "My counterweight", "volume_cm3": 1000,
+                "target_min_kg": 0.98, "target_max_kg": 1.02}
+        status, raw, _ = self.request("/api/products/counterweight", body)
+        result = json.loads(raw)
+        self.assertEqual(status, 200)
+        self.assertEqual(result["result_kind"], "simulation")
+        self.assertEqual(result["source_scenario_count"], 5)
+        self.assertAlmostEqual(result["mean_density_mass_kg"], 0.96426)
+        body["condition_id"] = "04441PP-REG(1)-1E1"
+        self.assertEqual(self.request("/api/products/counterweight", body)[0], 400)
+
     def test_generated_candidates_persist_as_downloadable_verified_geometry(self):
         class Fixture:
             def generate(self, prompt, schema, max_candidates):

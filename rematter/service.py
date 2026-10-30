@@ -89,6 +89,22 @@ class WorkbenchService:
             source_available = False
         return {"status": "ok" if source_available else "degraded", "source_available": source_available, "meta": self.meta_status()}
 
+    def product_catalog(self):
+        from .products import ProductDataError, product_catalog
+        try:
+            return product_catalog(self.root)
+        except ProductDataError as error:
+            raise ServiceError("source_unavailable", str(error), 503) from None
+
+    def counterweight(self, request):
+        from .products import ProductDataError, ProductInputError, counterweight
+        try:
+            return counterweight(request, self.root)
+        except ProductDataError as error:
+            raise ServiceError("source_unavailable", str(error), 503) from None
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
     def _parameters(self, request, names, allow_all=False):
         _allowed(request, names, "request")
         material_id = request.get("material_id", "04441PP-REG(1)-1E1")
