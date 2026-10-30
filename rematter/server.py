@@ -169,7 +169,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         try:
             self._guard()
             path = unquote(urlsplit(self.path).path)
-            routes = {"/api/experiments": self.server.application.run_experiment, "/api/evaluate": self.server.application.evaluate_candidate, "/api/proposals": self.server.application.propose, "/api/products/counterweight": self.server.application.counterweight}
+            routes = {"/api/experiments": self.server.application.run_experiment, "/api/evaluate": self.server.application.evaluate_candidate, "/api/proposals": self.server.application.propose, "/api/products/counterweight": self.server.application.counterweight, "/api/products/my-mix": self.server.application.my_mix_mass}
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)
             body = self._body()

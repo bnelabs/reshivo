@@ -105,6 +105,14 @@ class WorkbenchService:
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
 
+    def my_mix_mass(self, request):
+        from .mix_mass import my_mix_mass
+        from .products import ProductInputError
+        try:
+            return my_mix_mass(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
     def _parameters(self, request, names, allow_all=False):
         _allowed(request, names, "request")
         material_id = request.get("material_id", "04441PP-REG(1)-1E1")

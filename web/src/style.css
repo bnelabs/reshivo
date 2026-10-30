@@ -1376,3 +1376,114 @@ footer {
     font-size: 13px;
   }
 }
+
+.mix-mode-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 25px;
+}
+.mix-mode-switch button {
+  border: 1px solid #ccdcd9;
+  border-radius: 6px;
+  padding: 12px 17px;
+  background: white;
+  color: #486373;
+  font-size: 14px;
+}
+.mix-mode-switch button[aria-pressed='true'] {
+  border-color: #00837b;
+  color: #006b65;
+  background: #eef8f6;
+  box-shadow: inset 0 -2px 0 #00837b;
+}
+.mix-entry-card {
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid #dbe5e7;
+  border-radius: 6px;
+  background: #f9fbfc;
+}
+.mix-entry-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+.mix-entry-heading h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mix-entry-card .product-field:last-child {
+  margin-bottom: 0;
+}
+.mix-add-button {
+  width: 100%;
+  padding: 11px 15px;
+  margin: 0 0 16px;
+  font-size: 13px;
+}
+.mix-case-notice {
+  border-left: 3px solid #c89b4a;
+  padding: 12px;
+  background: #fff8e9;
+  font-size: 13px;
+  color: #775420;
+  line-height: 1.6;
+}
+.mix-reading-grouping {
+  font-size: 12px;
+  color: #52677d;
+}
+.mix-reading-grouping summary {
+  cursor: pointer;
+  color: #36546a;
+  margin: 14px 0 17px;
+}
+.mix-reading-grouping .product-field {
+  font-size: 12px;
+}
+.mix-example-banner {
+  padding: 18px 22px;
+  border: 1px solid #d3e4e2;
+  border-radius: 7px;
+  background: #f0f8f6;
+  margin-bottom: 24px;
+  color: #225b57;
+  font-size: 14px;
+}
+.mix-example-banner p {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+.mix-output {
+  position: sticky;
+  top: 24px;
+}
+.mix-output td:last-child {
+  overflow-wrap: anywhere;
+  max-width: 220px;
+}
+.product-page section[hidden] {
+  display: none;
+}
+@media (max-width: 700px) {
+  .mix-output {
+    position: static;
+  }
+  .mix-mode-switch {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .mix-entry-card {
+    padding: 13px;
+  }
+  .mix-entry-card .product-pair {
+    gap: 10px;
+  }
+  .mix-example-banner {
+    padding: 16px;
+  }
+}

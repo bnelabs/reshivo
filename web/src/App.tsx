@@ -144,9 +144,10 @@ export default function App() {
           </button>
         </div>
       )}
-      {tab === 'product' ? (
+      <div hidden={tab !== 'product'}>
         <ProductPlanner />
-      ) : !bootstrap ? (
+      </div>
+      {tab === 'product' ? null : !bootstrap ? (
         <main className="startup-state">
           <h1>ReMatter</h1>
           <p>

@@ -124,3 +124,77 @@ export type CounterweightResult = {
   physical_product_tested: false
   batch_consistency_established: false
 }
+
+export type MixVolumeBasis = 'external_volume' | 'solid_volume' | 'other' | 'unknown'
+export type MixAmountUnit = 'g' | 'mass_percent' | 'volume_percent'
+export type MixCase = {
+  label: string
+  components: {
+    name: string
+    role: 'main' | 'binder' | 'other'
+    amount: number
+    unit: MixAmountUnit
+  }[]
+  amount_basis: string
+  process: string
+  density_method: string
+  density_volume_basis: MixVolumeBasis
+  calculation_volume_basis: MixVolumeBasis
+  volume_basis_details: string
+}
+export type MixReading = {
+  id: string
+  value_g_cm3: number
+  reading_kind: 'unknown' | 'specimen' | 'repeat'
+  batch_id: string | null
+  run_id: string | null
+  specimen_id: string | null
+  repeat_of: string | null
+}
+export type MixMassResult = {
+  result_kind: 'simulation'
+  input_kind: 'my_mix'
+  product_name: string
+  property: 'mass'
+  case: MixCase
+  case_fingerprint: string
+  volume_cm3: number
+  target_min_kg: number
+  target_max_kg: number
+  reading_scenarios: (MixReading & { mass_kg: number; inside_target: boolean })[]
+  density_mean_g_cm3: number
+  mean_density_mass_kg: number
+  observed_mass_min_kg: number
+  observed_mass_max_kg: number
+  readings_in_target: number
+  reading_count: number
+  grouping: {
+    identified_batch_count: number
+    unknown_batch_reading_count: number
+    repeat_reading_count: number
+    batch_groups: {
+      batch_id: string
+      reading_count: number
+      mass_min_kg: number
+      mass_max_kg: number
+    }[]
+    run_groups: {
+      batch_id: string | null
+      run_id: string
+      reading_count: number
+      mass_min_kg: number
+      mass_max_kg: number
+    }[]
+    specimen_groups: {
+      batch_id: string | null
+      run_id: string | null
+      specimen_id: string
+      reading_count: number
+      mass_min_kg: number
+      mass_max_kg: number
+    }[]
+  }
+  assumptions: string[]
+  physical_product_tested: false
+  batch_consistency_established: false
+}
