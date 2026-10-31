@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { AdaptationPlanner } from './AdaptationPlanner'
-import type { MixCase, MixMassResult, MixReading, MixVolumeBasis, WorkshopCase } from '../types'
+import type {
+  AssemblyObservationFields,
+  MixCase,
+  MixMassResult,
+  MixReading,
+  MixVolumeBasis,
+  WorkshopCase,
+} from '../types'
 
 type ReadingEntry = Omit<
   MixReading,
@@ -53,10 +60,14 @@ export function MyMixPlanner({
   active,
   caseData,
   onEditCase,
+  assemblyObservation,
+  onAssemblyObservationChange,
 }: {
   active: boolean
   caseData: WorkshopCase
   onEditCase: () => void
+  assemblyObservation: AssemblyObservationFields
+  onAssemblyObservationChange: (observation: AssemblyObservationFields) => void
 }) {
   const { brief, details } = caseData
   const productName = brief.product
@@ -762,6 +773,8 @@ export function MyMixPlanner({
         ready={adaptationReady}
         baselineVolume={volume}
         active={active}
+        assemblyObservation={assemblyObservation}
+        onAssemblyObservationChange={onAssemblyObservationChange}
       />
     </>
   )

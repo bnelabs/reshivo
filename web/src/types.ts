@@ -280,6 +280,16 @@ export type CalculationDetails = {
   mass_target_max_kg: string
 }
 export type WorkshopCase = { brief: AdvisorBrief; details: CalculationDetails }
+export type AssemblyObservationFields = {
+  id: string
+  kind: '' | 'user_reported' | 'simulated'
+  mass: string
+  error: string
+  maxAdd: string
+  maxRemove: string
+  adjustmentError: string
+  idealFeedback: boolean
+}
 export type AdvisorRoute = {
   id: string
   title: string

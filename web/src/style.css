@@ -2735,6 +2735,61 @@ footer {
   margin: 3px 0 0;
   accent-color: #087f74;
 }
+.engineering-assistant {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid #dce7e3;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.engineering-assistant h3 {
+  font-size: 17px;
+  color: #254b42;
+}
+.engineering-assistant h4 {
+  margin-bottom: 8px;
+}
+.engineering-assistant textarea {
+  width: 100%;
+  border: 1px solid #cbdcd5;
+  border-radius: 5px;
+  padding: 11px;
+  color: #25414b;
+  font: inherit;
+  resize: vertical;
+}
+.engineering-assistant .workshop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.engineering-assistant .primary-button {
+  background: #176c59;
+  color: #fff;
+  padding: 11px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.engineering-answer {
+  white-space: pre-wrap;
+}
+.engineering-checked {
+  margin: 18px 0;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #d4e4db;
+  border-radius: 5px;
+}
+.engineering-trace {
+  max-height: 320px;
+  max-width: 100%;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 10px;
+}
 @media (max-width: 600px) {
   .workshop-case-component-pair {
     grid-template-columns: 1fr;

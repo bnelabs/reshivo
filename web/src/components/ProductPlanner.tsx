@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import type { ProductCatalog, WorkshopCase } from '../types'
+import type { AssemblyObservationFields, ProductCatalog, WorkshopCase } from '../types'
 import { CaseSummary } from './CaseDetails'
 import { MyMixPlanner } from './MyMixPlanner'
 import { PublishedExample } from './PublishedExample'
@@ -9,9 +9,13 @@ import { TestedLevels } from './TestedLevels'
 export function ProductPlanner({
   caseData,
   onEditCase,
+  assemblyObservation,
+  onAssemblyObservationChange,
 }: {
   caseData: WorkshopCase
   onEditCase: () => void
+  assemblyObservation: AssemblyObservationFields
+  onAssemblyObservationChange: (observation: AssemblyObservationFields) => void
 }) {
   const materialKey = JSON.stringify([
     caseData.brief.input,
@@ -75,6 +79,8 @@ export function ProductPlanner({
           active={mode === 'my_mix'}
           caseData={caseData}
           onEditCase={onEditCase}
+          assemblyObservation={assemblyObservation}
+          onAssemblyObservationChange={onAssemblyObservationChange}
         />
       </section>
       <section hidden={mode !== 'published'} aria-label="Published polyethylene example">

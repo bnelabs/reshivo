@@ -47,7 +47,7 @@ def _numeric_values(value, cls, defaults, name):
 
 
 class WorkbenchService:
-    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None):
+    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None, assist_fn=None):
         self.root = Path(root).resolve()
         self.output_root = Path(output_root or self.root / "outputs/workbench").resolve()
         self.config, self.default_requirements, self.default_search = load_config(self.root / "examples/support-member.json")
@@ -55,6 +55,7 @@ class WorkbenchService:
         self.proposal_fn = proposal_fn
         self.advisor_fn = advisor_fn
         self.trial_fn = trial_fn
+        self.assist_fn = assist_fn
 
     def meta_status(self):
         if self.meta_status_fn is not None:
@@ -164,6 +165,24 @@ class WorkbenchService:
             return adjust_from_measurement(request)
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
+
+    def adaptation_assist(self, request):
+        from .engineering_agent import assist_with_adaptation, validate_assist_request
+        from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError
+        from .products import ProductInputError
+        try:
+            validate_assist_request(request)
+            if self.assist_fn is not None:
+                return self.assist_fn(request)
+            return assist_with_adaptation(request, root=self.root)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+        except MetaConfigurationError as error:
+            raise ServiceError("meta_not_configured", str(error), 503) from None
+        except MetaValidationError as error:
+            raise ServiceError("meta_invalid_response", str(error), 502) from None
+        except MetaAPIError as error:
+            raise ServiceError("meta_request_failed", str(error), 502) from None
 
     def product_catalog(self):
         from .products import ProductDataError, product_catalog

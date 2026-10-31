@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import type { MixCase, MixReading, WorkshopCase } from '../types'
+import type { AssemblyObservationFields, MixCase, MixReading, WorkshopCase } from '../types'
+import { EngineeringAssistant } from './EngineeringAssistant'
 
 type DataKind = '' | 'user_measurements' | 'synthetic'
-type PlanRequest = {
+export type PlanRequest = {
   case: MixCase
   data_kind: Exclude<DataKind, ''>
   observations: MixReading[]
@@ -15,6 +16,17 @@ type PlanRequest = {
   baseline_fill_volume_cm3: number
   density_uncertainty_g_cm3: number
   volume_tolerance_cm3: number
+}
+export type FeedbackRequest = {
+  observation: {
+    id: string
+    kind: 'user_reported' | 'simulated'
+    mass_kg: number
+    uncertainty_kg: number
+  }
+  max_add_mass_kg: number
+  max_remove_mass_kg: number
+  adjustment_uncertainty_kg: number
 }
 type VolumeChoice = {
   feasible: boolean
@@ -97,15 +109,6 @@ const interval = (minimum: number | null, maximum: number | null, unit: string) 
   minimum === null || maximum === null
     ? 'No fit'
     : `${quantity(minimum)}–${quantity(maximum)} ${unit}`
-const emptyFeedback = {
-  id: '',
-  kind: '' as '' | 'user_reported' | 'simulated',
-  mass: '',
-  error: '',
-  maxAdd: '',
-  maxRemove: '',
-  adjustmentError: '',
-}
 const numberReady = (value: string, positive = false) =>
   value.trim() !== '' &&
   Number.isFinite(Number(value)) &&
@@ -119,6 +122,8 @@ export function AdaptationPlanner({
   ready,
   baselineVolume,
   active = true,
+  assemblyObservation,
+  onAssemblyObservationChange,
 }: {
   caseData: WorkshopCase
   materialCase: MixCase | null
@@ -126,6 +131,8 @@ export function AdaptationPlanner({
   ready: boolean
   baselineVolume: string
   active?: boolean
+  assemblyObservation: AssemblyObservationFields
+  onAssemblyObservationChange: (observation: AssemblyObservationFields) => void
 }) {
   const [dataKind, setDataKind] = useState<DataKind>('')
   const [fields, setFields] = useState({
@@ -142,8 +149,9 @@ export function AdaptationPlanner({
     workshopCase: WorkshopCase
     signature: string
   } | null>(null)
-  const [feedbackFields, setFeedbackFields] = useState({ ...emptyFeedback })
-  const [idealFeedback, setIdealFeedback] = useState(false)
+  const feedbackFields = assemblyObservation
+  const idealFeedback = assemblyObservation.idealFeedback
+  const feedbackSignature = JSON.stringify(assemblyObservation)
   const [feedback, setFeedback] = useState<FeedbackResult | null>(null)
   const [busy, setBusy] = useState<'plan' | 'feedback' | null>(null)
   const [error, setError] = useState('')
@@ -162,11 +170,14 @@ export function AdaptationPlanner({
     setBusy(null)
     setPlanState(null)
     setFeedback(null)
-    setFeedbackFields({ ...emptyFeedback })
-    setIdealFeedback(false)
     setError('')
   }, [signature])
   useEffect(() => setDataKind(''), [readingSignature])
+  useEffect(() => {
+    feedbackRequest.current?.abort()
+    setFeedback(null)
+    setBusy((current) => (current === 'feedback' ? null : current))
+  }, [feedbackSignature])
   useEffect(() => {
     if (!active) {
       planRequest.current?.abort()
@@ -194,24 +205,24 @@ export function AdaptationPlanner({
     setBusy(null)
     setPlanState(null)
     setFeedback(null)
-    setFeedbackFields({ ...emptyFeedback })
-    setIdealFeedback(false)
     setError('')
   }
   function editField(key: keyof typeof fields, value: string) {
     clearPlan()
     setFields((current) => ({ ...current, [key]: value }))
   }
-  function editFeedback(key: keyof typeof feedbackFields, value: string) {
+  function editFeedback(
+    key: Exclude<keyof AssemblyObservationFields, 'idealFeedback'>,
+    value: string,
+  ) {
     feedbackRequest.current?.abort()
     setBusy(null)
     setFeedback(null)
     setError('')
-    setFeedbackFields((current) => ({ ...current, [key]: value }))
+    onAssemblyObservationChange({ ...assemblyObservation, [key]: value })
   }
   const externalBasis = materialCase?.density_volume_basis === 'external_volume'
   const planReady =
-    active &&
     ready &&
     Boolean(materialCase && externalBasis && dataKind && readings.length) &&
     numberReady(targetMinimum) &&
@@ -226,16 +237,46 @@ export function AdaptationPlanner({
         numberReady(value),
       ))
   const feedbackReady =
-    active &&
-    Boolean(plan && feedbackFields.id.trim() && feedbackFields.kind) &&
+    Boolean(planReady && feedbackFields.id.trim() && feedbackFields.kind) &&
     [feedbackFields.mass, feedbackFields.maxAdd, feedbackFields.maxRemove].every((value) =>
       numberReady(value),
     ) &&
     (idealFeedback ||
       [feedbackFields.error, feedbackFields.adjustmentError].every((value) => numberReady(value)))
 
+  const preparedPlan: PlanRequest | null =
+    planReady && materialCase && dataKind
+      ? {
+          case: materialCase,
+          data_kind: dataKind,
+          observations: readings,
+          tare_mass_kg: Number(fields.tare),
+          tare_uncertainty_kg: idealized ? 0 : Number(fields.tareError),
+          target_min_kg: Number(targetMinimum),
+          target_max_kg: Number(targetMaximum),
+          max_fill_volume_cm3: Number(fields.capacity),
+          baseline_fill_volume_cm3: Number(fields.baseline),
+          density_uncertainty_g_cm3: idealized ? 0 : Number(fields.densityError),
+          volume_tolerance_cm3: idealized ? 0 : Number(fields.volumeError),
+        }
+      : null
+  const preparedFeedback: FeedbackRequest | null =
+    feedbackReady && feedbackFields.kind
+      ? {
+          observation: {
+            id: feedbackFields.id.trim(),
+            kind: feedbackFields.kind,
+            mass_kg: Number(feedbackFields.mass),
+            uncertainty_kg: idealFeedback ? 0 : Number(feedbackFields.error),
+          },
+          max_add_mass_kg: Number(feedbackFields.maxAdd),
+          max_remove_mass_kg: Number(feedbackFields.maxRemove),
+          adjustment_uncertainty_kg: idealFeedback ? 0 : Number(feedbackFields.adjustmentError),
+        }
+      : null
+
   async function calculatePlan() {
-    if (!planReady || !materialCase || !dataKind || busy) return
+    if (!preparedPlan || !active || busy) return
     const controller = new AbortController()
     planRequest.current?.abort()
     feedbackRequest.current?.abort()
@@ -244,22 +285,13 @@ export function AdaptationPlanner({
     setError('')
     setPlanState(null)
     setFeedback(null)
-    const payload: PlanRequest = {
-      case: materialCase,
-      data_kind: dataKind,
-      observations: readings,
-      tare_mass_kg: Number(fields.tare),
-      tare_uncertainty_kg: idealized ? 0 : Number(fields.tareError),
-      target_min_kg: Number(targetMinimum),
-      target_max_kg: Number(targetMaximum),
-      max_fill_volume_cm3: Number(fields.capacity),
-      baseline_fill_volume_cm3: Number(fields.baseline),
-      density_uncertainty_g_cm3: idealized ? 0 : Number(fields.densityError),
-      volume_tolerance_cm3: idealized ? 0 : Number(fields.volumeError),
-    }
     const snapshot = structuredClone(caseData)
     try {
-      const response = await api<PlanResult>('/api/adaptation/plan', payload, controller.signal)
+      const response = await api<PlanResult>(
+        '/api/adaptation/plan',
+        preparedPlan,
+        controller.signal,
+      )
       if (!controller.signal.aborted)
         setPlanState({ value: response, workshopCase: snapshot, signature })
     } catch (failure) {
@@ -272,7 +304,7 @@ export function AdaptationPlanner({
     }
   }
   async function calculateFeedback() {
-    if (!feedbackReady || !plan || !feedbackFields.kind || busy) return
+    if (!preparedFeedback || !preparedPlan || !active || busy) return
     const controller = new AbortController()
     feedbackRequest.current?.abort()
     feedbackRequest.current = controller
@@ -280,20 +312,17 @@ export function AdaptationPlanner({
     setError('')
     setFeedback(null)
     try {
+      const boundPlan =
+        plan ?? (await api<PlanResult>('/api/adaptation/plan', preparedPlan, controller.signal))
+      if (controller.signal.aborted) return
+      if (!plan)
+        setPlanState({ value: boundPlan, workshopCase: structuredClone(caseData), signature })
       const response = await api<FeedbackResult>(
         '/api/adaptation/feedback',
         {
-          plan: plan.request,
-          plan_fingerprint: plan.plan_fingerprint,
-          observation: {
-            id: feedbackFields.id.trim(),
-            kind: feedbackFields.kind,
-            mass_kg: Number(feedbackFields.mass),
-            uncertainty_kg: idealFeedback ? 0 : Number(feedbackFields.error),
-          },
-          max_add_mass_kg: Number(feedbackFields.maxAdd),
-          max_remove_mass_kg: Number(feedbackFields.maxRemove),
-          adjustment_uncertainty_kg: idealFeedback ? 0 : Number(feedbackFields.adjustmentError),
+          plan: boundPlan.request,
+          plan_fingerprint: boundPlan.plan_fingerprint,
+          ...preparedFeedback,
         },
         controller.signal,
       )
@@ -607,158 +636,170 @@ export function AdaptationPlanner({
           <button type="button" className="text-button" onClick={download}>
             Download this simulation
           </button>
-          <details className="product-detail">
-            <summary>Check a completed assembly</summary>
-            <p>
-              Enter an actual reported mass or a clearly labelled simulated observation. This step
-              calculates a mass-only correction tied to the plan above.
-            </p>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault()
-                void calculateFeedback()
-              }}
-            >
-              <div className="product-pair">
-                <label>
-                  Observation reference
-                  <input
-                    maxLength={80}
-                    value={feedbackFields.id}
-                    onChange={(event) => editFeedback('id', event.target.value)}
-                  />
-                </label>
-                <label>
-                  Mass observation type
-                  <select
-                    value={feedbackFields.kind}
-                    onChange={(event) => editFeedback('kind', event.target.value)}
-                  >
-                    <option value="">Choose the observation type</option>
-                    <option value="user_reported">User-reported assembly mass</option>
-                    <option value="simulated">Simulated assembly mass</option>
-                  </select>
-                </label>
-              </div>
+        </div>
+      )}
+      {preparedPlan && (
+        <details className="product-detail">
+          <summary>Check a completed assembly</summary>
+          <p>
+            Enter an actual reported mass or a clearly labelled simulated observation. This step
+            calculates a mass-only correction using the same case and target.
+          </p>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              void calculateFeedback()
+            }}
+          >
+            <div className="product-pair">
               <label>
-                Observed complete-assembly mass (kg)
+                Observation reference
+                <input
+                  maxLength={80}
+                  value={feedbackFields.id}
+                  onChange={(event) => editFeedback('id', event.target.value)}
+                />
+              </label>
+              <label>
+                Mass observation type
+                <select
+                  value={feedbackFields.kind}
+                  onChange={(event) => editFeedback('kind', event.target.value)}
+                >
+                  <option value="">Choose the observation type</option>
+                  <option value="user_reported">User-reported assembly mass</option>
+                  <option value="simulated">Simulated assembly mass</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              Observed complete-assembly mass (kg)
+              <input
+                type="number"
+                min="0"
+                max="1000000"
+                step="any"
+                value={feedbackFields.mass}
+                onChange={(event) => editFeedback('mass', event.target.value)}
+              />
+            </label>
+            <div className="product-pair">
+              <label>
+                Maximum mass available to add (kg)
                 <input
                   type="number"
                   min="0"
                   max="1000000"
                   step="any"
-                  value={feedbackFields.mass}
-                  onChange={(event) => editFeedback('mass', event.target.value)}
+                  value={feedbackFields.maxAdd}
+                  onChange={(event) => editFeedback('maxAdd', event.target.value)}
                 />
               </label>
-              <div className="product-pair">
-                <label>
-                  Maximum mass available to add (kg)
-                  <input
-                    type="number"
-                    min="0"
-                    max="1000000"
-                    step="any"
-                    value={feedbackFields.maxAdd}
-                    onChange={(event) => editFeedback('maxAdd', event.target.value)}
-                  />
-                </label>
-                <label>
-                  Maximum adjustable mass to remove (kg)
-                  <input
-                    type="number"
-                    min="0"
-                    max="1000000"
-                    step="any"
-                    value={feedbackFields.maxRemove}
-                    onChange={(event) => editFeedback('maxRemove', event.target.value)}
-                  />
-                </label>
-              </div>
               <label>
+                Maximum adjustable mass to remove (kg)
                 <input
-                  type="checkbox"
-                  checked={idealFeedback}
-                  onChange={(event) => {
-                    feedbackRequest.current?.abort()
-                    setBusy(null)
-                    setFeedback(null)
-                    setError('')
-                    setIdealFeedback(event.target.checked)
-                  }}
-                />{' '}
-                Use idealized feedback with zero measurement and adjustment error
+                  type="number"
+                  min="0"
+                  max="1000000"
+                  step="any"
+                  value={feedbackFields.maxRemove}
+                  onChange={(event) => editFeedback('maxRemove', event.target.value)}
+                />
               </label>
-              <div className="product-pair">
-                <label>
-                  Observed mass uncertainty (± kg)
-                  <input
-                    type="number"
-                    min="0"
-                    max="1000000"
-                    step="any"
-                    disabled={idealFeedback}
-                    value={feedbackFields.error}
-                    onChange={(event) => editFeedback('error', event.target.value)}
-                  />
-                </label>
-                <label>
-                  Adjustment uncertainty (± kg)
-                  <input
-                    type="number"
-                    min="0"
-                    max="1000000"
-                    step="any"
-                    disabled={idealFeedback}
-                    value={feedbackFields.adjustmentError}
-                    onChange={(event) => editFeedback('adjustmentError', event.target.value)}
-                  />
-                </label>
-              </div>
-              <button
-                type="submit"
-                className="outline-button"
-                disabled={!feedbackReady || Boolean(busy)}
-              >
-                {busy === 'feedback' ? 'Checking…' : 'Calculate mass correction'}
-              </button>
-            </form>
-            {feedback && (
-              <div className="workshop-trim-result" role="status">
-                <strong>Simulation · mass-only feedback</strong>
+            </div>
+            <label>
+              <input
+                type="checkbox"
+                checked={idealFeedback}
+                onChange={(event) => {
+                  feedbackRequest.current?.abort()
+                  setBusy(null)
+                  setFeedback(null)
+                  setError('')
+                  onAssemblyObservationChange({
+                    ...assemblyObservation,
+                    idealFeedback: event.target.checked,
+                  })
+                }}
+              />{' '}
+              Use idealized feedback with zero measurement and adjustment error
+            </label>
+            <div className="product-pair">
+              <label>
+                Observed mass uncertainty (± kg)
+                <input
+                  type="number"
+                  min="0"
+                  max="1000000"
+                  step="any"
+                  disabled={idealFeedback}
+                  value={feedbackFields.error}
+                  onChange={(event) => editFeedback('error', event.target.value)}
+                />
+              </label>
+              <label>
+                Adjustment uncertainty (± kg)
+                <input
+                  type="number"
+                  min="0"
+                  max="1000000"
+                  step="any"
+                  disabled={idealFeedback}
+                  value={feedbackFields.adjustmentError}
+                  onChange={(event) => editFeedback('adjustmentError', event.target.value)}
+                />
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="outline-button"
+              disabled={!feedbackReady || Boolean(busy)}
+            >
+              {busy === 'feedback' ? 'Checking…' : 'Calculate mass correction'}
+            </button>
+          </form>
+          {feedback && (
+            <div className="workshop-trim-result" role="status">
+              <strong>Simulation · mass-only feedback</strong>
+              <p>
+                {feedback.feasible
+                  ? feedback.action === 'none'
+                    ? 'The observed mass interval is already inside the target; no mass correction is needed.'
+                    : `${feedback.action === 'add' ? 'Add' : 'Remove'} ${quantity(Math.abs(feedback.chosen_signed_adjustment_kg ?? 0))} kg as the modeled midpoint correction.`
+                  : 'No permitted mass correction covers the entered bounds.'}
+              </p>
+              {feedback.feasible && (
                 <p>
-                  {feedback.feasible
-                    ? feedback.action === 'none'
-                      ? 'The observed mass interval is already inside the target; no mass correction is needed.'
-                      : `${feedback.action === 'add' ? 'Add' : 'Remove'} ${quantity(Math.abs(feedback.chosen_signed_adjustment_kg ?? 0))} kg as the modeled midpoint correction.`
-                    : 'No permitted mass correction covers the entered bounds.'}
+                  Modeled mass after correction:{' '}
+                  {interval(
+                    feedback.simulated_mass_min_kg_after_adjustment,
+                    feedback.simulated_mass_max_kg_after_adjustment,
+                    'kg',
+                  )}
+                  .
                 </p>
-                {feedback.feasible && (
-                  <p>
-                    Modeled mass after correction:{' '}
-                    {interval(
-                      feedback.simulated_mass_min_kg_after_adjustment,
-                      feedback.simulated_mass_max_kg_after_adjustment,
-                      'kg',
-                    )}
-                    .
-                  </p>
-                )}
-                <p>{feedback.volume_status}</p>
-                <ul>
-                  {feedback.next_options.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-                <p className="helper">
-                  A mass correction does not establish retention, durability or finished-product
-                  consistency. Reweigh after an actual adjustment.
-                </p>
-              </div>
-            )}
-          </details>
-        </div>
+              )}
+              <p>{feedback.volume_status}</p>
+              <ul>
+                {feedback.next_options.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+              <p className="helper">
+                A mass correction does not establish retention, durability or finished-product
+                consistency. Reweigh after an actual adjustment.
+              </p>
+            </div>
+          )}
+        </details>
       )}
+      <EngineeringAssistant
+        caseData={caseData}
+        plan={preparedPlan}
+        feedback={preparedFeedback}
+        active={active}
+        onCapacitySuggestion={(capacity) => editField('capacity', String(capacity))}
+      />
     </details>
   )
 }

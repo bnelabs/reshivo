@@ -10,6 +10,7 @@ import type {
   AdvisorRoute,
   AdvisorStatus,
   AdvisorTrialResult,
+  AssemblyObservationFields,
   CalculationDetails,
   MassTrimResult,
   WorkshopCase,
@@ -35,6 +36,16 @@ const newCalculationDetails = (): CalculationDetails => ({
   amount_basis: '',
   mass_target_min_kg: '',
   mass_target_max_kg: '',
+})
+const newAssemblyObservation = (): AssemblyObservationFields => ({
+  id: '',
+  kind: '',
+  mass: '',
+  error: '',
+  maxAdd: '',
+  maxRemove: '',
+  adjustmentError: '',
+  idealFeedback: false,
 })
 const counterweightExample: AdvisorBrief = {
   input:
@@ -168,14 +179,22 @@ function RouteCard({
 function WeightAdjustment({
   caseData,
   onEditCase,
+  assemblyObservation,
+  onAssemblyObservationChange,
 }: {
   caseData: WorkshopCase
   onEditCase: () => void
+  assemblyObservation: AssemblyObservationFields
+  onAssemblyObservationChange: (observation: AssemblyObservationFields) => void
 }) {
-  const [current, setCurrent] = useState('')
+  const current = assemblyObservation.mass
   const minimum = caseData.details.mass_target_min_kg
   const maximum = caseData.details.mass_target_max_kg
-  const [result, setResult] = useState<MassTrimResult | null>(null)
+  const signature = JSON.stringify([assemblyObservation, minimum, maximum])
+  const [result, setResult] = useState<{
+    value: MassTrimResult
+    signature: string
+  } | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const request = useRef<AbortController | null>(null)
@@ -185,20 +204,14 @@ function WeightAdjustment({
     setBusy(false)
     setResult(null)
     setError('')
-  }, [minimum, maximum])
-  const currentResult =
-    result &&
-    result.current_mass_kg === Number(current) &&
-    result.target_min_kg === Number(minimum) &&
-    result.target_max_kg === Number(maximum)
-      ? result
-      : null
-  function change(update: () => void) {
+  }, [signature])
+  const currentResult = result?.signature === signature ? result.value : null
+  function change(update: Partial<AssemblyObservationFields>) {
     request.current?.abort()
     setBusy(false)
     setResult(null)
     setError('')
-    update()
+    onAssemblyObservationChange({ ...assemblyObservation, ...update })
   }
   const valid =
     [current, minimum, maximum].every(
@@ -227,7 +240,7 @@ function WeightAdjustment({
         },
         controller.signal,
       )
-      if (!controller.signal.aborted) setResult(response)
+      if (!controller.signal.aborted) setResult({ value: response, signature })
     } catch (failure) {
       if (!controller.signal.aborted)
         setError(
@@ -241,11 +254,11 @@ function WeightAdjustment({
     <details className="workshop-weight-tool">
       <summary>
         <span>Weight adjustment</span>
-        <small>Use a weighed, assembled unit</small>
+        <small>Use a complete-assembly observation</small>
       </summary>
       <p>
-        Weigh the assembled unit, then work out how much mass to add or remove. No density estimate
-        is needed.
+        Use the complete assembled unit's observed mass to work out a nominal addition or removal.
+        No density estimate is needed. This observation is shared with the calculation tools.
       </p>
       <CaseSummary brief={caseData.brief} />
       <p>
@@ -262,18 +275,43 @@ function WeightAdjustment({
       >
         <div className="workshop-trim-fields">
           <label>
-            Current measured mass (kg)
+            Complete-assembly mass (kg)
             <input
               type="number"
               min="0"
               max="1000000"
               step="any"
               value={current}
-              onChange={(event) => change(() => setCurrent(event.target.value))}
+              onChange={(event) => change({ mass: event.target.value })}
               required
             />
           </label>
+          <label>
+            Observation source
+            <select
+              value={assemblyObservation.kind}
+              onChange={(event) =>
+                change({ kind: event.target.value as AssemblyObservationFields['kind'] })
+              }
+            >
+              <option value="">Not recorded</option>
+              <option value="user_reported">Actual, user-reported weighing</option>
+              <option value="simulated">Simulated observation</option>
+            </select>
+          </label>
+          <label>
+            Observation ID (if known)
+            <input
+              maxLength={200}
+              value={assemblyObservation.id}
+              onChange={(event) => change({ id: event.target.value })}
+            />
+          </label>
         </div>
+        <p className="helper">
+          This arithmetic does not include weighing uncertainty or limits on adding and removing
+          mass. Use the calculation tools for those checks; an omitted uncertainty is unknown.
+        </p>
         <button type="submit" className="outline-button" disabled={!valid || busy}>
           {busy ? 'Calculating…' : 'Calculate adjustment'}
         </button>
@@ -285,12 +323,21 @@ function WeightAdjustment({
       )}
       {currentResult && (
         <div className="workshop-trim-result" role="status">
+          <p>
+            {assemblyObservation.kind === 'simulated'
+              ? 'Simulated observation'
+              : assemblyObservation.kind === 'user_reported'
+                ? 'User-reported weighing'
+                : 'Observation source not recorded'}
+            {assemblyObservation.id.trim() ? ` · ${assemblyObservation.id.trim()}` : ''}. Nominal
+            mass adjustment; uncertainty and adjustment limits are not included.
+          </p>
           <strong>{currentResult.action}</strong>
           {currentResult.status !== 'inside' && (
             <p>
               {currentResult.status === 'add' ? 'Add' : 'Remove'}{' '}
               {quantity(currentResult.adjustment_min_kg)}–
-              {quantity(currentResult.adjustment_max_kg)} kg to reach the target interval. The
+              {quantity(currentResult.adjustment_max_kg)} kg for the entered mass and target. The
               correction to its midpoint is {quantity(currentResult.adjustment_to_midpoint_kg)} kg.
             </p>
           )}
@@ -313,6 +360,8 @@ export function Workshop() {
   const [brief, setBrief] = useState<AdvisorBrief>(emptyBrief)
   const [calculationDetails, setCalculationDetails] =
     useState<CalculationDetails>(newCalculationDetails)
+  const [assemblyObservation, setAssemblyObservation] =
+    useState<AssemblyObservationFields>(newAssemblyObservation)
   const caseData: WorkshopCase = { brief, details: calculationDetails }
   const materialKey = JSON.stringify([
     brief.input,
@@ -388,6 +437,11 @@ export function Workshop() {
     if (plan || busy) setNotice('Brief changed. Find updated routes for this case.')
     invalidate()
     setExampleLoaded(false)
+    if (
+      ['input', 'variation', 'contamination', 'process', 'product', 'use_case'].includes(key) &&
+      brief[key] !== value
+    )
+      setAssemblyObservation(newAssemblyObservation())
     setBrief((current) => ({ ...current, [key]: value }))
     if (key === 'input')
       setCalculationDetails((current) => ({
@@ -406,6 +460,15 @@ export function Workshop() {
     if (plan || busy) setNotice('Case details changed. Find updated routes for this case.')
     invalidate()
     setExampleLoaded(false)
+    if (
+      JSON.stringify([details.components, details.amount_unit, details.amount_basis]) !==
+      JSON.stringify([
+        calculationDetails.components,
+        calculationDetails.amount_unit,
+        calculationDetails.amount_basis,
+      ])
+    )
+      setAssemblyObservation(newAssemblyObservation())
     setCalculationDetails(details)
   }
   function openCaseDetails() {
@@ -424,6 +487,7 @@ export function Workshop() {
   }
   function loadExample() {
     invalidate()
+    setAssemblyObservation(newAssemblyObservation())
     setBrief({ ...counterweightExample })
     setCalculationDetails({
       ...newCalculationDetails(),
@@ -995,6 +1059,8 @@ export function Workshop() {
               key={JSON.stringify([materialKey, brief.product, brief.use_case])}
               caseData={caseData}
               onEditCase={openCaseDetails}
+              assemblyObservation={assemblyObservation}
+              onAssemblyObservationChange={setAssemblyObservation}
             />
           </div>
           <form
@@ -1045,7 +1111,12 @@ export function Workshop() {
         </summary>
         {toolsOpen && (
           <Suspense fallback={<p>Loading calculation tools…</p>}>
-            <CalculationTools caseData={caseData} onEditCase={openCaseDetails} />
+            <CalculationTools
+              caseData={caseData}
+              onEditCase={openCaseDetails}
+              assemblyObservation={assemblyObservation}
+              onAssemblyObservationChange={setAssemblyObservation}
+            />
           </Suspense>
         )}
       </details>
