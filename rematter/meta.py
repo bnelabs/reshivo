@@ -77,7 +77,7 @@ class MetaClient:
         self.key, self.model = configuration(root, environ)
         self.opener = opener or urllib.request.build_opener(NoRedirect)
 
-    def generate(self, prompt, schema, max_candidates):
+    def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096):
         if not self.key:
             raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file.")
         if self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
@@ -85,11 +85,11 @@ class MetaClient:
         payload = {
             "model": self.model,
             "messages": [
-                {"role": "system", "content": "You propose bounded mechanical geometry candidates. Numerical code determines their performance. Never invent measured material properties, chemical recipes, experimental validation or scientific novelty. Do not claim design-code compliance, certification, service qualification or manufacturing readiness. These checks cover only the specified bending model. Write short, plain design names and explain the geometry in everyday language. Avoid compliance jargon in user-facing explanations."},
+                {"role": "system", "content": system_prompt or "You propose bounded mechanical geometry candidates. Numerical code determines their performance. Never invent measured material properties, chemical recipes, experimental validation or scientific novelty. Do not claim design-code compliance, certification, service qualification or manufacturing readiness. These checks cover only the specified bending model. Write short, plain design names and explain the geometry in everyday language. Avoid compliance jargon in user-facing explanations."},
                 {"role": "user", "content": prompt},
             ],
-            "response_format": {"type": "json_schema", "json_schema": {"name": "geometry_candidates", "strict": True, "schema": schema}},
-            "max_completion_tokens": 4096,
+            "response_format": {"type": "json_schema", "json_schema": {"name": schema_name, "strict": True, "schema": schema}},
+            "max_completion_tokens": max_completion_tokens,
             "reasoning_effort": "low",
         }
         request = urllib.request.Request(ENDPOINT, data=json.dumps(payload, allow_nan=False).encode(), method="POST", headers={"Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
@@ -100,7 +100,7 @@ class MetaClient:
         except urllib.error.HTTPError as error:
             code = error.code
             error.close()
-            raise MetaAPIError(f"Meta could not generate designs (HTTP {code}). Try again.") from None
+            raise MetaAPIError(f"Meta request failed (HTTP {code}). Try again.") from None
         except (urllib.error.URLError, TimeoutError, OSError):
             raise MetaAPIError("Could not reach Meta. Check the connection and try again.") from None
         if len(raw) > 512_000:
@@ -111,13 +111,13 @@ class MetaClient:
         try:
             choice = body["choices"][0]
             if choice.get("finish_reason") == "length":
-                raise MetaValidationError("Meta's response was cut short. Request fewer design ideas.")
+                raise MetaValidationError("Meta's response was cut short. Try a shorter brief or question.")
             message = choice["message"]
             if message.get("refusal"):
-                raise MetaValidationError("Meta did not return any design ideas")
+                raise MetaValidationError("Meta did not return a usable response")
             content = message["content"]
             if not isinstance(content, str) or not content.strip():
-                raise MetaValidationError("Meta returned an empty design response")
+                raise MetaValidationError("Meta returned an empty response")
         except (KeyError, IndexError, TypeError):
             raise MetaValidationError("Meta returned an incomplete response") from None
         source_usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}

@@ -119,6 +119,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 self._json(application.bootstrap())
             elif path == "/api/health":
                 self._json(application.health())
+            elif path == "/api/advisor/status":
+                self._json(application.advisor_status())
             elif path == "/api/products/catalog":
                 self._json(application.product_catalog())
             elif path == "/api/products/target-series":
@@ -171,7 +173,17 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         try:
             self._guard()
             path = unquote(urlsplit(self.path).path)
-            routes = {"/api/experiments": self.server.application.run_experiment, "/api/evaluate": self.server.application.evaluate_candidate, "/api/proposals": self.server.application.propose, "/api/products/counterweight": self.server.application.counterweight, "/api/products/my-mix": self.server.application.my_mix_mass, "/api/products/target-check": self.server.application.target_check}
+            routes = {
+                "/api/experiments": self.server.application.run_experiment,
+                "/api/evaluate": self.server.application.evaluate_candidate,
+                "/api/proposals": self.server.application.propose,
+                "/api/products/counterweight": self.server.application.counterweight,
+                "/api/products/my-mix": self.server.application.my_mix_mass,
+                "/api/products/target-check": self.server.application.target_check,
+                "/api/advisor/help": self.server.application.advisor_help,
+                "/api/advisor/mass-trim": self.server.application.advisor_mass_trim,
+                "/api/advisor/balance-mix": self.server.application.advisor_balance_mix,
+            }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)
             body = self._body()

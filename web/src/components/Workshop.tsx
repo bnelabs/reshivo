@@ -1,0 +1,834 @@
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { api } from '../api'
+import { BalanceMix } from './BalanceMix'
+import type {
+  AdvisorBrief,
+  AdvisorMessage,
+  AdvisorResult,
+  AdvisorRoute,
+  AdvisorStatus,
+  MassTrimResult,
+} from '../types'
+
+const CalculationTools = lazy(() =>
+  import('./ProductPlanner').then((module) => ({ default: module.ProductPlanner })),
+)
+const emptyBrief: AdvisorBrief = {
+  input: '',
+  variation: '',
+  contamination: '',
+  product: '',
+  use_case: '',
+  targets: '',
+  process: '',
+  available_changes: '',
+}
+const counterweightExample: AdvisorBrief = {
+  input:
+    'Mostly metal dust, with a small portion of cable-plastic residue that might act as a binder. Metal composition and binder identity have not been confirmed.',
+  variation:
+    'The metal/plastic proportions and particle sizes vary between the material we receive. The range has not been measured yet.',
+  contamination:
+    'Cable-plastic identity and other contamination are unknown; amounts are not yet measured.',
+  product: 'A contained counterweight',
+  use_case:
+    'A fixed ballast unit with dust contained and a robust outer case. Not for lifting or another safety-critical use.',
+  targets:
+    'Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check.',
+  process:
+    'Assembly and weighing at home. No heating of unknown cable plastics. No laboratory or specialist moulding equipment available.',
+  available_changes:
+    'A rigid enclosure, mechanical containment, adjustable fill compartments, or an appropriate known binder may be considered. Keep dust contained; no open dust sorting at home.',
+}
+const quantity = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 4 })
+const briefFields: {
+  key: keyof AdvisorBrief
+  label: string
+  placeholder: string
+  required?: boolean
+  rows?: number
+}[] = [
+  {
+    key: 'input',
+    label: 'What you have',
+    placeholder: 'Materials, their approximate amounts and the form they arrive in',
+    required: true,
+    rows: 3,
+  },
+  {
+    key: 'variation',
+    label: 'What changes from one input to another',
+    placeholder: 'Mix, proportions, particle sizes or anything you can control',
+    rows: 2,
+  },
+  {
+    key: 'product',
+    label: 'What you want to make',
+    placeholder: 'A counterweight, a panel, a fixture, or another product',
+    required: true,
+  },
+  {
+    key: 'use_case',
+    label: 'How it will be used',
+    placeholder: 'Where it goes, what it does and what it must withstand',
+    required: true,
+    rows: 2,
+  },
+  {
+    key: 'targets',
+    label: 'What must it do?',
+    placeholder: 'The physical properties and target ranges that matter to you',
+    required: true,
+    rows: 2,
+  },
+]
+const optionalFields: { key: keyof AdvisorBrief; label: string; placeholder: string }[] = [
+  {
+    key: 'contamination',
+    label: 'Contamination',
+    placeholder: 'Name and amount if known. Say unknown when it is unknown.',
+  },
+  {
+    key: 'process',
+    label: 'Your equipment and process',
+    placeholder: 'Tools, assembly methods and process conditions you can use',
+  },
+  {
+    key: 'available_changes',
+    label: 'What you can add or change',
+    placeholder:
+      'Known binders, fillers, enclosures, sorting, geometry, cost or other restrictions',
+  },
+]
+
+type Section = 'material' | 'engineering' | 'next'
+
+function RouteCard({
+  route,
+  selected,
+  onSelect,
+  onDevelop,
+  busy,
+}: {
+  route: AdvisorRoute
+  selected: boolean
+  onSelect: () => void
+  onDevelop: () => void
+  busy: boolean
+}) {
+  return (
+    <article className={`workshop-route${selected ? ' is-selected' : ''}`}>
+      <div className="workshop-route-heading">
+        <h3>{route.title}</h3>
+        <button type="button" aria-pressed={selected} onClick={onSelect}>
+          {selected ? 'Selected' : 'Select route'}
+        </button>
+      </div>
+      <p className="workshop-route-change">{route.change}</p>
+      <p>{route.why}</p>
+      <details>
+        <summary>Steps &amp; trade-offs</summary>
+        <ol>
+          {route.steps.map((step, index) => (
+            <li key={index}>{step}</li>
+          ))}
+        </ol>
+        {route.tradeoffs.length > 0 && (
+          <ul>
+            {route.tradeoffs.map((tradeoff, index) => (
+              <li key={index}>{tradeoff}</li>
+            ))}
+          </ul>
+        )}
+      </details>
+      <div className="workshop-route-check">
+        <span>Next check</span>
+        <p>{route.check}</p>
+      </div>
+      <button type="button" className="workshop-route-develop" disabled={busy} onClick={onDevelop}>
+        Develop this route <span aria-hidden="true">↗</span>
+      </button>
+    </article>
+  )
+}
+
+function WeightAdjustment() {
+  const [current, setCurrent] = useState('')
+  const [minimum, setMinimum] = useState('')
+  const [maximum, setMaximum] = useState('')
+  const [result, setResult] = useState<MassTrimResult | null>(null)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const request = useRef<AbortController | null>(null)
+  useEffect(() => () => request.current?.abort(), [])
+  function change(update: () => void) {
+    request.current?.abort()
+    setBusy(false)
+    setResult(null)
+    setError('')
+    update()
+  }
+  const valid =
+    [current, minimum, maximum].every(
+      (value) =>
+        value.trim() !== '' &&
+        Number.isFinite(Number(value)) &&
+        Number(value) >= 0 &&
+        Number(value) <= 1_000_000,
+    ) &&
+    Number(maximum) > 0 &&
+    Number(minimum) <= Number(maximum)
+  async function calculate() {
+    if (!valid || busy) return
+    const controller = new AbortController()
+    request.current = controller
+    setBusy(true)
+    setError('')
+    setResult(null)
+    try {
+      const response = await api<MassTrimResult>(
+        '/api/advisor/mass-trim',
+        {
+          current_mass_kg: Number(current),
+          target_min_kg: Number(minimum),
+          target_max_kg: Number(maximum),
+        },
+        controller.signal,
+      )
+      if (!controller.signal.aborted) setResult(response)
+    } catch (failure) {
+      if (!controller.signal.aborted)
+        setError(
+          failure instanceof Error ? failure.message : 'The adjustment could not be calculated.',
+        )
+    } finally {
+      if (!controller.signal.aborted) setBusy(false)
+    }
+  }
+  return (
+    <details className="workshop-weight-tool">
+      <summary>
+        <span>Weight adjustment</span>
+        <small>Use a weighed, assembled unit</small>
+      </summary>
+      <p>
+        Weigh the assembled unit, then work out how much mass to add or remove. No density estimate
+        is needed.
+      </p>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          void calculate()
+        }}
+      >
+        <div className="workshop-trim-fields">
+          <label>
+            Current measured mass (kg)
+            <input
+              type="number"
+              min="0"
+              max="1000000"
+              step="any"
+              value={current}
+              onChange={(event) => change(() => setCurrent(event.target.value))}
+              required
+            />
+          </label>
+          <label>
+            Target minimum (kg)
+            <input
+              type="number"
+              min="0"
+              max="1000000"
+              step="any"
+              value={minimum}
+              onChange={(event) => change(() => setMinimum(event.target.value))}
+              required
+            />
+          </label>
+          <label>
+            Target maximum (kg)
+            <input
+              type="number"
+              min="0.000001"
+              max="1000000"
+              step="any"
+              value={maximum}
+              onChange={(event) => change(() => setMaximum(event.target.value))}
+              required
+            />
+          </label>
+        </div>
+        <button type="submit" className="outline-button" disabled={!valid || busy}>
+          {busy ? 'Calculating…' : 'Calculate adjustment'}
+        </button>
+      </form>
+      {error && (
+        <p className="workshop-error" role="alert">
+          {error}
+        </p>
+      )}
+      {result && (
+        <div className="workshop-trim-result" role="status">
+          <strong>{result.action}</strong>
+          {result.status !== 'inside' && (
+            <p>
+              {result.status === 'add' ? 'Add' : 'Remove'} {quantity(result.adjustment_min_kg)}–
+              {quantity(result.adjustment_max_kg)} kg to reach the target interval. The correction
+              to its midpoint is {quantity(result.adjustment_to_midpoint_kg)} kg.
+            </p>
+          )}
+          <p>Reweigh the complete assembled unit after any adjustment.</p>
+          <details>
+            <summary>Calculation notes</summary>
+            <ul>
+              {result.assumptions.map((note, index) => (
+                <li key={index}>{note}</li>
+              ))}
+            </ul>
+          </details>
+        </div>
+      )}
+    </details>
+  )
+}
+
+export function Workshop() {
+  const [brief, setBrief] = useState<AdvisorBrief>(emptyBrief)
+  const [section, setSection] = useState<Section>('material')
+  const [status, setStatus] = useState<AdvisorStatus | null>(null)
+  const [statusAttempt, setStatusAttempt] = useState(0)
+  const [statusError, setStatusError] = useState('')
+  const [plan, setPlan] = useState<AdvisorResult | null>(null)
+  const [history, setHistory] = useState<AdvisorMessage[]>([])
+  const [question, setQuestion] = useState('')
+  const [lastQuestion, setLastQuestion] = useState('')
+  const [selectedRoute, setSelectedRoute] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [exampleLoaded, setExampleLoaded] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const request = useRef<AbortController | null>(null)
+  const answer = useRef<HTMLElement | null>(null)
+  const followup = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setStatusError('')
+    api<AdvisorStatus>('/api/advisor/status', undefined, controller.signal)
+      .then(setStatus)
+      .catch((failure) => {
+        if (!controller.signal.aborted)
+          setStatusError(failure instanceof Error ? failure.message : 'Meta status could not load.')
+      })
+    return () => controller.abort()
+  }, [statusAttempt])
+  useEffect(() => () => request.current?.abort(), [])
+  useEffect(() => {
+    if (!busy) return
+    const start = Date.now()
+    setElapsed(0)
+    const timer = window.setInterval(
+      () => setElapsed(Math.floor((Date.now() - start) / 1000)),
+      1000,
+    )
+    return () => window.clearInterval(timer)
+  }, [busy])
+  useEffect(() => {
+    if (plan) {
+      answer.current?.focus({ preventScroll: true })
+      answer.current?.scrollIntoView({ block: 'start' })
+    }
+  }, [plan])
+
+  function invalidate() {
+    request.current?.abort()
+    setBusy(false)
+    setPlan(null)
+    setHistory([])
+    setSelectedRoute(null)
+    setError('')
+    setQuestion('')
+    setLastQuestion('')
+  }
+  function editBrief(key: keyof AdvisorBrief, value: string) {
+    if (plan || busy) setNotice('Brief changed. Find updated routes for this case.')
+    invalidate()
+    setExampleLoaded(false)
+    setBrief((current) => ({ ...current, [key]: value }))
+  }
+  function loadExample() {
+    invalidate()
+    setBrief({ ...counterweightExample })
+    setNotice('')
+    setExampleLoaded(true)
+    setSection('material')
+  }
+  const briefReady = ['input', 'product', 'use_case', 'targets'].every((key) =>
+    brief[key as keyof AdvisorBrief].trim(),
+  )
+
+  async function ask(nextQuestion = '') {
+    if (!briefReady || !status?.configured || busy) return
+    const controller = new AbortController()
+    request.current?.abort()
+    request.current = controller
+    const submittedQuestion =
+      nextQuestion.trim() ||
+      'How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments.'
+    setBusy(true)
+    setError('')
+    setNotice('')
+    setLastQuestion(nextQuestion.trim())
+    try {
+      const response = await api<AdvisorResult>(
+        '/api/advisor/help',
+        { brief, question: submittedQuestion, history: history.slice(-6) },
+        controller.signal,
+      )
+      if (!controller.signal.aborted) {
+        setPlan(response)
+        const prompt =
+          submittedQuestion ||
+          'Find practical material and engineering routes for this batch and product.'
+        setHistory((current) =>
+          [
+            ...current,
+            { role: 'user', content: prompt } as AdvisorMessage,
+            {
+              role: 'assistant',
+              content: [
+                response.answer,
+                ...response.material_routes.map(
+                  (route) =>
+                    `Material route: ${route.title}. ${route.change} ${route.why} Next check: ${route.check}`,
+                ),
+                ...response.engineering_routes.map(
+                  (route) =>
+                    `Engineering route: ${route.title}. ${route.change} ${route.why} Next check: ${route.check}`,
+                ),
+                ...response.next_steps,
+              ]
+                .join('\n')
+                .slice(0, 6000),
+            } as AdvisorMessage,
+          ].slice(-6),
+        )
+        setQuestion('')
+        setSelectedRoute(null)
+      }
+    } catch (failure) {
+      if (!controller.signal.aborted)
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : 'Meta could not finish this request. Your brief is still here.',
+        )
+    } finally {
+      if (!controller.signal.aborted) setBusy(false)
+    }
+  }
+  function stopWaiting() {
+    request.current?.abort()
+    setBusy(false)
+    setNotice('Stopped waiting. Your brief is still here.')
+  }
+  function develop(route: AdvisorRoute) {
+    setSelectedRoute(route.id)
+    void ask(
+      `Develop the proposed route “${route.title}” for this batch. Explain the practical sequence, how it deals with the stated input variation, useful alternatives, trade-offs and the smallest next check. The proposal was: ${route.change}.`,
+    )
+  }
+  function askAbout(route: AdvisorRoute) {
+    setSelectedRoute(route.id)
+    setQuestion(`For the route “${route.title}”, `)
+    followup.current?.focus()
+  }
+  function download() {
+    if (!plan) return
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify({ brief, plan, history, selected_route: selectedRoute }, null, 2)], {
+        type: 'application/json',
+      }),
+    )
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'rematter-batch-plan.json'
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+  const routes = plan
+    ? section === 'material'
+      ? plan.material_routes
+      : plan.engineering_routes
+    : []
+  const chosen = plan
+    ? [...plan.material_routes, ...plan.engineering_routes].find(
+        (route) => route.id === selectedRoute,
+      )
+    : undefined
+
+  return (
+    <div className="workshop">
+      <div className="workshop-intro">
+        <div>
+          <p className="workshop-eyebrow">Recycled input. Practical next steps.</p>
+          <h1>What can we make from this batch?</h1>
+          <p>
+            Work through the mix, product design and process together—even when your input changes.
+          </p>
+        </div>
+        <div className="workshop-connection" role="status">
+          <span
+            className={`workshop-connection-dot${status?.configured ? ' is-configured' : ''}`}
+            aria-hidden="true"
+          />
+          <div>
+            <strong>
+              {statusError
+                ? 'Connection unavailable'
+                : status
+                  ? status.configured
+                    ? 'Meta configured'
+                    : 'Meta needs a key'
+                  : 'Checking Meta…'}
+            </strong>
+            {status && <small>{status.model}</small>}
+          </div>
+          {(statusError || (status && !status.configured)) && (
+            <button type="button" onClick={() => setStatusAttempt((attempt) => attempt + 1)}>
+              Retry
+            </button>
+          )}
+        </div>
+      </div>
+      <main className="workshop-grid">
+        <aside className="workshop-brief">
+          <div className="workshop-brief-heading">
+            <div>
+              <p className="workshop-eyebrow">Your case</p>
+              <h2>Start with what you have</h2>
+            </div>
+            <span>01</span>
+          </div>
+          <button className="workshop-example" type="button" onClick={loadExample}>
+            Try a counterweight example <span aria-hidden="true">↗</span>
+          </button>
+          {exampleLoaded && (
+            <p className="workshop-example-note" role="status">
+              Hypothetical example loaded. Edit it to fit your batch; these are not material
+              measurements.
+            </p>
+          )}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              void ask()
+            }}
+          >
+            {briefFields.map((field) => (
+              <label key={field.key}>
+                {field.label}
+                {field.rows ? (
+                  <textarea
+                    rows={field.rows}
+                    maxLength={3000}
+                    required={field.required}
+                    value={brief[field.key]}
+                    placeholder={field.placeholder}
+                    onChange={(event) => editBrief(field.key, event.target.value)}
+                  />
+                ) : (
+                  <input
+                    maxLength={3000}
+                    required={field.required}
+                    value={brief[field.key]}
+                    placeholder={field.placeholder}
+                    onChange={(event) => editBrief(field.key, event.target.value)}
+                  />
+                )}
+              </label>
+            ))}
+            <details className="workshop-constraints">
+              <summary>Contamination, process & allowed changes</summary>
+              {optionalFields.map((field) => (
+                <label key={field.key}>
+                  {field.label}
+                  <textarea
+                    rows={2}
+                    maxLength={3000}
+                    value={brief[field.key]}
+                    placeholder={field.placeholder}
+                    onChange={(event) => editBrief(field.key, event.target.value)}
+                  />
+                </label>
+              ))}
+            </details>
+            {status && !status.configured && (
+              <p className="workshop-help">
+                Add a Meta Model API key to the local server configuration, then retry the
+                connection. Your brief stays available.
+              </p>
+            )}
+            {statusError && <p className="workshop-error">{statusError}</p>}
+            <button
+              className="workshop-submit"
+              type="submit"
+              disabled={!briefReady || !status?.configured || busy}
+            >
+              {busy ? 'Working through your case…' : 'Find ways to use this batch'}
+              <span aria-hidden="true">→</span>
+            </button>
+            <p className="workshop-submit-note">
+              Sends this brief to Meta. You can describe unknowns in plain language.
+            </p>
+          </form>
+        </aside>
+        <section
+          className="workshop-workspace"
+          ref={answer}
+          tabIndex={-1}
+          aria-label="Batch workspace"
+        >
+          <nav className="workshop-tabs" aria-label="Workshop sections">
+            {(
+              [
+                { id: 'material', label: 'Material Lab' },
+                { id: 'engineering', label: 'Engineering' },
+                { id: 'next', label: 'Next run' },
+              ] as { id: Section; label: string }[]
+            ).map((tab) => (
+              <button
+                type="button"
+                key={tab.id}
+                aria-current={section === tab.id ? 'page' : undefined}
+                onClick={() => setSection(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+          {notice && (
+            <p className="workshop-notice" role="status">
+              {notice}
+            </p>
+          )}
+          {error && (
+            <p className="workshop-error" role="alert">
+              {error}
+            </p>
+          )}
+          {busy && (
+            <div className="workshop-working" role="status">
+              <span className="workshop-working-dot" aria-hidden="true" />
+              <div>
+                <strong>Meta is working through this batch</strong>
+                <p>
+                  Comparing material routes, engineering choices and the next useful check.{' '}
+                  {elapsed}s
+                </p>
+              </div>
+              <button type="button" onClick={stopWaiting}>
+                Stop waiting
+              </button>
+            </div>
+          )}
+          {!plan ? (
+            <div className="workshop-start">
+              <span className="workshop-start-mark" aria-hidden="true">
+                ↗
+              </span>
+              <p className="workshop-eyebrow">A route from input to output</p>
+              <h2>
+                {section === 'material'
+                  ? 'Find a useful way forward'
+                  : section === 'engineering'
+                    ? 'Make the product work with the input'
+                    : 'Turn an option into the next run'}
+              </h2>
+              <p>
+                {section === 'material'
+                  ? 'Describe the batch and the job. Meta will suggest practical changes to the mix or process, with trade-offs and checks for each route.'
+                  : section === 'engineering'
+                    ? 'Explore containment, geometry, assembly and adjustment. Product choices can help you work with the variation you have.'
+                    : 'Keep the next action small and concrete: what to try, what to observe and what to ask next.'}
+              </p>
+              {section === 'material' && (
+                <p>
+                  If plastic is part of the input, what must it do: bind the fill, contain it, or
+                  carry a load? The route should fit that job.
+                </p>
+              )}
+              <div className="workshop-start-options">
+                <div>
+                  <span>01</span>
+                  <strong>Adapt the material</strong>
+                  <p>Sorting, a known binder, additions or a different process.</p>
+                </div>
+                <div>
+                  <span>02</span>
+                  <strong>Engineer around variation</strong>
+                  <p>Containment, adjustable fill and product geometry.</p>
+                </div>
+                <div>
+                  <span>03</span>
+                  <strong>Choose the next run</strong>
+                  <p>A practical sequence and the checks that will inform it.</p>
+                </div>
+              </div>
+              <p className="workshop-start-note">
+                Start with your brief or try the counterweight example. No laboratory numbers are
+                required to explore routes.
+              </p>
+            </div>
+          ) : (
+            <div className="workshop-plan">
+              <div className="workshop-plan-heading">
+                <div>
+                  <span className="workshop-proposal-label">Proposed routes</span>
+                  <h2>
+                    {section === 'material'
+                      ? 'Ways to work with this material'
+                      : section === 'engineering'
+                        ? 'Ways to make the product work'
+                        : 'A practical next run'}
+                  </h2>
+                </div>
+                <button type="button" className="workshop-download" onClick={download}>
+                  Download plan
+                </button>
+              </div>
+              {lastQuestion && <p className="workshop-last-question">You asked: {lastQuestion}</p>}
+              <div className="workshop-answer">
+                {plan.answer
+                  .split(/\n\s*\n/)
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+              </div>
+              {section !== 'next' ? (
+                <div className="workshop-routes">
+                  {routes.map((route) => (
+                    <RouteCard
+                      key={route.id}
+                      route={route}
+                      selected={selectedRoute === route.id}
+                      busy={busy}
+                      onSelect={() => askAbout(route)}
+                      onDevelop={() => develop(route)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <ol className="workshop-next-steps">
+                    {plan.next_steps.map((step, index) => (
+                      <li key={index}>
+                        <span>{String(index + 1).padStart(2, '0')}</span>
+                        <p>{step}</p>
+                      </li>
+                    ))}
+                  </ol>
+                  {plan.questions.length > 0 && (
+                    <div className="workshop-open-questions">
+                      <h3>What would help narrow this down?</h3>
+                      <ul>
+                        {plan.questions.map((item, index) => (
+                          <li key={index}>{item}</li>
+                        ))}
+                      </ul>
+                      <p>You can answer below; unknowns can stay unknown.</p>
+                    </div>
+                  )}
+                </>
+              )}
+              {chosen && (
+                <p className="workshop-selected-note">
+                  Selected route: <strong>{chosen.title}</strong>
+                </p>
+              )}
+              <div className="workshop-plan-footer">
+                <span>
+                  {plan.live ? 'Generated by Meta' : 'Proposal'} · {plan.model}
+                </span>
+                <span>{(plan.elapsed_ms / 1000).toFixed(1)}s</span>
+              </div>
+              {plan.sources.length > 0 && (
+                <details className="workshop-sources">
+                  <summary>References used for context</summary>
+                  {plan.sources.map((source) => (
+                    <div key={source.id}>
+                      <a href={source.url} target="_blank" rel="noreferrer">
+                        {source.title} ↗
+                      </a>
+                      <p>{source.scope}</p>
+                    </div>
+                  ))}
+                  <p>These references do not establish the properties of your own mix.</p>
+                </details>
+              )}
+            </div>
+          )}
+          <div hidden={section !== 'material'}>
+            <BalanceMix />
+          </div>
+          <div hidden={section !== 'engineering'}>
+            <WeightAdjustment />
+          </div>
+          <form
+            className="workshop-followup"
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (question.trim()) void ask(question)
+            }}
+          >
+            <label htmlFor="workshop-question">Ask Meta about this batch</label>
+            <div>
+              <input
+                id="workshop-question"
+                ref={followup}
+                value={question}
+                maxLength={3000}
+                onChange={(event) => setQuestion(event.target.value)}
+                placeholder={
+                  plan
+                    ? 'Compare a route, change a constraint, or ask what to try next…'
+                    : 'Ask a question using the brief on the left…'
+                }
+              />
+              <button
+                type="submit"
+                disabled={!question.trim() || !briefReady || !status?.configured || busy}
+              >
+                Send <span aria-hidden="true">↑</span>
+              </button>
+            </div>
+            <p>
+              Uses your current brief and recent conversation.
+              {plan ? ' Proposed routes still need checks on the actual material and product.' : ''}
+            </p>
+          </form>
+        </section>
+      </main>
+      <details
+        className="workshop-calculations"
+        onToggle={(event) => {
+          if (event.currentTarget.open) setToolsOpen(true)
+        }}
+      >
+        <summary>
+          <span>Calculation tools</span>
+          <small>Measured mix mass and published study comparisons</small>
+        </summary>
+        {toolsOpen && (
+          <Suspense fallback={<p>Loading calculation tools…</p>}>
+            <CalculationTools />
+          </Suspense>
+        )}
+      </details>
+    </div>
+  )
+}

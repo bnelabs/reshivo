@@ -47,12 +47,13 @@ def _numeric_values(value, cls, defaults, name):
 
 
 class WorkbenchService:
-    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None):
+    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None):
         self.root = Path(root).resolve()
         self.output_root = Path(output_root or self.root / "outputs/workbench").resolve()
         self.config, self.default_requirements, self.default_search = load_config(self.root / "examples/support-member.json")
         self.meta_status_fn = meta_status_fn
         self.proposal_fn = proposal_fn
+        self.advisor_fn = advisor_fn
 
     def meta_status(self):
         if self.meta_status_fn is not None:
@@ -88,6 +89,46 @@ class WorkbenchService:
         except ServiceError:
             source_available = False
         return {"status": "ok" if source_available else "degraded", "source_available": source_available, "meta": self.meta_status()}
+
+    def advisor_status(self):
+        if self.meta_status_fn is not None:
+            return self.meta_status()
+        from .advisor import advisor_status
+        return advisor_status(self.root)
+
+    def advisor_help(self, request):
+        from .advisor import help_with_case, validate_request
+        from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError
+        from .products import ProductInputError
+        try:
+            validate_request(request)
+            if self.advisor_fn is not None:
+                return self.advisor_fn(request)
+            return help_with_case(request, root=self.root)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+        except MetaConfigurationError as error:
+            raise ServiceError("meta_not_configured", str(error), 503) from None
+        except MetaValidationError as error:
+            raise ServiceError("meta_invalid_response", str(error), 502) from None
+        except MetaAPIError as error:
+            raise ServiceError("meta_request_failed", str(error), 502) from None
+
+    def advisor_mass_trim(self, request):
+        from .advisor import mass_trim
+        from .products import ProductInputError
+        try:
+            return mass_trim(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
+    def advisor_balance_mix(self, request):
+        from .advisor import balance_mix
+        from .products import ProductInputError
+        try:
+            return balance_mix(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
 
     def product_catalog(self):
         from .products import ProductDataError, product_catalog

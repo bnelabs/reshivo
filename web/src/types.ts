@@ -255,3 +255,78 @@ export type TestedLevelResult = {
   batch_consistency_established: false
   interpolation_used: false
 }
+
+export type AdvisorBrief = {
+  input: string
+  variation: string
+  contamination: string
+  product: string
+  use_case: string
+  targets: string
+  process: string
+  available_changes: string
+}
+export type AdvisorRoute = {
+  id: string
+  title: string
+  change: string
+  why: string
+  steps: string[]
+  tradeoffs: string[]
+  check: string
+}
+export type AdvisorMessage = { role: 'user' | 'assistant'; content: string }
+export type AdvisorStatus = { configured: boolean; model: string }
+export type AdvisorResult = {
+  result_kind: 'engineering_proposals'
+  live: boolean
+  provider: 'meta'
+  model: string
+  usage: Record<string, number>
+  elapsed_ms: number
+  request_id: string
+  answer: string
+  material_routes: AdvisorRoute[]
+  engineering_routes: AdvisorRoute[]
+  next_steps: string[]
+  questions: string[]
+  sources: { id: string; title: string; url: string; scope: string }[]
+  physical_product_tested: false
+  performance_verified: false
+}
+export type MassTrimResult = {
+  result_kind: 'calculation'
+  current_mass_kg: number
+  target_min_kg: number
+  target_max_kg: number
+  status: 'add' | 'remove' | 'inside'
+  action: string
+  adjustment_min_kg: number
+  adjustment_max_kg: number
+  adjustment_to_midpoint_kg: number
+  assumptions: string[]
+}
+
+export type BalanceMixRequest = {
+  component: string
+  input_mass_kg: number
+  input_min_percent: number
+  input_max_percent: number
+  addition_name: string
+  addition_percent: number
+  target_min_percent: number
+  target_max_percent: number
+}
+export type BalanceMixResult = BalanceMixRequest & {
+  result_kind: 'composition_calculation'
+  feasible: boolean
+  addition_min_kg: number | null
+  addition_max_kg: number | null
+  example_addition_kg: number | null
+  resulting_min_percent: number | null
+  resulting_max_percent: number | null
+  action: string
+  next_options: string[]
+  assumptions: string[]
+  physical_performance_verified: false
+}

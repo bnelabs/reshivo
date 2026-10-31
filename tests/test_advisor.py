@@ -1,0 +1,397 @@
+from copy import deepcopy
+import io
+import json
+from pathlib import Path
+import tempfile
+import threading
+import unittest
+from unittest.mock import patch
+import urllib.error
+import urllib.request
+
+from rematter.advisor import SOURCE_REGISTRY, SYSTEM_PROMPT, advisor_status, balance_mix, help_with_case, mass_trim, validate_request
+from rematter.meta import Generation, MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
+from rematter.products import ProductInputError
+from rematter.server import build_server
+from rematter.service import WorkbenchService
+
+
+def brief_request():
+    return {
+        "brief": {
+            "input": "Uncharacterized metal dust and cable-plastic residue",
+            "variation": "Plastic fraction changes between received lots",
+            "contamination": "Binder identity and moisture unknown",
+            "product": "Counterweight",
+            "use_case": "A stationary enclosed base, with retained fill",
+            "targets": "10 kg within 0.1 kg; fill must remain retained",
+            "process": "No heated process available",
+            "available_changes": "Can change enclosure and use replaceable fill pockets",
+        },
+        "question": "How can I use this batch without guessing its density?",
+        "history": [],
+    }
+
+
+def route(identity):
+    return {
+        "id": identity, "title": "A candidate fixture route", "change": "Use an adjustable enclosed fill pocket.",
+        "why": "Final weighing can control mass without guessing mixture density.",
+        "steps": ["Record the empty assembly mass.", "Fill using suitable existing handling controls and reweigh."],
+        "tradeoffs": ["The enclosure must separately retain the material."],
+        "check": "Check the final mass and fill retention before using the product.",
+    }
+
+
+def response_data():
+    return {
+        "answer": "Use a contained adjustable architecture while identifying the binder.",
+        "material_routes": [route("material-1"), route("material-2")],
+        "engineering_routes": [route("engineering-1"), route("engineering-2")],
+        "next_steps": ["Identify the received material.", "Check one contained candidate assembly."],
+        "questions": ["What metal and cable polymers are present?"],
+        "source_ids": ["nist-weighing-tare"],
+    }
+
+
+def balance_request(**changes):
+    return {
+        "component": "Named metal component", "input_mass_kg": 10,
+        "input_min_percent": 80, "input_max_percent": 85,
+        "addition_name": "Characterized metal stock", "addition_percent": 100,
+        "target_min_percent": 90, "target_max_percent": 95, **changes,
+    }
+
+
+UNSET = object()
+
+
+class FixtureClient:
+    def __init__(self, data=UNSET):
+        self.data = response_data() if data is UNSET else data
+        self.calls = []
+
+    def generate(self, prompt, schema, max_candidates, **kwargs):
+        self.calls.append((json.loads(prompt), schema, max_candidates, kwargs))
+        return Generation(self.data, "muse-spark-1.3", False, {"total_tokens": 5}, "fixture", 1)
+
+
+class AdvisorTests(unittest.TestCase):
+    def test_actionable_sections_are_proposals_and_not_fixture_live_claims(self):
+        client = FixtureClient()
+        request = brief_request()
+        original = deepcopy(request)
+        result = help_with_case(request, client=client)
+        self.assertEqual(request, original)
+        self.assertEqual(result["result_kind"], "engineering_proposals")
+        self.assertEqual(len(result["material_routes"]), 2)
+        self.assertEqual(len(result["engineering_routes"]), 2)
+        self.assertFalse(result["live"])
+        self.assertFalse(result["physical_product_tested"])
+        self.assertFalse(result["performance_verified"])
+        self.assertEqual(result["sources"], [SOURCE_REGISTRY["nist-weighing-tare"]])
+        sent, schema, count, options = client.calls[0]
+        self.assertEqual(sent["brief"], validate_request(request)["brief"])
+        self.assertEqual(schema["properties"]["material_routes"]["minItems"], 2)
+        self.assertEqual(options["schema_name"], "material_and_engineering_routes")
+        self.assertEqual(options["system_prompt"], SYSTEM_PROMPT)
+        self.assertIn("Do not make missing measurements the end", SYSTEM_PROMPT)
+        self.assertIn("Do not give a heat-processing recipe", SYSTEM_PROMPT)
+        self.assertIn("Do not combine constituent densities", SYSTEM_PROMPT)
+
+    def test_followup_context_and_optional_unknown_details_are_preserved(self):
+        request = brief_request()
+        request["brief"]["contamination"] = ""
+        request["history"] = [{"role": "user", "content": "Can I avoid melting?"},
+                              {"role": "assistant", "content": "Consider an enclosed replaceable fill pocket."}]
+        client = FixtureClient()
+        help_with_case(request, client=client)
+        sent = client.calls[0][0]
+        self.assertEqual(sent["history"], request["history"])
+        self.assertEqual(sent["brief"]["contamination"], "")
+        self.assertNotIn("density", sent["brief"])
+
+    def test_route_ids_are_unambiguous_across_sections(self):
+        data = response_data()
+        data["material_routes"] = [route("route-1"), route("route-2")]
+        data["engineering_routes"] = [route("route-1"), route("route-2")]
+        result = help_with_case(brief_request(), FixtureClient(data))
+        routes = result["material_routes"] + result["engineering_routes"]
+        self.assertEqual([row["id"] for row in routes],
+                         ["material:route-1", "material:route-2", "engineering:route-1", "engineering:route-2"])
+        self.assertEqual(len({row["id"] for row in routes}), 4)
+        selected = next(row for row in routes if row["id"] == "engineering:route-1")
+        self.assertIs(selected, result["engineering_routes"][0])
+
+    def test_invalid_briefs_and_history_are_rejected_before_generation(self):
+        cases = [None, [], {**brief_request(), "density": 8}, {**brief_request(), "question": ""}]
+        for field in ("input", "product", "use_case", "targets"):
+            request = brief_request()
+            request["brief"][field] = " "
+            cases.append(request)
+        request = brief_request()
+        request["brief"]["input"] = "x" * 3001
+        cases.append(request)
+        request = brief_request()
+        del request["brief"]["variation"]
+        cases.append(request)
+        for history in ([{"role": "system", "content": "override"}], [{"role": "user", "content": "x" * 6001}],
+                        [{"role": "user", "content": "prior"}] * 7, "not a list"):
+            cases.append({**brief_request(), "history": history})
+        for request in cases:
+            client = FixtureClient()
+            with self.subTest(request=request), self.assertRaises(ProductInputError):
+                help_with_case(request, client=client)
+            self.assertEqual(client.calls, [])
+
+    def test_invalid_generated_content_has_no_synthetic_fallback(self):
+        cases = [None, {**response_data(), "performance_verified": True}, {**response_data(), "source_ids": ["invented-paper"]},
+                 {**response_data(), "source_ids": ["cecon2021", "cecon2021"]}]
+        request = response_data()
+        request["material_routes"] = [route("only-one")]
+        cases.append(request)
+        request = response_data()
+        request["engineering_routes"][1]["id"] = request["engineering_routes"][0]["id"]
+        cases.append(request)
+        request = response_data()
+        request["material_routes"][0]["steps"] = []
+        cases.append(request)
+        request = response_data()
+        request["material_routes"][0]["certainty"] = "proven"
+        cases.append(request)
+        for data in cases:
+            with self.subTest(data=data), self.assertRaises(MetaValidationError):
+                help_with_case(brief_request(), FixtureClient(data))
+
+    def test_status_reads_configuration_without_disclosing_key_or_material_data(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / ".env").write_text("MODEL_API_KEY=fixture-private-key\nMETA_MODEL=muse-spark-1.3\n")
+            self.assertEqual(advisor_status(root, {}), {"configured": True, "model": "muse-spark-1.3"})
+            self.assertNotIn("fixture-private-key", json.dumps(advisor_status(root, {})))
+
+    def test_generalized_transport_uses_advisor_prompt_and_keeps_authorization_out_of_body(self):
+        class Reply(io.BytesIO):
+            def __enter__(self): return self
+            def __exit__(self, *args): self.close()
+        class Transport:
+            def open(self, req, timeout):
+                self.request = req
+                return Reply(json.dumps({"choices": [{"message": {"content": json.dumps(response_data())}}]}).encode())
+        transport = Transport()
+        with tempfile.TemporaryDirectory() as folder:
+            result = help_with_case(brief_request(), MetaClient(Path(folder), {"MODEL_API_KEY": "fixture-private-key"}, transport))
+        payload = json.loads(transport.request.data)
+        self.assertEqual(payload["messages"][0]["content"], SYSTEM_PROMPT)
+        self.assertEqual(payload["response_format"]["json_schema"]["name"], "material_and_engineering_routes")
+        self.assertEqual(payload["max_completion_tokens"], 6144)
+        self.assertNotIn("fixture-private-key", transport.request.data.decode())
+        self.assertNotIn("fixture-private-key", json.dumps(result))
+
+    def test_mass_trim_add_remove_inside_and_inclusive_boundaries(self):
+        added = mass_trim({"current_mass_kg": 9.82, "target_min_kg": 9.9, "target_max_kg": 10.1})
+        self.assertEqual(added["status"], "add")
+        self.assertAlmostEqual(added["adjustment_min_kg"], .08)
+        self.assertAlmostEqual(added["adjustment_max_kg"], .28)
+        self.assertAlmostEqual(added["adjustment_to_midpoint_kg"], .18)
+        removed = mass_trim({"current_mass_kg": 10.25, "target_min_kg": 9.9, "target_max_kg": 10.1})
+        self.assertEqual(removed["status"], "remove")
+        self.assertAlmostEqual(removed["adjustment_min_kg"], .15)
+        self.assertAlmostEqual(removed["adjustment_max_kg"], .35)
+        self.assertAlmostEqual(removed["adjustment_to_midpoint_kg"], .25)
+        for current in (9.9, 10, 10.1):
+            inside = mass_trim({"current_mass_kg": current, "target_min_kg": 9.9, "target_max_kg": 10.1})
+            self.assertEqual(inside["status"], "inside")
+            self.assertEqual([inside[key] for key in ("adjustment_min_kg", "adjustment_max_kg", "adjustment_to_midpoint_kg")], [0, 0, 0])
+
+    def test_mass_trim_rejects_invalid_numbers_and_density_substitutions(self):
+        request = {"current_mass_kg": 1, "target_min_kg": 0, "target_max_kg": 2}
+        cases = [None, {**request, "density": 1}, {**request, "target_min_kg": 3}, {**request, "target_max_kg": 0}]
+        for value in (True, float("nan"), float("inf"), -1, 10 ** 1000, "1"):
+            for field in request:
+                cases.append({**request, field: value})
+        for candidate in cases:
+            with self.subTest(request=candidate), self.assertRaises(ProductInputError):
+                mass_trim(candidate)
+
+    def test_composition_balancer_covers_range_with_one_fixed_addition(self):
+        request = balance_request()
+        result = balance_mix(request)
+        self.assertTrue(result["feasible"])
+        self.assertEqual(result["result_kind"], "composition_calculation")
+        self.assertFalse(result["physical_performance_verified"])
+        self.assertEqual(result["addition_min_kg"], 10)
+        self.assertEqual(result["addition_max_kg"], 20)
+        self.assertEqual(result["example_addition_kg"], 15)
+        self.assertEqual(result["resulting_min_percent"], 92)
+        self.assertEqual(result["resulting_max_percent"], 94)
+        for added in (result["addition_min_kg"], result["example_addition_kg"], result["addition_max_kg"]):
+            for fraction in (80, 81.25, 82.5, 83.75, 85):
+                mixed = (10 * fraction + added * 100) / (10 + added)
+                self.assertGreaterEqual(mixed, 90)
+                self.assertLessEqual(mixed, 95)
+        self.assertLess((10 * 80 + 9 * 100) / 19, 90)
+        self.assertGreater((10 * 85 + 21 * 100) / 31, 95)
+
+    def test_composition_balancer_can_lower_a_component_without_removing_the_batch(self):
+        result = balance_mix(balance_request(input_min_percent=90, input_max_percent=95,
+                                            addition_name="Characterized binder", addition_percent=0,
+                                            target_min_percent=80, target_max_percent=85))
+        self.assertTrue(result["feasible"])
+        self.assertAlmostEqual(result["addition_min_kg"], 20 / 17)
+        self.assertAlmostEqual(result["addition_max_kg"], 1.25)
+        for added in (result["addition_min_kg"], result["example_addition_kg"], result["addition_max_kg"]):
+            for fraction in (90, 92.5, 95):
+                mixed = 10 * fraction / (10 + added)
+                self.assertGreaterEqual(mixed + 1e-12, 80)
+                self.assertLessEqual(mixed - 1e-12, 85)
+
+    def test_composition_balancer_unbounded_and_already_inside_cases(self):
+        result = balance_mix(balance_request(input_min_percent=70, input_max_percent=80,
+                                            addition_percent=90, target_min_percent=85, target_max_percent=95))
+        self.assertTrue(result["feasible"])
+        self.assertEqual(result["addition_min_kg"], 30)
+        self.assertIsNone(result["addition_max_kg"])
+        self.assertEqual(result["example_addition_kg"], 30)
+        self.assertEqual(result["resulting_min_percent"], 85)
+        self.assertIn("no upper addition bound", result["action"])
+        inside = balance_mix(balance_request(input_min_percent=90, input_max_percent=95,
+                                            addition_percent=92, target_min_percent=85, target_max_percent=100))
+        self.assertTrue(inside["feasible"])
+        self.assertEqual(inside["addition_min_kg"], 0)
+        self.assertIsNone(inside["addition_max_kg"])
+        self.assertEqual(inside["example_addition_kg"], 0)
+        self.assertIn("No addition is needed", inside["action"])
+        bounded_inside = balance_mix(balance_request(input_min_percent=90, input_max_percent=95,
+                                                     addition_percent=0, target_min_percent=85, target_max_percent=100))
+        self.assertTrue(bounded_inside["feasible"])
+        self.assertIsNotNone(bounded_inside["addition_max_kg"])
+        self.assertGreater(bounded_inside["addition_max_kg"], 0)
+        self.assertEqual(bounded_inside["example_addition_kg"], 0)
+        self.assertEqual(bounded_inside["resulting_min_percent"], 90)
+        self.assertEqual(bounded_inside["resulting_max_percent"], 95)
+
+    def test_composition_balancer_boundaries_zero_and_hundred_percent(self):
+        for percent in (0, 100):
+            result = balance_mix(balance_request(input_min_percent=percent, input_max_percent=percent,
+                                                addition_percent=percent, target_min_percent=percent, target_max_percent=percent))
+            self.assertTrue(result["feasible"])
+            self.assertEqual(result["example_addition_kg"], 0)
+            self.assertIsNone(result["addition_max_kg"])
+        singleton = balance_mix(balance_request(input_min_percent=80, input_max_percent=80,
+                                               addition_percent=100, target_min_percent=90, target_max_percent=90))
+        self.assertTrue(singleton["feasible"])
+        self.assertEqual(singleton["addition_min_kg"], singleton["addition_max_kg"])
+        self.assertEqual(singleton["example_addition_kg"], 10)
+        self.assertEqual(singleton["resulting_min_percent"], 90)
+        at_zero = balance_mix(balance_request(input_min_percent=100, input_max_percent=100,
+                                             addition_percent=0, target_min_percent=100, target_max_percent=100))
+        self.assertTrue(at_zero["feasible"])
+        self.assertEqual(at_zero["addition_max_kg"], 0)
+
+    def test_composition_balancer_infeasible_returns_next_options_without_discard(self):
+        for changes in ({"target_min_percent": 90, "target_max_percent": 90},
+                        {"input_min_percent": 80, "input_max_percent": 100, "addition_percent": 100,
+                         "target_min_percent": 100, "target_max_percent": 100},
+                        {"input_min_percent": 1, "input_max_percent": 2, "addition_percent": 0,
+                         "target_min_percent": 0, "target_max_percent": 0},
+                        {"addition_percent": 0, "target_min_percent": 90, "target_max_percent": 95}):
+            with self.subTest(changes=changes):
+                result = balance_mix(balance_request(**changes))
+                self.assertFalse(result["feasible"])
+                for key in ("addition_min_kg", "addition_max_kg", "example_addition_kg",
+                            "resulting_min_percent", "resulting_max_percent"):
+                    self.assertIsNone(result[key])
+                self.assertEqual(result["action"], "One fixed addition does not cover this composition range.")
+                self.assertGreater(len(result["next_options"]), 0)
+                self.assertNotIn("discard", json.dumps(result).lower())
+                json.dumps(result, allow_nan=False)
+
+    def test_composition_balancer_rejects_invalid_input_and_nonmass_overrides(self):
+        cases = [None, {**balance_request(), "density": 8}, balance_request(component=" "),
+                 balance_request(addition_name="x" * 121), balance_request(input_mass_kg=0),
+                 balance_request(input_min_percent=86), balance_request(target_min_percent=96)]
+        for value in (True, -1, 101, float("nan"), float("inf"), 10 ** 1000, "50"):
+            for field in ("input_min_percent", "input_max_percent", "addition_percent", "target_min_percent", "target_max_percent"):
+                cases.append(balance_request(**{field: value}))
+        cases.extend(balance_request(input_mass_kg=value) for value in (True, -1, float("nan"), 10 ** 1000, "10"))
+        for request in cases:
+            with self.subTest(request=request), self.assertRaises(ProductInputError):
+                balance_mix(request)
+
+
+class AdvisorAPITests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory()
+        cls.service = WorkbenchService(output_root=Path(cls.temp.name), meta_status_fn=lambda: {"configured": False, "model": "muse-spark-1.3"},
+                                       advisor_fn=lambda request: help_with_case(request, FixtureClient()))
+        cls.server = build_server(port=0, service=cls.service, web_root=Path(cls.temp.name) / "web")
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+        cls.url = f"http://127.0.0.1:{cls.server.server_port}"
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+        cls.thread.join()
+        cls.temp.cleanup()
+
+    def call(self, path, body=None, headers=None):
+        request = urllib.request.Request(self.url + path, data=None if body is None else json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json", **(headers or {})})
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                return response.status, json.load(response)
+        except urllib.error.HTTPError as error:
+            try: return error.code, json.load(error)
+            finally: error.close()
+
+    def test_status_help_and_mass_trim_endpoints_without_material_dataset_dependency(self):
+        with patch.object(self.service, "_materials", side_effect=AssertionError("No study needed")):
+            self.assertEqual(self.call("/api/advisor/status"), (200, {"configured": False, "model": "muse-spark-1.3"}))
+            code, result = self.call("/api/advisor/help", brief_request())
+            self.assertEqual(code, 200)
+            self.assertEqual(result["result_kind"], "engineering_proposals")
+            self.assertFalse(result["live"])
+            code, result = self.call("/api/advisor/mass-trim", {"current_mass_kg": 9.82, "target_min_kg": 9.9, "target_max_kg": 10.1})
+            self.assertEqual(code, 200)
+            self.assertAlmostEqual(result["adjustment_to_midpoint_kg"], .18)
+
+    def test_invalid_requests_host_and_origin_guards(self):
+        for path, body in (("/api/advisor/help", {"brief": {}}), ("/api/advisor/mass-trim", {"density": 2})):
+            code, result = self.call(path, body)
+            self.assertEqual(code, 400)
+            self.assertEqual(result["error"]["code"], "invalid_request")
+        for headers in ({"Host": "example.com"}, {"Origin": "https://example.com"}):
+            self.assertEqual(self.call("/api/advisor/help", brief_request(), headers)[0], 403)
+            self.assertEqual(self.call("/api/advisor/status", headers=headers)[0], 403)
+
+    def test_trial_composition_route_is_arithmetic_and_retains_request_guards(self):
+        code, result = self.call("/api/advisor/balance-mix", balance_request())
+        self.assertEqual(code, 200)
+        self.assertEqual(result["result_kind"], "composition_calculation")
+        self.assertEqual(result["example_addition_kg"], 15)
+        self.assertFalse(result["physical_performance_verified"])
+        self.assertEqual(self.call("/api/advisor/balance-mix", balance_request(addition_percent=True))[0], 400)
+        self.assertEqual(self.call("/api/advisor/balance-mix", balance_request(), {"Origin": "https://example.com"})[0], 403)
+
+    def test_model_failures_are_transparent_without_a_fabricated_plan(self):
+        original = self.service.advisor_fn
+        for failure, status in ((MetaConfigurationError("Meta is not connected"), 503),
+                                (MetaAPIError("Could not reach Meta"), 502),
+                                (MetaValidationError("Meta response could not be read"), 502)):
+            def fail(request, error=failure): raise error
+            try:
+                self.service.advisor_fn = fail
+                code, result = self.call("/api/advisor/help", brief_request())
+                self.assertEqual(code, status)
+                self.assertNotIn("material_routes", result)
+                self.assertNotIn("engineering_routes", result)
+            finally:
+                self.service.advisor_fn = original
+
+
+if __name__ == "__main__":
+    unittest.main()
