@@ -1,11 +1,27 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import type { ProductCatalog } from '../types'
+import type { ProductCatalog, WorkshopCase } from '../types'
+import { CaseSummary } from './CaseDetails'
 import { MyMixPlanner } from './MyMixPlanner'
 import { PublishedExample } from './PublishedExample'
 import { TestedLevels } from './TestedLevels'
 
-export function ProductPlanner() {
+export function ProductPlanner({
+  caseData,
+  onEditCase,
+}: {
+  caseData: WorkshopCase
+  onEditCase: () => void
+}) {
+  const materialKey = JSON.stringify([
+    caseData.brief.input,
+    caseData.brief.variation,
+    caseData.brief.contamination,
+    caseData.brief.process,
+    caseData.details.components,
+    caseData.details.amount_unit,
+    caseData.details.amount_basis,
+  ])
   const [mode, setMode] = useState<'my_mix' | 'published' | 'tested_levels'>('my_mix')
   const [catalog, setCatalog] = useState<ProductCatalog | null>(null)
   const [catalogAttempt, setCatalogAttempt] = useState(0)
@@ -22,20 +38,21 @@ export function ProductPlanner() {
     return () => controller.abort()
   }, [catalogAttempt])
   return (
-    <main className="product-page">
+    <section className="product-page" aria-label="Calculation tools for this case">
       <div className="product-intro">
         <div>
-          <p className="eyebrow">From recycled input to product</p>
-          <h1>What are you making?</h1>
+          <p className="eyebrow">Your case, carried through</p>
+          <h2>Calculations for this case</h2>
           <p>
-            Choose a product and a target. Use measurements of the material you actually processed.
+            Use the material, product and process you already entered, with matching measurements.
           </p>
         </div>
         <span className="product-label">Research prototype</span>
       </div>
+      <CaseSummary brief={caseData.brief} />
       <div className="mix-mode-switch" role="group" aria-label="Measurement source">
         <button type="button" aria-pressed={mode === 'my_mix'} onClick={() => setMode('my_mix')}>
-          My mix
+          This case
         </button>
         <button
           type="button"
@@ -53,7 +70,12 @@ export function ProductPlanner() {
         </button>
       </div>
       <section hidden={mode !== 'my_mix'} aria-label="My mix planner">
-        <MyMixPlanner active={mode === 'my_mix'} />
+        <MyMixPlanner
+          key={materialKey}
+          active={mode === 'my_mix'}
+          caseData={caseData}
+          onEditCase={onEditCase}
+        />
       </section>
       <section hidden={mode !== 'published'} aria-label="Published polyethylene example">
         {catalog ? (
@@ -112,6 +134,6 @@ export function ProductPlanner() {
           </p>
         </section>
       )}
-    </main>
+    </section>
   )
 }

@@ -266,6 +266,20 @@ export type AdvisorBrief = {
   process: string
   available_changes: string
 }
+export type CalculationDetails = {
+  label: string
+  components: {
+    id: number
+    name: string
+    role: 'main' | 'binder' | 'other'
+    amount: string
+  }[]
+  amount_unit: MixAmountUnit
+  amount_basis: string
+  mass_target_min_kg: string
+  mass_target_max_kg: string
+}
+export type WorkshopCase = { brief: AdvisorBrief; details: CalculationDetails }
 export type AdvisorRoute = {
   id: string
   title: string

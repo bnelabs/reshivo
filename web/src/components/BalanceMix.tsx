@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import type { BalanceMixRequest, BalanceMixResult } from '../types'
+import { CaseSummary } from './CaseDetails'
+import type { BalanceMixRequest, BalanceMixResult, WorkshopCase } from '../types'
 
 const quantity = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 6 })
 const initial = {
-  component: '',
   input_mass_kg: '',
   input_min_percent: '',
   input_max_percent: '',
@@ -14,8 +14,40 @@ const initial = {
   target_max_percent: '',
 }
 
-export function BalanceMix() {
-  const [fields, setFields] = useState(initial)
+export function BalanceMix({
+  caseData,
+  onEditCase,
+}: {
+  caseData: WorkshopCase
+  onEditCase: () => void
+}) {
+  const components = caseData.details.components.filter((row) => row.name.trim())
+  const binders = components.filter((row) => row.role === 'binder')
+  const [componentId, setComponentId] = useState(
+    () => (binders.length === 1 ? binders[0].id : components[0]?.id) ?? null,
+  )
+  const component = components.find((row) => row.id === componentId)
+  const total = caseData.details.components.reduce((sum, row) => sum + Number(row.amount), 0)
+  const complete = caseData.details.components.every(
+    (row) =>
+      row.name.trim() &&
+      row.amount.trim() &&
+      Number.isFinite(Number(row.amount)) &&
+      Number(row.amount) > 0,
+  )
+  function sharedFraction(id: number | null) {
+    const row = components.find((item) => item.id === id)
+    if (!row || !complete || caseData.details.amount_unit === 'volume_percent') return ''
+    if (caseData.details.amount_unit === 'mass_percent')
+      return Math.abs(total - 100) <= 0.000001 ? row.amount : ''
+    return total > 0 ? String((Number(row.amount) * 100) / total) : ''
+  }
+  const [fields, setFields] = useState(() => ({
+    ...initial,
+    input_mass_kg: complete && caseData.details.amount_unit === 'g' ? String(total / 1000) : '',
+    input_min_percent: sharedFraction(componentId),
+    input_max_percent: sharedFraction(componentId),
+  }))
   const [result, setResult] = useState<BalanceMixResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -36,7 +68,7 @@ export function BalanceMix() {
     'target_max_percent',
   ] as const
   const valid =
-    Boolean(fields.component.trim() && fields.addition_name.trim()) &&
+    Boolean(component?.name.trim() && fields.addition_name.trim()) &&
     fields.input_mass_kg.trim() !== '' &&
     Number.isFinite(Number(fields.input_mass_kg)) &&
     Number(fields.input_mass_kg) > 0 &&
@@ -60,7 +92,7 @@ export function BalanceMix() {
     setResult(null)
     setError('')
     const payload: BalanceMixRequest = {
-      component: fields.component.trim(),
+      component: component!.name.trim(),
       input_mass_kg: Number(fields.input_mass_kg),
       input_min_percent: Number(fields.input_min_percent),
       input_max_percent: Number(fields.input_max_percent),
@@ -98,6 +130,15 @@ export function BalanceMix() {
         Use known mass fractions and a trial composition you choose. This does not predict strength,
         density or sound performance.
       </p>
+      <CaseSummary brief={caseData.brief} />
+      <p>
+        Materials come from your case. A known mass recipe supplies the starting fraction; enter a
+        measured range below when your trial input varies. Volume percentages are not converted to
+        mass.
+      </p>
+      <button type="button" className="text-button" onClick={onEditCase}>
+        {components.length ? 'Edit case details' : 'Add exact material details to your case'}
+      </button>
       <form
         onSubmit={(event) => {
           event.preventDefault()
@@ -107,13 +148,31 @@ export function BalanceMix() {
         <div className="product-pair">
           <label>
             Component to balance
-            <input
-              maxLength={120}
-              value={fields.component}
-              onChange={(event) => change('component', event.target.value)}
-              placeholder="For example, a named binder"
-              required
-            />
+            <select
+              value={componentId ?? ''}
+              disabled={!components.length}
+              onChange={(event) => {
+                const id = Number(event.target.value)
+                request.current?.abort()
+                setBusy(false)
+                setResult(null)
+                setError('')
+                setComponentId(id)
+                const fraction = sharedFraction(id)
+                setFields((current) => ({
+                  ...current,
+                  input_min_percent: fraction,
+                  input_max_percent: fraction,
+                }))
+              }}
+            >
+              {!components.length && <option value="">Add material details in your case</option>}
+              {components.map((row) => (
+                <option key={row.id} value={row.id}>
+                  {row.name}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
             Input mass (kg)

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { BalanceMix } from './BalanceMix'
 import { TrialPlan } from './TrialPlan'
+import { CaseDetails, CaseSummary } from './CaseDetails'
 import type {
   AdvisorBrief,
   AdvisorMessage,
@@ -9,7 +10,9 @@ import type {
   AdvisorRoute,
   AdvisorStatus,
   AdvisorTrialResult,
+  CalculationDetails,
   MassTrimResult,
+  WorkshopCase,
 } from '../types'
 
 const CalculationTools = lazy(() =>
@@ -25,6 +28,14 @@ const emptyBrief: AdvisorBrief = {
   process: '',
   available_changes: '',
 }
+const newCalculationDetails = (): CalculationDetails => ({
+  label: '',
+  components: [{ id: 1, name: '', role: 'main', amount: '' }],
+  amount_unit: 'mass_percent',
+  amount_basis: '',
+  mass_target_min_kg: '',
+  mass_target_max_kg: '',
+})
 const counterweightExample: AdvisorBrief = {
   input:
     'Mostly metal dust, with a small portion of cable-plastic residue that might act as a binder. Metal composition and binder identity have not been confirmed.',
@@ -154,15 +165,34 @@ function RouteCard({
   )
 }
 
-function WeightAdjustment() {
+function WeightAdjustment({
+  caseData,
+  onEditCase,
+}: {
+  caseData: WorkshopCase
+  onEditCase: () => void
+}) {
   const [current, setCurrent] = useState('')
-  const [minimum, setMinimum] = useState('')
-  const [maximum, setMaximum] = useState('')
+  const minimum = caseData.details.mass_target_min_kg
+  const maximum = caseData.details.mass_target_max_kg
   const [result, setResult] = useState<MassTrimResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const request = useRef<AbortController | null>(null)
   useEffect(() => () => request.current?.abort(), [])
+  useEffect(() => {
+    request.current?.abort()
+    setBusy(false)
+    setResult(null)
+    setError('')
+  }, [minimum, maximum])
+  const currentResult =
+    result &&
+    result.current_mass_kg === Number(current) &&
+    result.target_min_kg === Number(minimum) &&
+    result.target_max_kg === Number(maximum)
+      ? result
+      : null
   function change(update: () => void) {
     request.current?.abort()
     setBusy(false)
@@ -217,6 +247,13 @@ function WeightAdjustment() {
         Weigh the assembled unit, then work out how much mass to add or remove. No density estimate
         is needed.
       </p>
+      <CaseSummary brief={caseData.brief} />
+      <p>
+        Shared mass target: {minimum && maximum ? `${minimum}–${maximum} kg` : 'not entered yet.'}{' '}
+        <button type="button" className="text-button" onClick={onEditCase}>
+          {minimum && maximum ? 'Edit case details' : 'Set the mass range in your case'}
+        </button>
+      </p>
       <form
         onSubmit={(event) => {
           event.preventDefault()
@@ -236,30 +273,6 @@ function WeightAdjustment() {
               required
             />
           </label>
-          <label>
-            Target minimum (kg)
-            <input
-              type="number"
-              min="0"
-              max="1000000"
-              step="any"
-              value={minimum}
-              onChange={(event) => change(() => setMinimum(event.target.value))}
-              required
-            />
-          </label>
-          <label>
-            Target maximum (kg)
-            <input
-              type="number"
-              min="0.000001"
-              max="1000000"
-              step="any"
-              value={maximum}
-              onChange={(event) => change(() => setMaximum(event.target.value))}
-              required
-            />
-          </label>
         </div>
         <button type="submit" className="outline-button" disabled={!valid || busy}>
           {busy ? 'Calculating…' : 'Calculate adjustment'}
@@ -270,21 +283,22 @@ function WeightAdjustment() {
           {error}
         </p>
       )}
-      {result && (
+      {currentResult && (
         <div className="workshop-trim-result" role="status">
-          <strong>{result.action}</strong>
-          {result.status !== 'inside' && (
+          <strong>{currentResult.action}</strong>
+          {currentResult.status !== 'inside' && (
             <p>
-              {result.status === 'add' ? 'Add' : 'Remove'} {quantity(result.adjustment_min_kg)}–
-              {quantity(result.adjustment_max_kg)} kg to reach the target interval. The correction
-              to its midpoint is {quantity(result.adjustment_to_midpoint_kg)} kg.
+              {currentResult.status === 'add' ? 'Add' : 'Remove'}{' '}
+              {quantity(currentResult.adjustment_min_kg)}–
+              {quantity(currentResult.adjustment_max_kg)} kg to reach the target interval. The
+              correction to its midpoint is {quantity(currentResult.adjustment_to_midpoint_kg)} kg.
             </p>
           )}
           <p>Reweigh the complete assembled unit after any adjustment.</p>
           <details>
             <summary>Calculation notes</summary>
             <ul>
-              {result.assumptions.map((note, index) => (
+              {currentResult.assumptions.map((note, index) => (
                 <li key={index}>{note}</li>
               ))}
             </ul>
@@ -297,6 +311,18 @@ function WeightAdjustment() {
 
 export function Workshop() {
   const [brief, setBrief] = useState<AdvisorBrief>(emptyBrief)
+  const [calculationDetails, setCalculationDetails] =
+    useState<CalculationDetails>(newCalculationDetails)
+  const caseData: WorkshopCase = { brief, details: calculationDetails }
+  const materialKey = JSON.stringify([
+    brief.input,
+    brief.variation,
+    brief.contamination,
+    brief.process,
+    calculationDetails.components,
+    calculationDetails.amount_unit,
+    calculationDetails.amount_basis,
+  ])
   const [section, setSection] = useState<Section>('material')
   const [status, setStatus] = useState<AdvisorStatus | null>(null)
   const [statusAttempt, setStatusAttempt] = useState(0)
@@ -363,10 +389,52 @@ export function Workshop() {
     invalidate()
     setExampleLoaded(false)
     setBrief((current) => ({ ...current, [key]: value }))
+    if (key === 'input')
+      setCalculationDetails((current) => ({
+        ...newCalculationDetails(),
+        mass_target_min_kg: current.mass_target_min_kg,
+        mass_target_max_kg: current.mass_target_max_kg,
+      }))
+    if (key === 'targets')
+      setCalculationDetails((current) => ({
+        ...current,
+        mass_target_min_kg: '',
+        mass_target_max_kg: '',
+      }))
+  }
+  function editCalculationDetails(details: CalculationDetails) {
+    if (plan || busy) setNotice('Case details changed. Find updated routes for this case.')
+    invalidate()
+    setExampleLoaded(false)
+    setCalculationDetails(details)
+  }
+  function openCaseDetails() {
+    const details = document.getElementById('case-calculation-details') as HTMLDetailsElement | null
+    if (details) {
+      details.open = true
+      details.scrollIntoView({ block: 'center' })
+      details.querySelector('input')?.focus({ preventScroll: true })
+    }
+    if (!brief.process.trim()) {
+      const processDetails = document.getElementById(
+        'case-process-details',
+      ) as HTMLDetailsElement | null
+      if (processDetails) processDetails.open = true
+    }
   }
   function loadExample() {
     invalidate()
     setBrief({ ...counterweightExample })
+    setCalculationDetails({
+      ...newCalculationDetails(),
+      label: 'Hypothetical counterweight case',
+      components: [
+        { id: 1, name: 'Metal dust (identity unconfirmed)', role: 'main', amount: '' },
+        { id: 2, name: 'Cable-plastic residue (polymer unconfirmed)', role: 'binder', amount: '' },
+      ],
+      mass_target_min_kg: '9.9',
+      mass_target_max_kg: '10.1',
+    })
     setNotice('')
     setExampleLoaded(true)
     setSection('material')
@@ -426,7 +494,12 @@ export function Workshop() {
     try {
       const response = await api<AdvisorResult>(
         '/api/advisor/help',
-        { brief, question: submittedQuestion, history: recentHistory },
+        {
+          brief,
+          question: submittedQuestion,
+          history: recentHistory,
+          calculation_context: calculationDetails,
+        },
         controller.signal,
       )
       if (!controller.signal.aborted) {
@@ -498,7 +571,7 @@ export function Workshop() {
     try {
       const response = await api<AdvisorTrialResult>(
         '/api/advisor/trial',
-        { brief, route },
+        { brief, route, calculation_context: calculationDetails },
         controller.signal,
       )
       if (!controller.signal.aborted) {
@@ -522,7 +595,20 @@ export function Workshop() {
     if (!plan) return
     const url = URL.createObjectURL(
       new Blob(
-        [JSON.stringify({ brief, plan, history, selected_route: selectedRoute, trial }, null, 2)],
+        [
+          JSON.stringify(
+            {
+              brief,
+              calculation_details: calculationDetails,
+              plan,
+              history,
+              selected_route: selectedRoute,
+              trial,
+            },
+            null,
+            2,
+          ),
+        ],
         { type: 'application/json' },
       ),
     )
@@ -620,7 +706,7 @@ export function Workshop() {
                 )}
               </label>
             ))}
-            <details className="workshop-constraints">
+            <details className="workshop-constraints" id="case-process-details">
               <summary>Contamination, process & allowed changes</summary>
               {optionalFields.map((field) => (
                 <label key={field.key}>
@@ -635,6 +721,7 @@ export function Workshop() {
                 </label>
               ))}
             </details>
+            <CaseDetails details={calculationDetails} onChange={editCalculationDetails} />
             {status && !status.configured && (
               <p className="workshop-help">
                 Add a Meta Model API key to the local server configuration, then retry the
@@ -901,10 +988,14 @@ export function Workshop() {
             </div>
           )}
           <div hidden={section !== 'material'}>
-            <BalanceMix />
+            <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} />
           </div>
           <div hidden={section !== 'engineering'}>
-            <WeightAdjustment />
+            <WeightAdjustment
+              key={JSON.stringify([materialKey, brief.product, brief.use_case])}
+              caseData={caseData}
+              onEditCase={openCaseDetails}
+            />
           </div>
           <form
             className="workshop-followup"
@@ -954,7 +1045,7 @@ export function Workshop() {
         </summary>
         {toolsOpen && (
           <Suspense fallback={<p>Loading calculation tools…</p>}>
-            <CalculationTools />
+            <CalculationTools caseData={caseData} onEditCase={openCaseDetails} />
           </Suspense>
         )}
       </details>

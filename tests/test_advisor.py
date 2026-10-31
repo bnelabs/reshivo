@@ -58,6 +58,16 @@ def trial_request():
     return {"brief": brief_request()["brief"], "route": route("engineering:adjustable-fill")}
 
 
+def calculation_context():
+    return {
+        "label": " Shared case ",
+        "components": [{"id": 1, "name": " Named material ", "role": "main", "amount": " 95 "},
+                       {"id": 2, "name": "", "role": "binder", "amount": ""}],
+        "amount_unit": "mass_percent", "amount_basis": " As received ",
+        "mass_target_min_kg": " 9.9 ", "mass_target_max_kg": "10.1",
+    }
+
+
 def trial_data():
     return {
         "title": "Adjustable contained counterweight",
@@ -101,6 +111,89 @@ class FixtureClient:
     def generate(self, prompt, schema, max_candidates, **kwargs):
         self.calls.append((json.loads(prompt), schema, max_candidates, kwargs))
         return Generation(self.data, "muse-spark-1.3", False, {"total_tokens": 5}, "fixture", 1)
+
+
+class SharedCalculationContextTests(unittest.TestCase):
+    def test_shared_details_reach_both_prompts_and_results_without_becoming_measurements(self):
+        for factory, operation, generated in ((brief_request, help_with_case, response_data()),
+                                              (trial_request, plan_trial, trial_data())):
+            request = factory()
+            request["calculation_context"] = calculation_context()
+            original = deepcopy(request)
+            client = FixtureClient(generated)
+            result = operation(request, client)
+            expected = calculation_context()
+            expected.update(label="Shared case", amount_basis="As received", mass_target_min_kg="9.9")
+            expected["components"][0].update(name="Named material", amount="95")
+            self.assertEqual(request, original)
+            self.assertEqual(client.calls[0][0]["calculation_context"], expected)
+            self.assertEqual(result["calculation_context"], expected)
+            self.assertEqual(result["calculation_context"]["components"][1]["name"], "")
+            self.assertEqual(result["calculation_context"]["components"][1]["amount"], "")
+            self.assertFalse(result["performance_verified"])
+            self.assertFalse(result["physical_product_tested"])
+
+    def test_incomplete_quantities_remain_text_and_do_not_relax_original_trial_targets(self):
+        request = trial_request()
+        request["calculation_context"] = calculation_context()
+        request["calculation_context"]["components"][0]["amount"] = "not measured"
+        request["calculation_context"]["mass_target_min_kg"] = ""
+        request["calculation_context"]["mass_target_max_kg"] = ""
+        result = plan_trial(request, FixtureClient(trial_data()))
+        self.assertEqual(result["calculation_context"]["components"][0]["amount"], "not measured")
+        self.assertEqual(result["calculation_context"]["mass_target_min_kg"], "")
+        self.assertEqual(result["targets"], request["brief"]["targets"])
+        request["calculation_context"].update(mass_target_min_kg="9.9", mass_target_max_kg="10.1")
+        data = trial_data()
+        data["checks"][0]["target"] = "9.9–10.1 kg"
+        with self.assertRaises(MetaValidationError):
+            plan_trial(request, FixtureClient(data))
+
+    def test_invalid_context_is_rejected_before_either_model_request(self):
+        cases = [None, {}, [], {**calculation_context(), "density": 4.2},
+                 {**calculation_context(), "components": []},
+                 {**calculation_context(), "components": calculation_context()["components"] * 11},
+                 {**calculation_context(), "amount_unit": "unknown"}]
+        for field, limit in (("label", 120), ("amount_basis", 300),
+                             ("mass_target_min_kg", 80), ("mass_target_max_kg", 80)):
+            cases.extend(({**calculation_context(), field: "x" * (limit + 1)},
+                          {**calculation_context(), field: 0}))
+        for changes in ({"id": True}, {"id": 0}, {"id": -1}, {"id": 1.5}, {"id": "1"},
+                        {"role": "density"}, {"amount": 95}, {"amount": "x" * 81},
+                        {"name": "x" * 121}, {"density": 1}):
+            value = calculation_context()
+            value["components"][0].update(changes)
+            cases.append(value)
+        value = calculation_context()
+        value["components"][1]["id"] = 1
+        cases.append(value)
+        value = calculation_context()
+        del value["components"][0]["name"]
+        cases.append(value)
+        value = calculation_context()
+        del value["amount_basis"]
+        cases.append(value)
+        for value in cases:
+            for factory, operation in ((brief_request, help_with_case), (trial_request, plan_trial)):
+                client = FixtureClient()
+                request = {**factory(), "calculation_context": value}
+                with self.subTest(context=value, operation=operation.__name__), self.assertRaises(ProductInputError):
+                    operation(request, client)
+                self.assertEqual(client.calls, [])
+
+    def test_context_boundaries_preserve_values_without_a_complete_recipe_claim(self):
+        context = {
+            "label": "x" * 120,
+            "components": [{"id": index + 1, "name": "x" * 120, "role": "other", "amount": "x" * 80}
+                           for index in range(20)],
+            "amount_unit": "volume_percent", "amount_basis": "x" * 300,
+            "mass_target_min_kg": "x" * 80, "mass_target_max_kg": "x" * 80,
+        }
+        self.assertEqual(validate_request({**brief_request(), "calculation_context": context})["calculation_context"], context)
+        self.assertEqual(validate_trial_request({**trial_request(), "calculation_context": context})["calculation_context"], context)
+        for factory, operation, data in ((brief_request, help_with_case, response_data()),
+                                          (trial_request, plan_trial, trial_data())):
+            self.assertNotIn("calculation_context", operation(factory(), FixtureClient(data)))
 
 
 class TrialTests(unittest.TestCase):
@@ -559,6 +652,19 @@ class AdvisorAPITests(unittest.TestCase):
         self.assertEqual(result["targets"], trial_request()["brief"]["targets"])
         self.assertFalse(result["performance_verified"])
         self.assertFalse(result["physical_product_tested"])
+
+    def test_shared_case_context_round_trips_through_both_routes(self):
+        for path, factory in (("/api/advisor/help", brief_request), ("/api/advisor/trial", trial_request)):
+            request = {**factory(), "calculation_context": calculation_context()}
+            status, result = self.call(path, request)
+            self.assertEqual(status, 200)
+            self.assertEqual(result["calculation_context"]["label"], "Shared case")
+            self.assertEqual(result["calculation_context"]["components"][0]["amount"], "95")
+            self.assertFalse(result["performance_verified"])
+            request["calculation_context"]["components"][0]["amount"] = 95
+            status, result = self.call(path, request)
+            self.assertEqual(status, 400)
+            self.assertEqual(result["error"]["code"], "invalid_request")
 
     def test_trial_endpoint_keeps_request_size_origin_host_and_concurrency_guards(self):
         code, result = self.call("/api/advisor/trial", {**trial_request(), "history": []})

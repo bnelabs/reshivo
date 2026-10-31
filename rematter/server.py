@@ -184,6 +184,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/advisor/trial": self.server.application.advisor_trial,
                 "/api/advisor/mass-trim": self.server.application.advisor_mass_trim,
                 "/api/advisor/balance-mix": self.server.application.advisor_balance_mix,
+                "/api/adaptation/plan": self.server.application.adaptation_plan,
+                "/api/adaptation/feedback": self.server.application.adaptation_feedback,
             }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)

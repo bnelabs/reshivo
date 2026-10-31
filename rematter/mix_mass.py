@@ -82,7 +82,7 @@ def _case(raw):
         "label": _text(raw.get("label"), "case name"),
         "components": normalized,
         "amount_basis": _text(raw.get("amount_basis"), "amount basis, such as dry mass or as-received mass", 300),
-        "process": _text(raw.get("process"), "process used for the measured mix", 2000),
+        "process": _text(raw.get("process"), "process used for the measured mix", 3000),
         "density_method": _text(raw.get("density_method"), "density measurement method", 1000),
         "density_volume_basis": density_basis,
         "calculation_volume_basis": calculation_basis,
@@ -139,7 +139,7 @@ def my_mix_mass(request):
     _object(request, {"product_name", "property", "case", "readings", "volume_cm3", "target_min_kg", "target_max_kg"}, "mass simulation")
     if request.get("property") != "mass":
         raise ProductInputError("Only mass has a calculation here; other properties need matching measurements and a suitable calculation")
-    product_name = _text(request.get("product_name"), "product name")
+    product_name = _text(request.get("product_name"), "product name", 3000)
     case = _case(request.get("case"))
     readings = _readings(request.get("readings"))
     volume = _number(request.get("volume_cm3"), "Volume (cm3)")

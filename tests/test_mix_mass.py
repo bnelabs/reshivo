@@ -36,6 +36,23 @@ def mix_request():
 
 
 class MixMassTests(unittest.TestCase):
+    def test_shared_product_and_process_limits_preserve_full_brief_text(self):
+        request = mix_request()
+        request["product_name"] = "P" * 3000
+        request["case"]["process"] = "M" * 3000
+        result = my_mix_mass(request)
+        self.assertEqual(result["product_name"], request["product_name"])
+        self.assertEqual(result["case"]["process"], request["case"]["process"])
+        self.assertAlmostEqual(result["reading_scenarios"][0]["mass_kg"], 1.05)
+        for field in ("product_name", "process"):
+            candidate = mix_request()
+            if field == "process":
+                candidate["case"][field] = "M" * 3001
+            else:
+                candidate[field] = "P" * 3001
+            with self.subTest(field=field), self.assertRaises(ProductInputError):
+                my_mix_mass(candidate)
+
     def test_entered_processed_density_is_scaled_without_study_substitution(self):
         request = mix_request()
         original = deepcopy(request)

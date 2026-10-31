@@ -149,6 +149,22 @@ class WorkbenchService:
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
 
+    def adaptation_plan(self, request):
+        from .adaptation import plan_adaptation
+        from .products import ProductInputError
+        try:
+            return plan_adaptation(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
+    def adaptation_feedback(self, request):
+        from .adaptation import adjust_from_measurement
+        from .products import ProductInputError
+        try:
+            return adjust_from_measurement(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
     def product_catalog(self):
         from .products import ProductDataError, product_catalog
         try:

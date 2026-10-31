@@ -2615,3 +2615,132 @@ footer {
     animation: none;
   }
 }
+
+.workshop-case-details {
+  border-top: 1px solid #e0e9e6;
+  margin-top: 20px;
+  padding-top: 17px;
+  scroll-margin-top: 25px;
+}
+.workshop-case-details > summary {
+  color: #3e6965;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.workshop-case-details > p,
+.workshop-case-details-group > p {
+  color: #6b8187;
+  font-size: 11px;
+  line-height: 1.65;
+  margin: 12px 0;
+}
+.workshop-case-details .workshop-case-details-note {
+  color: #859699;
+  font-size: 10px;
+}
+.workshop-case-details-group {
+  border-top: 1px solid #e0e9e6;
+  padding-top: 18px;
+  margin-top: 20px;
+}
+.workshop-case-details-group > h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3e5f63;
+  margin: 0 0 8px;
+}
+.workshop-case-component {
+  border: 1px solid #e0e9e6;
+  border-radius: 5px;
+  padding: 12px;
+  margin: 12px 0;
+  min-width: 0;
+}
+.workshop-case-component-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.workshop-case-component-heading h4 {
+  font-size: 11px;
+  font-weight: 600;
+  color: #567370;
+  margin: 0;
+}
+.workshop-case-component-heading button {
+  padding: 3px 0;
+  background: none;
+  color: #67847d;
+  font-size: 10px;
+}
+.workshop-case-component-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.workshop-case-component-pair > label {
+  min-width: 0;
+}
+.workshop-case-details .workshop-case-add {
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.workshop-case-summary {
+  padding: 16px 18px;
+  border: 1px solid #dce9e4;
+  background: #f5f9f7;
+  border-radius: 6px;
+  margin: 12px 0 18px;
+  min-width: 0;
+}
+.workshop-case-summary > .workshop-eyebrow {
+  margin: 0 0 10px;
+}
+.workshop-case-summary dl {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+.workshop-case-summary dl > div {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 10px;
+}
+.workshop-case-summary dt {
+  color: #78918b;
+  font-size: 10px;
+  line-height: 1.65;
+}
+.workshop-case-summary dd {
+  margin: 0;
+  color: #46655f;
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.workshop-weight-tool label:has(input[type='checkbox']) {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+.workshop-weight-tool input[type='checkbox'] {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+  accent-color: #087f74;
+}
+@media (max-width: 600px) {
+  .workshop-case-component-pair {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .workshop-case-summary {
+    padding: 14px;
+  }
+}
