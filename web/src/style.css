@@ -2790,7 +2790,113 @@ footer {
   overflow-wrap: anywhere;
   font-size: 10px;
 }
+.assembly-mass-planner textarea,
+.assembly-mass-planner select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d8e3df;
+  border-radius: 5px;
+  background: #fff;
+  color: #25414b;
+  padding: 10px 11px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.assembly-mass-planner textarea {
+  resize: vertical;
+}
+.assembly-note-reader {
+  margin-top: 22px;
+}
+.assembly-tool-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.assembly-note-review {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #d4e4db;
+  border-radius: 5px;
+  background: #f6f9f6;
+  overflow-wrap: anywhere;
+}
+.assembly-note-review h4 {
+  margin: 0 0 10px;
+  color: #254b42;
+  font-size: 14px;
+}
+.assembly-note-review dl {
+  margin: 16px 0;
+}
+.assembly-note-review dl > div {
+  display: grid;
+  grid-template-columns: minmax(115px, 0.8fr) minmax(0, 1.2fr);
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px solid #e1ebe5;
+}
+.assembly-note-review dt {
+  color: #5d786e;
+}
+.assembly-note-review dd {
+  margin: 0;
+  min-width: 0;
+}
+.assembly-note-review strong {
+  font-weight: 500;
+}
+.assembly-note-review q {
+  display: block;
+  color: #6f827c;
+  margin-top: 5px;
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+.assembly-applied-note > summary {
+  color: #436e65;
+  cursor: pointer;
+  font-weight: 500;
+}
+.assembly-applied-note blockquote {
+  margin: 15px 0;
+  padding-left: 12px;
+  border-left: 2px solid #cbdcd5;
+  color: #5d786e;
+  white-space: pre-wrap;
+}
+.assembly-manual-details,
+.assembly-nominal-tool {
+  margin: 22px 0;
+  padding-top: 16px;
+  border-top: 1px solid #e1ebe5;
+}
+.assembly-manual-details > summary,
+.assembly-nominal-tool > summary {
+  color: #436e65;
+  cursor: pointer;
+}
+.assembly-mass-planner .workshop-trim-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.assembly-mass-planner .assembly-observation-summary {
+  color: #46655f;
+}
+.assembly-mass-planner .workshop-trim-result h3 {
+  margin: 10px 0;
+  font-size: 17px;
+  color: #254b42;
+}
 @media (max-width: 600px) {
+  .assembly-mass-planner .workshop-trim-fields,
+  .assembly-note-review dl > div {
+    grid-template-columns: 1fr;
+  }
+  .assembly-note-review dl > div {
+    gap: 5px;
+  }
   .workshop-case-component-pair {
     grid-template-columns: 1fr;
     gap: 0;

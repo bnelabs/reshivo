@@ -47,7 +47,7 @@ def _numeric_values(value, cls, defaults, name):
 
 
 class WorkbenchService:
-    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None, assist_fn=None):
+    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None, assist_fn=None, note_fn=None):
         self.root = Path(root).resolve()
         self.output_root = Path(output_root or self.root / "outputs/workbench").resolve()
         self.config, self.default_requirements, self.default_search = load_config(self.root / "examples/support-member.json")
@@ -56,6 +56,7 @@ class WorkbenchService:
         self.advisor_fn = advisor_fn
         self.trial_fn = trial_fn
         self.assist_fn = assist_fn
+        self.note_fn = note_fn
 
     def meta_status(self):
         if self.meta_status_fn is not None:
@@ -124,6 +125,24 @@ class WorkbenchService:
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
 
+    def advisor_read_observation(self, request):
+        from .observation_intake import read_observation_note, validate_note_request
+        from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError
+        from .products import ProductInputError
+        try:
+            validate_note_request(request)
+            if self.note_fn is not None:
+                return self.note_fn(request)
+            return read_observation_note(request, root=self.root)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+        except MetaConfigurationError as error:
+            raise ServiceError("meta_not_configured", str(error), 503) from None
+        except MetaValidationError as error:
+            raise ServiceError("meta_invalid_response", str(error), 502) from None
+        except MetaAPIError as error:
+            raise ServiceError("meta_request_failed", str(error), 502) from None
+
     def advisor_trial(self, request):
         from .advisor import plan_trial, validate_trial_request
         from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError
@@ -183,6 +202,14 @@ class WorkbenchService:
             raise ServiceError("meta_invalid_response", str(error), 502) from None
         except MetaAPIError as error:
             raise ServiceError("meta_request_failed", str(error), 502) from None
+
+    def adaptation_observed_mass(self, request):
+        from .adaptation import adjust_observed_mass
+        from .products import ProductInputError
+        try:
+            return adjust_observed_mass(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
 
     def product_catalog(self):
         from .products import ProductDataError, product_catalog

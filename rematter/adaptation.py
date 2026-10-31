@@ -1,5 +1,5 @@
 """Bounded fill-volume planning from stated processed-mix density observations."""
-from decimal import Decimal, localcontext
+from decimal import Decimal, InvalidOperation, localcontext
 import hashlib
 import json
 import math
@@ -15,6 +15,7 @@ PLAN_FIELDS = {
     "density_uncertainty_g_cm3", "volume_tolerance_cm3",
 }
 DATA_KINDS = {"user_measurements", "synthetic", "source_replay"}
+FEEDBACK_FIELDS = {"observation", "max_add_mass_kg", "max_remove_mass_kg", "adjustment_uncertainty_kg"}
 ASSUMPTIONS = [
     "Simulation only: assembled mass equals tare plus processed-mix density times external fill volume / 1000.",
     "Density belongs to the stated processed mix, not its separate ingredients. No constituent-density mixing rule is used.",
@@ -48,6 +49,16 @@ def _text(value, label, maximum):
     if not isinstance(value, str) or not value.strip() or len(value) > maximum:
         raise ProductInputError(f"Enter {label} as text no longer than {maximum} characters")
     return value.strip()
+
+
+def _shared_number(text, label, positive=False):
+    if not text:
+        raise ProductInputError(f"Enter {label} in the shared calculation details")
+    try:
+        value = float(Decimal(text))
+    except (InvalidOperation, ValueError, OverflowError):
+        raise ProductInputError(f"{label} must be a finite shared number") from None
+    return _number(value, label, positive)
 
 
 def _fingerprint(value):
@@ -256,6 +267,14 @@ def adjust_from_measurement(request):
     fingerprint = _text(request["plan_fingerprint"], "plan fingerprint", 64)
     if fingerprint != _fingerprint(plan):
         raise ProductInputError("The case or plan changed. Recalculate before applying this observation.")
+    feedback = _validated_mass_feedback({key: request[key] for key in FEEDBACK_FIELDS})
+    return {"plan_fingerprint": fingerprint, "case_fingerprint": _fingerprint(plan["case"]),
+            "density_data_kind": plan["data_kind"],
+            **_mass_feedback_result(plan["target_min_kg"], plan["target_max_kg"], feedback)}
+
+
+def _validated_mass_feedback(request):
+    _object(request, FEEDBACK_FIELDS, label="mass feedback")
     observation = _object(request["observation"], {"id", "kind", "mass_kg", "uncertainty_kg"}, label="mass observation")
     if observation["kind"] not in ("user_reported", "simulated"):
         raise ProductInputError("Identify the mass observation as user_reported or simulated")
@@ -270,11 +289,19 @@ def adjust_from_measurement(request):
         raise ProductInputError("Mass observation uncertainty must not extend below zero")
     if _d(remove) > _d(observation["mass_kg"]) - _d(observation["uncertainty_kg"]):
         raise ProductInputError("Removable mass must not exceed the assembly's lower mass bound")
+    return {"observation": observation, "max_add_mass_kg": add, "max_remove_mass_kg": remove,
+            "adjustment_uncertainty_kg": adjustment_error}
+
+
+def _mass_feedback_result(target_min_kg, target_max_kg, feedback):
+    observation = feedback["observation"]
+    add, remove = feedback["max_add_mass_kg"], feedback["max_remove_mass_kg"]
+    adjustment_error = feedback["adjustment_uncertainty_kg"]
     with localcontext() as context:
         context.prec = 60
         measured = _d(observation["mass_kg"])
         uncertainty = _d(observation["uncertainty_kg"])
-        low_target, high_target = _d(plan["target_min_kg"]), _d(plan["target_max_kg"])
+        low_target, high_target = _d(target_min_kg), _d(target_max_kg)
         low_mass, high_mass = measured - uncertainty, measured + uncertainty
         if low_mass >= low_target and high_mass <= high_target:
             feasible, low, high, correction, adjusted_low, adjusted_high, action = True, Decimal(0), Decimal(0), Decimal(0), low_mass, high_mass, "none"
@@ -289,8 +316,7 @@ def adjust_from_measurement(request):
             action = "add" if feasible and correction > 0 else "remove" if feasible and correction < 0 else "unresolved"
         return {
             "result_kind": "simulation", "model": "bounded_mass_feedback_v1", "mass_only": True,
-            "plan_fingerprint": fingerprint, "case_fingerprint": _fingerprint(plan["case"]),
-            "density_data_kind": plan["data_kind"], "observation": observation,
+            "observation": observation,
             "observed_mass_min_kg": _float(low_mass), "observed_mass_max_kg": _float(high_mass),
             "feasible": feasible, "action": action,
             "signed_adjustment_min_kg": _float(low) if feasible else None,
@@ -308,3 +334,35 @@ def adjust_from_measurement(request):
                             "This mass-only result does not establish volume fit, retention, durability or future-batch performance."],
             "physical_product_tested": False, "batch_consistency_established": False,
         }
+
+
+def validate_observed_mass_request(request):
+    """Bind a weighed assembly to shared targets without completing a recipe or density plan."""
+    from .advisor import _brief, _calculation_context
+    _object(request, {"brief", "calculation_context", "feedback"}, {"request_fingerprint"}, "observed mass request")
+    brief = _brief(request["brief"])
+    details = _calculation_context(request["calculation_context"])
+    low = _shared_number(details["mass_target_min_kg"], "shared minimum mass target")
+    high = _shared_number(details["mass_target_max_kg"], "shared maximum mass target", True)
+    if low > high:
+        raise ProductInputError("The minimum mass target must not exceed the maximum")
+    normalized = {"brief": brief, "calculation_context": details,
+                  "target_min_kg": low, "target_max_kg": high,
+                  "feedback": _validated_mass_feedback(request["feedback"])}
+    if "request_fingerprint" in request:
+        fingerprint = _text(request["request_fingerprint"], "observed mass request fingerprint", 64)
+        if fingerprint != _fingerprint(normalized):
+            raise ProductInputError("The shared case, mass target or observation changed. Recalculate before using this result.")
+    return normalized
+
+
+def adjust_observed_mass(request):
+    """Calculate a mass-only correction from an identified complete-assembly observation."""
+    request = validate_observed_mass_request(request)
+    return {"input_mode": "observed_mass_only", "request_fingerprint": _fingerprint(request),
+            "case_fingerprint": _fingerprint({key: request[key] for key in ("brief", "calculation_context")}),
+            "plan_fingerprint": None, "density_data_kind": None,
+            "target_min_kg": request["target_min_kg"], "target_max_kg": request["target_max_kg"],
+            "brief": request["brief"], "calculation_context": request["calculation_context"],
+            "feedback_request": request["feedback"],
+            **_mass_feedback_result(request["target_min_kg"], request["target_max_kg"], request["feedback"])}

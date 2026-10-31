@@ -34,6 +34,34 @@ export function CaseDetails({
         Names, amounts and targets are not inferred from your description. Leave unknown values
         blank.
       </p>
+      <div className="workshop-case-details-group">
+        <h3>Mass target</h3>
+        <p>Enter the numeric mass range once for the mass calculation and weight adjustment.</p>
+        <div className="workshop-case-component-pair">
+          <label>
+            Mass target minimum (kg)
+            <input
+              type="number"
+              min="0"
+              max="1000000"
+              step="any"
+              value={details.mass_target_min_kg}
+              onChange={(event) => onChange({ ...details, mass_target_min_kg: event.target.value })}
+            />
+          </label>
+          <label>
+            Mass target maximum (kg)
+            <input
+              type="number"
+              min="0.000001"
+              max="1000000"
+              step="any"
+              value={details.mass_target_max_kg}
+              onChange={(event) => onChange({ ...details, mass_target_max_kg: event.target.value })}
+            />
+          </label>
+        </div>
+      </div>
       <label>
         Case name (optional)
         <input
@@ -43,9 +71,12 @@ export function CaseDetails({
           placeholder="Current case"
         />
       </label>
-      <div className="workshop-case-details-group">
-        <h3>Exact recipe</h3>
-        <p>Use the materials and amounts in the processed mix you measured.</p>
+      <details className="workshop-case-details-group product-detail">
+        <summary>Recipe details for composition or density tools</summary>
+        <p>
+          These tools use the precise materials and amounts in your processed mix. A
+          weighed-assembly check uses the mass range above.
+        </p>
         <label>
           Amount unit
           <select
@@ -152,35 +183,7 @@ export function CaseDetails({
             placeholder="For example, dry mass or as received"
           />
         </label>
-      </div>
-      <div className="workshop-case-details-group">
-        <h3>Mass target</h3>
-        <p>Enter the numeric mass range once for the mass calculation and weight adjustment.</p>
-        <div className="workshop-case-component-pair">
-          <label>
-            Mass target minimum (kg)
-            <input
-              type="number"
-              min="0"
-              max="1000000"
-              step="any"
-              value={details.mass_target_min_kg}
-              onChange={(event) => onChange({ ...details, mass_target_min_kg: event.target.value })}
-            />
-          </label>
-          <label>
-            Mass target maximum (kg)
-            <input
-              type="number"
-              min="0.000001"
-              max="1000000"
-              step="any"
-              value={details.mass_target_max_kg}
-              onChange={(event) => onChange({ ...details, mass_target_max_kg: event.target.value })}
-            />
-          </label>
-        </div>
-      </div>
+      </details>
     </details>
   )
 }

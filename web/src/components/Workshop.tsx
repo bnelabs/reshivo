@@ -2,7 +2,8 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { BalanceMix } from './BalanceMix'
 import { TrialPlan } from './TrialPlan'
-import { CaseDetails, CaseSummary } from './CaseDetails'
+import { CaseDetails } from './CaseDetails'
+import { AssemblyMassPlanner as WeightAdjustment } from './AssemblyMassPlanner'
 import type {
   AdvisorBrief,
   AdvisorMessage,
@@ -12,7 +13,6 @@ import type {
   AdvisorTrialResult,
   AssemblyObservationFields,
   CalculationDetails,
-  MassTrimResult,
   WorkshopCase,
 } from '../types'
 
@@ -64,7 +64,6 @@ const counterweightExample: AdvisorBrief = {
   available_changes:
     'A rigid enclosure, mechanical containment, adjustable fill compartments, or an appropriate known binder may be considered. Keep dust contained; no open dust sorting at home.',
 }
-const quantity = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 4 })
 const briefFields: {
   key: keyof AdvisorBrief
   label: string
@@ -173,186 +172,6 @@ function RouteCard({
         Plan a trial <span aria-hidden="true">↗</span>
       </button>
     </article>
-  )
-}
-
-function WeightAdjustment({
-  caseData,
-  onEditCase,
-  assemblyObservation,
-  onAssemblyObservationChange,
-}: {
-  caseData: WorkshopCase
-  onEditCase: () => void
-  assemblyObservation: AssemblyObservationFields
-  onAssemblyObservationChange: (observation: AssemblyObservationFields) => void
-}) {
-  const current = assemblyObservation.mass
-  const minimum = caseData.details.mass_target_min_kg
-  const maximum = caseData.details.mass_target_max_kg
-  const signature = JSON.stringify([assemblyObservation, minimum, maximum])
-  const [result, setResult] = useState<{
-    value: MassTrimResult
-    signature: string
-  } | null>(null)
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-  const request = useRef<AbortController | null>(null)
-  useEffect(() => () => request.current?.abort(), [])
-  useEffect(() => {
-    request.current?.abort()
-    setBusy(false)
-    setResult(null)
-    setError('')
-  }, [signature])
-  const currentResult = result?.signature === signature ? result.value : null
-  function change(update: Partial<AssemblyObservationFields>) {
-    request.current?.abort()
-    setBusy(false)
-    setResult(null)
-    setError('')
-    onAssemblyObservationChange({ ...assemblyObservation, ...update })
-  }
-  const valid =
-    [current, minimum, maximum].every(
-      (value) =>
-        value.trim() !== '' &&
-        Number.isFinite(Number(value)) &&
-        Number(value) >= 0 &&
-        Number(value) <= 1_000_000,
-    ) &&
-    Number(maximum) > 0 &&
-    Number(minimum) <= Number(maximum)
-  async function calculate() {
-    if (!valid || busy) return
-    const controller = new AbortController()
-    request.current = controller
-    setBusy(true)
-    setError('')
-    setResult(null)
-    try {
-      const response = await api<MassTrimResult>(
-        '/api/advisor/mass-trim',
-        {
-          current_mass_kg: Number(current),
-          target_min_kg: Number(minimum),
-          target_max_kg: Number(maximum),
-        },
-        controller.signal,
-      )
-      if (!controller.signal.aborted) setResult({ value: response, signature })
-    } catch (failure) {
-      if (!controller.signal.aborted)
-        setError(
-          failure instanceof Error ? failure.message : 'The adjustment could not be calculated.',
-        )
-    } finally {
-      if (!controller.signal.aborted) setBusy(false)
-    }
-  }
-  return (
-    <details className="workshop-weight-tool">
-      <summary>
-        <span>Weight adjustment</span>
-        <small>Use a complete-assembly observation</small>
-      </summary>
-      <p>
-        Use the complete assembled unit's observed mass to work out a nominal addition or removal.
-        No density estimate is needed. This observation is shared with the calculation tools.
-      </p>
-      <CaseSummary brief={caseData.brief} />
-      <p>
-        Shared mass target: {minimum && maximum ? `${minimum}–${maximum} kg` : 'not entered yet.'}{' '}
-        <button type="button" className="text-button" onClick={onEditCase}>
-          {minimum && maximum ? 'Edit case details' : 'Set the mass range in your case'}
-        </button>
-      </p>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault()
-          void calculate()
-        }}
-      >
-        <div className="workshop-trim-fields">
-          <label>
-            Complete-assembly mass (kg)
-            <input
-              type="number"
-              min="0"
-              max="1000000"
-              step="any"
-              value={current}
-              onChange={(event) => change({ mass: event.target.value })}
-              required
-            />
-          </label>
-          <label>
-            Observation source
-            <select
-              value={assemblyObservation.kind}
-              onChange={(event) =>
-                change({ kind: event.target.value as AssemblyObservationFields['kind'] })
-              }
-            >
-              <option value="">Not recorded</option>
-              <option value="user_reported">Actual, user-reported weighing</option>
-              <option value="simulated">Simulated observation</option>
-            </select>
-          </label>
-          <label>
-            Observation ID (if known)
-            <input
-              maxLength={200}
-              value={assemblyObservation.id}
-              onChange={(event) => change({ id: event.target.value })}
-            />
-          </label>
-        </div>
-        <p className="helper">
-          This arithmetic does not include weighing uncertainty or limits on adding and removing
-          mass. Use the calculation tools for those checks; an omitted uncertainty is unknown.
-        </p>
-        <button type="submit" className="outline-button" disabled={!valid || busy}>
-          {busy ? 'Calculating…' : 'Calculate adjustment'}
-        </button>
-      </form>
-      {error && (
-        <p className="workshop-error" role="alert">
-          {error}
-        </p>
-      )}
-      {currentResult && (
-        <div className="workshop-trim-result" role="status">
-          <p>
-            {assemblyObservation.kind === 'simulated'
-              ? 'Simulated observation'
-              : assemblyObservation.kind === 'user_reported'
-                ? 'User-reported weighing'
-                : 'Observation source not recorded'}
-            {assemblyObservation.id.trim() ? ` · ${assemblyObservation.id.trim()}` : ''}. Nominal
-            mass adjustment; uncertainty and adjustment limits are not included.
-          </p>
-          <strong>{currentResult.action}</strong>
-          {currentResult.status !== 'inside' && (
-            <p>
-              {currentResult.status === 'add' ? 'Add' : 'Remove'}{' '}
-              {quantity(currentResult.adjustment_min_kg)}–
-              {quantity(currentResult.adjustment_max_kg)} kg for the entered mass and target. The
-              correction to its midpoint is {quantity(currentResult.adjustment_to_midpoint_kg)} kg.
-            </p>
-          )}
-          <p>Reweigh the complete assembled unit after any adjustment.</p>
-          <details>
-            <summary>Calculation notes</summary>
-            <ul>
-              {currentResult.assumptions.map((note, index) => (
-                <li key={index}>{note}</li>
-              ))}
-            </ul>
-          </details>
-        </div>
-      )}
-    </details>
   )
 }
 
@@ -1061,6 +880,7 @@ export function Workshop() {
               onEditCase={openCaseDetails}
               assemblyObservation={assemblyObservation}
               onAssemblyObservationChange={setAssemblyObservation}
+              active={section === 'engineering'}
             />
           </div>
           <form

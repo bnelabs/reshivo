@@ -10,7 +10,7 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.adaptation import adjust_from_measurement, plan_adaptation, validate_plan
+from rematter.adaptation import adjust_from_measurement, adjust_observed_mass, plan_adaptation, validate_plan
 from rematter.products import ProductInputError
 from rematter.server import build_server
 from rematter.service import WorkbenchService
@@ -51,6 +51,20 @@ def feedback_request():
         "plan": request, "plan_fingerprint": result["plan_fingerprint"],
         "observation": {"id": "Weigh-1", "kind": "simulated", "mass_kg": 9.7, "uncertainty_kg": .02},
         "max_add_mass_kg": .5, "max_remove_mass_kg": 0, "adjustment_uncertainty_kg": .01,
+    }
+
+
+def observed_mass_request():
+    return {
+        "brief": {"input": "Unidentified material retained in a sealed unit", "variation": "Unknown",
+                  "contamination": "Unknown", "product": "Stationary enclosed base",
+                  "use_case": "Use existing sealed units without opening", "targets": "9.9 to 10.1 kg",
+                  "process": "", "available_changes": "Exchange suitable sealed units and reweigh"},
+        "calculation_context": {"label": "", "amount_basis": "", "amount_unit": "mass_percent",
+                                "components": [{"id": 1, "name": "", "role": "main", "amount": ""}],
+                                "mass_target_min_kg": "9.9", "mass_target_max_kg": "10.1"},
+        "feedback": {"observation": {"id": "Weigh-1", "kind": "simulated", "mass_kg": 9.7, "uncertainty_kg": .02},
+                     "max_add_mass_kg": .5, "max_remove_mass_kg": 0, "adjustment_uncertainty_kg": .01},
     }
 
 
@@ -402,6 +416,99 @@ class MassFeedbackTests(unittest.TestCase):
                 adjust_from_measurement(request)
 
 
+class ObservedMassTests(unittest.TestCase):
+    def test_blank_recipe_and_density_are_not_needed_for_a_weighed_mass_correction(self):
+        request = observed_mass_request()
+        original = deepcopy(request)
+        with patch("rematter.adaptation.validate_plan", side_effect=AssertionError("No density plan needed")), \
+             patch("rematter.meta.MetaClient", side_effect=AssertionError("No provider needed")):
+            result = adjust_observed_mass(request)
+        self.assertEqual(request, original)
+        self.assertEqual(result["input_mode"], "observed_mass_only")
+        self.assertIsNone(result["plan_fingerprint"])
+        self.assertIsNone(result["density_data_kind"])
+        self.assertEqual(result["action"], "add")
+        self.assertAlmostEqual(result["chosen_signed_adjustment_kg"], .3)
+        self.assertAlmostEqual(result["simulated_mass_min_kg_after_adjustment"], 9.97)
+        self.assertAlmostEqual(result["simulated_mass_max_kg_after_adjustment"], 10.03)
+        self.assertEqual(result["brief"], request["brief"])
+        self.assertEqual(result["calculation_context"], request["calculation_context"])
+        self.assertFalse(result["physical_product_tested"])
+        self.assertFalse(result["batch_consistency_established"])
+        self.assertIn("Not checked", result["volume_status"])
+
+    def test_same_math_covers_add_remove_none_and_infeasible_with_uncertainty(self):
+        for mass, add, remove, expected in ((9.7, .5, 0, "add"), (10.3, 0, .5, "remove"),
+                                             (10, 0, 0, "none"), (9.7, .1, 0, "unresolved")):
+            request = observed_mass_request()
+            request["feedback"]["observation"]["mass_kg"] = mass
+            request["feedback"].update(max_add_mass_kg=add, max_remove_mass_kg=remove)
+            with self.subTest(action=expected):
+                result = adjust_observed_mass(request)
+                self.assertEqual(result["action"], expected)
+                if expected == "unresolved":
+                    self.assertFalse(result["feasible"])
+                    self.assertIsNone(result["chosen_signed_adjustment_kg"])
+                    continue
+                command = result["chosen_signed_adjustment_kg"]
+                observation_error = request["feedback"]["observation"]["uncertainty_kg"]
+                adjustment_error = request["feedback"]["adjustment_uncertainty_kg"] if command else 0
+                for observation_sign, adjustment_sign in itertools.product((-1, 1), repeat=2):
+                    corrected = mass + observation_sign * observation_error + command + adjustment_sign * adjustment_error
+                    self.assertGreaterEqual(corrected, 9.9)
+                    self.assertLessEqual(corrected, 10.1)
+                if command:
+                    self.assertGreaterEqual(command - adjustment_error, -remove)
+                    self.assertLessEqual(command + adjustment_error, add)
+
+    def test_fingerprint_rejects_changed_brief_details_target_observation_or_limits(self):
+        original = observed_mass_request()
+        original["request_fingerprint"] = adjust_observed_mass(original)["request_fingerprint"]
+        self.assertEqual(adjust_observed_mass(original)["request_fingerprint"], original["request_fingerprint"])
+        mutations = [lambda r: r["brief"].update(product="Different product"),
+                     lambda r: r["brief"].update(process="Changed process"),
+                     lambda r: r["calculation_context"].update(label="Another case"),
+                     lambda r: r["calculation_context"]["components"][0].update(name="Named material"),
+                     lambda r: r["calculation_context"].update(mass_target_max_kg="10.2"),
+                     lambda r: r["feedback"]["observation"].update(id="Another observation"),
+                     lambda r: r["feedback"]["observation"].update(mass_kg=9.8),
+                     lambda r: r["feedback"].update(max_add_mass_kg=.4)]
+        for mutate in mutations:
+            request = deepcopy(original)
+            mutate(request)
+            with self.subTest(request=request):
+                with self.assertRaises(ProductInputError): adjust_observed_mass(request)
+                request.pop("request_fingerprint")
+                self.assertNotEqual(adjust_observed_mass(request)["request_fingerprint"], original["request_fingerprint"])
+
+    def test_missing_invalid_or_unsupported_inputs_never_get_a_correction(self):
+        requests = [None, {}, {**observed_mass_request(), "density": 4},
+                    {**observed_mass_request(), "feedback": None},
+                    {**observed_mass_request(), "target_max_kg": 20},
+                    {**observed_mass_request(), "request_fingerprint": "stale"}]
+        for value in ("", "NaN", "Infinity", "-1", "1000001"):
+            request = observed_mass_request()
+            request["calculation_context"]["mass_target_min_kg"] = value
+            requests.append(request)
+        request = observed_mass_request()
+        request["calculation_context"].update(mass_target_min_kg="11", mass_target_max_kg="10")
+        requests.append(request)
+        for changes in ({"id": ""}, {"kind": "verified"}, {"mass_kg": -1}, {"uncertainty_kg": 10}):
+            request = observed_mass_request()
+            request["feedback"]["observation"].update(changes)
+            requests.append(request)
+        for key in ("max_add_mass_kg", "max_remove_mass_kg", "adjustment_uncertainty_kg"):
+            request = observed_mass_request()
+            request["feedback"].pop(key)
+            requests.append(request)
+        request = observed_mass_request()
+        request["feedback"]["max_remove_mass_kg"] = 9.7
+        requests.append(request)
+        for request in requests:
+            with self.subTest(request=request), self.assertRaises(ProductInputError):
+                adjust_observed_mass(request)
+
+
 class AdaptationAPITests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -456,7 +563,8 @@ class AdaptationAPITests(unittest.TestCase):
 
     def test_both_routes_keep_origin_host_size_and_work_slot_guards(self):
         for path, request in (("/api/adaptation/plan", adaptation_request()),
-                              ("/api/adaptation/feedback", feedback_request())):
+                              ("/api/adaptation/feedback", feedback_request()),
+                              ("/api/adaptation/observed-mass", observed_mass_request())):
             for headers in ({"Host": "example.com"}, {"Origin": "https://example.com"}):
                 with self.subTest(path=path, headers=headers):
                     self.assertEqual(self.call(path, request, headers)[0], 403)
@@ -471,6 +579,21 @@ class AdaptationAPITests(unittest.TestCase):
                 self.server.work_slots.release()
                 self.server.work_slots.release()
             self.assertEqual(self.call(path, request)[0], 200)
+
+    def test_direct_observed_mass_route_has_no_density_or_dataset_dependency(self):
+        with patch.object(self.service, "_materials", side_effect=AssertionError("No study needed")), \
+             patch("rematter.adaptation.validate_plan", side_effect=AssertionError("No density needed")), \
+             patch("rematter.meta.MetaClient", side_effect=AssertionError("No provider needed")):
+            status, result = self.call("/api/adaptation/observed-mass", observed_mass_request())
+        self.assertEqual(status, 200)
+        self.assertEqual(result["action"], "add")
+        self.assertEqual(result["input_mode"], "observed_mass_only")
+        request = observed_mass_request()
+        request["request_fingerprint"] = result["request_fingerprint"]
+        request["feedback"]["observation"]["mass_kg"] = 9.8
+        status, result = self.call("/api/adaptation/observed-mass", request)
+        self.assertEqual(status, 400)
+        self.assertEqual(result["error"]["code"], "invalid_request")
 
 
 if __name__ == "__main__":

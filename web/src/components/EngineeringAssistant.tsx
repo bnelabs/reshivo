@@ -72,7 +72,7 @@ export function EngineeringAssistant({
   plan: PlanRequest | null
   feedback: FeedbackRequest | null
   active: boolean
-  onCapacitySuggestion: (capacity: number) => void
+  onCapacitySuggestion?: (capacity: number) => void
 }) {
   const [question, setQuestion] = useState(
     'What can I change to reach this mass target with these readings and limits?',
@@ -84,6 +84,18 @@ export function EngineeringAssistant({
   const request = useRef<AbortController | null>(null)
   const resultArea = useRef<HTMLDivElement | null>(null)
   const signature = JSON.stringify([caseData, plan, feedback, question])
+  const targetValues = [caseData.details.mass_target_min_kg, caseData.details.mass_target_max_kg]
+  const targetReady =
+    targetValues.every(
+      (value) =>
+        value.trim() !== '' &&
+        Number.isFinite(Number(value)) &&
+        Number(value) >= 0 &&
+        Number(value) <= 1_000_000,
+    ) &&
+    Number(targetValues[1]) > 0 &&
+    Number(targetValues[0]) <= Number(targetValues[1])
+  const calculationReady = Boolean(plan || feedback) && targetReady
   const currentSignature = useRef(signature)
   currentSignature.current = signature
 
@@ -111,7 +123,7 @@ export function EngineeringAssistant({
   }, [result])
 
   async function ask() {
-    if (!plan || !active || busy || !question.trim()) return
+    if (!calculationReady || !active || busy || !question.trim()) return
     const controller = new AbortController()
     request.current?.abort()
     request.current = controller
@@ -164,10 +176,10 @@ export function EngineeringAssistant({
         Ask about this case. Meta can compare the design, check a larger capacity, or use the
         assembly observation entered above. It runs the calculations before proposing a next step.
       </p>
-      {!plan && (
+      {!calculationReady && (
         <p className="product-input-note">
-          Complete the density readings, target, capacity and error settings above to use this mass
-          workflow.
+          Set the shared mass target and enter a complete assembly observation with its bounds, or a
+          matching density and capacity plan.
         </p>
       )}
       <label>
@@ -183,7 +195,7 @@ export function EngineeringAssistant({
         <button
           type="button"
           className="primary-button"
-          disabled={!plan || !active || busy || !question.trim()}
+          disabled={!calculationReady || !active || busy || !question.trim()}
           onClick={() => void ask()}
         >
           {busy ? `Working… ${elapsed}s` : 'Ask Meta to work this out'}
@@ -249,13 +261,15 @@ export function EngineeringAssistant({
                     <strong>{quantity(summary.proposed_max_fill_volume_cm3)} cm³</strong>. All
                     entered readings fit: {summary.all_observations_fit ? 'yes' : 'no'}.
                   </p>
-                  <button
-                    type="button"
-                    className="outline-button"
-                    onClick={() => onCapacitySuggestion(summary.proposed_max_fill_volume_cm3!)}
-                  >
-                    Use suggested capacity in this comparison
-                  </button>
+                  {onCapacitySuggestion && (
+                    <button
+                      type="button"
+                      className="outline-button"
+                      onClick={() => onCapacitySuggestion(summary.proposed_max_fill_volume_cm3!)}
+                    >
+                      Use suggested capacity in this comparison
+                    </button>
+                  )}
                   <p className="helper">
                     Changes this software comparison. It does not change or qualify a physical
                     enclosure.

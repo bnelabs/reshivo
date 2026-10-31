@@ -62,6 +62,16 @@ def feedback():
             "max_add_mass_kg": .5, "max_remove_mass_kg": 0, "adjustment_uncertainty_kg": .01}
 
 
+def mass_only_request():
+    request = assist_request()
+    request["plan"] = None
+    request["feedback"] = feedback()
+    request["calculation_context"].update(label="", amount_basis="",
+        components=[{"id": 1, "name": "", "role": "main", "amount": ""}])
+    request["brief"]["process"] = ""
+    return request
+
+
 def call(identity, name, arguments=None):
     return {"id": identity, "type": "function", "function": {
         "name": name, "arguments": json.dumps(arguments if arguments is not None else {})}}
@@ -184,6 +194,96 @@ class EngineeringAgentTests(unittest.TestCase):
                 if action == "remove_mass": self.assertLess(correction, 0)
                 if action == "keep_mass": self.assertEqual(correction, 0)
                 if action == "request_changes": self.assertIsNone(correction)
+
+    def test_mass_only_two_turn_workflow_executes_without_recipe_density_or_dataset(self):
+        request = mass_only_request()
+        original = deepcopy(request)
+        answer = "Use the bounded mass correction with suitable sealed units and reweigh the complete assembly."
+        with patch("rematter.engineering_agent.validate_plan", side_effect=AssertionError("No plan needed")), \
+             patch("rematter.adaptation.validate_plan", side_effect=AssertionError("No density needed")), \
+             patch("rematter.service.WorkbenchService._materials", side_effect=AssertionError("No study needed")):
+            result, transport = self.run_script(request, reply(call("mass", "check_mass_feedback")),
+                                                reply(present("answer", "mass", "add_mass", answer)))
+        self.assertEqual(request, original)
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["model_turns"], 2)
+        self.assertEqual(result["answer"], answer)
+        self.assertFalse(result["answer_verified"])
+        self.assertIsNone(result["plan_request"])
+        self.assertEqual(len(result["tool_trace"]), 1)
+        execution = result["tool_trace"][0]
+        self.assertEqual(execution["inputs"], {key: request[key] for key in ("brief", "calculation_context", "feedback")})
+        self.assertEqual(execution["result"]["input_mode"], "observed_mass_only")
+        self.assertIsNone(execution["result"]["density_data_kind"])
+        self.assertAlmostEqual(result["verified_summary"]["chosen_signed_adjustment_kg"], .3)
+        self.assertEqual(result["verified_summary"]["observation_id"], "Assembly-1")
+        context = json.loads(transport.requests[0]["messages"][1]["content"])
+        self.assertIsNone(context["bound_plan"])
+        self.assertEqual(context["input_mode"], "observed_mass_only")
+        self.assertEqual(context["bound_mass_target"], {"target_min_kg": 9.9, "target_max_kg": 10.1})
+        self.assertNotIn("density_min_g_cm3", json.dumps(context))
+        sent_summary = json.loads(transport.requests[1]["messages"][-1]["content"])
+        self.assertEqual(sent_summary["execution_call_id"], "mass")
+        self.assertNotIn("brief", sent_summary)
+        self.assertEqual(result["model_trace"][0]["tool_results"][0]["result"], sent_summary)
+
+    def test_mass_only_capacity_tools_need_a_density_plan_and_never_fake_execution(self):
+        with patch("rematter.engineering_agent.plan_adaptation", side_effect=AssertionError("No density plan")):
+            result, transport = self.run_script(mass_only_request(),
+                reply(call("compare", "compare_current_design"), call("capacity", "check_capacity_repair"),
+                      call("mass", "check_mass_feedback")),
+                reply(present("answer", "mass", "add_mass")))
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual([row["id"] for row in result["tool_trace"]], ["mass"])
+        tool_results = result["model_trace"][0]["tool_results"]
+        for tool in tool_results[:2]:
+            self.assertEqual(tool["result"]["status"], "need_density_plan")
+            self.assertIsNone(tool["result"]["execution_call_id"])
+        self.assertEqual(len(transport.requests), 2)
+
+    def test_mass_only_requires_complete_feedback_and_canonical_valid_shared_targets(self):
+        requests = []
+        for feedback_value in (None, {}, {"observation": {}}):
+            request = mass_only_request()
+            request["feedback"] = feedback_value
+            requests.append(request)
+        for field in ("mass_target_min_kg", "mass_target_max_kg"):
+            for value in ("", "NaN", "Infinity", "-1", "1000001"):
+                request = mass_only_request()
+                request["calculation_context"][field] = value
+                requests.append(request)
+        request = mass_only_request()
+        request["calculation_context"].update(mass_target_min_kg="11", mass_target_max_kg="10")
+        requests.append(request)
+        request = mass_only_request()
+        request["calculation_context"]["density"] = "4"
+        requests.append(request)
+        client = Mock()
+        for request in requests:
+            with self.subTest(request=request), self.assertRaises(ProductInputError):
+                assist_with_adaptation(request, client=client)
+        client.tool_turn.assert_not_called()
+
+    def test_mass_only_fingerprint_changes_with_case_target_or_feedback(self):
+        fingerprints = []
+        for change in ("original", "case", "target", "feedback"):
+            request = mass_only_request()
+            if change == "case": request["brief"]["use_case"] = "Another stationary configuration"
+            if change == "target": request["calculation_context"]["mass_target_max_kg"] = "10.2"
+            if change == "feedback": request["feedback"]["observation"]["mass_kg"] = 9.8
+            result, _ = self.run_script(request, reply(call("mass", "check_mass_feedback")),
+                                        reply(present("answer", "mass", "add_mass")))
+            fingerprints.append(result["tool_trace"][0]["result"]["request_fingerprint"])
+        self.assertEqual(len(set(fingerprints)), len(fingerprints))
+
+    def test_large_shared_brief_stays_in_local_mass_trace_without_oversized_tool_summary(self):
+        request = mass_only_request()
+        request["brief"] = {key: "x" * 3000 for key in request["brief"]}
+        result, transport = self.run_script(request, reply(call("mass", "check_mass_feedback")),
+                                            reply(present("answer", "mass", "add_mass")))
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["tool_trace"][0]["result"]["brief"], request["brief"])
+        self.assertLessEqual(len(transport.requests[1]["messages"][-1]["content"].encode()), MAX_SUMMARY_BYTES)
 
     def test_valid_fixed_and_adjustable_actions_use_actual_result(self):
         for action in ("adjust_volume", "keep_fixed"):
@@ -470,7 +570,8 @@ class EngineeringAssistAPITests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory()
-        cls.service = WorkbenchService(output_root=Path(cls.temp.name), assist_fn=lambda request: {"status": "fixture", "question": request["question"]})
+        cls.service = WorkbenchService(output_root=Path(cls.temp.name), assist_fn=lambda request: {"status": "fixture", "question": request["question"]},
+                                       note_fn=lambda request: {"status": "fixture", "note": request["note"]})
         cls.server = build_server(port=0, service=cls.service, web_root=Path(cls.temp.name) / "web")
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -483,8 +584,9 @@ class EngineeringAssistAPITests(unittest.TestCase):
         cls.thread.join()
         cls.temp.cleanup()
 
-    def call(self, body, headers=None):
-        request = urllib.request.Request(self.url, data=json.dumps(body).encode(),
+    def call(self, body, headers=None, path=None):
+        url = self.url.rsplit("/api/", 1)[0] + path if path else self.url
+        request = urllib.request.Request(url, data=json.dumps(body).encode(),
                                          headers={"Content-Type": "application/json", **(headers or {})})
         try:
             with urllib.request.urlopen(request, timeout=5) as response:
@@ -504,6 +606,11 @@ class EngineeringAssistAPITests(unittest.TestCase):
             self.assertEqual(status, 400)
             self.assertEqual(result["error"]["code"], "invalid_request")
             self.assertEqual(assist.call_count, 1)
+
+    def test_route_accepts_mass_only_case_without_a_complete_recipe(self):
+        status, result = self.call(mass_only_request())
+        self.assertEqual(status, 200)
+        self.assertEqual(result["status"], "fixture")
 
     def test_service_executes_runner_when_no_injected_assistance_is_set(self):
         with patch.object(self.service, "assist_fn", None), \
@@ -534,6 +641,52 @@ class EngineeringAssistAPITests(unittest.TestCase):
             self.server.work_slots.release()
             self.server.work_slots.release()
         self.assertEqual(self.call(assist_request())[0], 200)
+
+    def note_request(self):
+        request = mass_only_request()
+        return {key: request[key] for key in ("brief", "calculation_context")} | {"note": "Simulated assembly A weighs 9.7 kg."}
+
+    def test_note_route_validates_before_generation_and_uses_the_shared_case(self):
+        path = "/api/advisor/read-observation"
+        with patch.object(self.service, "note_fn", wraps=self.service.note_fn) as read_note:
+            request = self.note_request()
+            status, result = self.call(request, path=path)
+            self.assertEqual(status, 200)
+            self.assertEqual(result["note"], request["note"])
+            request["note"] = ""
+            status, result = self.call(request, path=path)
+            self.assertEqual(status, 400)
+            self.assertEqual(result["error"]["code"], "invalid_request")
+            self.assertEqual(read_note.call_count, 1)
+        with patch.object(self.service, "note_fn", None), \
+             patch("rematter.observation_intake.read_observation_note", return_value={"status": "review_required"}) as read_note:
+            self.assertEqual(self.call(self.note_request(), path=path), (200, {"status": "review_required"}))
+            read_note.assert_called_once_with(self.note_request(), root=self.service.root)
+
+    def test_note_route_retains_typed_provider_errors(self):
+        for error, status, code in ((MetaConfigurationError("Not connected"), 503, "meta_not_configured"),
+                                    (MetaAPIError("Unavailable"), 502, "meta_request_failed"),
+                                    (MetaValidationError("Invalid response"), 502, "meta_invalid_response")):
+            with self.subTest(code=code), patch.object(self.service, "note_fn", side_effect=error):
+                actual_status, result = self.call(self.note_request(), path="/api/advisor/read-observation")
+                self.assertEqual(actual_status, status)
+                self.assertEqual(result["error"]["code"], code)
+
+    def test_note_route_keeps_host_origin_size_and_work_slot_guards(self):
+        path = "/api/advisor/read-observation"
+        for headers in ({"Host": "example.com"}, {"Origin": "https://example.com"}):
+            self.assertEqual(self.call(self.note_request(), headers, path)[0], 403)
+        self.assertEqual(self.call({"oversized": "x" * 65536}, path=path)[0], 413)
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        try:
+            status, result = self.call(self.note_request(), path=path)
+            self.assertEqual(status, 429)
+            self.assertEqual(result["error"]["code"], "service_busy")
+        finally:
+            self.server.work_slots.release()
+            self.server.work_slots.release()
+        self.assertEqual(self.call(self.note_request(), path=path)[0], 200)
 
 
 if __name__ == "__main__":
