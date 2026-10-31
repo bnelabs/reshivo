@@ -181,6 +181,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/products/my-mix": self.server.application.my_mix_mass,
                 "/api/products/target-check": self.server.application.target_check,
                 "/api/advisor/help": self.server.application.advisor_help,
+                "/api/advisor/trial": self.server.application.advisor_trial,
                 "/api/advisor/mass-trim": self.server.application.advisor_mass_trim,
                 "/api/advisor/balance-mix": self.server.application.advisor_balance_mix,
             }

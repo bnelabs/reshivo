@@ -1,12 +1,14 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { BalanceMix } from './BalanceMix'
+import { TrialPlan } from './TrialPlan'
 import type {
   AdvisorBrief,
   AdvisorMessage,
   AdvisorResult,
   AdvisorRoute,
   AdvisorStatus,
+  AdvisorTrialResult,
   MassTrimResult,
 } from '../types'
 
@@ -120,7 +122,7 @@ function RouteCard({
     <article className={`workshop-route${selected ? ' is-selected' : ''}`}>
       <div className="workshop-route-heading">
         <h3>{route.title}</h3>
-        <button type="button" aria-pressed={selected} onClick={onSelect}>
+        <button type="button" aria-pressed={selected} onClick={onSelect} disabled={busy}>
           {selected ? 'Selected' : 'Select route'}
         </button>
       </div>
@@ -146,7 +148,7 @@ function RouteCard({
         <p>{route.check}</p>
       </div>
       <button type="button" className="workshop-route-develop" disabled={busy} onClick={onDevelop}>
-        Develop this route <span aria-hidden="true">↗</span>
+        Plan a trial <span aria-hidden="true">↗</span>
       </button>
     </article>
   )
@@ -303,11 +305,13 @@ export function Workshop() {
   const [history, setHistory] = useState<AdvisorMessage[]>([])
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
-  const [selectedRoute, setSelectedRoute] = useState<string | null>(null)
+  const [selectedRoute, setSelectedRoute] = useState<AdvisorRoute | null>(null)
+  const [trial, setTrial] = useState<AdvisorTrialResult | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [exampleLoaded, setExampleLoaded] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [activity, setActivity] = useState<'routes' | 'trial' | null>(null)
+  const busy = activity !== null
   const [elapsed, setElapsed] = useState(0)
   const [toolsOpen, setToolsOpen] = useState(false)
   const request = useRef<AbortController | null>(null)
@@ -337,18 +341,19 @@ export function Workshop() {
     return () => window.clearInterval(timer)
   }, [busy])
   useEffect(() => {
-    if (plan) {
+    if (plan || trial) {
       answer.current?.focus({ preventScroll: true })
       answer.current?.scrollIntoView({ block: 'start' })
     }
-  }, [plan])
+  }, [plan, trial])
 
   function invalidate() {
     request.current?.abort()
-    setBusy(false)
+    setActivity(null)
     setPlan(null)
     setHistory([])
     setSelectedRoute(null)
+    setTrial(null)
     setError('')
     setQuestion('')
     setLastQuestion('')
@@ -378,14 +383,50 @@ export function Workshop() {
     const submittedQuestion =
       nextQuestion.trim() ||
       'How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments.'
-    setBusy(true)
+    const selectedContext: AdvisorMessage | null = trial
+      ? {
+          role: 'assistant',
+          content: [
+            `Chosen route: ${trial.selected_route.title}. ${trial.selected_route.change}`,
+            `Proposed trial: ${trial.title}. ${trial.objective}`,
+            `Targets: ${trial.targets}`,
+            `Compare: ${trial.comparison}. Change: ${trial.change}`,
+            `Keep fixed: ${trial.keep_fixed.join('; ')}`,
+            `Have ready: ${trial.materials.join('; ')}`,
+            ...trial.steps.map((step) => `Action: ${step.action} Record: ${step.record}`),
+            ...trial.checks.map(
+              (check) =>
+                `Check ${check.property}: ${check.target}. ${check.method} If outside: ${check.if_outside}`,
+            ),
+            ...trial.questions,
+          ]
+            .join('\n')
+            .slice(0, 6000),
+        }
+      : selectedRoute
+        ? {
+            role: 'assistant',
+            content: [
+              `Chosen route: ${selectedRoute.title}. ${selectedRoute.change} ${selectedRoute.why}`,
+              ...selectedRoute.steps,
+              ...selectedRoute.tradeoffs,
+              `Next check: ${selectedRoute.check}`,
+            ]
+              .join('\n')
+              .slice(0, 6000),
+          }
+        : null
+    const recentHistory = selectedContext
+      ? [...history.slice(-5), selectedContext]
+      : history.slice(-6)
+    setActivity('routes')
     setError('')
     setNotice('')
     setLastQuestion(nextQuestion.trim())
     try {
       const response = await api<AdvisorResult>(
         '/api/advisor/help',
-        { brief, question: submittedQuestion, history: history.slice(-6) },
+        { brief, question: submittedQuestion, history: recentHistory },
         controller.signal,
       )
       if (!controller.signal.aborted) {
@@ -393,9 +434,9 @@ export function Workshop() {
         const prompt =
           submittedQuestion ||
           'Find practical material and engineering routes for this batch and product.'
-        setHistory((current) =>
+        setHistory(() =>
           [
-            ...current,
+            ...recentHistory,
             { role: 'user', content: prompt } as AdvisorMessage,
             {
               role: 'assistant',
@@ -418,6 +459,8 @@ export function Workshop() {
         )
         setQuestion('')
         setSelectedRoute(null)
+        setTrial(null)
+        setSection((current) => (current === 'next' ? 'material' : current))
       }
     } catch (failure) {
       if (!controller.signal.aborted)
@@ -427,31 +470,61 @@ export function Workshop() {
             : 'Meta could not finish this request. Your brief is still here.',
         )
     } finally {
-      if (!controller.signal.aborted) setBusy(false)
+      if (!controller.signal.aborted) setActivity(null)
     }
   }
   function stopWaiting() {
     request.current?.abort()
-    setBusy(false)
+    setActivity(null)
     setNotice('Stopped waiting. Your brief is still here.')
   }
-  function develop(route: AdvisorRoute) {
-    setSelectedRoute(route.id)
-    void ask(
-      `Develop the proposed route “${route.title}” for this batch. Explain the practical sequence, how it deals with the stated input variation, useful alternatives, trade-offs and the smallest next check. The proposal was: ${route.change}.`,
-    )
+  function selectRoute(route: AdvisorRoute) {
+    if (busy) return
+    if (selectedRoute?.id !== route.id) setTrial(null)
+    setSelectedRoute(route)
+    setError('')
+    setNotice('')
   }
-  function askAbout(route: AdvisorRoute) {
-    setSelectedRoute(route.id)
-    setQuestion(`For the route “${route.title}”, `)
-    followup.current?.focus()
+  async function planTrial(route: AdvisorRoute) {
+    if (!briefReady || !status?.configured || busy) return
+    selectRoute(route)
+    setSection('next')
+    const controller = new AbortController()
+    request.current?.abort()
+    request.current = controller
+    setActivity('trial')
+    setError('')
+    setNotice('')
+    try {
+      const response = await api<AdvisorTrialResult>(
+        '/api/advisor/trial',
+        { brief, route },
+        controller.signal,
+      )
+      if (!controller.signal.aborted) {
+        if (response.route_id !== route.id)
+          throw new Error('The trial did not match the selected route. Your route is still here.')
+        setTrial(response)
+        setSelectedRoute(response.selected_route)
+      }
+    } catch (failure) {
+      if (!controller.signal.aborted)
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : 'Meta could not finish the trial plan. Your selected route is still here.',
+        )
+    } finally {
+      if (!controller.signal.aborted) setActivity(null)
+    }
   }
   function download() {
     if (!plan) return
     const url = URL.createObjectURL(
-      new Blob([JSON.stringify({ brief, plan, history, selected_route: selectedRoute }, null, 2)], {
-        type: 'application/json',
-      }),
+      new Blob(
+        [JSON.stringify({ brief, plan, history, selected_route: selectedRoute, trial }, null, 2)],
+        { type: 'application/json' },
+      ),
     )
     const link = document.createElement('a')
     link.href = url
@@ -464,11 +537,7 @@ export function Workshop() {
       ? plan.material_routes
       : plan.engineering_routes
     : []
-  const chosen = plan
-    ? [...plan.material_routes, ...plan.engineering_routes].find(
-        (route) => route.id === selectedRoute,
-      )
-    : undefined
+  const chosen = selectedRoute
 
   return (
     <div className="workshop">
@@ -624,9 +693,15 @@ export function Workshop() {
             <div className="workshop-working" role="status">
               <span className="workshop-working-dot" aria-hidden="true" />
               <div>
-                <strong>Meta is working through this batch</strong>
+                <strong>
+                  {activity === 'trial'
+                    ? 'Meta is planning the selected trial'
+                    : 'Meta is working through this batch'}
+                </strong>
                 <p>
-                  Comparing material routes, engineering choices and the next useful check.{' '}
+                  {activity === 'trial'
+                    ? 'Setting out what to change, what to keep fixed and how to check the result.'
+                    : 'Comparing material routes, engineering choices and the next useful check.'}{' '}
                   {elapsed}s
                 </p>
               </div>
@@ -687,7 +762,9 @@ export function Workshop() {
             <div className="workshop-plan">
               <div className="workshop-plan-heading">
                 <div>
-                  <span className="workshop-proposal-label">Proposed routes</span>
+                  <span className="workshop-proposal-label">
+                    {section === 'next' && trial ? 'Proposed trial' : 'Proposed routes'}
+                  </span>
                   <h2>
                     {section === 'material'
                       ? 'Ways to work with this material'
@@ -700,75 +777,126 @@ export function Workshop() {
                   Download plan
                 </button>
               </div>
-              {lastQuestion && <p className="workshop-last-question">You asked: {lastQuestion}</p>}
-              <div className="workshop-answer">
-                {plan.answer
-                  .split(/\n\s*\n/)
-                  .filter(Boolean)
-                  .map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-              </div>
               {section !== 'next' ? (
-                <div className="workshop-routes">
-                  {routes.map((route) => (
-                    <RouteCard
-                      key={route.id}
-                      route={route}
-                      selected={selectedRoute === route.id}
-                      busy={busy}
-                      onSelect={() => askAbout(route)}
-                      onDevelop={() => develop(route)}
-                    />
-                  ))}
-                </div>
+                <>
+                  {lastQuestion && (
+                    <p className="workshop-last-question">You asked: {lastQuestion}</p>
+                  )}
+                  <div className="workshop-answer">
+                    {plan.answer
+                      .split(/\n\s*\n/)
+                      .filter(Boolean)
+                      .map((paragraph, index) => (
+                        <p key={index}>{paragraph}</p>
+                      ))}
+                  </div>
+                  <div className="workshop-routes">
+                    {routes.map((route) => (
+                      <RouteCard
+                        key={route.id}
+                        route={route}
+                        selected={selectedRoute?.id === route.id}
+                        busy={busy}
+                        onSelect={() => selectRoute(route)}
+                        onDevelop={() => void planTrial(route)}
+                      />
+                    ))}
+                  </div>
+                  {chosen && (
+                    <p className="workshop-selected-note">
+                      Selected route: <strong>{chosen.title}</strong>.{' '}
+                      <button type="button" onClick={() => setSection('next')}>
+                        {trial ? 'View trial plan' : 'Open Next run'} →
+                      </button>
+                    </p>
+                  )}
+                  <div className="workshop-plan-footer">
+                    <span>
+                      {plan.live ? 'Generated by Meta' : 'Proposal'} · {plan.model}
+                    </span>
+                    <span>{(plan.elapsed_ms / 1000).toFixed(1)}s</span>
+                  </div>
+                  {plan.sources.length > 0 && (
+                    <details className="workshop-sources">
+                      <summary>References used for context</summary>
+                      {plan.sources.map((source) => (
+                        <div key={source.id}>
+                          <a href={source.url} target="_blank" rel="noreferrer">
+                            {source.title} ↗
+                          </a>
+                          <p>{source.scope}</p>
+                        </div>
+                      ))}
+                      <p>These references do not establish the properties of your own mix.</p>
+                    </details>
+                  )}
+                </>
               ) : (
                 <>
-                  <ol className="workshop-next-steps">
-                    {plan.next_steps.map((step, index) => (
-                      <li key={index}>
-                        <span>{String(index + 1).padStart(2, '0')}</span>
-                        <p>{step}</p>
-                      </li>
-                    ))}
-                  </ol>
-                  {plan.questions.length > 0 && (
-                    <div className="workshop-open-questions">
-                      <h3>What would help narrow this down?</h3>
+                  {trial ? (
+                    <TrialPlan trial={trial} />
+                  ) : (
+                    <div className="workshop-trial-start">
+                      {chosen ? (
+                        <>
+                          <p className="workshop-eyebrow">Selected route</p>
+                          <h3>{chosen.title}</h3>
+                          <p>{chosen.change}</p>
+                          <p>
+                            Turn this route into a small comparison: what to change, what to keep
+                            the same, what to record and how to check it against your targets.
+                          </p>
+                          <button
+                            type="button"
+                            className="outline-button"
+                            disabled={busy || !status?.configured}
+                            onClick={() => void planTrial(chosen)}
+                          >
+                            {activity === 'trial' ? 'Planning trial…' : 'Plan a trial'}
+                          </button>
+                          <p className="workshop-trial-action-note">
+                            Sends this brief and selected route to Meta.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <h3>Choose one route to plan</h3>
+                          <p>
+                            Pick a material or engineering route first. The trial will stay tied to
+                            that choice and your current brief.
+                          </p>
+                          <div className="workshop-trial-choose">
+                            <button type="button" onClick={() => setSection('material')}>
+                              Material Lab →
+                            </button>
+                            <button type="button" onClick={() => setSection('engineering')}>
+                              Engineering →
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <details className="workshop-general-next">
+                    <summary>Earlier ideas &amp; open questions</summary>
+                    <p>These came from the route exploration, before choosing a trial.</p>
+                    <ol className="workshop-next-steps">
+                      {plan.next_steps.map((step, index) => (
+                        <li key={index}>
+                          <span>{String(index + 1).padStart(2, '0')}</span>
+                          <p>{step}</p>
+                        </li>
+                      ))}
+                    </ol>
+                    {plan.questions.length > 0 && (
                       <ul>
                         {plan.questions.map((item, index) => (
                           <li key={index}>{item}</li>
                         ))}
                       </ul>
-                      <p>You can answer below; unknowns can stay unknown.</p>
-                    </div>
-                  )}
+                    )}
+                  </details>
                 </>
-              )}
-              {chosen && (
-                <p className="workshop-selected-note">
-                  Selected route: <strong>{chosen.title}</strong>
-                </p>
-              )}
-              <div className="workshop-plan-footer">
-                <span>
-                  {plan.live ? 'Generated by Meta' : 'Proposal'} · {plan.model}
-                </span>
-                <span>{(plan.elapsed_ms / 1000).toFixed(1)}s</span>
-              </div>
-              {plan.sources.length > 0 && (
-                <details className="workshop-sources">
-                  <summary>References used for context</summary>
-                  {plan.sources.map((source) => (
-                    <div key={source.id}>
-                      <a href={source.url} target="_blank" rel="noreferrer">
-                        {source.title} ↗
-                      </a>
-                      <p>{source.scope}</p>
-                    </div>
-                  ))}
-                  <p>These references do not establish the properties of your own mix.</p>
-                </details>
               )}
             </div>
           )}
@@ -808,6 +936,7 @@ export function Workshop() {
             </div>
             <p>
               Uses your current brief and recent conversation.
+              {trial ? ' Includes your selected trial plan.' : ''}
               {plan ? ' Proposed routes still need checks on the actual material and product.' : ''}
             </p>
           </form>

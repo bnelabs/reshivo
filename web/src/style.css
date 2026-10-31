@@ -2137,6 +2137,188 @@ footer {
   color: #527d70;
   margin-top: 21px;
 }
+.workshop-selected-note button {
+  padding: 0;
+  background: none;
+  color: #248272;
+  font-size: inherit;
+}
+.workshop-trial-start {
+  padding: 22px;
+  background: #f5faf6;
+  border: 1px solid #dce8df;
+  border-radius: 6px;
+}
+.workshop-trial-start h3,
+.workshop-trial-intro h3 {
+  margin: 0 0 12px;
+  color: #2b5558;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+.workshop-trial-start > p,
+.workshop-trial p,
+.workshop-general-next {
+  color: #607d7b;
+  font-size: 12px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.workshop-trial-start > .workshop-eyebrow,
+.workshop-trial-intro > .workshop-eyebrow {
+  font-size: 10px;
+  color: #498d7d;
+  margin: 0 0 10px;
+}
+.workshop-trial-start > .workshop-trial-action-note {
+  color: #82968a;
+  font-size: 10px;
+  margin: 10px 0 0;
+}
+.workshop-trial-choose {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: 17px;
+}
+.workshop-trial-choose button {
+  padding: 0;
+  background: none;
+  color: #248272;
+  font-size: 12px;
+}
+.workshop-trial-intro {
+  margin-bottom: 22px;
+}
+.workshop-trial h4 {
+  color: #315e59;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+.workshop-trial-comparison,
+.workshop-trial-preparation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.workshop-trial-comparison {
+  padding: 18px;
+  background: #f2f8f4;
+  border-left: 2px solid #6ba58e;
+  border-radius: 0 5px 5px 0;
+}
+.workshop-trial-comparison p {
+  margin: 0;
+}
+.workshop-trial-preparation {
+  padding: 23px 0;
+}
+.workshop-trial-preparation ul {
+  padding-left: 17px;
+  margin: 0;
+  color: #68817b;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.workshop-trial-preparation li + li {
+  margin-top: 6px;
+}
+.workshop-trial-sequence > ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.workshop-trial-questions {
+  margin: 0 0 24px;
+}
+.workshop-trial-sequence > ol > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-top: 1px solid #e4ece6;
+  padding: 17px 0;
+}
+.workshop-trial-step-number {
+  flex-shrink: 0;
+  padding-top: 4px;
+  color: #659280;
+  font-size: 11px;
+}
+.workshop-trial-sequence li > div {
+  min-width: 0;
+}
+.workshop-trial-sequence li p {
+  margin: 0;
+}
+.workshop-trial-sequence li .workshop-trial-record {
+  margin-top: 9px;
+  color: #829489;
+  font-size: 11px;
+}
+.workshop-trial-record strong,
+.workshop-trial-targets strong {
+  color: #527a69;
+  font-weight: 500;
+  margin-right: 5px;
+}
+.workshop-trial-checks {
+  margin-top: 12px;
+}
+.workshop-trial-checks > article {
+  padding: 17px;
+  border: 1px solid #dee9e1;
+  border-radius: 5px;
+  margin-top: 12px;
+}
+.workshop-trial-checks h5 {
+  color: #35675f;
+  margin: 0 0 13px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.workshop-trial-checks dl {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.workshop-trial-checks dl > div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+.workshop-trial-checks dt {
+  color: #4f7b6c;
+  font-size: 11px;
+}
+.workshop-trial-checks dd {
+  color: #6b837d;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.workshop-trial > .workshop-trial-note {
+  color: #87998d;
+  font-size: 11px;
+  margin: 22px 0 0;
+}
+.workshop-general-next {
+  margin-top: 24px;
+  border-top: 1px solid #e4ece6;
+  padding-top: 17px;
+}
+.workshop-general-next summary {
+  cursor: pointer;
+  color: #6b8f7f;
+  font-size: 11px;
+}
+.workshop-general-next > p {
+  font-size: 11px;
+}
+.workshop-general-next > ul {
+  padding-left: 18px;
+}
 .workshop-sources {
   border-top: 1px solid #e3ebe6;
   font-size: 11px;
@@ -2314,6 +2496,18 @@ footer {
   }
 }
 @media (max-width: 750px) {
+  .workshop-trial-comparison,
+  .workshop-trial-preparation {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .workshop-trial-checks dl > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  .workshop-trial-start {
+    padding: 18px;
+  }
   .workshop-header {
     height: 62px;
     padding: 0 19px;

@@ -9,7 +9,7 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.advisor import SOURCE_REGISTRY, SYSTEM_PROMPT, advisor_status, balance_mix, help_with_case, mass_trim, validate_request
+from rematter.advisor import SOURCE_REGISTRY, SYSTEM_PROMPT, TRIAL_PROMPT, advisor_status, balance_mix, help_with_case, mass_trim, plan_trial, validate_request, validate_trial_request
 from rematter.meta import Generation, MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
 from rematter.products import ProductInputError
 from rematter.server import build_server
@@ -54,6 +54,33 @@ def response_data():
     }
 
 
+def trial_request():
+    return {"brief": brief_request()["brief"], "route": route("engineering:adjustable-fill")}
+
+
+def trial_data():
+    return {
+        "title": "Adjustable contained counterweight",
+        "objective": "Compare one adjustable assembled counterweight without guessing mix density.",
+        "comparison": "Use the same enclosure and material portion; vary only the retained adjustable fill mass.",
+        "change": "Adjust the weighed retained fill.",
+        "keep_fixed": ["Same enclosure and closure.", "Same identified material and handling controls."],
+        "materials": ["Suitable enclosure with an adjustable retained compartment.", "Scale suitable for the stated target tolerance."],
+        "steps": [{"action": "Confirm material identity and suitable existing handling controls before filling.",
+                   "record": "Material identity and the handling method available."},
+                  {"action": "Weigh the complete candidate assembly, adjust retained fill, and reweigh.",
+                   "record": "Each assembly mass, the adjustment and scale capability."}],
+        "checks": [{"property": "Mass", "target": "10 kg within 0.1 kg",
+                    "method": "Weigh the complete assembly with suitable measurement uncertainty.",
+                    "if_outside": "Adjust retained fill using the weight-adjustment tool and reweigh."},
+                   {"property": "Fill retention", "target": "fill must remain retained",
+                    "method": "Propose a check for the stated stationary installation; mass alone does not establish retention.",
+                    "if_outside": "Revise the closure or retained compartment before evaluating again."}],
+        "questions": ["Which metal and polymers are present?"],
+        "source_ids": ["nist-weighing-tare"],
+    }
+
+
 def balance_request(**changes):
     return {
         "component": "Named metal component", "input_mass_kg": 10,
@@ -74,6 +101,151 @@ class FixtureClient:
     def generate(self, prompt, schema, max_candidates, **kwargs):
         self.calls.append((json.loads(prompt), schema, max_candidates, kwargs))
         return Generation(self.data, "muse-spark-1.3", False, {"total_tokens": 5}, "fixture", 1)
+
+
+class TrialTests(unittest.TestCase):
+    def test_plan_is_bound_to_selected_route_and_unchanged_targets(self):
+        request = trial_request()
+        original = deepcopy(request)
+        client = FixtureClient(trial_data())
+        result = plan_trial(request, client)
+        self.assertEqual(request, original)
+        self.assertEqual(result["result_kind"], "trial_proposal")
+        self.assertEqual(result["route_id"], request["route"]["id"])
+        self.assertEqual(result["selected_route"], request["route"])
+        self.assertEqual(result["brief"], request["brief"])
+        self.assertEqual(result["targets"], request["brief"]["targets"])
+        self.assertFalse(result["live"])
+        self.assertFalse(result["physical_product_tested"])
+        self.assertFalse(result["performance_verified"])
+        self.assertEqual(result["sources"], [SOURCE_REGISTRY["nist-weighing-tare"]])
+        self.assertNotIn("material_routes", result)
+        self.assertNotIn("engineering_routes", result)
+        sent, schema, count, options = client.calls[0]
+        self.assertEqual(sent["route"], request["route"])
+        self.assertEqual(sent["brief"], request["brief"])
+        self.assertEqual(options["system_prompt"], TRIAL_PROMPT)
+        self.assertEqual(options["schema_name"], "selected_route_trial")
+        self.assertEqual(options["max_completion_tokens"], 6144)
+        self.assertEqual(count, 1)
+        self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(schema["properties"]["steps"]["minItems"], 2)
+
+    def test_generic_property_can_need_a_specialist_check_without_mass_inputs(self):
+        request = trial_request()
+        request["brief"].update(input="PET felt offcuts", variation="Thickness changes", contamination="Paper labels",
+                                product="Sound-absorbing wall panel", use_case="Speech reflections; fixed wall mounting",
+                                targets="Absorption over 1000–4000 Hz; total thickness below 30 mm",
+                                process="Sewing and clamps at home", available_changes="Layering and mounting")
+        request["route"] = route("material:layered-pet")
+        data = trial_data()
+        data["checks"] = [{"property": "Absorption", "target": "Absorption over 1000–4000 Hz",
+                           "method": "Keep mounting fixed for a local comparison. A matching acoustic test is still needed for an absorption result.",
+                           "if_outside": "Compare layering with the same frame; do not infer an absorption coefficient."},
+                          {"property": "Durability", "target": "Not set", "method": "Define the required handling exposure first.",
+                           "if_outside": "Choose the intended exposure before specifying a durability check."}]
+        data["source_ids"] = []
+        client = FixtureClient(data)
+        result = plan_trial(request, client)
+        self.assertEqual(result["brief"]["process"], "Sewing and clamps at home")
+        self.assertEqual(result["checks"], data["checks"])
+        self.assertEqual(result["sources"], [])
+        self.assertNotIn("density", client.calls[0][0]["brief"])
+
+    def test_targets_cannot_be_invented_or_silently_converted(self):
+        for target in ("9.9–10.1 kg", "10 kg within 0.01 kg", "Retention proved", "As in the brief"):
+            data = trial_data()
+            data["checks"][0]["target"] = target
+            with self.subTest(target=target), self.assertRaises(MetaValidationError):
+                plan_trial(trial_request(), FixtureClient(data))
+
+    def test_invalid_trial_requests_fail_before_generation(self):
+        cases = [None, [], {}, {"brief": trial_request()["brief"]}, {**trial_request(), "history": []},
+                 {**trial_request(), "route": []}]
+        for identity in ("raw-route", "material:", "engineering: ", "unknown:route", "material:" + "x" * 81):
+            request = trial_request()
+            request["route"]["id"] = identity
+            cases.append(request)
+        for field, value in (("title", "x" * 121), ("change", "x" * 1501), ("why", ""),
+                             ("check", None), ("steps", []), ("steps", ["x"] * 6),
+                             ("steps", ["x" * 901]), ("tradeoffs", ["x"] * 4)):
+            request = trial_request()
+            request["route"][field] = value
+            cases.append(request)
+        request = trial_request()
+        request["route"]["performance_verified"] = True
+        cases.append(request)
+        request = trial_request()
+        del request["route"]["check"]
+        cases.append(request)
+        request = trial_request()
+        request["brief"]["targets"] = ""
+        cases.append(request)
+        request = trial_request()
+        request["brief"]["input"] = "x" * 3001
+        cases.append(request)
+        for request in cases:
+            client = FixtureClient(trial_data())
+            with self.subTest(request=request), self.assertRaises(ProductInputError):
+                plan_trial(request, client)
+            self.assertEqual(client.calls, [])
+
+    def test_valid_request_limits_and_whitespace_are_normalized(self):
+        request = trial_request()
+        request["route"].update(id=" engineering:" + "x" * 80 + " ", title="x" * 120,
+                                change="x" * 1500, why="x" * 1500, check="x" * 1500,
+                                steps=["x" * 900] * 5, tradeoffs=["x" * 900] * 3)
+        with self.assertRaises(ProductInputError):
+            validate_trial_request(request)
+        request["route"]["id"] = "engineering:" + "x" * 80
+        request["brief"]["input"] = "x" * 3000
+        request["brief"]["product"] = " Counterweight "
+        self.assertEqual(validate_trial_request(request)["brief"]["product"], "Counterweight")
+        self.assertEqual(validate_trial_request(request)["route"]["steps"], request["route"]["steps"])
+
+    def test_malformed_trial_output_has_no_fabricated_fallback(self):
+        cases = [None, {**trial_data(), "performance_verified": True},
+                 {**trial_data(), "source_ids": ["invented-paper"]},
+                 {**trial_data(), "source_ids": ["nist-weighing-tare"] * 2}]
+        for field, value in (("title", "x" * 121), ("objective", ""), ("comparison", "x" * 1501),
+                             ("change", 1), ("keep_fixed", []), ("materials", ["x"] * 7),
+                             ("steps", []), ("steps", [{"action": "Only action"}] * 2),
+                             ("checks", []), ("checks", [{"property": "Mass"}]),
+                             ("questions", ["x"] * 4)):
+            data = trial_data()
+            data[field] = value
+            cases.append(data)
+        data = trial_data()
+        data["steps"][0]["verified"] = True
+        cases.append(data)
+        data = trial_data()
+        data["checks"][0]["if_outside"] = "x" * 1501
+        cases.append(data)
+        for data in cases:
+            with self.subTest(data=data), self.assertRaises(MetaValidationError):
+                plan_trial(trial_request(), FixtureClient(data))
+
+    def test_trial_transport_uses_its_own_schema_and_keeps_credentials_out_of_plan(self):
+        class Reply(io.BytesIO):
+            def __enter__(self): return self
+            def __exit__(self, *args): self.close()
+        class Transport:
+            def open(self, request, timeout):
+                self.request = request
+                return Reply(json.dumps({"choices": [{"message": {"content": json.dumps(trial_data())}}]}).encode())
+        transport = Transport()
+        with tempfile.TemporaryDirectory() as folder:
+            result = plan_trial(trial_request(), MetaClient(Path(folder), {"MODEL_API_KEY": "fixture-private-key"}, transport))
+        body = json.loads(transport.request.data)
+        self.assertEqual(body["messages"][0]["content"], TRIAL_PROMPT)
+        sent_rules = body["messages"][0]["content"]
+        self.assertIn("existing suitable presealed cartridges", sent_rules)
+        self.assertIn("await identified material and a suitable controlled facility in that step itself", sent_rules)
+        self.assertIn("Minimal open time, prompt closing or a generic mask is not an adequate handling control", sent_rules)
+        self.assertEqual(body["response_format"]["json_schema"]["name"], "selected_route_trial")
+        self.assertTrue(result["live"])
+        self.assertNotIn("fixture-private-key", json.dumps(result))
+        self.assertNotIn("fixture-private-key", transport.request.data.decode())
 
 
 class AdvisorTests(unittest.TestCase):
@@ -325,7 +497,8 @@ class AdvisorAPITests(unittest.TestCase):
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory()
         cls.service = WorkbenchService(output_root=Path(cls.temp.name), meta_status_fn=lambda: {"configured": False, "model": "muse-spark-1.3"},
-                                       advisor_fn=lambda request: help_with_case(request, FixtureClient()))
+                                       advisor_fn=lambda request: help_with_case(request, FixtureClient()),
+                                       trial_fn=lambda request: plan_trial(request, FixtureClient(trial_data())))
         cls.server = build_server(port=0, service=cls.service, web_root=Path(cls.temp.name) / "web")
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -376,6 +549,50 @@ class AdvisorAPITests(unittest.TestCase):
         self.assertFalse(result["physical_performance_verified"])
         self.assertEqual(self.call("/api/advisor/balance-mix", balance_request(addition_percent=True))[0], 400)
         self.assertEqual(self.call("/api/advisor/balance-mix", balance_request(), {"Origin": "https://example.com"})[0], 403)
+
+    def test_selected_route_trial_endpoint_has_no_dataset_dependency(self):
+        with patch.object(self.service, "_materials", side_effect=AssertionError("No study needed")):
+            code, result = self.call("/api/advisor/trial", trial_request())
+        self.assertEqual(code, 200)
+        self.assertEqual(result["result_kind"], "trial_proposal")
+        self.assertEqual(result["route_id"], trial_request()["route"]["id"])
+        self.assertEqual(result["targets"], trial_request()["brief"]["targets"])
+        self.assertFalse(result["performance_verified"])
+        self.assertFalse(result["physical_product_tested"])
+
+    def test_trial_endpoint_keeps_request_size_origin_host_and_concurrency_guards(self):
+        code, result = self.call("/api/advisor/trial", {**trial_request(), "history": []})
+        self.assertEqual(code, 400)
+        self.assertEqual(result["error"]["code"], "invalid_request")
+        for headers in ({"Host": "example.com"}, {"Origin": "https://example.com"}):
+            self.assertEqual(self.call("/api/advisor/trial", trial_request(), headers)[0], 403)
+        self.assertEqual(self.call("/api/advisor/trial", {"payload": "x" * 65536})[0], 413)
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        try:
+            code, result = self.call("/api/advisor/trial", trial_request())
+            self.assertEqual(code, 429)
+            self.assertEqual(result["error"]["code"], "service_busy")
+        finally:
+            self.server.work_slots.release()
+            self.server.work_slots.release()
+        self.assertEqual(self.call("/api/advisor/trial", trial_request())[0], 200)
+
+    def test_trial_model_failures_remain_explicit_without_a_substitute_plan(self):
+        original = self.service.trial_fn
+        for failure, status, code in ((MetaConfigurationError("Meta is not connected"), 503, "meta_not_configured"),
+                                      (MetaAPIError("Could not reach Meta"), 502, "meta_request_failed"),
+                                      (MetaValidationError("Changed target"), 502, "meta_invalid_response")):
+            def fail(request, error=failure): raise error
+            try:
+                self.service.trial_fn = fail
+                actual_status, result = self.call("/api/advisor/trial", trial_request())
+                self.assertEqual(actual_status, status)
+                self.assertEqual(result["error"]["code"], code)
+                self.assertNotIn("steps", result)
+                self.assertNotIn("performance_verified", result)
+            finally:
+                self.service.trial_fn = original
 
     def test_model_failures_are_transparent_without_a_fabricated_plan(self):
         original = self.service.advisor_fn

@@ -294,6 +294,31 @@ export type AdvisorResult = {
   physical_product_tested: false
   performance_verified: false
 }
+export type AdvisorTrialResult = {
+  result_kind: 'trial_proposal'
+  live: boolean
+  provider: 'meta'
+  model: string
+  usage: Record<string, number>
+  elapsed_ms: number
+  request_id: string
+  route_id: string
+  targets: string
+  brief: AdvisorBrief
+  selected_route: AdvisorRoute
+  title: string
+  objective: string
+  comparison: string
+  change: string
+  keep_fixed: string[]
+  materials: string[]
+  steps: { action: string; record: string }[]
+  checks: { property: string; target: string; method: string; if_outside: string }[]
+  questions: string[]
+  sources: { id: string; title: string; url: string; scope: string }[]
+  physical_product_tested: false
+  performance_verified: false
+}
 export type MassTrimResult = {
   result_kind: 'calculation'
   current_mass_kg: number
