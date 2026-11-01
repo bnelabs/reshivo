@@ -323,11 +323,13 @@ class MetaClient:
         return ToolTurn(normalized, self.model, True, usage, identity if isinstance(identity, str) else None,
                         round((time.monotonic() - started) * 1000))
 
-    def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096):
+    def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096, reasoning_effort="low"):
         if not self.key:
             raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file.")
         if self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
             raise MetaConfigurationError("Choose a supported standard-mode Meta reasoning model.")
+        if not isinstance(reasoning_effort, str) or reasoning_effort not in {"low", "medium", "high"}:
+            raise MetaValidationError("Choose low, medium or high reasoning effort")
         payload = {
             "model": self.model,
             "messages": [
@@ -336,7 +338,7 @@ class MetaClient:
             ],
             "response_format": {"type": "json_schema", "json_schema": {"name": schema_name, "strict": True, "schema": schema}},
             "max_completion_tokens": max_completion_tokens,
-            "reasoning_effort": "low",
+            "reasoning_effort": reasoning_effort,
         }
         request = urllib.request.Request(ENDPOINT, data=json.dumps(payload, allow_nan=False).encode(), method="POST", headers={"Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
         started = time.monotonic()

@@ -24,7 +24,65 @@ def candidate(**changes):
     return {"name": "Test geometry", "rationale": "A numerical fixture", "section": section}
 
 
+class GenerationTransport:
+    def __init__(self):
+        self.requests = []
+        self.timeout = None
+        self.read_limit = None
+
+    def open(self, request, timeout):
+        self.requests.append(request)
+        self.timeout = timeout
+        transport = self
+
+        class Reply(io.BytesIO):
+            def __enter__(self): return self
+            def __exit__(self, *args): self.close()
+            def read(self, size=-1):
+                transport.read_limit = size
+                return super().read(size)
+
+        return Reply(json.dumps({"choices": [{"finish_reason": "stop", "message": {"content": "{}"}}]}).encode())
+
+
 class MetaTests(unittest.TestCase):
+    def test_default_reasoning_keeps_the_bounded_transport_contract(self):
+        transport = GenerationTransport()
+        key = "fixture-generation-key"
+        with tempfile.TemporaryDirectory() as temp:
+            result = MetaClient(Path(temp), {"MODEL_API_KEY": key}, transport).generate("Check this case", {}, 1)
+        self.assertTrue(result.live)
+        self.assertEqual(result.data, {})
+        self.assertEqual(len(transport.requests), 1)
+        request = transport.requests[0]
+        payload = json.loads(request.data)
+        self.assertEqual(payload["reasoning_effort"], "low")
+        self.assertEqual(payload["max_completion_tokens"], 4096)
+        self.assertEqual(transport.timeout, 50)
+        self.assertEqual(transport.read_limit, 512_001)
+        self.assertEqual(request.get_header("Authorization"), "Bearer " + key)
+        self.assertNotIn(key, request.data.decode())
+
+    def test_explicit_supported_reasoning_reaches_the_request_payload(self):
+        with tempfile.TemporaryDirectory() as temp:
+            for effort in ("low", "medium", "high"):
+                transport = GenerationTransport()
+                with self.subTest(reasoning_effort=effort):
+                    MetaClient(Path(temp), {"MODEL_API_KEY": "fixture-generation-key"}, transport).generate(
+                        "Check this case", {}, 1, reasoning_effort=effort)
+                    self.assertEqual(len(transport.requests), 1)
+                    self.assertEqual(json.loads(transport.requests[0].data)["reasoning_effort"], effort)
+
+    def test_invalid_reasoning_is_rejected_before_http(self):
+        invalid = (None, True, False, 0, 1.0, [], {}, (), b"high", "", "LOW", " high", "high ", "maximum")
+        with tempfile.TemporaryDirectory() as temp:
+            for effort in invalid:
+                transport = GenerationTransport()
+                client = MetaClient(Path(temp), {"MODEL_API_KEY": "fixture-generation-key"}, transport)
+                with self.subTest(reasoning_effort=effort), self.assertRaises(MetaValidationError):
+                    client.generate("Check this case", {}, 1, reasoning_effort=effort)
+                self.assertEqual(transport.requests, [])
+
     def test_local_configuration_and_environment_precedence(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
