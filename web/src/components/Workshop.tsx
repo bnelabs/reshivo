@@ -15,6 +15,13 @@ import type {
   CalculationDetails,
   WorkshopCase,
 } from '../types'
+import type { BalancePreset } from './BalancePlanner'
+import {
+  balanceDemoBrief,
+  balanceDemoDetails,
+  balanceDemoObservation,
+  balanceDemoFields,
+} from '../balanceDemo'
 
 const CalculationTools = lazy(() =>
   import('./ProductPlanner').then((module) => ({ default: module.ProductPlanner })),
@@ -181,6 +188,7 @@ export function Workshop() {
     useState<CalculationDetails>(newCalculationDetails)
   const [assemblyObservation, setAssemblyObservation] =
     useState<AssemblyObservationFields>(newAssemblyObservation)
+  const [balancePreset, setBalancePreset] = useState<BalancePreset | undefined>()
   const caseData: WorkshopCase = { brief, details: calculationDetails }
   const materialKey = JSON.stringify([
     brief.input,
@@ -192,6 +200,7 @@ export function Workshop() {
     calculationDetails.amount_basis,
   ])
   const [section, setSection] = useState<Section>('material')
+  const [focusWorkspace, setFocusWorkspace] = useState(false)
   const [status, setStatus] = useState<AdvisorStatus | null>(null)
   const [statusAttempt, setStatusAttempt] = useState(0)
   const [statusError, setStatusError] = useState('')
@@ -256,6 +265,7 @@ export function Workshop() {
     if (plan || busy) setNotice('Brief changed. Find updated routes for this case.')
     invalidate()
     setExampleLoaded(false)
+    setBalancePreset(undefined)
     if (
       ['input', 'variation', 'contamination', 'process', 'product', 'use_case'].includes(key) &&
       brief[key] !== value
@@ -267,12 +277,16 @@ export function Workshop() {
         ...newCalculationDetails(),
         mass_target_min_kg: current.mass_target_min_kg,
         mass_target_max_kg: current.mass_target_max_kg,
+        ...(current.balance ? { balance: current.balance } : {}),
       }))
     if (key === 'targets')
       setCalculationDetails((current) => ({
         ...current,
         mass_target_min_kg: '',
         mass_target_max_kg: '',
+        ...(current.balance
+          ? { balance: { ...current.balance, target_min_mm: '', target_max_mm: '' } }
+          : {}),
       }))
   }
   function editCalculationDetails(details: CalculationDetails) {
@@ -286,26 +300,34 @@ export function Workshop() {
         calculationDetails.amount_unit,
         calculationDetails.amount_basis,
       ])
-    )
+    ) {
       setAssemblyObservation(newAssemblyObservation())
+      setBalancePreset(undefined)
+    }
     setCalculationDetails(details)
   }
   function openCaseDetails() {
-    const details = document.getElementById('case-calculation-details') as HTMLDetailsElement | null
-    if (details) {
-      details.open = true
-      details.scrollIntoView({ block: 'center' })
-      details.querySelector('input')?.focus({ preventScroll: true })
-    }
-    if (!brief.process.trim()) {
-      const processDetails = document.getElementById(
-        'case-process-details',
+    setFocusWorkspace(false)
+    requestAnimationFrame(() => {
+      const details = document.getElementById(
+        'case-calculation-details',
       ) as HTMLDetailsElement | null
-      if (processDetails) processDetails.open = true
-    }
+      if (details) {
+        details.open = true
+        details.scrollIntoView({ block: 'center' })
+        details.querySelector('input')?.focus({ preventScroll: true })
+      }
+      if (!brief.process.trim()) {
+        const processDetails = document.getElementById(
+          'case-process-details',
+        ) as HTMLDetailsElement | null
+        if (processDetails) processDetails.open = true
+      }
+    })
   }
   function loadExample() {
     invalidate()
+    setBalancePreset(undefined)
     setAssemblyObservation(newAssemblyObservation())
     setBrief({ ...counterweightExample })
     setCalculationDetails({
@@ -321,6 +343,18 @@ export function Workshop() {
     setNotice('')
     setExampleLoaded(true)
     setSection('material')
+  }
+  function loadBalanceDemo() {
+    invalidate()
+    setBrief(structuredClone(balanceDemoBrief))
+    setCalculationDetails(structuredClone(balanceDemoDetails))
+    setAssemblyObservation(structuredClone(balanceDemoObservation))
+    setBalancePreset({ serial: Date.now(), fields: structuredClone(balanceDemoFields) })
+    setExampleLoaded(false)
+    setNotice(
+      'Synthetic software example loaded. Its measurements do not describe your waste or a tested product.',
+    )
+    setSection('engineering')
   }
   const briefReady = ['input', 'product', 'use_case', 'targets'].every((key) =>
     brief[key as keyof AdvisorBrief].trim(),
@@ -542,8 +576,8 @@ export function Workshop() {
           )}
         </div>
       </div>
-      <main className="workshop-grid">
-        <aside className="workshop-brief">
+      <main className={`workshop-grid${focusWorkspace ? ' is-focused' : ''}`}>
+        <aside className="workshop-brief" hidden={focusWorkspace}>
           <div className="workshop-brief-heading">
             <div>
               <p className="workshop-eyebrow">Your case</p>
@@ -553,6 +587,9 @@ export function Workshop() {
           </div>
           <button className="workshop-example" type="button" onClick={loadExample}>
             Try a counterweight example <span aria-hidden="true">↗</span>
+          </button>
+          <button className="workshop-example" type="button" onClick={loadBalanceDemo}>
+            Try a synthetic mass-and-balance example <span aria-hidden="true">↗</span>
           </button>
           {exampleLoaded && (
             <p className="workshop-example-note" role="status">
@@ -648,7 +685,20 @@ export function Workshop() {
                 {tab.label}
               </button>
             ))}
+            <button
+              type="button"
+              className="workshop-focus"
+              aria-pressed={focusWorkspace}
+              onClick={() => setFocusWorkspace((value) => !value)}
+            >
+              {focusWorkspace ? 'Show case' : 'Focus workspace'}
+            </button>
           </nav>
+          {focusWorkspace && (
+            <p className="workshop-focus-case">
+              {brief.product || 'Your case'} · {brief.targets || 'Set targets in your case'}
+            </p>
+          )}
           {notice && (
             <p className="workshop-notice" role="status">
               {notice}
@@ -880,6 +930,7 @@ export function Workshop() {
               onEditCase={openCaseDetails}
               assemblyObservation={assemblyObservation}
               onAssemblyObservationChange={setAssemblyObservation}
+              balancePreset={balancePreset}
               active={section === 'engineering'}
             />
           </div>

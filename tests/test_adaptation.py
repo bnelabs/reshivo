@@ -562,9 +562,11 @@ class AdaptationAPITests(unittest.TestCase):
             self.assertNotIn("chosen_signed_adjustment_kg", result)
 
     def test_both_routes_keep_origin_host_size_and_work_slot_guards(self):
+        from test_balance import bound_fixture
         for path, request in (("/api/adaptation/plan", adaptation_request()),
                               ("/api/adaptation/feedback", feedback_request()),
-                              ("/api/adaptation/observed-mass", observed_mass_request())):
+                              ("/api/adaptation/observed-mass", observed_mass_request()),
+                              ("/api/adaptation/balance", bound_fixture())):
             for headers in ({"Host": "example.com"}, {"Origin": "https://example.com"}):
                 with self.subTest(path=path, headers=headers):
                     self.assertEqual(self.call(path, request, headers)[0], 403)
@@ -579,6 +581,17 @@ class AdaptationAPITests(unittest.TestCase):
                 self.server.work_slots.release()
                 self.server.work_slots.release()
             self.assertEqual(self.call(path, request)[0], 200)
+
+    def test_balance_route_returns_bound_simulation_and_rejects_stale_input(self):
+        from test_balance import bound_fixture
+        request = bound_fixture()
+        status, result = self.call("/api/adaptation/balance", request)
+        self.assertEqual(status, 200)
+        self.assertTrue(result["feasible"])
+        self.assertIn("<svg", result["layout_svg"])
+        request["request_fingerprint"] = result["request_fingerprint"]
+        request["balance"]["cg_x_mm"] = 12
+        self.assertEqual(self.call("/api/adaptation/balance", request)[0], 400)
 
     def test_direct_observed_mass_route_has_no_density_or_dataset_dependency(self):
         with patch.object(self.service, "_materials", side_effect=AssertionError("No study needed")), \

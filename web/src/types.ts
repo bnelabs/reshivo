@@ -278,6 +278,21 @@ export type CalculationDetails = {
   amount_basis: string
   mass_target_min_kg: string
   mass_target_max_kg: string
+  balance?: { coordinate_basis: string; target_min_mm: string; target_max_mm: string }
+}
+export type BalanceConfig = {
+  cg_x_mm: number
+  cg_uncertainty_mm: number
+  command_resolution_kg: number
+  independent_adjustments: true
+  positions: {
+    id: string
+    x_mm: number
+    position_uncertainty_mm: number
+    max_add_kg: number
+    max_remove_kg: number
+  }[]
+  baseline: { position_id: string; command_kg: number }
 }
 export type WorkshopCase = { brief: AdvisorBrief; details: CalculationDetails }
 export type AssemblyObservationFields = {

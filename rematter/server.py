@@ -189,6 +189,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/adaptation/feedback": self.server.application.adaptation_feedback,
                 "/api/adaptation/assist": self.server.application.adaptation_assist,
                 "/api/adaptation/observed-mass": self.server.application.adaptation_observed_mass,
+                "/api/adaptation/balance": self.server.application.adaptation_balance,
             }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)

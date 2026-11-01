@@ -4,6 +4,8 @@ import type { AssemblyObservationFields, MassTrimResult, WorkshopCase } from '..
 import type { FeedbackRequest } from './AdaptationPlanner'
 import { EngineeringAssistant } from './EngineeringAssistant'
 import { ObservationNoteReader } from './ObservationNoteReader'
+import { BalancePlanner } from './BalancePlanner'
+import type { BalancePreset } from './BalancePlanner'
 
 type ObservedMassResult = {
   result_kind: 'simulation'
@@ -53,12 +55,14 @@ export function AssemblyMassPlanner({
   assemblyObservation,
   onAssemblyObservationChange,
   active = true,
+  balancePreset,
 }: {
   caseData: WorkshopCase
   onEditCase: () => void
   assemblyObservation: AssemblyObservationFields
   onAssemblyObservationChange: (observation: AssemblyObservationFields) => void
   active?: boolean
+  balancePreset?: BalancePreset
 }) {
   const minimum = caseData.details.mass_target_min_kg
   const maximum = caseData.details.mass_target_max_kg
@@ -206,7 +210,7 @@ export function AssemblyMassPlanner({
   }
 
   return (
-    <details className="workshop-weight-tool assembly-mass-planner">
+    <details className="workshop-weight-tool assembly-mass-planner" open={Boolean(balancePreset)}>
       <summary>
         <span>Check a weighed assembly</span>
         <small>Mass target · no density needed</small>
@@ -411,12 +415,23 @@ export function AssemblyMassPlanner({
           </div>
         )}
       </details>
-      <EngineeringAssistant
+      <BalancePlanner
         caseData={caseData}
-        plan={null}
+        observation={assemblyObservation}
         feedback={preparedFeedback}
+        onEditCase={onEditCase}
         active={active}
+        preset={balancePreset}
+        checkedMassCorrection={result?.feasible ? result.chosen_signed_adjustment_kg : null}
       />
+      {!caseData.details.balance && (
+        <EngineeringAssistant
+          caseData={caseData}
+          plan={null}
+          feedback={preparedFeedback}
+          active={active}
+        />
+      )}
     </details>
   )
 }

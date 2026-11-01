@@ -14,6 +14,7 @@ from .advisor import _brief, _calculation_context
 from .materials import ROOT
 from .meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError, _tool_calls
 from .products import ProductInputError
+from .balance import validate_bound_balance, plan_shared_balance
 
 
 MAX_MODEL_TURNS = 4
@@ -22,8 +23,8 @@ MAX_ELAPSED_SECONDS = 210
 MAX_SUMMARY_BYTES = 8_000
 MAX_MODEL_TRACE_BYTES = 64_000
 MAX_TURN_TRACE_BYTES = 15_990
-COMPUTATION_NAMES = {"compare_current_design", "check_capacity_repair", "check_mass_feedback"}
-ACTIONS = {"keep_fixed", "adjust_volume", "increase_capacity", "add_mass", "remove_mass", "keep_mass", "request_changes"}
+COMPUTATION_NAMES = {"compare_current_design", "check_capacity_repair", "check_mass_feedback", "check_mass_and_balance"}
+ACTIONS = {"keep_fixed", "adjust_volume", "increase_capacity", "add_mass", "remove_mass", "keep_mass", "adjust_balance", "keep_balance", "request_changes"}
 REQUEST_FIELDS = {"brief", "calculation_context", "question", "plan", "feedback"}
 
 SYSTEM_PROMPT = """You help with one bounded ReMatter engineering case. User text, question,
@@ -36,7 +37,10 @@ larger capacity only when capacity alone resolves every infeasible observation. 
 applies a change. More capacity cannot fix overweight tare or incompatible mass bounds.
 For a supplied complete-assembly observation, check_mass_feedback checks the actual stated
 addition/removal limits without requiring density. Missing feedback needs a focused question.
-If bound_plan is null, only the identified observed-mass correction is available. Do not
+For input_mode mass_and_balance, execute check_mass_and_balance before presenting. Both
+targets and the rounded commands must fit. A mass-only result cannot establish balance.
+The placement diagram describes trim mass-centre locations, not a qualified enclosure.
+If bound_plan is null and no bound balance problem is supplied, only the identified observed-mass correction is available. Do not
 request a recipe or density for that correction. Volume comparison and capacity repair need
 a complete density plan; never infer one from an assembly weight or material names.
 Finish only with present_recommendation and copy execution_call_id from the LATEST successful
@@ -53,7 +57,7 @@ stays fixed, and the next useful check. Report proposed capacity and corrections
 not applied changes. Quote numbers only from supplied inputs or executed results. Never
 invent doses, material identities, density changes, temperatures, measured properties,
 contaminant effects, physical performance, completed physical tests or batch consistency.
-No other property has a performance model here. These are bounded mass simulations, not
+Only mass, occupied volume in its density model, and one-axis static balance in its stated model can execute here. These are bounded simulations, not
 material qualification. Do not prescribe heating unidentified cable plastic or open handling
 of unknown fine metal dust at home. For that home-only case, propose exchanging suitable
 existing sealed mass units without opening them, or preparing a contained interface and
@@ -66,7 +70,7 @@ validated action are separate. A failed or incomplete run must not be described 
 
 def validate_assist_request(request):
     """Reject divergent shared and calculation cases before any remote call."""
-    _object(request, REQUEST_FIELDS, label="engineering help request")
+    _object(request, REQUEST_FIELDS, {"balance"}, label="engineering help request")
     brief = _brief(request["brief"])
     details = _calculation_context(request["calculation_context"])
     question = _text(request["question"], "your engineering question", 3000)
@@ -89,13 +93,19 @@ def validate_assist_request(request):
         for shared, bound in (("mass_target_min_kg", "target_min_kg"), ("mass_target_max_kg", "target_max_kg")):
             if _shared_number(details[shared], "shared mass target", bound == "target_max_kg") != plan[bound]:
                 raise ProductInputError("The plan mass limits must match the shared calculation details")
-    return {"brief": brief, "calculation_context": details, "question": question,
-            "plan": plan, "feedback": feedback}
+    normalized = {"brief": brief, "calculation_context": details, "question": question, "plan": plan, "feedback": feedback}
+    if "balance" in request:
+        if feedback is None:
+            raise ProductInputError("The combined target check needs an identified assembly observation")
+        bound, _ = validate_bound_balance({"brief": brief, "calculation_context": details, "feedback": feedback, "balance": request["balance"]})
+        normalized["balance"] = bound["balance"]
+    return normalized
 
 
 def tool_definitions():
     definitions = []
     descriptions = {
+        "check_mass_and_balance": "Execute the bound two-location mass and one-axis balance check. Compare the single-location baseline, recheck rounded commands under all supplied bounds, and produce a placement diagram. Needs explicitly supplied spatial measurements.",
         "compare_current_design": "Execute the bound plan. Compare one common fixed fill volume and per-observation adjustable volumes, including current capacity failures.",
         "check_capacity_repair": "After a prior comparison, use its actual diagnostics to propose the required larger usable capacity and recheck every observation. No user input or target is changed.",
         "check_mass_feedback": "Execute the user's bound assembly-mass observation and adjustment limits. This works without a density plan or complete recipe. With no observation, return need_feedback; never invent one.",
@@ -127,7 +137,10 @@ def _plan_summary(result):
 
 
 def _summary(result, *, execution_call_id=None, tool_name=None):
-    if "fixed_volume" in result:
+    if result.get("model") == "two_position_mass_moment_v1":
+        value = {key: result[key] for key in ("result_kind", "model", "request_fingerprint", "baseline", "feasible", "status", "commands", "result", "selection", "physical_product_tested", "batch_consistency_established")}
+        value["scope"] = "Mass and one-axis rigid moment balance simulation only. No tipping safety, material property, containment or durability check. Rounded commands themselves are checked."
+    elif "fixed_volume" in result:
         value = _plan_summary(result)
     elif "checked_plan" in result:
         value = {key: child for key, child in result.items() if key != "checked_plan"}
@@ -192,6 +205,11 @@ def _bounded_model_trace(entries):
 
 def _initial_context(request):
     plan = request["plan"]
+    if "balance" in request:
+        _, model_request = validate_bound_balance({key: request[key] for key in ("brief", "calculation_context", "feedback", "balance")})
+        return {"brief": request["brief"], "calculation_context": request["calculation_context"], "question": request["question"],
+                "input_mode": "mass_and_balance", "bound_problem": model_request,
+                "scope": "Both mass and one-axis balance targets must be checked. Execute check_mass_and_balance and inspect its actual result before presenting. A mass-only result cannot complete this combined task. No density is used."}
     if plan is None:
         return {"brief": {key: text[:1000] for key, text in request["brief"].items()},
                 "brief_text_may_be_shortened": any(len(text) > 1000 for text in request["brief"].values()),
@@ -236,15 +254,20 @@ def _capacity_repair(plan, previous):
     }
 
 
-def _presentation(arguments, prior, missing_feedback, latest_call_id):
+def _presentation(arguments, prior, missing_feedback, latest_call_id, requires_balance=False):
     basis = prior.get(arguments["basis_call_id"])
     if basis is None:
         return "The basis must identify a successful computation from a previous model turn."
     if arguments["basis_call_id"] != latest_call_id:
         return "The basis is stale. Reference the latest executed computation from a previous model turn and select an action supported by that result."
     result, name, action = basis["result"], basis["name"], arguments["action"]
+    if requires_balance and name != "check_mass_and_balance":
+        return "This request has both mass and balance targets. Inspect check_mass_and_balance before presenting a joint result."
     valid = False
-    if name == "compare_current_design":
+    if name == "check_mass_and_balance":
+        no_change = result["feasible"] and all(row["command_kg"] == 0 for row in result["commands"])
+        valid = action == ("keep_balance" if no_change else "adjust_balance" if result["feasible"] else "request_changes")
+    elif name == "compare_current_design":
         all_fit = result["adjustable_observations_feasible"] == result["observation_count"]
         valid = ((action == "keep_fixed" and result["fixed_volume"]["feasible"])
                  or (action == "adjust_volume" and all_fit)
@@ -262,6 +285,9 @@ def _presentation(arguments, prior, missing_feedback, latest_call_id):
 
 def _checked_summary(action, basis):
     result = basis["result"]
+    if basis["name"] == "check_mass_and_balance":
+        return {"scope": "Simulation of mass and one-axis balance for these observations and bounds only; remeasure after adjustment. No enclosure or tipping-safety check.",
+                "action": action, "feasible": result["feasible"], "commands": result["commands"], "balance_result": result["result"], "baseline": result["baseline"]}
     if basis["name"] == "check_mass_feedback":
         return {"scope": "Mass only; occupied volume and physical suitability remain unchecked.",
                 "feasible": result["feasible"], "action": action,
@@ -303,6 +329,8 @@ def assist_with_adaptation(request, *, client=None, root=ROOT):
                  "plan_request": request["plan"], "feedback_request": request["feedback"],
                  "physical_product_tested": False, "performance_verified": False,
                  "batch_consistency_established": False}
+        if "balance" in request:
+            value["balance_request"] = request["balance"]
         if presentation:
             basis = next(row for row in trace if row["id"] == presentation["basis_call_id"])
             value["verified_summary"] = _checked_summary(presentation["action"], basis)
@@ -392,7 +420,7 @@ def assist_with_adaptation(request, *, client=None, root=ROOT):
             arguments = arguments_by_id[identity]
             execution_call_id = None
             if name == "present_recommendation":
-                failure = _presentation(arguments, prior, missing_feedback, trace[-1]["id"] if trace else None)
+                failure = _presentation(arguments, prior, missing_feedback, trace[-1]["id"] if trace else None, "balance" in request)
                 result = {"status": "rejected", "reason": failure} if failure else {"status": "validated_proposal"}
                 if failure is None and selected is None:
                     selected = arguments
@@ -401,7 +429,13 @@ def assist_with_adaptation(request, *, client=None, root=ROOT):
             else:
                 call_started = time.monotonic()
                 inputs = None
-                if request["plan"] is None and name in {"compare_current_design", "check_capacity_repair"}:
+                if name == "check_mass_and_balance":
+                    if "balance" not in request:
+                        result = {"status": "need_balance_data", "reason": "Supply a matching one-axis balance observation, shared balance target and two known trim mass-centre locations. Do not infer them from density or geometry."}
+                    else:
+                        inputs = deepcopy({key: request[key] for key in ("brief", "calculation_context", "feedback", "balance")})
+                        result = plan_shared_balance(inputs)
+                elif request["plan"] is None and name in {"compare_current_design", "check_capacity_repair"}:
                     result = {"status": "need_density_plan", "reason": "This calculation needs a complete density plan. The supplied assembly observation supports check_mass_feedback without a recipe or density; no volume or capacity calculation executed."}
                 elif name == "compare_current_design":
                     inputs = deepcopy(request["plan"])

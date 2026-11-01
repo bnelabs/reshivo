@@ -109,8 +109,8 @@ def _brief(value):
 
 
 def _calculation_context(value):
-    _object(value, CALCULATION_CONTEXT_FIELDS, "calculation context")
-    if set(value) != CALCULATION_CONTEXT_FIELDS:
+    _object(value, CALCULATION_CONTEXT_FIELDS | {"balance"}, "calculation context")
+    if set(value) - {"balance"} != CALCULATION_CONTEXT_FIELDS:
         raise ProductInputError("Include every shared calculation detail; unknown text may be blank")
     components = value["components"]
     if not isinstance(components, list) or not 1 <= len(components) <= 20:
@@ -133,13 +133,19 @@ def _calculation_context(value):
                            "amount": _text(component["amount"], "shared material amount", 80, required=False)})
     if value["amount_unit"] not in ("g", "mass_percent", "volume_percent"):
         raise ProductInputError("Use grams, mass percent or volume percent for shared material amounts")
-    return {
+    result = {
         "label": _text(value["label"], "shared case name", 120, required=False),
         "components": normalized, "amount_unit": value["amount_unit"],
         "amount_basis": _text(value["amount_basis"], "shared amount basis", 300, required=False),
         "mass_target_min_kg": _text(value["mass_target_min_kg"], "shared minimum mass", 80, required=False),
         "mass_target_max_kg": _text(value["mass_target_max_kg"], "shared maximum mass", 80, required=False),
     }
+    if "balance" in value:
+        balance = _object(value["balance"], {"coordinate_basis", "target_min_mm", "target_max_mm"}, "shared balance target")
+        if set(balance) != {"coordinate_basis", "target_min_mm", "target_max_mm"}:
+            raise ProductInputError("Include the shared axis meaning and both balance limits; unknown text may be blank")
+        result["balance"] = {key: _text(balance[key], key, 1000 if key == "coordinate_basis" else 80, required=False) for key in balance}
+    return result
 
 
 def _shared_context(request):

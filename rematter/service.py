@@ -211,6 +211,14 @@ class WorkbenchService:
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
 
+    def adaptation_balance(self, request):
+        from .balance import plan_shared_balance
+        from .products import ProductInputError
+        try:
+            return plan_shared_balance(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
     def product_catalog(self):
         from .products import ProductDataError, product_catalog
         try:

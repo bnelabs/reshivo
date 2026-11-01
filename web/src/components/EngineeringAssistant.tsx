@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import type { WorkshopCase } from '../types'
+import { commandGrams } from '../quantity'
+import type { BalanceConfig, WorkshopCase } from '../types'
 import type { FeedbackRequest, PlanRequest } from './AdaptationPlanner'
 
 type Action =
@@ -11,6 +12,8 @@ type Action =
   | 'remove_mass'
   | 'keep_mass'
   | 'request_changes'
+  | 'adjust_balance'
+  | 'keep_balance'
 type TraceEntry = {
   id: string
   name: string
@@ -39,6 +42,13 @@ type AssistResult = {
     all_observations_fit?: boolean
     feasible?: boolean
     observation_id?: string
+    commands?: { position_id: string; x_mm: number; command_kg: number; action: string }[] | null
+    balance_result?: {
+      mass_min_kg: number
+      mass_max_kg: number
+      cg_min_mm: number
+      cg_max_mm: number
+    } | null
   }
   tool_trace: TraceEntry[]
   model_turns: number
@@ -53,11 +63,14 @@ const actionLabel: Record<Action, string> = {
   remove_mass: 'Remove adjustable mass',
   keep_mass: 'The observed mass needs no adjustment',
   request_changes: 'Another change or measurement is needed',
+  adjust_balance: 'Adjust mass at the stated locations',
+  keep_balance: 'Mass and balance already fit',
 }
 const toolLabel: Record<string, string> = {
   compare_current_design: 'Compared fixed and adjustable fill',
   check_capacity_repair: 'Rechecked a larger capacity',
   check_mass_feedback: 'Checked the assembly mass correction',
+  check_mass_and_balance: 'Checked both mass and the balance point',
 }
 const quantity = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 6 })
 
@@ -67,15 +80,21 @@ export function EngineeringAssistant({
   feedback,
   active,
   onCapacitySuggestion,
+  balance = null,
+  requiresBalance = false,
 }: {
   caseData: WorkshopCase
   plan: PlanRequest | null
   feedback: FeedbackRequest | null
   active: boolean
   onCapacitySuggestion?: (capacity: number) => void
+  balance?: BalanceConfig | null
+  requiresBalance?: boolean
 }) {
   const [question, setQuestion] = useState(
-    'What can I change to reach this mass target with these readings and limits?',
+    requiresBalance
+      ? 'What should I change, and where, to keep both mass and balance within these targets?'
+      : 'What can I change to reach this mass target with these readings and limits?',
   )
   const [result, setResult] = useState<AssistResult | null>(null)
   const [busy, setBusy] = useState(false)
@@ -83,7 +102,7 @@ export function EngineeringAssistant({
   const [error, setError] = useState('')
   const request = useRef<AbortController | null>(null)
   const resultArea = useRef<HTMLDivElement | null>(null)
-  const signature = JSON.stringify([caseData, plan, feedback, question])
+  const signature = JSON.stringify([caseData, plan, feedback, balance, question])
   const targetValues = [caseData.details.mass_target_min_kg, caseData.details.mass_target_max_kg]
   const targetReady =
     targetValues.every(
@@ -95,7 +114,8 @@ export function EngineeringAssistant({
     ) &&
     Number(targetValues[1]) > 0 &&
     Number(targetValues[0]) <= Number(targetValues[1])
-  const calculationReady = Boolean(plan || feedback) && targetReady
+  const calculationReady =
+    Boolean(plan || feedback) && targetReady && (!requiresBalance || Boolean(balance))
   const currentSignature = useRef(signature)
   currentSignature.current = signature
 
@@ -141,6 +161,7 @@ export function EngineeringAssistant({
           question: question.trim(),
           plan,
           feedback,
+          ...(balance ? { balance } : {}),
         },
         controller.signal,
       )
@@ -168,18 +189,24 @@ export function EngineeringAssistant({
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
   const summary = result?.verified_summary
+  const basis = result?.tool_trace.find(
+    (entry) => entry.id === result.decision?.basis_call_id,
+  )?.result
+  const placementSvg = typeof basis?.layout_svg === 'string' ? basis.layout_svg : null
   return (
     <section className="engineering-assistant" aria-label="Meta engineering assistant">
       <div className="workshop-eyebrow">Meta + calculation tools</div>
       <h3>Work out the next change</h3>
       <p>
-        Ask about this case. Meta can compare the design, check a larger capacity, or use the
-        assembly observation entered above. It runs the calculations before proposing a next step.
+        {requiresBalance
+          ? 'Ask where to add or remove trim for both targets. Meta uses the shared case, runs the mass-and-balance check, and explains the checked action.'
+          : 'Ask about this case. Meta can compare the design, check a larger capacity, or use the assembly observation entered above. It runs the calculations before proposing a next step.'}
       </p>
       {!calculationReady && (
         <p className="product-input-note">
-          Set the shared mass target and enter a complete assembly observation with its bounds, or a
-          matching density and capacity plan.
+          {requiresBalance
+            ? 'Complete the shared mass and balance targets, assembly observation, and both adjustment locations first.'
+            : 'Set the shared mass target and enter a complete assembly observation with its bounds, or a matching density and capacity plan.'}
         </p>
       )}
       <label>
@@ -254,6 +281,53 @@ export function EngineeringAssistant({
           {summary && (
             <div className="engineering-checked">
               <h4>Calculation results</h4>
+              {summary.commands && (
+                <ul>
+                  {summary.commands.map((row) => (
+                    <li key={row.position_id}>
+                      <strong>
+                        {row.action === 'none'
+                          ? 'No change'
+                          : `${row.action === 'add' ? 'Add' : 'Remove'} ${commandGrams(Math.abs(row.command_kg))} g`}
+                      </strong>{' '}
+                      · {row.position_id}, x={String(row.x_mm)} mm
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {summary.balance_result && (
+                <p>
+                  Approximate ranges: mass {quantity(summary.balance_result.mass_min_kg)}–
+                  {quantity(summary.balance_result.mass_max_kg)} kg. Balance point:{' '}
+                  {quantity(summary.balance_result.cg_min_mm)}–
+                  {quantity(summary.balance_result.cg_max_mm)} mm.
+                </p>
+              )}
+              {placementSvg && (
+                <>
+                  <img
+                    className="balance-diagram"
+                    src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(placementSvg)}`}
+                    alt="Simulated adjustment locations and balance-point comparison"
+                  />
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() => {
+                      const url = URL.createObjectURL(
+                        new Blob([placementSvg], { type: 'image/svg+xml' }),
+                      )
+                      const link = document.createElement('a')
+                      link.href = url
+                      link.download = 'rematter-trim-placement.svg'
+                      link.click()
+                      setTimeout(() => URL.revokeObjectURL(url), 1000)
+                    }}
+                  >
+                    Download placement diagram
+                  </button>
+                </>
+              )}
               {summary.proposed_max_fill_volume_cm3 !== undefined && (
                 <>
                   <p>

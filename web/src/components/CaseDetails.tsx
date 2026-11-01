@@ -72,6 +72,89 @@ export function CaseDetails({
         />
       </label>
       <details className="workshop-case-details-group product-detail">
+        <summary>Balance-point target for this product</summary>
+        <p>
+          For a product that needs a controlled balance point, define one axis and its allowed
+          centre-of-mass range. The mass-and-balance tool reuses these targets.
+        </p>
+        {!details.balance ? (
+          <button
+            type="button"
+            className="outline-button"
+            onClick={() =>
+              onChange({
+                ...details,
+                balance: { coordinate_basis: '', target_min_mm: '', target_max_mm: '' },
+              })
+            }
+          >
+            Add a balance target
+          </button>
+        ) : (
+          <>
+            <label>
+              Axis and zero point
+              <textarea
+                rows={2}
+                maxLength={1000}
+                value={details.balance.coordinate_basis}
+                onChange={(event) =>
+                  onChange({
+                    ...details,
+                    balance: { ...details.balance!, coordinate_basis: event.target.value },
+                  })
+                }
+                placeholder="Define x=0 and how the assembly and trim mass-centre positions were measured."
+              />
+            </label>
+            <div className="workshop-case-component-pair">
+              <label>
+                Balance target minimum x (mm)
+                <input
+                  type="number"
+                  min="-10000"
+                  max="10000"
+                  step="any"
+                  value={details.balance.target_min_mm}
+                  onChange={(event) =>
+                    onChange({
+                      ...details,
+                      balance: { ...details.balance!, target_min_mm: event.target.value },
+                    })
+                  }
+                />
+              </label>
+              <label>
+                Balance target maximum x (mm)
+                <input
+                  type="number"
+                  min="-10000"
+                  max="10000"
+                  step="any"
+                  value={details.balance.target_max_mm}
+                  onChange={(event) =>
+                    onChange({
+                      ...details,
+                      balance: { ...details.balance!, target_max_mm: event.target.value },
+                    })
+                  }
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => {
+                const { balance: _removed, ...remaining } = details
+                onChange(remaining)
+              }}
+            >
+              Remove balance target
+            </button>
+          </>
+        )}
+      </details>
+      <details className="workshop-case-details-group product-detail">
         <summary>Recipe details for composition or density tools</summary>
         <p>
           These tools use the precise materials and amounts in your processed mix. A
