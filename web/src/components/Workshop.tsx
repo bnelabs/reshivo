@@ -4,6 +4,8 @@ import { BalanceMix } from './BalanceMix'
 import { TrialPlan } from './TrialPlan'
 import { CaseDetails } from './CaseDetails'
 import { AssemblyMassPlanner as WeightAdjustment } from './AssemblyMassPlanner'
+import { EngineeringNoteReader } from './EngineeringNoteReader'
+import type { EngineeringNotePatch } from '../engineeringNote'
 import type {
   AdvisorBrief,
   AdvisorMessage,
@@ -355,6 +357,28 @@ export function Workshop() {
       'Synthetic software example loaded. Its measurements do not describe your waste or a tested product.',
     )
     setSection('engineering')
+  }
+  function applyEngineeringNote(patch: EngineeringNotePatch) {
+    if (
+      JSON.stringify([
+        calculationDetails.mass_target_min_kg,
+        calculationDetails.mass_target_max_kg,
+        calculationDetails.balance,
+      ]) !==
+      JSON.stringify([
+        patch.details.mass_target_min_kg,
+        patch.details.mass_target_max_kg,
+        patch.details.balance,
+      ])
+    )
+      invalidate()
+    setCalculationDetails(patch.details)
+    setAssemblyObservation(patch.observation)
+    setBalancePreset({ serial: Date.now(), fields: patch.fields, source: 'note' })
+    setExampleLoaded(false)
+    setNotice(
+      'Reviewed note applied. The calculations below use this observation and your shared targets.',
+    )
   }
   const briefReady = ['input', 'product', 'use_case', 'targets'].every((key) =>
     brief[key as keyof AdvisorBrief].trim(),
@@ -924,6 +948,11 @@ export function Workshop() {
             <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} />
           </div>
           <div hidden={section !== 'engineering'}>
+            <EngineeringNoteReader
+              caseData={caseData}
+              active={section === 'engineering'}
+              onApply={applyEngineeringNote}
+            />
             <WeightAdjustment
               key={JSON.stringify([materialKey, brief.product, brief.use_case])}
               caseData={caseData}

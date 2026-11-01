@@ -14,7 +14,7 @@ export type BalanceFields = {
   baselineIndex: string
   baselineG: string
 }
-export type BalancePreset = { serial: number; fields: BalanceFields }
+export type BalancePreset = { serial: number; fields: BalanceFields; source?: 'note' }
 const emptyFields = (): BalanceFields => ({
   cg: '',
   cgError: '',
@@ -33,7 +33,7 @@ const numberReady = (value: string, signed = false) =>
   Math.abs(Number(value)) <= 10_000_000 &&
   (signed || Number(value) >= 0)
 const q = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 3 })
-type BalanceResult = {
+export type BalanceResult = {
   result_kind: 'simulation'
   model: string
   feasible: boolean

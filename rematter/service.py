@@ -47,7 +47,7 @@ def _numeric_values(value, cls, defaults, name):
 
 
 class WorkbenchService:
-    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None, assist_fn=None, note_fn=None):
+    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None, assist_fn=None, note_fn=None, engineering_note_fn=None):
         self.root = Path(root).resolve()
         self.output_root = Path(output_root or self.root / "outputs/workbench").resolve()
         self.config, self.default_requirements, self.default_search = load_config(self.root / "examples/support-member.json")
@@ -57,6 +57,7 @@ class WorkbenchService:
         self.trial_fn = trial_fn
         self.assist_fn = assist_fn
         self.note_fn = note_fn
+        self.engineering_note_fn = engineering_note_fn
 
     def meta_status(self):
         if self.meta_status_fn is not None:
@@ -161,6 +162,24 @@ class WorkbenchService:
         except MetaAPIError as error:
             raise ServiceError("meta_request_failed", str(error), 502) from None
 
+    def advisor_read_engineering_note(self, request):
+        from .engineering_intake import read_engineering_note, validate_engineering_request
+        from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError
+        from .products import ProductInputError
+        try:
+            validate_engineering_request(request)
+            if self.engineering_note_fn is not None:
+                return self.engineering_note_fn(request)
+            return read_engineering_note(request, root=self.root)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+        except MetaConfigurationError as error:
+            raise ServiceError("meta_not_configured", str(error), 503) from None
+        except MetaValidationError as error:
+            raise ServiceError("meta_invalid_response", str(error), 502) from None
+        except MetaAPIError as error:
+            raise ServiceError("meta_request_failed", str(error), 502) from None
+
     def advisor_balance_mix(self, request):
         from .advisor import balance_mix
         from .products import ProductInputError
@@ -217,6 +236,32 @@ class WorkbenchService:
         try:
             return plan_shared_balance(request)
         except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
+    def adaptation_apply_engineering_note(self, request):
+        from .balance import plan_shared_balance
+        from .engineering_intake import normalize_engineering_fields, prepare_engineering_draft
+        from .meta import MetaValidationError
+        from .products import ProductInputError
+        try:
+            required = {"brief", "calculation_context", "note", "source_fields", "request_fingerprint", "draft_fingerprint",
+                        "review_confirmed", "independent_adjustments", "target_choice"}
+            if not isinstance(request, dict) or set(request) != required:
+                raise ProductInputError("Include exactly the current case, note, source fields, draft fingerprints and review choices")
+            if type(request["review_confirmed"]) is not bool or type(request["independent_adjustments"]) is not bool:
+                raise ProductInputError("Review and independent-adjustment confirmations must be explicit booleans")
+            if request["target_choice"] not in ("current", "proposed"):
+                raise ProductInputError("Explicitly choose current or proposed targets")
+            case = {key: request[key] for key in ("brief", "calculation_context", "note")}
+            draft = normalize_engineering_fields(case, request["source_fields"])
+            if any(request[key] != draft[key] for key in ("request_fingerprint", "draft_fingerprint")):
+                raise ProductInputError("The case, note or source-linked draft changed; read and review it again")
+            prepared = prepare_engineering_draft(case, draft, review_confirmed=request["review_confirmed"],
+                                                independent_adjustments=request["independent_adjustments"], target_choice=request["target_choice"])
+            reviewed = request["review_confirmed"] and request["independent_adjustments"]
+            return {**prepared, "reviewed_values": draft["values"] if reviewed else None,
+                    "check": plan_shared_balance(prepared["bound_request"]) if prepared["ready"] else None}
+        except (ProductInputError, MetaValidationError) as error:
             raise ServiceError("invalid_request", str(error)) from None
 
     def product_catalog(self):

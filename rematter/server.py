@@ -182,6 +182,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/products/target-check": self.server.application.target_check,
                 "/api/advisor/help": self.server.application.advisor_help,
                 "/api/advisor/read-observation": self.server.application.advisor_read_observation,
+                "/api/advisor/read-engineering-note": self.server.application.advisor_read_engineering_note,
                 "/api/advisor/trial": self.server.application.advisor_trial,
                 "/api/advisor/mass-trim": self.server.application.advisor_mass_trim,
                 "/api/advisor/balance-mix": self.server.application.advisor_balance_mix,
@@ -190,6 +191,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/adaptation/assist": self.server.application.adaptation_assist,
                 "/api/adaptation/observed-mass": self.server.application.adaptation_observed_mass,
                 "/api/adaptation/balance": self.server.application.adaptation_balance,
+                "/api/adaptation/apply-engineering-note": self.server.application.adaptation_apply_engineering_note,
             }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)

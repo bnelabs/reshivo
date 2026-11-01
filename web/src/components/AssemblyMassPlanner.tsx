@@ -210,9 +210,16 @@ export function AssemblyMassPlanner({
   }
 
   return (
-    <details className="workshop-weight-tool assembly-mass-planner" open={Boolean(balancePreset)}>
+    <details
+      className="workshop-weight-tool assembly-mass-planner"
+      open={Boolean(balancePreset && balancePreset.source !== 'note')}
+    >
       <summary>
-        <span>Check a weighed assembly</span>
+        <span>
+          {balancePreset?.source === 'note'
+            ? 'Manual measurements and checks'
+            : 'Check a weighed assembly'}
+        </span>
         <small>Mass target · no density needed</small>
       </summary>
       <p>
@@ -225,12 +232,14 @@ export function AssemblyMassPlanner({
           {targetReady ? 'Edit case target' : 'Set the mass range in your case'}
         </button>
       </p>
-      <ObservationNoteReader
-        caseData={caseData}
-        assemblyObservation={assemblyObservation}
-        active={active}
-        onApply={applyObservation}
-      />
+      {balancePreset?.source !== 'note' && (
+        <ObservationNoteReader
+          caseData={caseData}
+          assemblyObservation={assemblyObservation}
+          active={active}
+          onApply={applyObservation}
+        />
+      )}
       <details
         className="assembly-manual-details"
         open={manualOpen}

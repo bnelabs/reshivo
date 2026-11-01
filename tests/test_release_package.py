@@ -13,7 +13,8 @@ class ReleasePackageTests(unittest.TestCase):
     def test_selection_excludes_history_secrets_builds_and_acoustic_derivatives(self):
         for name in (".git/config", ".env", ".env.local", "outputs/demo.json", "web/node_modules/react/index.js",
                      "web/dist/index.html", "data/research/acoustics/footwear_measurements.json",
-                     "../rematter/a.py", "/tmp/a.py", "rematter/__pycache__/a.pyc"):
+                     "../rematter/a.py", "/tmp/a.py", "rematter/__pycache__/a.pyc",
+                     "data/research/density/access_attempts/cecon-mmc1-challenge.html"):
             with self.subTest(name=name):
                 self.assertFalse(release.selected(name))
         for name in ("rematter/balance.py", "web/src/App.tsx", ".env.example", "data/research/density/measurements.json"):

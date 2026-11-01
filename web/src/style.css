@@ -2847,6 +2847,99 @@ footer {
   height: auto;
   margin-top: 18px;
 }
+.engineering-note-reader {
+  margin: 22px 24px;
+  border: 1px solid #d6e5dc;
+  border-radius: 6px;
+  padding: 18px;
+  color: #365b52;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.engineering-note-reader > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.engineering-note-reader summary small {
+  display: block;
+  font-weight: 400;
+  color: #718379;
+}
+.engineering-note-reader textarea {
+  display: block;
+  width: 100%;
+  margin: 7px 0 14px;
+  border: 1px solid #bccfc4;
+  border-radius: 4px;
+  padding: 12px;
+  font: inherit;
+  resize: vertical;
+}
+.engineering-note-review {
+  padding: 18px;
+  margin-top: 18px;
+  background: #f3f8f4;
+  border-radius: 5px;
+}
+.engineering-note-review h3 {
+  font-size: 19px;
+  margin-top: 0;
+  color: #254b42;
+}
+.engineering-note-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+.engineering-note-summary > p:nth-child(-n + 3),
+.engineering-note-summary > p:last-child {
+  grid-column: 1 / -1;
+}
+.engineering-note-questions {
+  background: #fbf7e9;
+  border-radius: 4px;
+  padding: 14px 20px;
+}
+.engineering-note-review dl > div {
+  border-bottom: 1px solid #dce5df;
+  padding: 8px 0;
+}
+.engineering-note-review dd {
+  margin-left: 0;
+  overflow-wrap: anywhere;
+}
+.engineering-note-review dd small {
+  display: block;
+  color: #6f8177;
+}
+.engineering-note-review fieldset {
+  border: 1px solid #c8dace;
+  border-radius: 4px;
+  margin: 14px 0;
+}
+.engineering-note-review fieldset label,
+.engineering-note-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 14px 0;
+}
+.engineering-note-review input {
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .engineering-note-reader {
+    margin: 16px 12px;
+    padding: 14px;
+  }
+  .engineering-note-review {
+    padding: 12px;
+  }
+  .engineering-note-summary {
+    grid-template-columns: 1fr;
+  }
+}
 .balance-command-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
