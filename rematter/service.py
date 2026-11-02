@@ -321,6 +321,14 @@ class WorkbenchService:
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
 
+    def compare_readings(self, request):
+        from .products import ProductInputError
+        from .reading_comparison import compare_readings
+        try:
+            return compare_readings(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+
     def _parameters(self, request, names, allow_all=False):
         _allowed(request, names, "request")
         material_id = request.get("material_id", "04441PP-REG(1)-1E1")

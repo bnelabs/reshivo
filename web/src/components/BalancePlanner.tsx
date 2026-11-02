@@ -188,6 +188,18 @@ export function BalancePlanner({
           },
         }
       : null
+  const missingChecks: string[] = []
+  if (!targetReady) missingChecks.push('Set the mass and balance targets and their common axis.')
+  if (!feedback) missingChecks.push('Complete the assembly mass, its uncertainty and the available adjustment bounds.')
+  if (!numberReady(fields.cg, true)) missingChecks.push('Enter this observation’s balance-point reading.')
+  if (!numberReady(fields.cgError)) missingChecks.push('Enter the uncertainty for this balance-point reading.')
+  if (!numberReady(fields.resolutionG) || Number(fields.resolutionG) <= 0)
+    missingChecks.push('Enter the smallest available adjustment increment.')
+  if (!fields.independent) missingChecks.push('Confirm the adjustment bounds apply independently at each active location.')
+  if (!fields.positions.every((p) => p.id.trim() && numberReady(p.x, true) && [p.error, p.addG, p.removeG].every((v) => numberReady(v))) || fields.positions[0].id.trim() === fields.positions[1].id.trim())
+    missingChecks.push('Complete both distinct adjustment locations, their uncertainties and available add/remove limits.')
+  if (fields.baselineG.trim() !== '' && !numberReady(fields.baselineG, true))
+    missingChecks.push('Correct the optional comparison command.')
   async function calculate() {
     if (!prepared || !feedback || busy || !active) return
     const request = new AbortController()
@@ -372,6 +384,12 @@ export function BalancePlanner({
           </button>
         )}
       </details>
+      {!prepared && missingChecks.length > 0 && (
+        <div className="product-input-note" role="status">
+          <strong>Before checking both targets:</strong>
+          <ul>{missingChecks.map((message) => <li key={message}>{message}</li>)}</ul>
+        </div>
+      )}
       <button
         type="button"
         className="outline-button"

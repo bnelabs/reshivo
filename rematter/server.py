@@ -181,6 +181,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/products/counterweight": self.server.application.counterweight,
                 "/api/products/my-mix": self.server.application.my_mix_mass,
                 "/api/products/target-check": self.server.application.target_check,
+                "/api/products/compare-readings": self.server.application.compare_readings,
                 "/api/advisor/help": self.server.application.advisor_help,
                 "/api/advisor/inspect-image": self.server.application.advisor_inspect_image,
                 "/api/advisor/read-observation": self.server.application.advisor_read_observation,

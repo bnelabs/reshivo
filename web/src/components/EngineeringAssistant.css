@@ -1,0 +1,25 @@
+.engineering-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.engineering-comparison-card {
+  padding: 15px;
+  border: 1px solid #dedbd0;
+  border-radius: 8px;
+  background: #faf8f2;
+}
+.engineering-comparison-card.is-checked {
+  border-color: #add3c6;
+  background: #edf8f3;
+}
+.engineering-comparison-card p {
+  margin: 7px 0 0;
+  font-size: 13px;
+}
+.engineering-explanation {
+  border-top: 1px solid #d7e3df;
+  margin-top: 18px;
+  padding-top: 5px;
+}

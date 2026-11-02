@@ -6,6 +6,7 @@ import { CaseDetails } from './CaseDetails'
 import { AssemblyMassPlanner as WeightAdjustment } from './AssemblyMassPlanner'
 import { EngineeringNoteReader } from './EngineeringNoteReader'
 import { ImageIntake } from './ImageIntake'
+import { MeasurementComparison } from './MeasurementComparison'
 import type { EngineeringNotePatch } from '../engineeringNote'
 import type {
   AdvisorBrief,
@@ -216,6 +217,7 @@ export function Workshop() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [exampleLoaded, setExampleLoaded] = useState(false)
+  const [balanceDemoLoaded, setBalanceDemoLoaded] = useState(false)
   const [activity, setActivity] = useState<'routes' | 'trial' | null>(null)
   const busy = activity !== null
   const [elapsed, setElapsed] = useState(0)
@@ -223,6 +225,7 @@ export function Workshop() {
   const request = useRef<AbortController | null>(null)
   const answer = useRef<HTMLElement | null>(null)
   const followup = useRef<HTMLInputElement | null>(null)
+  const engineeringChecks = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -263,6 +266,7 @@ export function Workshop() {
     setError('')
     setQuestion('')
     setLastQuestion('')
+    setBalanceDemoLoaded(false)
   }
   function editBrief(key: keyof AdvisorBrief, value: string) {
     if (plan || busy) setNotice('Brief changed. Find updated routes for this case.')
@@ -354,10 +358,28 @@ export function Workshop() {
     setAssemblyObservation(structuredClone(balanceDemoObservation))
     setBalancePreset({ serial: Date.now(), fields: structuredClone(balanceDemoFields) })
     setExampleLoaded(false)
+    setBalanceDemoLoaded(true)
     setNotice(
       'Synthetic software example loaded. Its measurements do not describe your waste or a tested product.',
     )
     setSection('engineering')
+  }
+  function showSimulatedDecision() {
+    setSection('engineering')
+    setFocusWorkspace(true)
+    requestAnimationFrame(() => {
+      const button = Array.from(engineeringChecks.current?.querySelectorAll('button') ?? []).find(
+        (candidate) => candidate.textContent?.includes('Compare mass-only and two-location adjustments'),
+      )
+      if (!button) return
+      let details = button.closest('details')
+      while (details && engineeringChecks.current?.contains(details)) {
+        details.open = true
+        details = details.parentElement?.closest('details') ?? null
+      }
+      button.scrollIntoView({ block: 'center' })
+      button.focus({ preventScroll: true })
+    })
   }
   function applyEngineeringNote(patch: EngineeringNotePatch) {
     if (
@@ -390,6 +412,7 @@ export function Workshop() {
     selectedRoute ||
     balancePreset ||
     calculationDetails.label.trim() ||
+    calculationDetails.balance ||
     calculationDetails.amount_basis.trim() ||
     calculationDetails.amount_unit !== 'mass_percent' ||
     calculationDetails.components.length > 1 ||
@@ -400,6 +423,13 @@ export function Workshop() {
       typeof value === 'string' ? value.trim() : value === true,
     ),
   )
+  function replaceWithExample(load: () => void) {
+    const hasCase = Object.values(brief).some((value) => value.trim()) || mayClearCaseData
+    if (hasCase && !window.confirm(
+      'Loading this example replaces your current case and can clear its mix details, measurements, options and trial. Continue?',
+    )) return
+    load()
+  }
 
   async function ask(nextQuestion = '') {
     if (!briefReady || !status?.configured || busy) return
@@ -588,12 +618,11 @@ export function Workshop() {
       : plan.engineering_routes
     : []
   const chosen = selectedRoute
-  const progress = !plan ? 1 : !trial ? 2 : section === 'engineering' ? 4 : 3
-  const steps = [
-    { title: 'Your case', detail: 'Material, product and goals' },
-    { title: 'Compare options', detail: 'Explore practical approaches' },
-    { title: 'Plan a trial', detail: 'Choose what to try' },
-    { title: 'Check a result', detail: 'Work with your measurements' },
+  const caseStatus = [
+    { title: 'Your case', detail: briefReady ? 'Required details added' : 'Details needed', ready: briefReady },
+    { title: 'Options', detail: plan ? 'Suggestions available' : 'Not explored yet', ready: Boolean(plan) },
+    { title: 'Trial plan', detail: trial ? 'Suggestion available' : 'Not planned yet', ready: Boolean(trial) },
+    { title: 'Engineering', detail: 'Tools available', ready: false },
   ]
   const fieldGroups = [
     {
@@ -642,26 +671,17 @@ export function Workshop() {
           )}
         </div>
       </div>
-      <ol className="workshop-progress" aria-label="Your progress">
-        {steps.map((step, index) => {
-          const number = index + 1
-          return (
-            <li
-              key={step.title}
-              className={
-                number === progress ? 'is-current' : number < progress ? 'is-complete' : ''
-              }
-              aria-current={number === progress ? 'step' : undefined}
-            >
-              <span className="workshop-progress-number">{number}</span>
+      <ul className="workshop-progress" aria-label="Your case at a glance">
+        {caseStatus.map((item) => (
+            <li key={item.title} className={item.ready ? 'is-ready' : ''}>
+              <span className="workshop-progress-dot" aria-hidden="true" />
               <span>
-                <strong>{step.title}</strong>
-                <small>{step.detail}</small>
+                <strong>{item.title}</strong>
+                <small>{item.detail}</small>
               </span>
             </li>
-          )
-        })}
-      </ol>
+        ))}
+      </ul>
       <main
         className={`workshop-grid${focusWorkspace ? ' is-focused' : ''}${plan ? ' has-plan' : ''}`}
       >
@@ -674,10 +694,10 @@ export function Workshop() {
           </div>
           <details className="workshop-examples">
             <summary>Try an example</summary>
-            <button className="workshop-example" type="button" onClick={loadExample}>
+            <button className="workshop-example" type="button" onClick={() => replaceWithExample(loadExample)}>
               Explore a counterweight <span aria-hidden="true">↗</span>
             </button>
-            <button className="workshop-example" type="button" onClick={loadBalanceDemo}>
+            <button className="workshop-example" type="button" onClick={() => replaceWithExample(loadBalanceDemo)}>
               Try a synthetic mass-and-balance check <span aria-hidden="true">↗</span>
             </button>
           </details>
@@ -685,6 +705,21 @@ export function Workshop() {
             <p className="workshop-example-note" role="status">
               Hypothetical example loaded. Edit it to fit your batch; these are not material
               measurements.
+            </p>
+          )}
+          {balanceDemoLoaded && (
+            <div className="workshop-demo-action workshop-demo-mobile">
+              <p>Compare a mass-only change with a two-location adjustment in this simulation.</p>
+              <button type="button" onClick={showSimulatedDecision}>
+                Open the simulated check <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          )}
+          {mayClearCaseData && (
+            <p className="workshop-edit-warning" role="status">
+              Editing the material, its variation, the process or the product can clear recorded
+              measurements and plans. Changing “What you have” also clears saved mix details.
+              Download anything you need before editing.
             </p>
           )}
           <form
@@ -748,6 +783,11 @@ export function Workshop() {
               <summary>
                 Equipment, contamination and other constraints <small>Optional</small>
               </summary>
+              {mayClearCaseData && (
+                <p className="workshop-edit-warning">
+                  Changing contamination or process can clear recorded measurements and plans.
+                </p>
+              )}
               {optionalFields.map((field) => (
                 <label key={field.key}>
                   {field.label}
@@ -834,6 +874,14 @@ export function Workshop() {
               {notice}
             </p>
           )}
+          {balanceDemoLoaded && section === 'engineering' && !focusWorkspace && (
+            <div className="workshop-demo-action">
+              <p>Compare a mass-only change with a two-location adjustment in this simulation.</p>
+              <button type="button" onClick={showSimulatedDecision}>
+                Open the simulated check <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          )}
           {error && (
             <p className="workshop-error" role="alert">
               {error}
@@ -860,7 +908,7 @@ export function Workshop() {
               </button>
             </div>
           )}
-          {!plan ? (
+          {!plan ? balanceDemoLoaded && section === 'engineering' ? null : (
             <div className="workshop-start">
               <h2>What happens next?</h2>
               <p>From your case, ReMatter helps you work through three decisions.</p>
@@ -905,6 +953,10 @@ export function Workshop() {
                   Download plan
                 </button>
               </div>
+              <p className="workshop-proposal-note">
+                These are suggested next steps, not measured product performance. Review the
+                options and test the one you choose.
+              </p>
               {section !== 'next' ? (
                 <>
                   {lastQuestion && (
@@ -1034,9 +1086,14 @@ export function Workshop() {
             </div>
           )}
           <div hidden={section !== 'material'}>
+            <MeasurementComparison
+              caseData={caseData}
+              canAsk={Boolean(status?.configured && briefReady && !busy)}
+              onAsk={(comparisonQuestion) => { void ask(comparisonQuestion) }}
+            />
             <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} />
           </div>
-          <div hidden={section !== 'engineering'}>
+          <div hidden={section !== 'engineering'} ref={engineeringChecks}>
             <EngineeringNoteReader
               caseData={caseData}
               active={section === 'engineering'}

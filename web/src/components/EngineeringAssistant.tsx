@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { commandGrams } from '../quantity'
+import { outwardBound, toDisplay, unitLabel, useUnitSystem } from '../units'
 import type { BalanceConfig, WorkshopCase } from '../types'
 import type { FeedbackRequest, PlanRequest } from './AdaptationPlanner'
+import './EngineeringAssistant.css'
 
 type Action =
   | 'keep_fixed'
@@ -43,6 +45,15 @@ type AssistResult = {
     feasible?: boolean
     observation_id?: string
     commands?: { position_id: string; x_mm: number; command_kg: number; action: string }[] | null
+    baseline?: {
+      mass_inside_target: boolean
+      balance_inside_target: boolean
+      adjustment_limits_fit: boolean
+      mass_min_kg: number | null
+      mass_max_kg: number | null
+      cg_min_mm: number | null
+      cg_max_mm: number | null
+    }
     balance_result?: {
       mass_min_kg: number
       mass_max_kg: number
@@ -96,6 +107,7 @@ export function EngineeringAssistant({
       ? 'What should I change, and where, to keep both mass and balance within these targets?'
       : 'What can I change to reach this mass target with these readings and limits?',
   )
+  const system = useUnitSystem()
   const [result, setResult] = useState<AssistResult | null>(null)
   const [busy, setBusy] = useState(false)
   const [elapsed, setElapsed] = useState(0)
@@ -259,12 +271,6 @@ export function EngineeringAssistant({
           {result.status === 'completed' && result.decision ? (
             <>
               <h3>{actionLabel[result.decision.action]}</h3>
-              <h4>Meta's proposed next step</h4>
-              <p className="engineering-answer">{result.answer}</p>
-              <p className="helper">
-                The explanation is a model proposal. The calculation results below are checked
-                separately.
-              </p>
             </>
           ) : (
             <>
@@ -280,7 +286,35 @@ export function EngineeringAssistant({
           )}
           {summary && (
             <div className="engineering-checked">
-              <h4>Calculation results</h4>
+              <h4>Checked decision</h4>
+              {summary.baseline && summary.balance_result && (
+                <>
+                <p className="engineering-targets">
+                  Your targets: mass {toDisplay(caseData.details.mass_target_min_kg, 'kg', system)}–{toDisplay(caseData.details.mass_target_max_kg, 'kg', system)} {unitLabel('kg', system)}
+                  {caseData.details.balance && <> · balance {toDisplay(caseData.details.balance.target_min_mm, 'mm', system)}–{toDisplay(caseData.details.balance.target_max_mm, 'mm', system)} {unitLabel('mm', system)}</>}
+                  {system === 'us' && ' (converted values rounded)'}
+                </p>
+                <div className="engineering-comparison" aria-label="Comparison of the entered action and the checked adjustment">
+                  <div className="engineering-comparison-card">
+                    <strong>{balance?.baseline.command_kg ? 'Your single-location comparison' : 'Without an adjustment'}</strong>
+                    <p>Mass {summary.baseline.mass_min_kg === null ? 'not calculated' : summary.baseline.mass_inside_target ? 'within target' : 'outside target'} · balance {summary.baseline.cg_min_mm === null ? 'not calculated' : summary.baseline.balance_inside_target ? 'within target' : 'outside target'}</p>
+                    {!summary.baseline.adjustment_limits_fit && <p>Adjustment limits also exceeded.</p>}
+                    {summary.baseline.mass_min_kg !== null && summary.baseline.mass_max_kg !== null && (
+                      <p>Mass: {outwardBound(summary.baseline.mass_min_kg, 'kg', system, 'min')}–{outwardBound(summary.baseline.mass_max_kg, 'kg', system, 'max')} {unitLabel('kg', system)}</p>
+                    )}
+                    {summary.baseline.cg_min_mm !== null && summary.baseline.cg_max_mm !== null && (
+                      <p>Balance: {outwardBound(summary.baseline.cg_min_mm, 'mm', system, 'min')}–{outwardBound(summary.baseline.cg_max_mm, 'mm', system, 'max')} {unitLabel('mm', system)}</p>
+                    )}
+                  </div>
+                  <div className="engineering-comparison-card is-checked">
+                    <strong>Checked adjustment</strong>
+                    <p>Both targets fit the entered bounds in this simulation.</p>
+                    <p>Mass: {outwardBound(summary.balance_result.mass_min_kg, 'kg', system, 'min')}–{outwardBound(summary.balance_result.mass_max_kg, 'kg', system, 'max')} {unitLabel('kg', system)}</p>
+                    <p>Balance: {outwardBound(summary.balance_result.cg_min_mm, 'mm', system, 'min')}–{outwardBound(summary.balance_result.cg_max_mm, 'mm', system, 'max')} {unitLabel('mm', system)}</p>
+                  </div>
+                </div>
+                </>
+              )}
               {summary.commands && (
                 <ul>
                   {summary.commands.map((row) => (
@@ -288,19 +322,19 @@ export function EngineeringAssistant({
                       <strong>
                         {row.action === 'none'
                           ? 'No change'
-                          : `${row.action === 'add' ? 'Add' : 'Remove'} ${commandGrams(Math.abs(row.command_kg))} g`}
+                          : `${row.action === 'add' ? 'Add' : 'Remove'} ${system === 'metric' ? `${commandGrams(Math.abs(row.command_kg))} g` : `≈ ${toDisplay(String(Math.abs(row.command_kg)), 'kg', system)} lb (exact ${commandGrams(Math.abs(row.command_kg))} g)`}`}
                       </strong>{' '}
-                      · {row.position_id}, x={String(row.x_mm)} mm
+                      · {row.position_id}, x={toDisplay(String(row.x_mm), 'mm', system)} {unitLabel('mm', system)}
                     </li>
                   ))}
                 </ul>
               )}
-              {summary.balance_result && (
+              {summary.balance_result && !summary.baseline && (
                 <p>
-                  Approximate ranges: mass {quantity(summary.balance_result.mass_min_kg)}–
-                  {quantity(summary.balance_result.mass_max_kg)} kg. Balance point:{' '}
-                  {quantity(summary.balance_result.cg_min_mm)}–
-                  {quantity(summary.balance_result.cg_max_mm)} mm.
+                  Approximate ranges: mass {outwardBound(summary.balance_result.mass_min_kg, 'kg', system, 'min')}–
+                  {outwardBound(summary.balance_result.mass_max_kg, 'kg', system, 'max')} {unitLabel('kg', system)}. Balance point:{' '}
+                  {outwardBound(summary.balance_result.cg_min_mm, 'mm', system, 'min')}–
+                  {outwardBound(summary.balance_result.cg_max_mm, 'mm', system, 'max')} {unitLabel('mm', system)}.
                 </p>
               )}
               {placementSvg && (
@@ -310,6 +344,7 @@ export function EngineeringAssistant({
                     src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(placementSvg)}`}
                     alt="Simulated adjustment locations and balance-point comparison"
                   />
+                  <p className="helper">The placement diagram uses grams and millimetres.</p>
                   <button
                     type="button"
                     className="text-button"
@@ -355,7 +390,7 @@ export function EngineeringAssistant({
                   <p>
                     {summary.chosen_signed_adjustment_kg === 0
                       ? 'No mass correction needed'
-                      : `${summary.chosen_signed_adjustment_kg > 0 ? 'Add' : 'Remove'} ${quantity(Math.abs(summary.chosen_signed_adjustment_kg))} kg`}
+                      : `${summary.chosen_signed_adjustment_kg > 0 ? 'Add' : 'Remove'} ${toDisplay(String(Math.abs(summary.chosen_signed_adjustment_kg)), 'kg', system)} ${unitLabel('kg', system)}`}
                     . Observation: {summary.observation_id}.
                   </p>
                 )}
@@ -367,6 +402,13 @@ export function EngineeringAssistant({
                 </p>
               )}
               <p className="helper">{summary.scope}</p>
+            </div>
+          )}
+          {result.status === 'completed' && result.decision && (
+            <div className="engineering-explanation">
+              <h4>Meta's explanation</h4>
+              <p className="engineering-answer">{result.answer}</p>
+              <p className="helper">The explanation is a model proposal and may use metric units. The checked values above follow your unit selection.</p>
             </div>
           )}
           <details className="product-detail">
