@@ -7,6 +7,7 @@ import { AssemblyMassPlanner as WeightAdjustment } from './AssemblyMassPlanner'
 import { EngineeringNoteReader } from './EngineeringNoteReader'
 import { ImageIntake } from './ImageIntake'
 import { MeasurementComparison } from './MeasurementComparison'
+import './WorkshopDecision.css'
 import type { EngineeringNotePatch } from '../engineeringNote'
 import type {
   AdvisorBrief,
@@ -20,15 +21,12 @@ import type {
   WorkshopCase,
 } from '../types'
 import type { BalancePreset } from './BalancePlanner'
-import {
-  balanceDemoBrief,
-  balanceDemoDetails,
-  balanceDemoObservation,
-  balanceDemoFields,
-} from '../balanceDemo'
 
 const CalculationTools = lazy(() =>
   import('./ProductPlanner').then((module) => ({ default: module.ProductPlanner })),
+)
+const PublishedBlend = lazy(() =>
+  import('./TestedLevels').then((module) => ({ default: module.TestedLevels })),
 )
 const emptyBrief: AdvisorBrief = {
   input: '',
@@ -74,6 +72,23 @@ const counterweightExample: AdvisorBrief = {
     'Assembly and weighing at home. No heating of unknown cable plastics. No laboratory or specialist moulding equipment available.',
   available_changes:
     'A rigid enclosure, mechanical containment, adjustable fill compartments, or an appropriate known binder may be considered. Keep dust contained; no open dust sorting at home.',
+}
+const planterExample: AdvisorBrief = {
+  input:
+    'Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.',
+  variation:
+    'The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized.',
+  contamination:
+    'No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.',
+  product: 'A non-load-bearing planter sleeve — material development case',
+  use_case:
+    'An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.',
+  targets:
+    'Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.',
+  process:
+    'Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.',
+  available_changes:
+    'The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin.',
 }
 const briefFields: {
   key: keyof AdvisorBrief
@@ -159,9 +174,9 @@ function RouteCard({
         </button>
       </div>
       <p className="workshop-route-change">{route.change}</p>
-      <p>{route.why}</p>
       <details>
-        <summary>Steps &amp; trade-offs</summary>
+        <summary>Why this may help &amp; how to try it</summary>
+        <p>{route.why}</p>
         <ol>
           {route.steps.map((step, index) => (
             <li key={index}>{step}</li>
@@ -214,18 +229,22 @@ export function Workshop() {
   const [lastQuestion, setLastQuestion] = useState('')
   const [selectedRoute, setSelectedRoute] = useState<AdvisorRoute | null>(null)
   const [trial, setTrial] = useState<AdvisorTrialResult | null>(null)
+  const [hasTrialFollowup, setHasTrialFollowup] = useState(false)
+  const [comparisonAdviceStale, setComparisonAdviceStale] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [exampleLoaded, setExampleLoaded] = useState(false)
-  const [balanceDemoLoaded, setBalanceDemoLoaded] = useState(false)
+  const [sourceOpen, setSourceOpen] = useState(false)
   const [activity, setActivity] = useState<'routes' | 'trial' | null>(null)
   const busy = activity !== null
   const [elapsed, setElapsed] = useState(0)
   const [toolsOpen, setToolsOpen] = useState(false)
   const request = useRef<AbortController | null>(null)
+  const comparisonRequest = useRef<AbortController | null>(null)
+  const comparisonAdviceShown = useRef(false)
   const answer = useRef<HTMLElement | null>(null)
   const followup = useRef<HTMLInputElement | null>(null)
-  const engineeringChecks = useRef<HTMLDivElement | null>(null)
+  const comparisonArea = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -257,16 +276,19 @@ export function Workshop() {
   }, [plan, trial])
 
   function invalidate() {
+    comparisonRequest.current = null
+    comparisonAdviceShown.current = false
+    setComparisonAdviceStale(false)
     request.current?.abort()
     setActivity(null)
     setPlan(null)
     setHistory([])
     setSelectedRoute(null)
     setTrial(null)
+    setHasTrialFollowup(false)
     setError('')
     setQuestion('')
     setLastQuestion('')
-    setBalanceDemoLoaded(false)
   }
   function editBrief(key: keyof AdvisorBrief, value: string) {
     if (plan || busy) setNotice('Brief changed. Find updated routes for this case.')
@@ -351,35 +373,22 @@ export function Workshop() {
     setExampleLoaded(true)
     setSection('material')
   }
-  function loadBalanceDemo() {
+  function loadPlanterExample() {
     invalidate()
-    setBrief(structuredClone(balanceDemoBrief))
-    setCalculationDetails(structuredClone(balanceDemoDetails))
-    setAssemblyObservation(structuredClone(balanceDemoObservation))
-    setBalancePreset({ serial: Date.now(), fields: structuredClone(balanceDemoFields) })
-    setExampleLoaded(false)
-    setBalanceDemoLoaded(true)
-    setNotice(
-      'Synthetic software example loaded. Its measurements do not describe your waste or a tested product.',
-    )
-    setSection('engineering')
-  }
-  function showSimulatedDecision() {
-    setSection('engineering')
-    setFocusWorkspace(true)
-    requestAnimationFrame(() => {
-      const button = Array.from(engineeringChecks.current?.querySelectorAll('button') ?? []).find(
-        (candidate) => candidate.textContent?.includes('Compare mass-only and two-location adjustments'),
-      )
-      if (!button) return
-      let details = button.closest('details')
-      while (details && engineeringChecks.current?.contains(details)) {
-        details.open = true
-        details = details.parentElement?.closest('details') ?? null
-      }
-      button.scrollIntoView({ block: 'center' })
-      button.focus({ preventScroll: true })
+    setBalancePreset(undefined)
+    setAssemblyObservation(newAssemblyObservation())
+    setBrief({ ...planterExample })
+    setCalculationDetails({
+      ...newCalculationDetails(),
+      label: 'Hypothetical PE material-development case',
+      components: [
+        { id: 1, name: 'Identified PCRPE resin (grade to record)', role: 'main', amount: '' },
+        { id: 2, name: 'Identified virgin MDPE resin (grade to record)', role: 'other', amount: '' },
+      ],
     })
+    setNotice('')
+    setExampleLoaded(true)
+    setSection('material')
   }
   function applyEngineeringNote(patch: EngineeringNotePatch) {
     if (
@@ -431,11 +440,34 @@ export function Workshop() {
     load()
   }
 
-  async function ask(nextQuestion = '') {
+  function comparisonDraftChanged() {
+    const pending = comparisonRequest.current
+    if (pending && request.current === pending && !pending.signal.aborted) {
+      pending.abort()
+      comparisonRequest.current = null
+      setActivity(null)
+      setNotice('Your readings changed. Stopped the request that used the previous comparison. Compare again before asking for updated advice.')
+    }
+    if (comparisonAdviceShown.current) {
+      setComparisonAdviceStale(true)
+      setHasTrialFollowup(false)
+    }
+  }
+
+  async function ask(
+    nextQuestion = '',
+    preserveSelectedTrial = Boolean(nextQuestion.trim() && (selectedRoute || trial)),
+    displayQuestion = nextQuestion.trim(),
+    fromComparison = false,
+  ) {
     if (!briefReady || !status?.configured || busy) return
     const controller = new AbortController()
     request.current?.abort()
     request.current = controller
+    comparisonRequest.current = fromComparison ? controller : null
+    if (fromComparison) {
+      setHasTrialFollowup(false)
+    }
     const submittedQuestion =
       nextQuestion.trim() ||
       'How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments.'
@@ -472,16 +504,21 @@ export function Workshop() {
               .slice(0, 6000),
           }
         : null
+    const earlierHistory: AdvisorMessage[] = comparisonAdviceStale
+      ? [...history.slice(-4), {
+          role: 'assistant',
+          content: 'Earlier measurement-comparison advice is no longer current because the readings or trial changed. Do not treat that comparison as a current target fit; updated confirmed readings are needed.',
+        }]
+      : history
     const recentHistory = selectedContext
-      ? [...history.slice(-5), selectedContext]
-      : history.slice(-6)
+      ? [...earlierHistory.slice(-5), selectedContext]
+      : earlierHistory.slice(-6)
     setActivity('routes')
     requestAnimationFrame(() =>
       answer.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }),
     )
     setError('')
     setNotice('')
-    setLastQuestion(nextQuestion.trim())
     try {
       const response = await api<AdvisorResult>(
         '/api/advisor/help',
@@ -494,6 +531,9 @@ export function Workshop() {
         controller.signal,
       )
       if (!controller.signal.aborted) {
+        comparisonAdviceShown.current = fromComparison
+        setComparisonAdviceStale(false)
+        setLastQuestion(displayQuestion.trim())
         setPlan(response)
         const prompt =
           submittedQuestion ||
@@ -522,9 +562,12 @@ export function Workshop() {
           ].slice(-6),
         )
         setQuestion('')
-        setSelectedRoute(null)
-        setTrial(null)
-        setSection((current) => (current === 'next' ? 'material' : current))
+        if (!preserveSelectedTrial) {
+          setSelectedRoute(null)
+          setTrial(null)
+        }
+        setHasTrialFollowup(preserveSelectedTrial && Boolean(trial))
+        setSection((current) => preserveSelectedTrial ? current : current === 'next' ? 'material' : current)
       }
     } catch (failure) {
       if (!controller.signal.aborted)
@@ -534,8 +577,19 @@ export function Workshop() {
             : 'Meta could not finish this request. Your brief is still here.',
         )
     } finally {
+      if (comparisonRequest.current === controller) comparisonRequest.current = null
       if (!controller.signal.aborted) setActivity(null)
     }
+  }
+  function openTrialMeasurements() {
+    requestAnimationFrame(() => {
+      const details = comparisonArea.current?.querySelector('details')
+      if (details) {
+        details.open = true
+        details.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        details.querySelector('input, select')?.scrollIntoView({ block: 'center' })
+      }
+    })
   }
   function stopWaiting() {
     request.current?.abort()
@@ -544,7 +598,10 @@ export function Workshop() {
   }
   function selectRoute(route: AdvisorRoute) {
     if (busy) return
-    if (selectedRoute?.id !== route.id) setTrial(null)
+    if (JSON.stringify(selectedRoute) !== JSON.stringify(route)) {
+      setTrial(null)
+      setHasTrialFollowup(false)
+    }
     setSelectedRoute(route)
     setError('')
     setNotice('')
@@ -622,7 +679,7 @@ export function Workshop() {
     { title: 'Your case', detail: briefReady ? 'Required details added' : 'Details needed', ready: briefReady },
     { title: 'Options', detail: plan ? 'Suggestions available' : 'Not explored yet', ready: Boolean(plan) },
     { title: 'Trial plan', detail: trial ? 'Suggestion available' : 'Not planned yet', ready: Boolean(trial) },
-    { title: 'Engineering', detail: 'Tools available', ready: false },
+    { title: 'Measurements', detail: 'Add results when available', ready: false },
   ]
   const fieldGroups = [
     {
@@ -697,8 +754,8 @@ export function Workshop() {
             <button className="workshop-example" type="button" onClick={() => replaceWithExample(loadExample)}>
               Explore a counterweight <span aria-hidden="true">↗</span>
             </button>
-            <button className="workshop-example" type="button" onClick={() => replaceWithExample(loadBalanceDemo)}>
-              Try a synthetic mass-and-balance check <span aria-hidden="true">↗</span>
+            <button className="workshop-example" type="button" onClick={() => replaceWithExample(loadPlanterExample)}>
+              Explore a recycled-PE product <span aria-hidden="true">↗</span>
             </button>
           </details>
           {exampleLoaded && (
@@ -706,14 +763,6 @@ export function Workshop() {
               Hypothetical example loaded. Edit it to fit your batch; these are not material
               measurements.
             </p>
-          )}
-          {balanceDemoLoaded && (
-            <div className="workshop-demo-action workshop-demo-mobile">
-              <p>Compare a mass-only change with a two-location adjustment in this simulation.</p>
-              <button type="button" onClick={showSimulatedDecision}>
-                Open the simulated check <span aria-hidden="true">→</span>
-              </button>
-            </div>
           )}
           {mayClearCaseData && (
             <p className="workshop-edit-warning" role="status">
@@ -874,13 +923,11 @@ export function Workshop() {
               {notice}
             </p>
           )}
-          {balanceDemoLoaded && section === 'engineering' && !focusWorkspace && (
-            <div className="workshop-demo-action">
-              <p>Compare a mass-only change with a two-location adjustment in this simulation.</p>
-              <button type="button" onClick={showSimulatedDecision}>
-                Open the simulated check <span aria-hidden="true">→</span>
-              </button>
-            </div>
+          {comparisonAdviceStale && (
+            <p className="workshop-edit-warning" role="status">
+              Meta’s earlier advice uses a previous comparison. Your readings or trial have changed.
+              Compare again and ask for updated advice before using it with these readings.
+            </p>
           )}
           {error && (
             <p className="workshop-error" role="alert">
@@ -908,7 +955,7 @@ export function Workshop() {
               </button>
             </div>
           )}
-          {!plan ? balanceDemoLoaded && section === 'engineering' ? null : (
+          {!plan ? (
             <div className="workshop-start">
               <h2>What happens next?</h2>
               <p>From your case, ReMatter helps you work through three decisions.</p>
@@ -957,43 +1004,74 @@ export function Workshop() {
                 These are suggested next steps, not measured product performance. Review the
                 options and test the one you choose.
               </p>
+              {chosen && section !== 'next' && (
+                <section className="workshop-current-decision" aria-label="Your selected approach">
+                  <p className="workshop-eyebrow">Your selected approach</p>
+                  <h3>{chosen.title}</h3>
+                  <dl>
+                    <div>
+                      <dt>Change</dt>
+                      <dd>{chosen.change}</dd>
+                    </div>
+                    <div>
+                      <dt>Check next</dt>
+                      <dd>{chosen.check}</dd>
+                    </div>
+                  </dl>
+                  <p className="workshop-decision-target"><strong>Your goal</strong> {brief.targets}</p>
+                  <button
+                    type="button"
+                    disabled={busy || !status?.configured}
+                    onClick={() => trial ? setSection('next') : void planTrial(chosen)}
+                  >
+                    {trial ? 'View this trial plan' : 'Plan this trial'} <span aria-hidden="true">→</span>
+                  </button>
+                  {!trial && <small>Meta will turn your chosen change into one proposed comparison.</small>}
+                </section>
+              )}
               {section !== 'next' ? (
                 <>
                   {lastQuestion && (
-                    <p className="workshop-last-question">You asked: {lastQuestion}</p>
+                    <>
+                      <p className="workshop-last-question">You asked: {lastQuestion}</p>
+                      <section className="workshop-answer" aria-label="Meta’s response">
+                        <strong>Meta’s response</strong>
+                        {plan.answer
+                          .split(/\n\s*\n/)
+                          .filter(Boolean)
+                          .map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                      </section>
+                    </>
                   )}
                   {!!plan.quarantined_answer?.length && (
                     <p role="status" className="workshop-last-question">
                       An unverified claim about meeting your targets was removed. Review the proposed options and checks before relying on them.
                     </p>
                   )}
-                  <div className="workshop-answer">
-                    {plan.answer
-                      .split(/\n\s*\n/)
-                      .filter(Boolean)
-                      .map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
-                      ))}
-                  </div>
                   <div className="workshop-routes">
                     {routes.map((route) => (
                       <RouteCard
                         key={route.id}
                         route={route}
-                        selected={selectedRoute?.id === route.id}
+                        selected={JSON.stringify(selectedRoute) === JSON.stringify(route)}
                         busy={busy}
                         onSelect={() => selectRoute(route)}
                         onDevelop={() => void planTrial(route)}
                       />
                     ))}
                   </div>
-                  {chosen && (
-                    <p className="workshop-selected-note">
-                      Selected route: <strong>{chosen.title}</strong>.{' '}
-                      <button type="button" onClick={() => setSection('next')}>
-                        {trial ? 'View trial plan' : 'Open trial plan'} →
-                      </button>
-                    </p>
+                  {!lastQuestion && (
+                    <details className="workshop-explanation">
+                      <summary>Read Meta’s explanation</summary>
+                      <div className="workshop-answer">
+                        {plan.answer
+                          .split(/\n\s*\n/)
+                          .filter(Boolean)
+                          .map((paragraph, index) => (
+                            <p key={index}>{paragraph}</p>
+                          ))}
+                      </div>
+                    </details>
                   )}
                   <div className="workshop-plan-footer">
                     <span>
@@ -1019,7 +1097,29 @@ export function Workshop() {
               ) : (
                 <>
                   {trial ? (
-                    <TrialPlan trial={trial} />
+                    <>
+                      {hasTrialFollowup && (
+                        <div className="workshop-followup-ready" role="status">
+                          <p>Meta has follow-up advice for this case. Your original trial is unchanged.</p>
+                          <button type="button" onClick={() => setSection('material')}>
+                            Review follow-up advice →
+                          </button>
+                        </div>
+                      )}
+                      <TrialPlan trial={trial} />
+                      <section className="workshop-trial-return">
+                        <h3>Bring back your trial results</h3>
+                        <p>
+                          When you have matching measurements, compare the tested input levels
+                          with your target. Then ask Meta what to check or change next, using this
+                          selected trial and your readings.
+                        </p>
+                        <button type="button" onClick={openTrialMeasurements}>
+                          Compare measurements from this trial <span aria-hidden="true">→</span>
+                        </button>
+                        <small>No readings yet? Keep this as a proposed trial; the app has not tested your material.</small>
+                      </section>
+                    </>
                   ) : (
                     <div className="workshop-trial-start">
                       {chosen ? (
@@ -1063,8 +1163,10 @@ export function Workshop() {
                     </div>
                   )}
                   <details className="workshop-general-next">
-                    <summary>Earlier ideas &amp; open questions</summary>
-                    <p>These came from the route exploration, before choosing a trial.</p>
+                    <summary>{hasTrialFollowup ? 'Follow-up ideas & open questions' : 'Earlier ideas & open questions'}</summary>
+                    <p>{hasTrialFollowup
+                      ? 'These suggestions respond to your follow-up. Your chosen trial above is unchanged.'
+                      : 'These came from the route exploration, before choosing a trial.'}</p>
                     <ol className="workshop-next-steps">
                       {plan.next_steps.map((step, index) => (
                         <li key={index}>
@@ -1085,15 +1187,60 @@ export function Workshop() {
               )}
             </div>
           )}
-          <div hidden={section !== 'material'}>
+          <div hidden={section === 'engineering'} ref={comparisonArea}>
             <MeasurementComparison
               caseData={caseData}
+              trial={trial ?? undefined}
               canAsk={Boolean(status?.configured && briefReady && !busy)}
-              onAsk={(comparisonQuestion) => { void ask(comparisonQuestion) }}
+              onAsk={(comparisonQuestion) => {
+                void ask(comparisonQuestion, true, 'What should I try next based on these trial readings?', true)
+              }}
+              onDraftChange={comparisonDraftChanged}
             />
-            <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} />
           </div>
-          <div hidden={section !== 'engineering'} ref={engineeringChecks}>
+          <div hidden={section !== 'material'}>
+            <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} />
+            <details
+              className="workshop-source-example"
+              onToggle={(event) => {
+                if (event.currentTarget.open) {
+                  setSourceOpen(true)
+                  setFocusWorkspace(true)
+                }
+              }}
+            >
+              <summary>
+                <span>Explore a measured blend example</span>
+                <small>Published PE specimens · separate from your case</small>
+              </summary>
+              <p className="workshop-source-scope">
+                See how changing recycled content affected a measured property in one published
+                study. Its materials, process and specimens belong to that study. No readings are
+                copied into your case or used to qualify your product.
+              </p>
+              {sourceOpen && (
+                <Suspense fallback={<p>Loading the published blend example…</p>}>
+                  <PublishedBlend
+                    active={section === 'material'}
+                    onAsk={(sourceQuestion) => {
+                      void ask(sourceQuestion, undefined, 'How can I develop my mix using this study as context?')
+                    }}
+                    disabled={busy || !briefReady || !status?.configured}
+                  />
+                </Suspense>
+              )}
+            </details>
+          </div>
+          <div hidden={section !== 'engineering'}>
+            <details className="workshop-observation-tools">
+              <summary>
+                <span>Optional mass and assembly checks</span>
+                <small>For a product with measured mass or balance targets</small>
+              </summary>
+              <p>
+                These checks use measurements of a stated mix or assembly. They do not tell you
+                which binder, contamination level or process will produce a material property.
+              </p>
             <EngineeringNoteReader
               caseData={caseData}
               active={section === 'engineering'}
@@ -1108,6 +1255,7 @@ export function Workshop() {
               balancePreset={balancePreset}
               active={section === 'engineering'}
             />
+            </details>
           </div>
           <form
             className="workshop-followup"

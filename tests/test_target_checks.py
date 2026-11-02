@@ -66,6 +66,31 @@ class TargetCheckTests(unittest.TestCase):
         result = target_check(request(target_min_MPa=25.7195, target_max_MPa=25.7195))
         self.assertEqual(result["levels"][1]["values_in_target"], 1)
 
+    def test_null_maximum_means_no_upper_bound_without_an_invented_limit(self):
+        result = target_check(request(target_max_MPa=None))
+        self.assertEqual(result["target_min_MPa"], 25)
+        self.assertIsNone(result["target_max_MPa"])
+        self.assertEqual([level["values_in_target"] for level in result["levels"]], [10, 10, 0, 0, 0, 0])
+        self.assertEqual(result["matching_tested_levels_wt_percent"], [0, 20])
+        self.assertFalse(result["interpolation_used"])
+        self.assertFalse(result["physical_product_tested"])
+        self.assertFalse(result["batch_consistency_established"])
+
+    def test_minimum_only_check_includes_boundary_and_handles_all_or_no_matches(self):
+        result = target_check(request(target_min_MPa=25.7195, target_max_MPa=None))
+        self.assertEqual(result["levels"][1]["values_in_target"], 10)
+        self.assertEqual(result["matching_tested_levels_wt_percent"], [0, 20])
+        result = target_check(request(target_min_MPa=0, target_max_MPa=None))
+        self.assertEqual(result["matching_tested_levels_wt_percent"], [0, 20, 40, 60, 80, 100])
+        result = target_check(request(target_min_MPa=1_000_000, target_max_MPa=None))
+        self.assertEqual(result["matching_tested_levels_wt_percent"], [])
+
+    def test_optional_bound_still_requires_the_explicit_maximum_key(self):
+        body = request()
+        del body["target_max_MPa"]
+        with self.assertRaises(ProductInputError):
+            target_check(body)
+
     def test_raw_values_and_input_levels_match_the_original_workbook(self):
         ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
         with ZipFile(ROOT / WORKBOOK_PATH) as workbook:
@@ -107,9 +132,11 @@ class TargetCheckTests(unittest.TestCase):
 
     def test_invalid_numeric_targets_are_rejected(self):
         for field in ("target_min_MPa", "target_max_MPa"):
-            for value in (True, "25", None, -1, float("nan"), float("inf"), 10 ** 1000):
+            for value in (True, "25", -1, float("nan"), float("inf"), 10 ** 1000):
                 with self.subTest(field=field, value=type(value)), self.assertRaises(ProductInputError):
                     target_check(request(**{field: value}))
+        with self.assertRaises(ProductInputError):
+            target_check(request(target_min_MPa=None))
         with self.assertRaises(ProductInputError):
             target_check(request(target_min_MPa=29, target_max_MPa=28))
 
@@ -191,6 +218,27 @@ class TargetCheckAPITests(unittest.TestCase):
         self.assertEqual(result["matching_tested_levels_wt_percent"], [20])
         self.assertEqual(sum(len(level["observations"]) for level in result["levels"]), 60)
         self.assertFalse(result["batch_consistency_established"])
+
+    def test_post_target_accepts_explicit_null_upper_bound(self):
+        status, result = self.call("/api/products/target-check", request(target_max_MPa=None))
+        self.assertEqual(status, 200)
+        self.assertEqual(result["target_min_MPa"], 25)
+        self.assertIsNone(result["target_max_MPa"])
+        self.assertEqual(result["matching_tested_levels_wt_percent"], [0, 20])
+        self.assertEqual([level["values_in_target"] for level in result["levels"]], [10, 10, 0, 0, 0, 0])
+        self.assertEqual(sum(len(level["observations"]) for level in result["levels"]), 60)
+
+    def test_post_target_rejects_missing_bound_key_and_invalid_null_minimum(self):
+        missing_maximum = request()
+        del missing_maximum["target_max_MPa"]
+        for body in (missing_maximum, request(target_min_MPa=None, target_max_MPa=None),
+                     request(target_max_MPa=""), request(target_max_MPa=False),
+                     request(target_max_MPa=-1), request(target_max_MPa=24)):
+            with self.subTest(body=body):
+                status, result = self.call("/api/products/target-check", body)
+                self.assertEqual(status, 400)
+                self.assertEqual(result["error"]["code"], "invalid_request")
+                self.assertNotIn("levels", result)
 
     def test_invalid_inputs_and_existing_host_origin_guards(self):
         for body in (request(property="mass"), request(target_min_MPa=True), request(target_max_MPa=10 ** 1000)):

@@ -1,21 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import type { TargetSeriesCatalog, TestedLevelResult } from '../types'
+import type { BalanceMixResult, TargetSeriesCatalog, TestedLevelResult } from '../types'
+import './TestedLevels.css'
 
 const quantity = (value: number, digits = 4) =>
   value.toLocaleString('en-US', { maximumFractionDigits: digits })
+const massQuantity = (value: number) => value !== 0 && Math.abs(value) < 0.000001
+  ? value.toExponential(6)
+  : value.toLocaleString('en-US', { maximumSignificantDigits: 12 })
 
-export function TestedLevels({ active }: { active: boolean }) {
+export function TestedLevels({ active, onAsk, disabled = false }: {
+  active: boolean
+  onAsk?: (question: string) => void
+  disabled?: boolean
+}) {
   const [catalog, setCatalog] = useState<TargetSeriesCatalog | null>(null)
   const [catalogAttempt, setCatalogAttempt] = useState(0)
   const [catalogError, setCatalogError] = useState('')
   const [seriesId, setSeriesId] = useState('CECON21-YIELD-MDPE')
   const [targetMin, setTargetMin] = useState('25')
-  const [targetMax, setTargetMax] = useState('28')
+  const [targetMax, setTargetMax] = useState('')
   const [result, setResult] = useState<TestedLevelResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const request = useRef<AbortController | null>(null)
+  const ingredientRequest = useRef<AbortController | null>(null)
+  const [recycledMass, setRecycledMass] = useState('')
+  const [ingredients, setIngredients] = useState<BalanceMixResult | null>(null)
+  const [ingredientBusy, setIngredientBusy] = useState(false)
+  const [ingredientError, setIngredientError] = useState('')
   const output = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -31,10 +44,12 @@ export function TestedLevels({ active }: { active: boolean }) {
       })
     return () => controller.abort()
   }, [catalogAttempt])
-  useEffect(() => () => request.current?.abort(), [])
+  useEffect(() => () => { request.current?.abort(); ingredientRequest.current?.abort() }, [])
   useEffect(() => {
     if (!active) {
       request.current?.abort()
+      ingredientRequest.current?.abort()
+      setIngredientBusy(false)
       setBusy(false)
     }
   }, [active])
@@ -50,17 +65,61 @@ export function TestedLevels({ active }: { active: boolean }) {
     setBusy(false)
     setResult(null)
     setError('')
+    ingredientRequest.current?.abort()
+    setIngredientBusy(false)
+    setIngredients(null)
+    setIngredientError('')
     update()
   }
   const selected = catalog?.series.find((item) => item.id === seriesId)
+  const highestMatching = result?.levels.filter((level) => level.all_values_in_target)
+    .reduce<NonNullable<typeof result>['levels'][number] | null>(
+      (highest, level) => !highest || level.pcrpe_wt_percent > highest.pcrpe_wt_percent ? level : highest,
+      null,
+    )
+  const ingredientMassValid = recycledMass.trim() !== '' && Number.isFinite(Number(recycledMass)) && Number(recycledMass) > 0 && Number(recycledMass) <= 1_000_000
+  async function calculateIngredients() {
+    if (!result || !highestMatching || highestMatching.pcrpe_wt_percent === 0 || !ingredientMassValid || ingredientBusy) return
+    const controller = new AbortController()
+    ingredientRequest.current?.abort()
+    ingredientRequest.current = controller
+    setIngredientBusy(true)
+    setIngredients(null)
+    setIngredientError('')
+    try {
+      const response = await api<BalanceMixResult>('/api/advisor/balance-mix', {
+        component: 'Raw PCRPE in the published example', input_mass_kg: Number(recycledMass),
+        input_min_percent: 100, input_max_percent: 100,
+        addition_name: `Raw virgin ${result.series.virgin_host} in the published example`, addition_percent: 0,
+        target_min_percent: highestMatching.pcrpe_wt_percent, target_max_percent: highestMatching.pcrpe_wt_percent,
+      }, controller.signal)
+      if (!controller.signal.aborted) setIngredients(response)
+    } catch (failure) {
+      if (!controller.signal.aborted) setIngredientError(failure instanceof Error ? failure.message : 'The ingredient amounts could not be calculated.')
+    } finally {
+      if (!controller.signal.aborted) setIngredientBusy(false)
+    }
+  }
+  function askAboutMaterial() {
+    if (!result || !onAsk) return
+    onAsk([
+      'Help me decide the next material-development trial for my current case, using the following published example only as context.',
+      'These are source measurements, NOT my material or finished product. Do not transfer their values or recipe performance to my waste.',
+      `Cecon 2021, DOI ${result.source.doi}; host ${result.series.virgin_host}; target at least ${result.target_min_MPa} MPa tensile yield stress${result.target_max_MPa === null ? ', no upper limit' : `, at most ${result.target_max_MPa} MPa`}.`,
+      `Process: ${result.source.process}. Test: ${result.source.test_method}.`,
+      ...result.levels.map((level) => `${level.pcrpe_wt_percent} wt% commercial PCRPE, remainder virgin ${result.series.virgin_host}: ${level.source_min_MPa}–${level.source_max_MPa} MPa; ${level.values_in_target}/${level.n} recorded specimens inside. Condition ${level.condition_id}.`),
+      'Independent runs and batches and complete recycled contaminant composition are unknown. No interpolation or future consistency claim.',
+      'Explain what to change in material, preparation, process or product design if I want to use more recycled input. Separate what this source actually supports from proposals for my case. Give a useful controlled comparison and what to measure; do not invent additive doses, processing settings or properties. Focus on formulation, preparation, process and product geometry relevant to the stated material question.',
+    ].join('\n'))
+  }
   const numbersValid =
-    [targetMin, targetMax].every(
+    [targetMin, ...(targetMax.trim() ? [targetMax] : [])].every(
       (value) =>
         value.trim() !== '' &&
         Number.isFinite(Number(value)) &&
         Number(value) >= 0 &&
         Number(value) <= 1_000_000,
-    ) && Number(targetMin) <= Number(targetMax)
+    ) && (!targetMax.trim() || Number(targetMin) <= Number(targetMax))
 
   async function calculate() {
     if (!selected || !numbersValid || busy) return
@@ -76,7 +135,7 @@ export function TestedLevels({ active }: { active: boolean }) {
         {
           series_id: seriesId,
           target_min_MPa: Number(targetMin),
-          target_max_MPa: Number(targetMax),
+          target_max_MPa: targetMax.trim() ? Number(targetMax) : null,
         },
         controller.signal,
       )
@@ -125,8 +184,8 @@ export function TestedLevels({ active }: { active: boolean }) {
       <div className="mix-example-banner">
         <strong>Source measurements · not my material</strong>
         <p>
-          Change the target and compare the study’s tested recycled-content levels. These measured
-          specimens do not describe your waste, a new recipe or a finished product.
+          How much recycled content fits this material target? Compare a published blend study.
+          This is separate from your case: no source readings are added to your mix.
         </p>
       </div>
       <div className="product-grid tested-levels-grid">
@@ -137,7 +196,8 @@ export function TestedLevels({ active }: { active: boolean }) {
             void calculate()
           }}
         >
-          <h2>Which tested levels fit a target?</h2>
+          <h2>Choose the material requirement</h2>
+          <p>Yield stress describes when a material starts to deform permanently under this tensile test. It is one material screen, not a complete product requirement.</p>
           <p className="helper">
             Only post-consumer recycled PE content changes within a selected source series. The
             virgin PE host supplies the remainder at 0–80 wt%.
@@ -173,13 +233,13 @@ export function TestedLevels({ active }: { active: boolean }) {
               />
             </label>
             <label className="product-field">
-              Yield-stress target maximum (MPa)
+              Yield-stress maximum (MPa, optional)
               <input
                 type="number"
                 min="0"
                 max="1000000"
                 step="any"
-                required
+                placeholder="No upper limit"
                 value={targetMax}
                 onChange={(event) => change(() => setTargetMax(event.target.value))}
               />
@@ -248,16 +308,49 @@ export function TestedLevels({ active }: { active: boolean }) {
               <div className="product-output-heading">
                 <div>
                   <span className="data-kind">Source measurements</span>
-                  <h2>Recorded specimens against your target</h2>
+                  <h2>What changes when recycled content changes?</h2>
                 </div>
                 <button type="button" className="text-button" onClick={download}>
                   Download tested-level JSON
                 </button>
               </div>
               <p className="product-result-context">
-                Virgin {result.series.virgin_host} host · {quantity(result.target_min_MPa)}–
-                {quantity(result.target_max_MPa)} MPa yield-stress target
+                Virgin {result.series.virgin_host} host · {result.target_max_MPa === null
+                  ? `at least ${quantity(result.target_min_MPa)} MPa yield stress`
+                  : `${quantity(result.target_min_MPa)}–${quantity(result.target_max_MPa)} MPa yield-stress target`}
               </p>
+              <div className="source-material-decision">
+                <span className="workshop-eyebrow">Material choice · source specimens only</span>
+                {highestMatching && highestMatching.pcrpe_wt_percent === 0 ? <>
+                  <h3>Only the virgin control has all readings inside</h3>
+                  <p>This study has no recycled-containing level with every recorded reading inside this target. It does not supply a recycling recipe for this requirement. Another material or process comparison would need its own measurements.</p>
+                </> : highestMatching ? <>
+                  <h3>{quantity(highestMatching.pcrpe_wt_percent)}% recycled PE + {quantity(100 - highestMatching.pcrpe_wt_percent)}% {result.series.virgin_host}</h3>
+                  <p>The highest tested recycled content with all ten recorded readings inside this target.</p>
+                  <p><strong>{quantity(highestMatching.source_min_MPa, 5)}–{quantity(highestMatching.source_max_MPa, 5)} MPa</strong> observed at this level.</p>
+                </> : <>
+                  <h3>No tested blend has all readings inside this target</h3>
+                  <p>This series does not supply a matching level. A different material or process would need its own measurements.</p>
+                </>}
+                <p className="helper">A source comparison can guide a matching trial. It does not qualify your waste or your finished product.</p>
+                {highestMatching && highestMatching.pcrpe_wt_percent > 0 && <details className="source-ingredient-amounts">
+                  <summary>Ingredient amounts for this studied proportion</summary>
+                  <p>Combine separate raw resins before processing. This does not calculate how to reprocess an existing moulded blend.</p>
+                  <label>Raw PCRPE mass for this calculation (kg)
+                    <input type="number" min="0" max="1000000" step="any" value={recycledMass} onChange={(event) => {
+                      ingredientRequest.current?.abort(); setIngredientBusy(false); setIngredients(null); setIngredientError(''); setRecycledMass(event.target.value)
+                    }} />
+                  </label>
+                  <button type="button" className="outline-button" disabled={!ingredientMassValid || ingredientBusy} onClick={() => void calculateIngredients()}>{ingredientBusy ? 'Calculating…' : 'Calculate ingredient amounts'}</button>
+                  {ingredientError && <p role="alert">{ingredientError}</p>}
+                  {ingredients?.feasible && ingredients.addition_min_kg !== null && <div className="source-ingredient-result" role="status">
+                    <strong>Simulation · ingredient masses only</strong>
+                    <p>{massQuantity(Number(recycledMass))} kg raw PCRPE + {massQuantity(ingredients.addition_min_kg)} kg raw virgin {result.series.virgin_host} = {massQuantity(Number(recycledMass) + ingredients.addition_min_kg)} kg at {quantity(highestMatching.pcrpe_wt_percent)} mass % recycled content.</p>
+                    <p>Composition only. The published yield measurements belong to the tested specimens; they do not predict this new batch. No ingredient amounts or readings are copied into your case.</p>
+                  </div>}
+                </details>}
+                {onAsk && <button type="button" className="outline-button" disabled={disabled} onClick={askAboutMaterial}>Ask Meta how to develop my mix</button>}
+              </div>
               <p className="source-scenario-count" role="status">
                 {result.matching_tested_levels_wt_percent.length > 0 ? (
                   <>
@@ -280,6 +373,14 @@ export function TestedLevels({ active }: { active: boolean }) {
                 not predict an untested blend, another material, future batches or finished-product
                 consistency.
               </p>
+              <div className="source-content-cards" aria-label="Measured response at tested recycled-content levels">
+                {result.levels.map((level) => <article key={level.condition_id} className={level.all_values_in_target ? 'source-content-card source-content-card-inside' : 'source-content-card'}>
+                  <h3>{quantity(level.pcrpe_wt_percent)}% <span>recycled PE</span></h3>
+                  <p><strong>{level.values_in_target}/{level.n}</strong> readings inside</p>
+                  <p>{quantity(level.source_min_MPa, 2)}–{quantity(level.source_max_MPa, 2)} MPa</p>
+                </article>)}
+              </div>
+              <details className="source-exact-table"><summary>Exact ranges and individual source readings</summary>
               <div className="product-reading-table tested-level-table">
                 <table>
                   <caption>
@@ -345,6 +446,7 @@ export function TestedLevels({ active }: { active: boolean }) {
                   </details>
                 ))}
               </section>
+              </details>
               <details className="product-detail">
                 <summary>Source and comparison limits</summary>
                 <p>{result.source.title}</p>

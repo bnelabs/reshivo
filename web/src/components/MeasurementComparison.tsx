@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { compareMeasurementDecimals, measurementDecimalKey, parseMeasurementDecimal } from '../measurementDecimal'
-import type { WorkshopCase } from '../types'
+import type { AdvisorTrialResult, WorkshopCase } from '../types'
 import './MeasurementComparison.css'
 
 type GroupKind = 'unknown' | 'repeat' | 'specimen' | 'run' | 'batch'
@@ -38,7 +38,7 @@ const groups: { value: GroupKind; label: string }[] = [
   { value: 'batch', label: 'Separate batch' },
 ]
 
-export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: WorkshopCase; canAsk: boolean; onAsk: (question: string) => void }) {
+export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftChange }: { caseData: WorkshopCase; trial?: AdvisorTrialResult; canAsk: boolean; onAsk: (question: string) => void; onDraftChange?: () => void }) {
   const [fields, setFields] = useState({ property_name: '', property_unit: '', input_name: '', input_unit: '', target_min: '', target_max: '', method: '' })
   const [dataKind, setDataKind] = useState<'' | 'synthetic' | 'user_reported'>('')
   const [settings, setSettings] = useState<Setting[]>([
@@ -46,10 +46,16 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
     { key: 2, id: 'Setting 2', level: '', readings: [newReading(2)] },
   ])
   const nextKey = useRef(3)
-  const signature = JSON.stringify(caseData)
-  const previousSignature = useRef(signature)
+  const caseSignature = JSON.stringify(caseData)
+  const trialSignature = JSON.stringify(trial ?? null)
+  const signature = JSON.stringify([caseSignature, trialSignature])
+  const previousCaseSignature = useRef(caseSignature)
+  const previousTrialSignature = useRef(trialSignature)
   const [confirmedSignature, setConfirmedSignature] = useState('')
   const [caseChanged, setCaseChanged] = useState(false)
+  const [trialChanged, setTrialChanged] = useState(false)
+  const [trialCheckIndex, setTrialCheckIndex] = useState('')
+  const [trialCheckCopied, setTrialCheckCopied] = useState(false)
   const [result, setResult] = useState<{ signature: string; value: ComparisonResult } | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -58,19 +64,29 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
   const confirmed = confirmedSignature === signature
 
   useLayoutEffect(() => {
-    if (previousSignature.current !== signature) {
-      previousSignature.current = signature
+    const changedCase = previousCaseSignature.current !== caseSignature
+    const changedTrial = previousTrialSignature.current !== trialSignature
+    if (changedCase || changedTrial) {
+      previousCaseSignature.current = caseSignature
+      previousTrialSignature.current = trialSignature
       request.current?.abort()
       setBusy(false)
       setResult(null)
       setConfirmedSignature('')
-      setCaseChanged(hasDraft.current)
+      if (changedCase) setCaseChanged(hasDraft.current)
+      if (changedTrial) {
+        setTrialChanged(hasDraft.current)
+        setTrialCheckIndex('')
+        setTrialCheckCopied(false)
+      }
       setError('')
+      onDraftChange?.()
     }
-  }, [signature])
+  }, [caseSignature, trialSignature])
   useLayoutEffect(() => () => request.current?.abort(), [])
 
   function invalidate() {
+    onDraftChange?.()
     request.current?.abort()
     setBusy(false)
     setResult(null)
@@ -96,17 +112,32 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
     }))
   }
 
+  const trialCheck = trialCheckIndex === '' ? undefined : trial?.checks[Number(trialCheckIndex)]
+  const trialCheckFits = Boolean(trialCheck?.property.trim() && trialCheck.method.trim() &&
+    trialCheck.property.length <= 120 && trialCheck.method.length <= 1000)
+  function useTrialCheck() {
+    if (!trialCheck || !trialCheckFits) return
+    hasDraft.current = true
+    invalidate()
+    setFields((current) => ({ ...current,
+      property_name: trialCheck.property, method: trialCheck.method,
+      property_unit: '', target_min: '', target_max: '',
+    }))
+    setTrialCheckCopied(true)
+  }
+
   const requiredCase = Boolean(caseData.brief.input.trim() && caseData.brief.product.trim() && caseData.brief.use_case.trim() && caseData.brief.targets.trim() && caseData.brief.process.trim())
   const validSettings = settings.every((setting) => setting.id.trim() && numberPresent(setting.level) && setting.readings.every((reading) => numberPresent(reading.value) && reading.group_label.trim()))
   const uniqueSettings = new Set(settings.map((setting) => setting.id.trim())).size === settings.length &&
     new Set(settings.map((setting) => measurementDecimalKey(setting.level))).size === settings.length
-  const targetOrder = compareMeasurementDecimals(fields.target_min, fields.target_max)
+  const hasTargetMax = fields.target_max.trim() !== ''
+  const targetOrder = hasTargetMax ? compareMeasurementDecimals(fields.target_min, fields.target_max) : null
   const savedMassTargetOrder = compareMeasurementDecimals(caseData.details.mass_target_min_kg, caseData.details.mass_target_max_kg)
   const invalidNumericText = [fields.target_min, fields.target_max, ...settings.flatMap((setting) => [setting.level, ...setting.readings.map((reading) => reading.value)])]
     .some((value) => value.trim() !== '' && !numberPresent(value))
   const valid = requiredCase && confirmed && Boolean(dataKind) &&
     [fields.property_name, fields.property_unit, fields.input_name, fields.input_unit, fields.method].every((value) => value.trim()) &&
-    targetOrder !== null && targetOrder <= 0 &&
+    numberPresent(fields.target_min) && (!hasTargetMax || (targetOrder !== null && targetOrder <= 0)) &&
     validSettings && uniqueSettings
 
   async function compare() {
@@ -122,7 +153,7 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
         brief: caseData.brief, calculation_context: caseData.details,
         property_name: fields.property_name.trim(), property_unit: fields.property_unit.trim(),
         input_name: fields.input_name.trim(), input_unit: fields.input_unit.trim(),
-        target_min: fields.target_min.trim(), target_max: fields.target_max.trim(), method: fields.method.trim(),
+        target_min: fields.target_min.trim(), target_max: hasTargetMax ? fields.target_max.trim() : null, method: fields.method.trim(),
         conditions_confirmed: confirmed, data_kind: dataKind,
         settings: settings.map((setting) => ({ id: setting.id.trim(), level: setting.level.trim(),
           readings: setting.readings.map((reading) => ({ value: reading.value.trim(), group_kind: reading.group_kind, group_label: reading.group_label,
@@ -141,8 +172,8 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
     reading_type: dataKind === 'synthetic' ? 'synthetic simulation' : 'user-reported measurements, not independently verified',
     input: fields.input_name.trim(), input_unit: fields.input_unit.trim(),
     property: fields.property_name.trim(), property_unit: fields.property_unit.trim(),
-    target: [fields.target_min.trim(), fields.target_max.trim()], method: fields.method.trim(),
-    limitations: 'Numeric values are exact decimal strings. Uncertainty and independence were not assessed. Individual grouping identifiers are not included in this summary; do not infer batch relationships.',
+    target: [fields.target_min.trim(), hasTargetMax ? fields.target_max.trim() : null], method: fields.method.trim(),
+    limitations: 'Numeric values are exact decimal strings; a null target maximum means no upper limit. Uncertainty and independence were not assessed. Individual grouping identifiers are not included in this summary; do not infer batch relationships.',
     settings: visibleResult.settings.map((setting) => ({ id: setting.id, level: setting.level,
       observed_min: setting.observed_min, observed_max: setting.observed_max,
       reading_count: setting.reading_count, in_target_count: setting.in_target_count })),
@@ -150,7 +181,7 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
   const question = `These are my reported or synthetic observations, not a prediction. Suggest practical next checks or changes, without assuming future consistency or unmeasured properties. Comparison summary:\n${comparisonSummary}`
   function download() {
     if (!visibleResult) return
-    const url = URL.createObjectURL(new Blob([JSON.stringify({ workshop_case: caseData, result: visibleResult }, null, 2)], { type: 'application/json' }))
+    const url = URL.createObjectURL(new Blob([JSON.stringify({ workshop_case: caseData, selected_trial: trial ?? null, result: visibleResult }, null, 2)], { type: 'application/json' }))
     const link = document.createElement('a')
     link.href = url
     link.download = 'rematter-entered-reading-comparison.json'
@@ -167,9 +198,40 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
         <p>Material: {caseData.brief.input || 'Not entered'} · Product: {caseData.brief.product || 'Not entered'}</p>
         <p>Process: {caseData.brief.process || 'Not entered'}</p>
       </div>
+      {trial && (
+        <section className="measurement-case" aria-label="Selected trial context">
+          <strong>Selected trial: {trial.title}</strong>
+          <p><strong>Change:</strong> {trial.change}</p>
+          <p><strong>Original targets:</strong> {trial.targets}</p>
+          <p>These are proposed checks. Enter only readings obtained using the method and conditions you state below.</p>
+          <details><summary>Review all proposed checks</summary><ol>
+            {trial.checks.map((check, index) => (
+              <li key={index}>
+                <p><strong>{check.property}</strong> · Target: {check.target}</p>
+                <p>Proposed method: {check.method}</p>
+              </li>
+            ))}
+          </ol></details>
+        </section>
+      )}
       {!requiredCase && <p className="measurement-prompt">Complete the required case fields and add the process under “Equipment, contamination and other constraints.”</p>}
       {caseChanged && <p className="measurement-prompt" role="status">Your case changed. Your draft is still here, but the previous comparison is cleared. Check that these readings still apply and confirm again.</p>}
+      {trialChanged && <p className="measurement-prompt" role="status">Your selected trial changed. Your draft is still here, but the previous comparison is cleared. Check the property, method and readings against this trial, then confirm again.</p>}
       <form onSubmit={(event) => { event.preventDefault(); void compare() }}>
+        {trial && (
+          <div className="measurement-case">
+            <label>Check from this trial
+              <select value={trialCheckIndex} onChange={(event) => { setTrialCheckIndex(event.target.value); setTrialCheckCopied(false) }}>
+                <option value="">Choose a proposed check to reuse</option>
+                {trial.checks.map((check, index) => <option key={index} value={String(index)}>{check.property}</option>)}
+              </select>
+            </label>
+            <button type="button" className="outline-button" disabled={!trialCheckFits} onClick={useTrialCheck}>Use this trial check</button>
+            <p className="measurement-help">Copies only the property and proposed method. Enter numerical limits and units for this method; original target above. No readings are supplied by the trial plan.</p>
+            {trialCheck && !trialCheckFits && <p className="measurement-prompt">This check cannot be copied in full: the property must be nonempty and at most 120 characters, and the method nonempty and at most 1,000 characters. Nothing has been copied. Write a concise method in the fields below without losing its conditions.</p>}
+            {trialCheckCopied && <p className="measurement-help" role="status">Copied the property and proposed method. Set the numerical limits and units for your readings. Existing input levels and readings remain a draft to review.</p>}
+          </div>
+        )}
         {savedMassTargetOrder !== null && savedMassTargetOrder <= 0 && (
           <button type="button" className="outline-button" onClick={() => {
             hasDraft.current = true
@@ -184,8 +246,9 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
           <label>What changed between settings<input maxLength={120} placeholder="e.g. binder content" value={fields.input_name} onChange={(e) => updateField('input_name', e.target.value)} /></label>
           <label>Input unit<input maxLength={40} placeholder="e.g. mass %" value={fields.input_unit} onChange={(e) => updateField('input_unit', e.target.value)} /></label>
           <label>Target minimum<input type="text" inputMode="decimal" value={fields.target_min} onChange={(e) => updateField('target_min', e.target.value)} /></label>
-          <label>Target maximum<input type="text" inputMode="decimal" value={fields.target_max} onChange={(e) => updateField('target_max', e.target.value)} /></label>
+          <label>Target maximum (optional)<input type="text" inputMode="decimal" placeholder="Leave blank for no upper limit" value={fields.target_max} onChange={(e) => updateField('target_max', e.target.value)} /></label>
         </div>
+        <p className="measurement-help">Enter a minimum target. Leave the maximum blank when your criterion has no upper limit.</p>
         <p className="measurement-help">For contamination, name the contaminant and enter its amount and basis at each setting, such as mass %. A vague “contamination” label is not enough to identify it.</p>
         <label>How were these readings obtained?<textarea maxLength={1000} rows={2} placeholder="Name the method and the conditions shared by all settings" value={fields.method} onChange={(e) => updateField('method', e.target.value)} /></label>
         <label>Reading type<select value={dataKind} onChange={(e) => { hasDraft.current = true; invalidate(); setDataKind(e.target.value as typeof dataKind) }}>
@@ -228,7 +291,7 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
           const readingKey = nextKey.current++
           updateSettings((current) => [...current, { key: settingKey, id: `Setting ${settingKey}`, level: '', readings: [newReading(readingKey)] }])
         }}>Add setting</button>
-        <label className="measurement-confirm"><input type="checkbox" checked={confirmed} onChange={(e) => { hasDraft.current = true; invalidate(); setConfirmedSignature(e.target.checked ? signature : ''); if (e.target.checked) setCaseChanged(false) }} /> I confirm the readings use the current case’s material, process and product, the same stated property and method, and that only the named input changes across settings.</label>
+        <label className="measurement-confirm"><input type="checkbox" checked={confirmed} onChange={(e) => { hasDraft.current = true; invalidate(); setConfirmedSignature(e.target.checked ? signature : ''); if (e.target.checked) { setCaseChanged(false); setTrialChanged(false) } }} /> I confirm the readings use the current case’s material, process and product, the same stated property and method, and that only the named input changes across settings.</label>
         {!uniqueSettings && validSettings && <p className="measurement-prompt">Give each setting a different name and input level.</p>}
         {invalidNumericText && <p className="measurement-prompt">Use finite decimal numbers with at most 160 characters and exponent magnitude at most 10000. Invalid entries are kept for correction and are not compared.</p>}
         {targetOrder !== null && targetOrder > 0 && <p className="measurement-prompt">The minimum target must be no greater than the maximum.</p>}
@@ -238,7 +301,7 @@ export function MeasurementComparison({ caseData, canAsk, onAsk }: { caseData: W
       </form>
       {visibleResult && <section className="measurement-results" aria-label="Reading comparison results" role="status">
         <strong>{dataKind === 'synthetic' ? 'Simulation · synthetic readings' : 'Comparison · your reported measurements'}</strong>
-        <p>Target: {fields.target_min}–{fields.target_max} {fields.property_unit}. These results describe only the readings you entered.</p>
+        <p>Target: {hasTargetMax ? <>{fields.target_min}–{fields.target_max} {fields.property_unit}</> : <>at least {fields.target_min} {fields.property_unit} (no upper limit)</>}. These results describe only the readings you entered.</p>
         {visibleResult.settings.map((setting) => <div key={setting.id} className="measurement-result-row">
           <h3>{setting.id}: {setting.level} {fields.input_unit}</h3>
           <p><strong>{setting.in_target_count} of {setting.reading_count} readings in target</strong> · observed {setting.observed_min}–{setting.observed_max} {fields.property_unit}</p>

@@ -146,13 +146,13 @@ def _target_number(request, name):
 
 def target_check(request, root=ROOT):
     if not isinstance(request, dict) or set(request) != {"series_id", "target_min_MPa", "target_max_MPa"}:
-        raise ProductInputError("Use one published series and its minimum and maximum yield-stress target")
+        raise ProductInputError("Use one published series, a minimum yield-stress target and a maximum target or null for no upper limit")
     identity = request.get("series_id")
     if not isinstance(identity, str) or identity not in {f"CECON21-YIELD-{host}" for host in HOST_COLUMNS}:
         raise ProductInputError("Choose one of the four published PE host series; no other material or input level is available")
     low = _target_number(request, "target_min_MPa")
-    high = _target_number(request, "target_max_MPa")
-    if low > high:
+    high = None if request["target_max_MPa"] is None else _target_number(request, "target_max_MPa")
+    if high is not None and low > high:
         raise ProductInputError("The minimum yield-stress target must not exceed the maximum")
     data = _source_data(root)
     selected = next(item for item in data["series"] if item["id"] == identity)
@@ -161,7 +161,7 @@ def target_check(request, root=ROOT):
     for condition_id in selected["condition_ids"]:
         condition = conditions[condition_id]
         values = [row["value"] for row in condition["observations"]]
-        count = sum(low <= value <= high for value in values)
+        count = sum(value >= low and (high is None or value <= high) for value in values)
         levels.append({
             "condition_id": condition_id, "pcrpe_wt_percent": condition["pcrpe_wt_percent"], "n": 10,
             "source_min_MPa": min(values), "source_max_MPa": max(values), "source_mean_MPa": statistics.mean(values),

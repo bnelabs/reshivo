@@ -70,6 +70,49 @@ class ReadingComparisonTests(unittest.TestCase):
         result = compare_readings(body)
         self.assertEqual(result["matching_setting_ids"], ["low"])
 
+    def test_null_maximum_removes_only_upper_bound_and_preserves_metadata(self):
+        body = request()
+        body["settings"][1]["readings"][1].update(value="1020.0000000000000001", specimen_id="specimen-2", batch_id="batch-A")
+        bounded = compare_readings(body)
+        self.assertFalse(bounded["settings"][1]["readings"][1]["inside_target"])
+        body["target_max"] = None
+        result = compare_readings(body)
+        self.assertIsNone(result["target_max"])
+        self.assertEqual(result["target_min"], "980")
+        self.assertEqual(result["matching_setting_ids"], ["high"])
+        self.assertEqual([row["inside_target"] for row in result["settings"][0]["readings"]], [False, True])
+        row = result["settings"][1]["readings"][1]
+        self.assertTrue(row["inside_target"])
+        self.assertEqual(row["value"], "1020.0000000000000001")
+        self.assertEqual((row["specimen_id"], row["batch_id"], row["group_kind"]), ("specimen-2", "batch-A", "run"))
+        self.assertEqual(result["brief"], bounded["brief"])
+        self.assertEqual(result["calculation_context"], bounded["calculation_context"])
+        self.assertFalse(result["interpolation_used"])
+        self.assertFalse(result["future_consistency_established"])
+        self.assertFalse(result["physical_product_tested_by_app"])
+        self.assertIsNone(json.loads(json.dumps(result))["target_max"])
+
+    def test_minimum_only_check_preserves_exact_decimal_boundary_and_has_no_numeric_ceiling(self):
+        body = request()
+        body.update(target_min=" 0.100000000000000005 ", target_max=None)
+        body["settings"][0]["readings"][0]["value"] = "0.1"
+        body["settings"][0]["readings"][1]["value"] = "0.100000000000000005"
+        body["settings"][1]["readings"] = [
+            {"value": "0.100000000000000006", "group_label": "Unknown", "group_kind": "unknown"},
+            {"value": "1e9999", "group_label": "Unknown", "group_kind": "unknown"}]
+        result = compare_readings(body)
+        self.assertEqual(result["target_min"], "0.100000000000000005")
+        self.assertEqual([row["inside_target"] for row in result["settings"][0]["readings"]], [False, True])
+        self.assertEqual([row["inside_target"] for row in result["settings"][1]["readings"]], [True, True])
+        self.assertEqual(result["settings"][1]["observed_max"], "1e9999")
+        self.assertEqual(result["matching_setting_ids"], ["high"])
+
+    def test_minimum_only_check_still_requires_explicit_maximum_key(self):
+        body = request()
+        del body["target_max"]
+        with self.assertRaises(ProductInputError):
+            compare_readings(body)
+
     def test_case_method_confirmation_and_provenance_are_required(self):
         for change in ("material", "process", "method", "confirmation", "kind", "unit"):
             body = request()
@@ -94,10 +137,12 @@ class ReadingComparisonTests(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(ProductInputError): compare_readings(body)
 
     def test_nonfinite_boolean_and_unordered_numbers_rejected(self):
-        for bad in (True, 0, 1, .1, "1_000", "0x10", "NaN", "Infinity", "1e10001", "1e-10001", "9" * 161, None, float("inf"), float("nan"), 10**5000):
-            for field in ("target_min", "level", "value"):
+        for bad in (True, False, 0, 1, .1, "", " ", "1_000", "0x10", "NaN", "Infinity", "1e10001", "1e-10001", "9" * 161, None, float("inf"), float("nan"), 10**5000):
+            for field in ("target_min", "target_max", "level", "value"):
+                if field == "target_max" and bad is None:
+                    continue
                 body = request()
-                if field == "target_min": body[field] = bad
+                if field in ("target_min", "target_max"): body[field] = bad
                 if field == "level": body["settings"][0][field] = bad
                 if field == "value": body["settings"][0]["readings"][0][field] = bad
                 with self.subTest(field=field, value_type=type(bad)), self.assertRaises(ProductInputError): compare_readings(body)
@@ -177,6 +222,23 @@ class ReadingComparisonHTTPTests(unittest.TestCase):
                 status, result = post(json.dumps(request()).encode())
                 self.assertEqual(status, 200)
                 self.assertEqual(result["matching_setting_ids"], ["high"])
+                body = request()
+                body.update(target_min="0.100000000000000005", target_max=None)
+                body["settings"][0]["readings"][0]["value"] = "0.1"
+                body["settings"][0]["readings"][1]["value"] = "0.100000000000000005"
+                body["settings"][1]["readings"][0]["value"] = "1e9999"
+                status, minimum_only = post(json.dumps(body).encode())
+                self.assertEqual(status, 200)
+                self.assertIsNone(minimum_only["target_max"])
+                self.assertEqual(minimum_only["target_min"], "0.100000000000000005")
+                self.assertEqual([row["inside_target"] for row in minimum_only["settings"][0]["readings"]], [False, True])
+                self.assertTrue(minimum_only["settings"][1]["readings"][0]["inside_target"])
+                self.assertEqual(minimum_only["settings"][1]["readings"][0]["value"], "1e9999")
+                for bad_maximum in (False, "", 1020):
+                    body["target_max"] = bad_maximum
+                    self.assertEqual(post(json.dumps(body).encode())[0], 400)
+                del body["target_max"]
+                self.assertEqual(post(json.dumps(body).encode())[0], 400)
                 body = request()
                 body.update(target_min="0", target_max="0")
                 body["settings"][0]["readings"][0]["value"] = "1e-400"

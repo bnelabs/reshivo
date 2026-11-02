@@ -1,0 +1,22 @@
+.source-material-decision{background:#eef6ec;border:1px solid #bfd3b9;border-radius:16px;padding:22px;margin:18px 0;color:#173329}
+.source-material-decision h3{font-size:clamp(1.2rem,2.2vw,1.75rem);line-height:1.25;margin:8px 0 12px}
+.source-material-decision p{line-height:1.5;margin:8px 0}
+.source-material-decision button{margin-top:10px}
+.source-content-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0}
+.source-content-card{border:1px solid #deded4;border-radius:12px;padding:15px;background:#fafaf5}
+.source-content-card-inside{border-color:#6f9a6b;background:#eff7eb}
+.source-content-card h3{font-size:1.35rem;margin:0 0 12px}
+.source-content-card h3 span{display:block;font-size:.8rem;font-weight:500;margin-top:3px}
+.source-content-card p{font-size:.86rem;line-height:1.45;margin:7px 0}
+.source-exact-table>summary{cursor:pointer;font-weight:600;padding:14px 0}
+.source-ingredient-amounts{border-top:1px solid #c4d8c2;margin-top:15px;padding-top:13px}
+.source-ingredient-amounts>summary{cursor:pointer;font-weight:600}
+.source-ingredient-amounts label{display:grid;gap:6px;max-width:380px;font-size:.85rem;margin:14px 0}
+.source-ingredient-amounts input{padding:10px;border:1px solid #acc5b0;border-radius:6px;background:white;font:inherit}
+.source-ingredient-result{padding:14px;margin-top:14px;border:1px solid #bdd3c0;border-radius:9px;background:white}
+.workshop-source-example .tested-levels-grid{grid-template-columns:minmax(0,1fr);gap:18px}
+.workshop-source-example .product-setup,.workshop-source-example .product-output{padding:18px;overflow-wrap:anywhere}
+.workshop-source-example .product-pair{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.workshop-source-example input,.workshop-source-example select{min-width:0;width:100%}
+.workshop-source-example .source-content-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:700px){.source-content-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.source-material-decision{padding:16px}}

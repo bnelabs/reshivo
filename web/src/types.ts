@@ -232,7 +232,7 @@ export type TestedLevelResult = {
   property: { name: 'yield_stress'; label: string; unit: 'MPa' }
   series: TestedInputSeries
   target_min_MPa: number
-  target_max_MPa: number
+  target_max_MPa: number | null
   levels: {
     condition_id: string
     pcrpe_wt_percent: number

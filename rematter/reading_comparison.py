@@ -61,8 +61,8 @@ def compare_readings(request):
         ("input_name", "changed input", 120), ("input_unit", "input unit", 40),
         ("method", "measurement method and conditions", 1000))}
     low, low_text = _number(request["target_min"], "minimum target")
-    high, high_text = _number(request["target_max"], "maximum target")
-    if low > high:
+    high, high_text = (None, None) if request["target_max"] is None else _number(request["target_max"], "maximum target")
+    if high is not None and low > high:
         raise ProductInputError("The minimum target must not exceed the maximum")
     raw = request["settings"]
     if not isinstance(raw, list) or not 2 <= len(raw) <= 20:
@@ -91,7 +91,7 @@ def compare_readings(request):
             identifiers = {field: None if reading.get(field) is None else _text(reading[field], field.replace('_', ' '), 160, verbatim=True)
                            for field in sorted(IDENTIFIER_FIELDS)}
             output.append({"value": value_text, "group_label": label, "group_kind": kind, **identifiers,
-                           "inside_target": bool(low <= value <= high)})
+                           "inside_target": bool(value >= low and (high is None or value <= high))})
             exact_values.append((value, value_text))
         count = sum(reading["inside_target"] for reading in output)
         settings.append({"id": identity, "level": level_text, "readings": output,

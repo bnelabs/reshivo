@@ -1,0 +1,180 @@
+.workshop-current-decision {
+  margin: 0 0 22px;
+  padding: 20px;
+  border: 1px solid #a9d4ca;
+  border-radius: 8px;
+  background: #f0f8f5;
+}
+.workshop-current-decision h3 {
+  margin: 5px 0 15px;
+  color: #173e36;
+  font-size: 19px;
+  line-height: 1.35;
+}
+.workshop-current-decision dl {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+}
+.workshop-current-decision dl div {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 10px;
+}
+.workshop-current-decision dt {
+  color: #2d6659;
+  font-size: 12px;
+  font-weight: 700;
+}
+.workshop-current-decision dd {
+  margin: 0;
+  color: #25463d;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.workshop-decision-target {
+  margin: 15px 0;
+  padding-top: 14px;
+  border-top: 1px solid #d0e4dd;
+  color: #486359;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.workshop-decision-target strong {
+  color: #244d40;
+  margin-right: 5px;
+}
+.workshop-current-decision > button,
+.workshop-trial-return > button {
+  padding: 11px 15px;
+  border: 0;
+  border-radius: 5px;
+  background: #087c70;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.workshop-current-decision > button:disabled {
+  opacity: .55;
+  cursor: default;
+}
+.workshop-current-decision > small,
+.workshop-trial-return > small {
+  display: block;
+  margin-top: 10px;
+  color: #516c62;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.workshop-explanation {
+  margin: 20px 0;
+  border-top: 1px solid #dce6e9;
+  padding-top: 14px;
+}
+.workshop-explanation > summary {
+  color: #426676;
+  font-size: 13px;
+  cursor: pointer;
+}
+.workshop-explanation .workshop-answer {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.workshop-source-example,
+.workshop-observation-tools {
+  margin: 18px 24px;
+  padding: 16px;
+  border: 1px solid #d6e2e6;
+  border-radius: 7px;
+  background: #fafcfc;
+  min-width: 0;
+}
+.workshop-source-example > summary,
+.workshop-observation-tools > summary {
+  cursor: pointer;
+  color: #194e55;
+  font-size: 14px;
+  font-weight: 650;
+}
+.workshop-source-example > summary small,
+.workshop-observation-tools > summary small {
+  display: block;
+  margin: 6px 0 0 16px;
+  color: #627b83;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.workshop-source-scope,
+.workshop-observation-tools > p {
+  margin: 15px 0;
+  color: #526d77;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.workshop-trial-return {
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid #c7deda;
+  border-radius: 7px;
+  background: #f3f9f7;
+}
+.workshop-trial-return h3 {
+  margin: 0 0 10px;
+  color: #224f43;
+  font-size: 17px;
+}
+.workshop-trial-return p {
+  margin: 0 0 16px;
+  color: #4d6a5f;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.workshop-current-decision > button:focus-visible,
+.workshop-trial-return > button:focus-visible,
+.workshop-source-example > summary:focus-visible,
+.workshop-observation-tools > summary:focus-visible,
+.workshop-explanation > summary:focus-visible {
+  outline: 3px solid #173f68;
+  outline-offset: 3px;
+}
+@media (max-width: 650px) {
+  .workshop-current-decision {
+    padding: 16px;
+  }
+  .workshop-current-decision dl div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .workshop-source-example,
+  .workshop-observation-tools {
+    margin: 16px;
+    padding: 14px;
+  }
+}
+.workshop-followup-ready {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid #b4d7d1;
+  border-radius: 6px;
+  background: #eff8f5;
+}
+.workshop-followup-ready p {
+  margin: 0 0 8px;
+  color: #31594d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.workshop-followup-ready button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #087369;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
