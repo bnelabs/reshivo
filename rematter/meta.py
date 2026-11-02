@@ -323,18 +323,24 @@ class MetaClient:
         return ToolTurn(normalized, self.model, True, usage, identity if isinstance(identity, str) else None,
                         round((time.monotonic() - started) * 1000))
 
-    def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096, reasoning_effort="low"):
+    def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096, reasoning_effort="low", image_data_url=None):
         if not self.key:
             raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file.")
         if self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
             raise MetaConfigurationError("Choose a supported standard-mode Meta reasoning model.")
         if not isinstance(reasoning_effort, str) or reasoning_effort not in {"low", "medium", "high"}:
             raise MetaValidationError("Choose low, medium or high reasoning effort")
+        if image_data_url is not None:
+            if not isinstance(image_data_url, str) or len(image_data_url) > 2_800_000 or not image_data_url.startswith(("data:image/jpeg;base64,", "data:image/png;base64,")):
+                raise MetaValidationError("Use a supported bounded image")
+            user_content = [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": {"url": image_data_url}}]
+        else:
+            user_content = prompt
         payload = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt or "You propose bounded mechanical geometry candidates. Numerical code determines their performance. Never invent measured material properties, chemical recipes, experimental validation or scientific novelty. Do not claim design-code compliance, certification, service qualification or manufacturing readiness. These checks cover only the specified bending model. Write short, plain design names and explain the geometry in everyday language. Avoid compliance jargon in user-facing explanations."},
-                {"role": "user", "content": prompt},
+                {"role": "user", "content": user_content},
             ],
             "response_format": {"type": "json_schema", "json_schema": {"name": schema_name, "strict": True, "schema": schema}},
             "max_completion_tokens": max_completion_tokens,

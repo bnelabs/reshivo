@@ -220,8 +220,8 @@ class TrialTests(unittest.TestCase):
         self.assertEqual(options["system_prompt"], TRIAL_PROMPT)
         self.assertEqual(options["schema_name"], "selected_route_trial")
         self.assertEqual(options["max_completion_tokens"], 8192)
-        self.assertEqual(options["reasoning_effort"], "high")
-        self.assertEqual(result["requested_reasoning_effort"], "high")
+        self.assertEqual(options["reasoning_effort"], "medium")
+        self.assertEqual(result["requested_reasoning_effort"], "medium")
         self.assertEqual(count, 1)
         self.assertFalse(schema["additionalProperties"])
         self.assertEqual(schema["properties"]["steps"]["minItems"], 2)
@@ -338,7 +338,7 @@ class TrialTests(unittest.TestCase):
         self.assertIn("await identified material and a suitable controlled facility in that step itself", sent_rules)
         self.assertIn("Minimal open time, prompt closing or a generic mask is not an adequate handling control", sent_rules)
         self.assertEqual(body["response_format"]["json_schema"]["name"], "selected_route_trial")
-        self.assertEqual(body["reasoning_effort"], "high")
+        self.assertEqual(body["reasoning_effort"], "medium")
         self.assertEqual(body["max_completion_tokens"], 8192)
         self.assertTrue(result["live"])
         self.assertNotIn("fixture-private-key", json.dumps(result))
@@ -346,6 +346,22 @@ class TrialTests(unittest.TestCase):
 
 
 class AdvisorTests(unittest.TestCase):
+    def test_unverified_target_assurance_is_quarantined_without_losing_routes(self):
+        data = response_data()
+        data["answer"] = "You can hit your targets by not relying on a fixed recipe.\n\nCompare the proposed options."
+        result = help_with_case(brief_request(), FixtureClient(data))
+        self.assertEqual(result["answer"], "Compare the proposed options.")
+        self.assertEqual(result["quarantined_answer"], ["You can hit your targets by not relying on a fixed recipe."])
+        self.assertEqual(len(result["material_routes"]), 2)
+        self.assertEqual(len(result["engineering_routes"]), 2)
+
+    def test_conditional_and_negative_language_is_not_recast_as_assurance(self):
+        data = response_data()
+        data["answer"] = "You cannot know whether it meets the target until it is tested. Compare the options."
+        result = help_with_case(brief_request(), FixtureClient(data))
+        self.assertEqual(result["answer"], data["answer"])
+        self.assertEqual(result["quarantined_answer"], [])
+
     def test_actionable_sections_are_proposals_and_not_fixture_live_claims(self):
         client = FixtureClient()
         request = brief_request()

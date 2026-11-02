@@ -1,3 +1,4 @@
+import { outwardBound, toDisplay, unitLabel, useUnitSystem } from '../units'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { commandGrams } from '../quantity'
@@ -9,18 +10,19 @@ import { EngineeringAssistant } from './EngineeringAssistant'
 const numberText = (value: Value | undefined) =>
   value === null || value === undefined ? '' : String(value)
 const show = (value: Value | undefined) => numberText(value) || 'unknown'
-const grams = (value: Value | undefined) =>
-  typeof value === 'number' ? `${commandGrams(value)} g` : 'unknown'
-
 function DraftSummary({ draft }: { draft: EngineeringDraft }) {
+  const system = useUnitSystem()
+  const length = (value: Value | undefined) => typeof value === 'number' ? toDisplay(String(value), 'mm', system) : show(value)
+  const mass = (value: Value | undefined) => typeof value === 'number' ? toDisplay(String(value), 'kg', system) : show(value)
+  const grams = (value: Value | undefined) => typeof value === 'number' ? system === 'metric' ? `${commandGrams(value)} g` : `${toDisplay(String(value), 'kg', system)} lb` : 'unknown'
   const v = draft.values
   const target = (key: string) => draft.target_resolution[key]?.selected
   return (
     <div className="engineering-note-summary">
       <p>
-        <strong>Targets</strong> {show(target('mass_target_min_kg'))}–
-        {show(target('mass_target_max_kg'))} kg · x={show(target('balance_target_min_mm'))}…
-        {show(target('balance_target_max_mm'))} mm
+        <strong>Targets</strong> {mass(target('mass_target_min_kg'))}–
+        {mass(target('mass_target_max_kg'))} {unitLabel('kg', system)} · x={length(target('balance_target_min_mm'))}…
+        {length(target('balance_target_max_mm'))} {unitLabel('mm', system)}
       </p>
       <p>
         <strong>{show(v.observation_id)}</strong> ·{' '}
@@ -30,14 +32,14 @@ function DraftSummary({ draft }: { draft: EngineeringDraft }) {
             ? 'User-reported measurement'
             : 'Source unknown'}
         <br />
-        Mass {grams(v.mass_kg)} ± {grams(v.weighing_uncertainty_kg)} · centre x={show(v.cg_x_mm)} ±{' '}
-        {show(v.cg_uncertainty_mm)} mm
+        Mass {grams(v.mass_kg)} ± {grams(v.weighing_uncertainty_kg)} · centre x={length(v.cg_x_mm)} ±{' '}
+        {length(v.cg_uncertainty_mm)} {unitLabel('mm', system)}
       </p>
       <p>{show(target('coordinate_basis'))}</p>
       {['a', 'b'].map((letter) => (
         <p key={letter}>
           <strong>{show(v[`position_${letter}_id`])}</strong> at x=
-          {show(v[`position_${letter}_x_mm`])} ± {show(v[`position_${letter}_uncertainty_mm`])} mm
+          {length(v[`position_${letter}_x_mm`])} ± {length(v[`position_${letter}_uncertainty_mm`])} {unitLabel('mm', system)}
           <br />
           Add up to {grams(v[`position_${letter}_max_add_kg`])} · remove up to{' '}
           {grams(v[`position_${letter}_max_remove_kg`])}
@@ -87,6 +89,7 @@ export function EngineeringNoteReader({
   active: boolean
   onApply: (patch: EngineeringNotePatch) => void
 }) {
+  const system = useUnitSystem()
   const [note, setNote] = useState('')
   const [draftState, setDraftState] = useState<{
     signature: string
@@ -223,7 +226,7 @@ export function EngineeringNoteReader({
       <p>
         Use the material and product already in your case. Paste the assembly readings, trim
         locations and bounds; targets can come from your brief. Review the interpretation before
-        using it.
+        using it. Notes can use kg, g, lb or oz for mass and mm, cm, m, inches or feet for positions.
       </p>
       <label>
         Trial note
@@ -365,10 +368,10 @@ export function EngineeringNoteReader({
                       <strong>
                         {row.action === 'none'
                           ? 'No change'
-                          : `${row.action === 'add' ? 'Add' : 'Remove'} ${commandGrams(Math.abs(row.command_kg))} g`}
+                          : `${row.action === 'add' ? 'Add' : 'Remove'} ${system === 'metric' ? `${commandGrams(Math.abs(row.command_kg))} g` : `≈ ${toDisplay(String(Math.abs(row.command_kg)), 'kg', system)} lb (exact ${commandGrams(Math.abs(row.command_kg))} g)`}`}
                       </strong>
                       <span>
-                        {row.position_id} · mass centre x={String(row.x_mm)} mm
+                        {row.position_id} · mass centre x={toDisplay(String(row.x_mm), 'mm', system)} {unitLabel('mm', system)}
                       </span>
                     </p>
                   ))}
@@ -376,10 +379,10 @@ export function EngineeringNoteReader({
               )}
               {applied.value.check?.result && (
                 <p>
-                  Approximate ranges: mass {applied.value.check.result.mass_min_kg.toFixed(3)}–
-                  {applied.value.check.result.mass_max_kg.toFixed(3)} kg · centre x=
-                  {applied.value.check.result.cg_min_mm.toFixed(3)}…
-                  {applied.value.check.result.cg_max_mm.toFixed(3)} mm.
+                  Approximate ranges: mass {outwardBound(applied.value.check.result.mass_min_kg, 'kg', system, 'min')}–
+                  {outwardBound(applied.value.check.result.mass_max_kg, 'kg', system, 'max')} {unitLabel('kg', system)} · centre x=
+                  {outwardBound(applied.value.check.result.cg_min_mm, 'mm', system, 'min')}…
+                  {outwardBound(applied.value.check.result.cg_max_mm, 'mm', system, 'max')} {unitLabel('mm', system)}.
                 </p>
               )}
               {applied.value.check && (
@@ -392,7 +395,7 @@ export function EngineeringNoteReader({
               <Questions items={[...applied.value.questions, ...applied.value.validation_errors]} />
               {applied.value.check ? (
                 <p>
-                  These readings and bounds support this simulation only. Remeasure after a physical
+                  The diagram uses grams and millimetres. These readings and bounds support this simulation only. Remeasure after a physical
                   adjustment. Retention, durability and tipping safety still need their own checks.
                 </p>
               ) : (

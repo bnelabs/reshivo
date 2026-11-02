@@ -1,3 +1,5 @@
+import { UnitInput, toDisplay, unitLabel, useUnitSystem } from '../units'
+import { commandGrams } from '../quantity'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import type { AssemblyObservationFields, MassTrimResult, WorkshopCase } from '../types'
@@ -28,25 +30,23 @@ const numberReady = (value: string) =>
   Number.isFinite(Number(value)) &&
   Number(value) >= 0 &&
   Number(value) <= 1_000_000
-const quantity = (value: number) => value.toLocaleString('en-US', { maximumFractionDigits: 4 })
-const mass = (value: number) =>
-  Math.abs(value) < 1 ? `${quantity(value * 1000)} g` : `${quantity(value)} kg`
-const massInterval = (minimum: number | null, maximum: number | null) => {
+const metricMass = (value: number) =>
+  Math.abs(value) < 1 ? `${commandGrams(value)} g` : `${String(value)} kg`
+const metricMassInterval = (minimum: number | null, maximum: number | null) => {
   if (minimum === null || maximum === null) return 'Not calculated'
   const grams = Math.max(Math.abs(minimum), Math.abs(maximum)) < 1
-  const scale = grams ? 1000 : 1
-  return `${quantity(minimum * scale)}–${quantity(maximum * scale)} ${grams ? 'g' : 'kg'}`
+  return `${grams ? commandGrams(minimum) : String(minimum)}–${grams ? commandGrams(maximum) : String(maximum)} ${grams ? 'g' : 'kg'}`
 }
 const numericFields: {
   key: 'mass' | 'error' | 'maxAdd' | 'maxRemove' | 'adjustmentError'
   label: string
   isError?: boolean
 }[] = [
-  { key: 'mass', label: 'Complete-assembly mass (kg)' },
-  { key: 'error', label: 'Weighing uncertainty (± kg)', isError: true },
-  { key: 'maxAdd', label: 'Maximum mass available to add (kg)' },
-  { key: 'maxRemove', label: 'Maximum adjustable mass to remove (kg)' },
-  { key: 'adjustmentError', label: 'Adjustment uncertainty (± kg)', isError: true },
+  { key: 'mass', label: 'Complete-assembly mass' },
+  { key: 'error', label: 'Weighing uncertainty', isError: true },
+  { key: 'maxAdd', label: 'Maximum mass available to add' },
+  { key: 'maxRemove', label: 'Maximum adjustable mass to remove' },
+  { key: 'adjustmentError', label: 'Adjustment uncertainty', isError: true },
 ]
 
 export function AssemblyMassPlanner({
@@ -64,6 +64,12 @@ export function AssemblyMassPlanner({
   active?: boolean
   balancePreset?: BalancePreset
 }) {
+  const system = useUnitSystem()
+  const mass = (value: number) => system === 'metric' ? metricMass(value) : `≈ ${toDisplay(String(value), 'kg', system)} lb (exact ${commandGrams(value)} g)`
+  const massInterval = (minimum: number | null, maximum: number | null) => {
+    if (system === 'metric') return metricMassInterval(minimum, maximum)
+    return minimum === null || maximum === null ? 'Not calculated' : `≈ ${toDisplay(String(minimum), 'kg', system)}–${toDisplay(String(maximum), 'kg', system)} lb`
+  }
   const minimum = caseData.details.mass_target_min_kg
   const maximum = caseData.details.mass_target_max_kg
   const targetReady =
@@ -227,7 +233,7 @@ export function AssemblyMassPlanner({
         or remove. The observation and target carry through the app.
       </p>
       <p>
-        Shared mass target: {targetReady ? `${minimum}–${maximum} kg` : 'not entered yet.'}{' '}
+        Shared mass target: {targetReady ? `${toDisplay(minimum, 'kg', system)}–${toDisplay(maximum, 'kg', system)} ${unitLabel('kg', system)}` : 'not entered yet.'}{' '}
         <button type="button" className="text-button" onClick={onEditCase}>
           {targetReady ? 'Edit case target' : 'Set the mass range in your case'}
         </button>
@@ -247,7 +253,7 @@ export function AssemblyMassPlanner({
       >
         <summary>Enter or edit observation details manually</summary>
         <p className="helper">
-          All quantities below use kilograms. Enter explicit uncertainty bounds; a blank is unknown.
+          Enter explicit uncertainty bounds; a blank is unknown.
           Changes also update this observation in the calculation tools.
         </p>
         <div className="workshop-trim-fields">
@@ -274,15 +280,12 @@ export function AssemblyMassPlanner({
           </label>
           {numericFields.map((field) => (
             <label key={field.key}>
-              {field.label}
-              <input
-                type="number"
-                min="0"
-                max="1000000"
-                step="any"
+              {field.label} ({field.isError ? '± ' : ''}{unitLabel('kg', system)})
+              <UnitInput
+                unit="kg"
                 disabled={field.isError && assemblyObservation.idealFeedback}
                 value={assemblyObservation[field.key]}
-                onChange={(event) => editObservation({ [field.key]: event.target.value })}
+                onChange={(value) => editObservation({ [field.key]: value })}
               />
             </label>
           ))}

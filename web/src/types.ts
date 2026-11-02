@@ -325,6 +325,7 @@ export type AdvisorResult = {
   elapsed_ms: number
   request_id: string
   answer: string
+  quarantined_answer?: string[]
   material_routes: AdvisorRoute[]
   engineering_routes: AdvisorRoute[]
   next_steps: string[]

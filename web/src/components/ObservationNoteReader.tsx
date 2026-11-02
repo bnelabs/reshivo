@@ -1,3 +1,4 @@
+import { toDisplay, unitLabel, useUnitSystem } from '../units'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import type { AssemblyObservationFields, WorkshopCase } from '../types'
@@ -7,7 +8,7 @@ type GroundedRecord = {
   text?: string
   kind?: 'user_reported' | 'simulated'
   number_text?: string
-  unit?: 'g' | 'kg'
+  unit?: 'g' | 'kg' | 'lb' | 'oz'
   normalized_kg?: number
 }
 type ObservationDraft = {
@@ -85,6 +86,7 @@ const simulatedNote =
   'Simulated observation ref trial-1: complete assembly mass 950 g, weighing uncertainty 5 g. I can add at most 100 g and remove at most 100 g. Adjustment uncertainty is 5 g.'
 
 function DraftDetails({ draft }: { draft: ObservationDraft }) {
+  const system = useUnitSystem()
   return (
     <>
       <p className="helper">
@@ -100,7 +102,7 @@ function DraftDetails({ draft }: { draft: ObservationDraft }) {
                 ? 'Simulated observation'
                 : 'User-reported weighing'
               : value
-                ? `${value}${field.quantity ? ' kg' : ''}`
+                ? field.quantity ? `${toDisplay(value, 'kg', system)} ${unitLabel('kg', system)}` : value
                 : 'Not stated — remains unknown'
           return (
             <div key={field.key}>
@@ -217,7 +219,7 @@ export function ObservationNoteReader({
       </label>
       <p className="helper">
         Meta reads this note with your current case. Review its quoted details before applying them
-        to your shared observation. Missing values stay unknown.
+        to your shared observation. Use kg, g, lb or oz; missing values stay unknown.
       </p>
       <div className="assembly-tool-actions">
         <button

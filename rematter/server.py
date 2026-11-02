@@ -10,6 +10,7 @@ from .materials import ROOT
 from .service import ServiceError, WorkbenchService
 
 MAX_BODY_BYTES = 64 * 1024
+MAX_IMAGE_BODY_BYTES = 3 * 1024 * 1024
 
 
 class WorkbenchHTTPServer(ThreadingHTTPServer):
@@ -70,7 +71,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
     def _error(self, error):
         self._json({"error": {"code": error.code, "message": error.message}}, error.status)
 
-    def _body(self):
+    def _body(self, max_bytes=MAX_BODY_BYTES):
         if self.headers.get("Transfer-Encoding") is not None:
             raise ServiceError("invalid_request", "Transfer encoding is not supported", 400)
         content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
@@ -85,9 +86,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             raise ServiceError("invalid_request", "Invalid Content-Length", 400) from None
         if length < 0:
             raise ServiceError("invalid_request", "Invalid Content-Length", 400)
-        if length > MAX_BODY_BYTES:
+        if length > max_bytes:
             self.close_connection = True
-            raise ServiceError("request_too_large", "JSON request exceeds 64 KiB", 413)
+            raise ServiceError("request_too_large", "JSON request exceeds the size limit", 413)
         data = self.rfile.read(length)
         if len(data) != length:
             raise ServiceError("invalid_request", "Incomplete JSON request", 400)
@@ -181,6 +182,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/products/my-mix": self.server.application.my_mix_mass,
                 "/api/products/target-check": self.server.application.target_check,
                 "/api/advisor/help": self.server.application.advisor_help,
+                "/api/advisor/inspect-image": self.server.application.advisor_inspect_image,
                 "/api/advisor/read-observation": self.server.application.advisor_read_observation,
                 "/api/advisor/read-engineering-note": self.server.application.advisor_read_engineering_note,
                 "/api/advisor/trial": self.server.application.advisor_trial,
@@ -195,8 +197,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)
-            body = self._body()
-            acquired = self.server.work_slots.acquire(blocking=False)
+            if path == "/api/advisor/inspect-image":
+                acquired = self.server.work_slots.acquire(blocking=False)
+                if not acquired:
+                    self.close_connection = True
+                    raise ServiceError("service_busy", "The workbench is busy; try again", 429)
+            body = self._body(MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else MAX_BODY_BYTES)
+            if not acquired:
+                acquired = self.server.work_slots.acquire(blocking=False)
             if not acquired:
                 raise ServiceError("service_busy", "Two calculations are already running; try again shortly", 429)
             self._json(routes[path](body))

@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict'
+import { outwardBound, toCanonical, toDisplay, unitLabel } from '../src/unitConversion.ts'
+
+assert.equal(toCanonical('1', 'kg', 'us'), '0.45359237')
+assert.equal(toCanonical('1', 'g', 'us'), '453.59237')
+assert.equal(toCanonical('-2', 'mm', 'us'), '-50.8')
+assert.equal(toDisplay('-50.8', 'mm', 'us'), '-2')
+assert.equal(toDisplay('0.45359237', 'kg', 'us'), '1')
+assert.equal(toDisplay('25.4', 'mm', 'us'), '1')
+assert.equal(unitLabel('g', 'metric'), 'g')
+assert.equal(unitLabel('g', 'us'), 'lb')
+assert.equal(toCanonical('', 'kg', 'us'), '')
+assert.equal(toCanonical('-', 'mm', 'us'), '-')
+assert.equal(toDisplay('-', 'mm', 'us'), '-')
+assert.equal(toCanonical('0x10', 'kg', 'us'), 'invalid:0x10')
+assert.equal(toDisplay('invalid:0x10', 'kg', 'metric'), '0x10')
+assert.equal(toDisplay('invalid:0x10', 'kg', 'us'), '0x10')
+assert.equal(toCanonical('1e-999', 'kg', 'metric'), 'invalid:1e-999')
+assert.equal(toCanonical('1e-999', 'kg', 'us'), 'invalid:1e-999')
+assert.equal(toCanonical('1e308', 'g', 'us'), 'invalid:1e308')
+assert.equal(toCanonical('1e308', 'kg', 'metric'), 'invalid:1e308')
+assert.equal(toDisplay('invalid:1e-999', 'kg', 'metric'), '1e-999')
+assert.equal(toDisplay('invalid:1e-999', 'kg', 'us'), '1e-999')
+assert.ok(Number(outwardBound(-0.6256281407035176, 'mm', 'metric', 'min')) <= -0.6256281407035176)
+assert.ok(Number(outwardBound(0.664179104477612, 'mm', 'metric', 'max')) >= 0.664179104477612)
+assert.equal(outwardBound(0.664179104477612, 'mm', 'metric', 'max'), '0.6642')
+assert.notEqual(outwardBound(1e-10, 'mm', 'metric', 'min'), '0')
+for (const [value, kind] of [['0.001', 'kg'], ['102.75', 'g'], ['-83.72', 'mm']]) {
+  const roundtrip = Number(toCanonical(toDisplay(value, kind, 'us'), kind, 'us'))
+  assert.ok(Math.abs(roundtrip - Number(value)) < 1e-6 * Math.max(1, Math.abs(Number(value))))
+}
+console.log('US customary views convert to canonical metric values without changing dimensions')

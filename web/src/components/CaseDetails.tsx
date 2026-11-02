@@ -1,3 +1,4 @@
+import { UnitInput, unitLabel, useUnitSystem } from '../units'
 import type { AdvisorBrief, CalculationDetails, MixAmountUnit } from '../types'
 
 type Component = CalculationDetails['components'][number]
@@ -9,6 +10,7 @@ export function CaseDetails({
   details: CalculationDetails
   onChange: (details: CalculationDetails) => void
 }) {
+  const system = useUnitSystem()
   function updateComponent(id: number, update: Partial<Component>) {
     onChange({
       ...details,
@@ -39,25 +41,19 @@ export function CaseDetails({
         <p>Enter the numeric mass range once for the mass calculation and weight adjustment.</p>
         <div className="workshop-case-component-pair">
           <label>
-            Mass target minimum (kg)
-            <input
-              type="number"
-              min="0"
-              max="1000000"
-              step="any"
+            Mass target minimum ({unitLabel('kg', system)})
+            <UnitInput
+              unit="kg"
               value={details.mass_target_min_kg}
-              onChange={(event) => onChange({ ...details, mass_target_min_kg: event.target.value })}
+              onChange={(value) => onChange({ ...details, mass_target_min_kg: value })}
             />
           </label>
           <label>
-            Mass target maximum (kg)
-            <input
-              type="number"
-              min="0.000001"
-              max="1000000"
-              step="any"
+            Mass target maximum ({unitLabel('kg', system)})
+            <UnitInput
+              unit="kg"
               value={details.mass_target_max_kg}
-              onChange={(event) => onChange({ ...details, mass_target_max_kg: event.target.value })}
+              onChange={(value) => onChange({ ...details, mass_target_max_kg: value })}
             />
           </label>
         </div>
@@ -109,35 +105,25 @@ export function CaseDetails({
             </label>
             <div className="workshop-case-component-pair">
               <label>
-                Balance target minimum x (mm)
-                <input
-                  type="number"
-                  min="-10000"
-                  max="10000"
-                  step="any"
+                Balance target minimum x ({unitLabel('mm', system)})
+                <UnitInput
+                  unit="mm"
                   value={details.balance.target_min_mm}
-                  onChange={(event) =>
-                    onChange({
-                      ...details,
-                      balance: { ...details.balance!, target_min_mm: event.target.value },
-                    })
-                  }
+                  onChange={(value) => onChange({
+                    ...details,
+                    balance: { ...details.balance!, target_min_mm: value },
+                  })}
                 />
               </label>
               <label>
-                Balance target maximum x (mm)
-                <input
-                  type="number"
-                  min="-10000"
-                  max="10000"
-                  step="any"
+                Balance target maximum x ({unitLabel('mm', system)})
+                <UnitInput
+                  unit="mm"
                   value={details.balance.target_max_mm}
-                  onChange={(event) =>
-                    onChange({
-                      ...details,
-                      balance: { ...details.balance!, target_max_mm: event.target.value },
-                    })
-                  }
+                  onChange={(value) => onChange({
+                    ...details,
+                    balance: { ...details.balance!, target_max_mm: value },
+                  })}
                 />
               </label>
             </div>
@@ -164,6 +150,7 @@ export function CaseDetails({
           Amount unit
           <select
             value={details.amount_unit}
+            disabled={details.components.some((component) => component.amount.trim() !== '')}
             onChange={(event) =>
               onChange({ ...details, amount_unit: event.target.value as MixAmountUnit })
             }
@@ -173,6 +160,9 @@ export function CaseDetails({
             <option value="volume_percent">Volume percent</option>
           </select>
         </label>
+        {details.components.some((component) => component.amount.trim() !== '') && (
+          <p className="helper">Clear the material amounts before changing their unit or basis.</p>
+        )}
         {details.components.map((component, index) => (
           <div className="workshop-case-component" key={component.id}>
             <div className="workshop-case-component-heading">

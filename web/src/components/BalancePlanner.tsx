@@ -1,3 +1,4 @@
+import { UnitInput, outwardBound, toDisplay, unitLabel, useUnitSystem } from '../units'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import type { AssemblyObservationFields, BalanceConfig, WorkshopCase } from '../types'
@@ -83,6 +84,7 @@ export function BalancePlanner({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const controller = useRef<AbortController | null>(null)
+  const system = useUnitSystem()
   const target = caseData.details.balance
   const observationKey = JSON.stringify([
     observation.id,
@@ -257,9 +259,9 @@ export function BalancePlanner({
         </p>
       ) : (
         <p className="balance-target">
-          Using your case: mass {caseData.details.mass_target_min_kg}–
-          {caseData.details.mass_target_max_kg} kg · balance x={target!.target_min_mm}…
-          {target!.target_max_mm} mm.{' '}
+          Using your case: mass {toDisplay(caseData.details.mass_target_min_kg, 'kg', system)}–
+          {toDisplay(caseData.details.mass_target_max_kg, 'kg', system)} {unitLabel('kg', system)} · balance x={toDisplay(target!.target_min_mm, 'mm', system)}…
+          {toDisplay(target!.target_max_mm, 'mm', system)} {unitLabel('mm', system)}.{' '}
           <button type="button" className="text-button" onClick={onEditCase}>
             Edit target
           </button>
@@ -280,23 +282,12 @@ export function BalancePlanner({
         </p>
         <div className="product-pair">
           <label>
-            Assembly centre x (mm)
-            <input
-              type="number"
-              step="any"
-              value={fields.cg}
-              onChange={(e) => edit('cg', e.target.value)}
-            />
+            Assembly centre x ({unitLabel('mm', system)})
+            <UnitInput unit="mm" value={fields.cg} onChange={(value) => edit('cg', value)} />
           </label>
           <label>
-            Centre uncertainty (± mm)
-            <input
-              type="number"
-              min="0"
-              step="any"
-              value={fields.cgError}
-              onChange={(e) => edit('cgError', e.target.value)}
-            />
+            Centre uncertainty (± {unitLabel('mm', system)})
+            <UnitInput unit="mm" value={fields.cgError} onChange={(value) => edit('cgError', value)} />
           </label>
         </div>
         {fields.positions.map((p, index) => (
@@ -312,56 +303,27 @@ export function BalancePlanner({
             </label>
             <div className="product-pair">
               <label>
-                Location {index + 1} mass centre x (mm)
-                <input
-                  type="number"
-                  step="any"
-                  value={p.x}
-                  onChange={(e) => position(index, 'x', e.target.value)}
-                />
+                Location {index + 1} mass centre x ({unitLabel('mm', system)})
+                <UnitInput unit="mm" value={p.x} onChange={(value) => position(index, 'x', value)} />
               </label>
               <label>
-                Location {index + 1} position uncertainty (± mm)
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={p.error}
-                  onChange={(e) => position(index, 'error', e.target.value)}
-                />
+                Location {index + 1} position uncertainty (± {unitLabel('mm', system)})
+                <UnitInput unit="mm" value={p.error} onChange={(value) => position(index, 'error', value)} />
               </label>
               <label>
-                Location {index + 1} addition limit (g)
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={p.addG}
-                  onChange={(e) => position(index, 'addG', e.target.value)}
-                />
+                Location {index + 1} addition limit ({unitLabel('g', system)})
+                <UnitInput unit="g" value={p.addG} onChange={(value) => position(index, 'addG', value)} />
               </label>
               <label>
-                Location {index + 1} removable trim (g)
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={p.removeG}
-                  onChange={(e) => position(index, 'removeG', e.target.value)}
-                />
+                Location {index + 1} removable trim ({unitLabel('g', system)})
+                <UnitInput unit="g" value={p.removeG} onChange={(value) => position(index, 'removeG', value)} />
               </label>
             </div>
           </div>
         ))}
         <label>
-          Command increment (g)
-          <input
-            type="number"
-            min="0.000001"
-            step="any"
-            value={fields.resolutionG}
-            onChange={(e) => edit('resolutionG', e.target.value)}
-          />
+          Command increment ({unitLabel('g', system)})
+          <UnitInput unit="g" value={fields.resolutionG} onChange={(value) => edit('resolutionG', value)} />
         </label>
         <p className="helper">
           The rounded command itself is rechecked. This increment is not a claim about weighing
@@ -377,7 +339,7 @@ export function BalancePlanner({
         </label>
         <p>
           Uses your shared total add/remove limits and ±
-          {feedback ? q(feedback.adjustment_uncertainty_kg * 1000) : 'unknown'} g adjustment bound
+          {feedback ? toDisplay(String(feedback.adjustment_uncertainty_kg), 'kg', system) : 'unknown'} {unitLabel('kg', system)} adjustment bound
           per active location. Removal locations describe independently available trim units, not an
           assumed removable part of loose fill.
         </p>
@@ -397,13 +359,8 @@ export function BalancePlanner({
           </select>
         </label>
         <label>
-          Comparison command (signed g)
-          <input
-            type="number"
-            step="any"
-            value={fields.baselineG}
-            onChange={(e) => edit('baselineG', e.target.value)}
-          />
+          Comparison command (signed {unitLabel('g', system)})
+          <UnitInput unit="g" value={fields.baselineG} onChange={(value) => edit('baselineG', value)} />
         </label>
         {checkedMassCorrection !== null && (
           <button
@@ -411,7 +368,7 @@ export function BalancePlanner({
             className="text-button"
             onClick={() => edit('baselineG', String(checkedMassCorrection * 1000))}
           >
-            Use the checked mass-only midpoint ({q(checkedMassCorrection * 1000)} g)
+            Use the checked mass-only midpoint ({toDisplay(String(checkedMassCorrection), 'kg', system)} {unitLabel('kg', system)})
           </button>
         )}
       </details>
@@ -453,10 +410,10 @@ export function BalancePlanner({
                   <strong>
                     {p.action === 'none'
                       ? 'No change'
-                      : `${p.action === 'add' ? 'Add' : 'Remove'} ${commandGrams(Math.abs(p.command_kg))} g`}
+                      : `${p.action === 'add' ? 'Add' : 'Remove'} ${system === 'metric' ? `${commandGrams(Math.abs(p.command_kg))} g` : `≈ ${toDisplay(String(Math.abs(p.command_kg)), 'kg', system)} lb (exact ${commandGrams(Math.abs(p.command_kg))} g)`}`}
                   </strong>
                   <span>
-                    {p.position_id} · mass centre x={String(p.x_mm)} mm
+                    {p.position_id} · mass centre x={toDisplay(String(p.x_mm), 'mm', system)} {unitLabel('mm', system)}
                   </span>
                 </p>
               ))}
@@ -464,8 +421,8 @@ export function BalancePlanner({
           )}
           {result.result && (
             <p>
-              Approximate ranges: mass {q(result.result.mass_min_kg)}–{q(result.result.mass_max_kg)}{' '}
-              kg · balance x={q(result.result.cg_min_mm)}…{q(result.result.cg_max_mm)} mm, including
+              Approximate ranges: mass {outwardBound(result.result.mass_min_kg, 'kg', system, 'min')}–{outwardBound(result.result.mass_max_kg, 'kg', system, 'max')}{' '}
+              {unitLabel('kg', system)} · balance x={outwardBound(result.result.cg_min_mm, 'mm', system, 'min')}…{outwardBound(result.result.cg_max_mm, 'mm', system, 'max')} {unitLabel('mm', system)}, including
               the supplied bounds.
             </p>
           )}
@@ -483,7 +440,7 @@ export function BalancePlanner({
             alt="Simulated trim placement diagram showing entered locations and balance target"
           />
           <p className="helper">
-            A placement diagram for this simulation. Remeasure after any physical adjustment; space,
+            The diagram uses grams and millimetres. Remeasure after any physical adjustment; space,
             retention, durability and tipping safety remain unchecked.
           </p>
           <button type="button" className="text-button" onClick={() => download(true)}>

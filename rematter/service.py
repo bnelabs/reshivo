@@ -126,6 +126,21 @@ class WorkbenchService:
         except ProductInputError as error:
             raise ServiceError("invalid_request", str(error)) from None
 
+    def advisor_inspect_image(self, request):
+        from .image_intake import inspect_image
+        from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError
+        from .products import ProductInputError
+        try:
+            return inspect_image(request, root=self.root)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+        except MetaConfigurationError as error:
+            raise ServiceError("meta_not_configured", str(error), 503) from None
+        except MetaValidationError as error:
+            raise ServiceError("meta_invalid_response", str(error), 502) from None
+        except MetaAPIError as error:
+            raise ServiceError("meta_request_failed", str(error), 502) from None
+
     def advisor_read_observation(self, request):
         from .observation_intake import read_observation_note, validate_note_request
         from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError

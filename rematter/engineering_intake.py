@@ -12,6 +12,7 @@ from .materials import ROOT
 from .meta import MetaClient, MetaValidationError
 from .observation_intake import _provenance
 from .products import ProductInputError
+from .quantity_guards import unsafe_scalar
 
 
 FIELD_ORDER = (
@@ -67,9 +68,11 @@ For observation_kind use simulated only with explicit simulated/synthetic proven
 user_reported only with an explicit actual observation reported by the user. Unclear stays null.
 Saying an explicitly synthetic observation is 'not a physical test' does not negate its
 synthetic provenance. 'Not synthetic', conditional provenance and questions remain unclear.
-Each quantity has verbatim number_text, its stated unit g/kg/mm/cm/m, and its own focused quote.
-Do not convert values yourself. Signed spatial coordinates are allowed; left/right labels alone
-do not establish coordinates, a datum, symmetry, or an actual trim mass centre. A hole centre
+Each quantity has verbatim number_text, its stated unit g/kg/lb/oz/mm/cm/m/in/ft, and its own focused quote.
+Do not convert values yourself. Do not extract part of a compound expression such as 1 lb 5 oz
+or 1 ft 6 in. Leave it null and ask for the value in a single unit. Pounds-force and lbf are
+forces, not masses. Signed spatial coordinates are allowed; left/right labels alone do not
+establish coordinates, a datum, symmetry, or an actual trim mass centre. A hole centre
 is not automatically a trim mass centre. Missing/uncertain values remain null, never zero.
 Mass uncertainty, adjustment uncertainty, command increment, CG uncertainty, position error,
 per-location stock and total stock are different quantities. Do not substitute one for another.
@@ -87,12 +90,12 @@ No source measurement, simulation, physical validation or future-batch guarantee
 """
 
 _NUMBER = r"[+\-−]?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)"
-_UNIT = r"(?:kilograms?|kg|grams?|g|millimet(?:er|re)s?|mm|centimet(?:er|re)s?|cm|met(?:er|re)s?|m)"
+_UNIT = r"(?:kilograms?|kg|grams?|g|pounds?|lbs?|ounces?|oz|millimet(?:er|re)s?|mm|centimet(?:er|re)s?|cm|met(?:er|re)s?|m|inches|inch|in(?=\s*(?:[,;.!?)]|$|to\b|from\b|above\b|below\b|left\b|right\b|uncertainty\b|offset\b|[-–—]))|feet|foot|ft)"
 _SCALAR = re.compile(rf"(?<![\w.,+\-−])(?P<number>{_NUMBER})\s*(?P<unit>{_UNIT})\b", re.IGNORECASE)
 _RANGE = re.compile(rf"(?<![\w.,+\-−])(?P<low>{_NUMBER})\s*(?:(?P<low_unit>{_UNIT})\s*)?(?:–|—|\.\.|…|\bto\b|\band\b|-)\s*(?P<high>{_NUMBER})\s*(?P<unit>{_UNIT})\b", re.IGNORECASE)
 _SCOPE_NEGATION = re.compile(r"\bnot\s+(?:a\s+physical\s+test|physically\s+tested|a\s+tested\s+product)\b", re.IGNORECASE)
-_MASS_FACTORS = {"g": Decimal("0.001"), "kg": Decimal(1)}
-_LENGTH_FACTORS = {"mm": Decimal(1), "cm": Decimal(10), "m": Decimal(1000)}
+_MASS_FACTORS = {"g": Decimal("0.001"), "kg": Decimal(1), "lb": Decimal("0.45359237"), "oz": Decimal("0.028349523125")}
+_LENGTH_FACTORS = {"mm": Decimal(1), "cm": Decimal(10), "m": Decimal(1000), "in": Decimal("25.4"), "ft": Decimal("304.8")}
 
 
 def validate_engineering_request(request):
@@ -112,7 +115,7 @@ def engineering_schema():
     for field in FIELD_ORDER:
         specific = ({"text": {"type": "string", "minLength": 1, "maxLength": 1000 if field == "coordinate_basis" else 80}} if field in TEXT_FIELDS else
                     {"kind": {"type": "string", "enum": ["simulated", "user_reported"]}} if field == "observation_kind" else
-                    {"number_text": {"type": "string", "minLength": 1, "maxLength": 80}, "unit": {"type": "string", "enum": ["g", "kg", "mm", "cm", "m"]}})
+                    {"number_text": {"type": "string", "minLength": 1, "maxLength": 80}, "unit": {"type": "string", "enum": ["g", "kg", "lb", "oz", "mm", "cm", "m", "in", "ft"]}})
         properties[field] = nullable({**common, **specific})
     return {"type": "object", "additionalProperties": False, "required": list(FIELD_ORDER), "properties": properties}
 
@@ -121,6 +124,10 @@ def _unit(text):
     text = text.lower()
     if text in ("g", "gram", "grams"): return "g"
     if text in ("kg", "kilogram", "kilograms"): return "kg"
+    if text in ("lb", "lbs", "pound", "pounds"): return "lb"
+    if text in ("oz", "ounce", "ounces"): return "oz"
+    if text in ("in", "inch", "inches"): return "in"
+    if text in ("ft", "foot", "feet"): return "ft"
     if text == "mm" or text.startswith("millimet"): return "mm"
     if text == "cm" or text.startswith("centimet"): return "cm"
     if text == "m" or text.startswith("met"): return "m"
@@ -147,10 +154,14 @@ def _quantity(record, field, case):
         raise MetaValidationError(f"The engineering draft's {field} needs a stated quantity with compatible units")
     # Match in the whole original text so a clipped quote cannot hide part of a range.
     grounded = False
+    ambiguous = False
     for excerpt in re.finditer(re.escape(quote), original):
         for scalar in _SCALAR.finditer(original):
             if not (excerpt.start() <= scalar.start() < scalar.end() <= excerpt.end()): continue
             if scalar["number"] != literal or _unit(scalar["unit"]) != unit: continue
+            if unsafe_scalar(original, scalar.start(), scalar.end()):
+                ambiguous = True
+                continue
             enclosing = [r for r in _RANGE.finditer(original) if r.start() < scalar.end() and scalar.start() < r.end()]
             if not enclosing:
                 grounded = True
@@ -162,10 +173,15 @@ def _quantity(record, field, case):
             endpoint = "low" if "_min_" in field else "high"
             for interval in _RANGE.finditer(original):
                 if not (excerpt.start() <= interval.start() < interval.end() <= excerpt.end()): continue
+                if unsafe_scalar(original, interval.start(), interval.end()):
+                    ambiguous = True
+                    continue
                 endpoint_unit = interval["low_unit"] or interval["unit"] if endpoint == "low" else interval["unit"]
                 if interval[endpoint] == literal and _unit(endpoint_unit) == unit: grounded = True
         if grounded: break
     if not grounded:
+        if ambiguous:
+            raise MetaValidationError("Use a single mass or length unit for each value, and distinguish force from mass. Please restate the affected value.")
         raise MetaValidationError(f"The engineering draft's {field} is not the stated scalar or target endpoint in its source")
     try:
         with localcontext() as context:

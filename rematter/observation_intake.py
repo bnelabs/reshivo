@@ -7,6 +7,7 @@ from .advisor import _brief, _calculation_context
 from .materials import ROOT
 from .meta import MetaClient, MetaValidationError
 from .products import ProductInputError
+from .quantity_guards import unsafe_scalar
 
 
 FIELD_ORDER = ("id", "kind", "mass", "uncertainty", "max_add_mass", "max_remove_mass", "adjustment_uncertainty")
@@ -32,10 +33,12 @@ For kind return simulated only when the note explicitly labels this observation 
 or synthetic; return user_reported only when it explicitly describes an actual weighing
 reported by the user. A planned, hypothetical, conditional or merely 'weighed' statement
 does not establish provenance. Leave uncertain provenance null, and never invent an ID.
-Each quantity needs the exact number_text, unit g or kg, and an exact contiguous quote
+Each quantity needs the exact number_text, unit g, kg, lb or oz, and an exact contiguous quote
 from the note that places that number immediately beside its own unit. 'grams' and
-'kilograms' are permitted spellings. Do not infer a missing or shared unit, select an
+'kilograms', 'pounds' and 'ounces' are permitted spellings. Do not infer a missing or shared unit, select an
 endpoint of a range, convert a number, sum masses, or assume zero uncertainty/capacity.
+Do not extract part of a compound value such as 1 lb 5 oz. Leave it null so the user can
+restate it in one unit. Pounds-force and lbf are forces, not masses.
 Use separate focused excerpts for distinct meanings, even when numbers repeat. The
 complete-assembly mass must include the entire assembly, not just a component or fill.
 An explicit numeric zero can be extracted; an omitted bound cannot become zero.
@@ -43,7 +46,7 @@ No interpretation is verified and no physical test is established by this extrac
 """
 
 _NUMBER = r"(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)"
-_UNIT = r"(?:kilograms?|kg|grams?|g)"
+_UNIT = r"(?:kilograms?|kg|grams?|g|pounds?|lbs?|ounces?|oz)"
 _QUANTITY = re.compile(rf"(?<![\w.,+\-])(?P<number>{_NUMBER})\s*(?P<unit>{_UNIT})\b", re.IGNORECASE)
 _COMMON_RANGE = re.compile(rf"{_NUMBER}\s*(?:[-–—/±]|\+\s*/\s*-|\bto\b|\band\b)\s*{_NUMBER}\s*{_UNIT}\b", re.IGNORECASE)
 _SIMULATED = re.compile(r"\b(?:simulated|synthetic)\b", re.IGNORECASE)
@@ -77,7 +80,7 @@ def observation_schema():
 
     quote = {"type": "string", "minLength": 1, "maxLength": 1000}
     quantity = nullable({"number_text": {"type": "string", "minLength": 1, "maxLength": 80},
-                         "unit": {"type": "string", "enum": ["g", "kg"]}, "quote": quote})
+                         "unit": {"type": "string", "enum": ["g", "kg", "lb", "oz"]}, "quote": quote})
     return {"type": "object", "additionalProperties": False, "required": list(FIELD_ORDER),
             "properties": {
                 "id": nullable({"text": {"type": "string", "minLength": 1, "maxLength": 80}, "quote": quote}),
@@ -113,29 +116,45 @@ def _provenance(quote, kind, note):
     return False
 
 
+def _mass_unit(text):
+    text = text.lower()
+    if text in ("kg", "kilogram", "kilograms"): return "kg"
+    if text in ("g", "gram", "grams"): return "g"
+    if text in ("lb", "lbs", "pound", "pounds"): return "lb"
+    if text in ("oz", "ounce", "ounces"): return "oz"
+    return None
+
+
 def _quantity(value, note, field):
     quote = _quoted_record(value, {"number_text", "unit", "quote"}, note, field)
     literal, unit = value["number_text"], value["unit"]
     if (not isinstance(literal, str) or len(literal) > 80 or not re.fullmatch(_NUMBER, literal)
-            or unit not in ("g", "kg") or _COMMON_RANGE.search(quote)):
+            or unit not in ("g", "kg", "lb", "oz") or _COMMON_RANGE.search(quote)):
         raise MetaValidationError(f"The observation draft's {field} needs one unambiguous nonnegative quantity")
     matches = [match for match in _QUANTITY.finditer(quote)
                if match["number"] == literal
-               and ("kg" if match["unit"].lower().startswith("k") else "g") == unit]
+               and _mass_unit(match["unit"]) == unit]
     original_spans = {(match.start(), match.end()) for match in _QUANTITY.finditer(note)}
     ranges = [(match.start(), match.end()) for match in _COMMON_RANGE.finditer(note)]
     grounded = False
+    ambiguous = False
     for excerpt in re.finditer(re.escape(quote), note):
         for match in matches:
             start, end = excerpt.start() + match.start(), excerpt.start() + match.end()
-            if (start, end) in original_spans and not any(low < end and start < high for low, high in ranges):
+            if (start, end) in original_spans and unsafe_scalar(note, start, end):
+                ambiguous = True
+                continue
+            if ((start, end) in original_spans and not unsafe_scalar(note, start, end)
+                    and not any(low < end and start < high for low, high in ranges)):
                 grounded = True
     if not grounded:
+        if ambiguous:
+            raise MetaValidationError("Use one mass unit for each value, and distinguish force from mass. Please restate the affected value.")
         raise MetaValidationError(f"The observation draft's {field} number and unit are not adjacent in its quote")
     try:
         with localcontext() as context:
             context.prec = 100
-            kg = Decimal(literal) * (Decimal("0.001") if unit == "g" else Decimal(1))
+            kg = Decimal(literal) * {"g": Decimal("0.001"), "kg": Decimal(1), "lb": Decimal("0.45359237"), "oz": Decimal("0.028349523125")}[unit]
             if not kg.is_finite() or not 0 <= kg <= 1_000_000:
                 raise InvalidOperation()
     except InvalidOperation:

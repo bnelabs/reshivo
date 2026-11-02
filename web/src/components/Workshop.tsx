@@ -5,6 +5,7 @@ import { TrialPlan } from './TrialPlan'
 import { CaseDetails } from './CaseDetails'
 import { AssemblyMassPlanner as WeightAdjustment } from './AssemblyMassPlanner'
 import { EngineeringNoteReader } from './EngineeringNoteReader'
+import { ImageIntake } from './ImageIntake'
 import type { EngineeringNotePatch } from '../engineeringNote'
 import type {
   AdvisorBrief,
@@ -380,8 +381,24 @@ export function Workshop() {
       'Reviewed note applied. The calculations below use this observation and your shared targets.',
     )
   }
-  const briefReady = ['input', 'product', 'use_case', 'targets'].every((key) =>
-    brief[key as keyof AdvisorBrief].trim(),
+  const missingFields = briefFields.filter((field) => field.required && !brief[field.key].trim())
+  const briefReady = missingFields.length === 0
+  const mayClearCaseData = Boolean(
+    toolsOpen ||
+    plan ||
+    trial ||
+    selectedRoute ||
+    balancePreset ||
+    calculationDetails.label.trim() ||
+    calculationDetails.amount_basis.trim() ||
+    calculationDetails.amount_unit !== 'mass_percent' ||
+    calculationDetails.components.length > 1 ||
+    calculationDetails.components.some(
+      (component) => component.name.trim() || component.amount.trim() || component.role !== 'main',
+    ) ||
+    Object.values(assemblyObservation).some((value) =>
+      typeof value === 'string' ? value.trim() : value === true,
+    ),
   )
 
   async function ask(nextQuestion = '') {
@@ -429,6 +446,9 @@ export function Workshop() {
       ? [...history.slice(-5), selectedContext]
       : history.slice(-6)
     setActivity('routes')
+    requestAnimationFrame(() =>
+      answer.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }),
+    )
     setError('')
     setNotice('')
     setLastQuestion(nextQuestion.trim())
@@ -507,6 +527,9 @@ export function Workshop() {
     request.current?.abort()
     request.current = controller
     setActivity('trial')
+    requestAnimationFrame(() =>
+      answer.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }),
+    )
     setError('')
     setNotice('')
     try {
@@ -565,15 +588,34 @@ export function Workshop() {
       : plan.engineering_routes
     : []
   const chosen = selectedRoute
+  const progress = !plan ? 1 : !trial ? 2 : section === 'engineering' ? 4 : 3
+  const steps = [
+    { title: 'Your case', detail: 'Material, product and goals' },
+    { title: 'Compare options', detail: 'Explore practical approaches' },
+    { title: 'Plan a trial', detail: 'Choose what to try' },
+    { title: 'Check a result', detail: 'Work with your measurements' },
+  ]
+  const fieldGroups = [
+    {
+      title: 'Your recycled input',
+      detail: 'Tell us what you have and how it changes.',
+      fields: briefFields.slice(0, 2),
+    },
+    {
+      title: 'Your desired product',
+      detail: 'Tell us what you want to make and what matters.',
+      fields: briefFields.slice(2),
+    },
+  ]
 
   return (
     <div className="workshop">
       <div className="workshop-intro">
         <div>
-          <p className="workshop-eyebrow">Recycled input. Practical next steps.</p>
-          <h1>What can we make from this batch?</h1>
+          <h1>Turn variable waste into a useful product</h1>
           <p>
-            Work through the mix, product design and process together—even when your input changes.
+            Describe your material and your goal. ReMatter helps you explore what to change, what to
+            try, and what to check.
           </p>
         </div>
         <div className="workshop-connection" role="status">
@@ -600,21 +642,45 @@ export function Workshop() {
           )}
         </div>
       </div>
-      <main className={`workshop-grid${focusWorkspace ? ' is-focused' : ''}`}>
+      <ol className="workshop-progress" aria-label="Your progress">
+        {steps.map((step, index) => {
+          const number = index + 1
+          return (
+            <li
+              key={step.title}
+              className={
+                number === progress ? 'is-current' : number < progress ? 'is-complete' : ''
+              }
+              aria-current={number === progress ? 'step' : undefined}
+            >
+              <span className="workshop-progress-number">{number}</span>
+              <span>
+                <strong>{step.title}</strong>
+                <small>{step.detail}</small>
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+      <main
+        className={`workshop-grid${focusWorkspace ? ' is-focused' : ''}${plan ? ' has-plan' : ''}`}
+      >
         <aside className="workshop-brief" hidden={focusWorkspace}>
           <div className="workshop-brief-heading">
             <div>
-              <p className="workshop-eyebrow">Your case</p>
-              <h2>Start with what you have</h2>
+              <h2>Tell us about your case</h2>
+              <p>Start with the four marked fields. Add the rest whenever you are ready.</p>
             </div>
-            <span>01</span>
           </div>
-          <button className="workshop-example" type="button" onClick={loadExample}>
-            Try a counterweight example <span aria-hidden="true">↗</span>
-          </button>
-          <button className="workshop-example" type="button" onClick={loadBalanceDemo}>
-            Try a synthetic mass-and-balance example <span aria-hidden="true">↗</span>
-          </button>
+          <details className="workshop-examples">
+            <summary>Try an example</summary>
+            <button className="workshop-example" type="button" onClick={loadExample}>
+              Explore a counterweight <span aria-hidden="true">↗</span>
+            </button>
+            <button className="workshop-example" type="button" onClick={loadBalanceDemo}>
+              Try a synthetic mass-and-balance check <span aria-hidden="true">↗</span>
+            </button>
+          </details>
           {exampleLoaded && (
             <p className="workshop-example-note" role="status">
               Hypothetical example loaded. Edit it to fit your batch; these are not material
@@ -627,31 +693,61 @@ export function Workshop() {
               void ask()
             }}
           >
-            {briefFields.map((field) => (
-              <label key={field.key}>
-                {field.label}
-                {field.rows ? (
-                  <textarea
-                    rows={field.rows}
-                    maxLength={3000}
-                    required={field.required}
-                    value={brief[field.key]}
-                    placeholder={field.placeholder}
-                    onChange={(event) => editBrief(field.key, event.target.value)}
-                  />
-                ) : (
-                  <input
-                    maxLength={3000}
-                    required={field.required}
-                    value={brief[field.key]}
-                    placeholder={field.placeholder}
-                    onChange={(event) => editBrief(field.key, event.target.value)}
+            {fieldGroups.map((group, groupIndex) => (
+              <fieldset className="workshop-case-group" key={group.title}>
+                <legend>
+                  <span>{groupIndex + 1}</span>
+                  {group.title}
+                </legend>
+                <p>{group.detail}</p>
+                {groupIndex === 0 && (
+                  <ImageIntake
+                    brief={brief}
+                    mayClearCaseData={mayClearCaseData}
+                    onApply={(note) =>
+                      editBrief('input', [brief.input.trim(), note].filter(Boolean).join('\n'))
+                    }
                   />
                 )}
-              </label>
+                <div className="workshop-case-fields">
+                  {group.fields.map((field) => (
+                    <label key={field.key}>
+                      <span>
+                        {field.label}
+                        {field.required && (
+                          <span className="workshop-required" aria-hidden="true">
+                            {' '}
+                            *
+                          </span>
+                        )}
+                      </span>
+                      {field.rows ? (
+                        <textarea
+                          rows={field.rows}
+                          maxLength={3000}
+                          required={field.required}
+                          value={brief[field.key]}
+                          placeholder={field.placeholder}
+                          onChange={(event) => editBrief(field.key, event.target.value)}
+                        />
+                      ) : (
+                        <input
+                          maxLength={3000}
+                          required={field.required}
+                          value={brief[field.key]}
+                          placeholder={field.placeholder}
+                          onChange={(event) => editBrief(field.key, event.target.value)}
+                        />
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             ))}
             <details className="workshop-constraints" id="case-process-details">
-              <summary>Contamination, process & allowed changes</summary>
+              <summary>
+                Equipment, contamination and other constraints <small>Optional</small>
+              </summary>
               {optionalFields.map((field) => (
                 <label key={field.key}>
                   {field.label}
@@ -678,11 +774,21 @@ export function Workshop() {
               type="submit"
               disabled={!briefReady || !status?.configured || busy}
             >
-              {busy ? 'Working through your case…' : 'Find ways to use this batch'}
+              {busy ? 'Working through your case…' : 'Explore options'}
               <span aria-hidden="true">→</span>
             </button>
+            {!briefReady && (
+              <p className="workshop-required-note" role="status">
+                To continue, add:{' '}
+                {missingFields
+                  .map((field) => field.label.toLowerCase().replace(/\?$/, ''))
+                  .join(', ')}
+                .
+              </p>
+            )}
             <p className="workshop-submit-note">
-              Sends this brief to Meta. You can describe unknowns in plain language.
+              Your case is sent to Meta when you select Explore options. Describe unknowns in plain
+              language.
             </p>
           </form>
         </aside>
@@ -695,9 +801,9 @@ export function Workshop() {
           <nav className="workshop-tabs" aria-label="Workshop sections">
             {(
               [
-                { id: 'material', label: 'Material Lab' },
+                { id: 'material', label: 'Material options' },
                 { id: 'engineering', label: 'Engineering' },
-                { id: 'next', label: 'Next run' },
+                { id: 'next', label: 'Trial plan' },
               ] as { id: Section; label: string }[]
             ).map((tab) => (
               <button
@@ -715,7 +821,7 @@ export function Workshop() {
               aria-pressed={focusWorkspace}
               onClick={() => setFocusWorkspace((value) => !value)}
             >
-              {focusWorkspace ? 'Show case' : 'Focus workspace'}
+              {focusWorkspace ? 'Show case' : 'Hide case'}
             </button>
           </nav>
           {focusWorkspace && (
@@ -746,7 +852,7 @@ export function Workshop() {
                   {activity === 'trial'
                     ? 'Setting out what to change, what to keep fixed and how to check the result.'
                     : 'Comparing material routes, engineering choices and the next useful check.'}{' '}
-                  {elapsed}s
+                  {elapsed}s {elapsed >= 10 && 'This can take up to a minute.'}
                 </p>
               </div>
               <button type="button" onClick={stopWaiting}>
@@ -756,50 +862,28 @@ export function Workshop() {
           )}
           {!plan ? (
             <div className="workshop-start">
-              <span className="workshop-start-mark" aria-hidden="true">
-                ↗
-              </span>
-              <p className="workshop-eyebrow">A route from input to output</p>
-              <h2>
-                {section === 'material'
-                  ? 'Find a useful way forward'
-                  : section === 'engineering'
-                    ? 'Make the product work with the input'
-                    : 'Turn an option into the next run'}
-              </h2>
-              <p>
-                {section === 'material'
-                  ? 'Describe the batch and the job. Meta will suggest practical changes to the mix or process, with trade-offs and checks for each route.'
-                  : section === 'engineering'
-                    ? 'Explore containment, geometry, assembly and adjustment. Product choices can help you work with the variation you have.'
-                    : 'Keep the next action small and concrete: what to try, what to observe and what to ask next.'}
-              </p>
-              {section === 'material' && (
-                <p>
-                  If plastic is part of the input, what must it do: bind the fill, contain it, or
-                  carry a load? The route should fit that job.
-                </p>
-              )}
+              <h2>What happens next?</h2>
+              <p>From your case, ReMatter helps you work through three decisions.</p>
               <div className="workshop-start-options">
                 <div>
-                  <span>01</span>
-                  <strong>Adapt the material</strong>
-                  <p>Sorting, a known binder, additions or a different process.</p>
+                  <span>2</span>
+                  <strong>Compare your options</strong>
+                  <p>See ways to adjust the material, process or product, with trade-offs.</p>
                 </div>
                 <div>
-                  <span>02</span>
-                  <strong>Engineer around variation</strong>
-                  <p>Containment, adjustable fill and product geometry.</p>
+                  <span>3</span>
+                  <strong>Plan one trial</strong>
+                  <p>Choose an approach and see what to change, observe and check.</p>
                 </div>
                 <div>
-                  <span>03</span>
-                  <strong>Choose the next run</strong>
-                  <p>A practical sequence and the checks that will inform it.</p>
+                  <span>4</span>
+                  <strong>Check your result</strong>
+                  <p>Use your measurements in the available engineering tools.</p>
                 </div>
               </div>
               <p className="workshop-start-note">
-                Start with your brief or try the counterweight example. No laboratory numbers are
-                required to explore routes.
+                Ideas are starting points. Your material and product still need the checks that fit
+                your case.
               </p>
             </div>
           ) : (
@@ -826,6 +910,11 @@ export function Workshop() {
                   {lastQuestion && (
                     <p className="workshop-last-question">You asked: {lastQuestion}</p>
                   )}
+                  {!!plan.quarantined_answer?.length && (
+                    <p role="status" className="workshop-last-question">
+                      An unverified claim about meeting your targets was removed. Review the proposed options and checks before relying on them.
+                    </p>
+                  )}
                   <div className="workshop-answer">
                     {plan.answer
                       .split(/\n\s*\n/)
@@ -850,7 +939,7 @@ export function Workshop() {
                     <p className="workshop-selected-note">
                       Selected route: <strong>{chosen.title}</strong>.{' '}
                       <button type="button" onClick={() => setSection('next')}>
-                        {trial ? 'View trial plan' : 'Open Next run'} →
+                        {trial ? 'View trial plan' : 'Open trial plan'} →
                       </button>
                     </p>
                   )}
@@ -911,7 +1000,7 @@ export function Workshop() {
                           </p>
                           <div className="workshop-trial-choose">
                             <button type="button" onClick={() => setSection('material')}>
-                              Material Lab →
+                              Material options →
                             </button>
                             <button type="button" onClick={() => setSection('engineering')}>
                               Engineering →
@@ -981,7 +1070,7 @@ export function Workshop() {
                 placeholder={
                   plan
                     ? 'Compare a route, change a constraint, or ask what to try next…'
-                    : 'Ask a question using the brief on the left…'
+                    : 'Ask a question about your case…'
                 }
               />
               <button
