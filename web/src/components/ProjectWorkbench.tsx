@@ -26,7 +26,7 @@ import { canReattachMixCalculation, mixQuestionFingerprint, mixQuestionIsCurrent
 import type { PreparedMixCalculation } from '../mixQuestion'
 import { briefFrom } from '../projectBrief'
 import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
-import { downloadTextFile, formatAdviceForReport, formatProjectSummary, printTextReport } from '../readableSummary'
+import { downloadTextFile, formatAdviceForReport, formatEarlierAdviceForReport, formatProjectSummary, printTextReport } from '../readableSummary'
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
@@ -84,6 +84,8 @@ export function ProjectWorkbench() {
   const [question, setQuestion] = useState('')
   const [focusHelpQuestion, setFocusHelpQuestion] = useState(false)
   const helpQuestion = useRef<HTMLTextAreaElement>(null)
+  const optionsHeading = useRef<HTMLHeadingElement>(null)
+  const pendingOptionsHeadingFocus = useRef(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [inlineError, setInlineError] = useState('')
@@ -124,6 +126,17 @@ export function ProjectWorkbench() {
   const showCurrentGuidance = Boolean(modeReady && !planningMode?.planningOnly)
   const showHistoricalIdeas = Boolean(showCurrentGuidance && savedReviewReady && !savedNeedsReview)
   const visibleSavedNotes = (w.advice_notes ?? []).filter((note) => modeReady && savedReviewReady && !savedNeedsReview && (showHistoricalIdeas || note.kind === 'local_guidance'))
+  useEffect(() => {
+    const focusHeading = pendingOptionsHeadingFocus.current
+    pendingOptionsHeadingFocus.current = false
+    if (focusHeading && page === 'options' && optionsHeading.current) {
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+      optionsHeading.current.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' })
+      optionsHeading.current.focus({ preventScroll: true })
+    } else {
+      window.scrollTo({ top: 0 })
+    }
+  }, [page])
   useEffect(() => {
     if (!focusHelpQuestion || page !== 'options' || !helpQuestion.current) return
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -224,9 +237,6 @@ export function ProjectWorkbench() {
     void refreshProvider()
     return () => request.current?.abort()
   }, [])
-  useEffect(() => {
-    window.scrollTo({ top: 0 })
-  }, [page])
   function update(next: ProjectWorkspace) {
     setW(next)
     setNotice('Unsaved changes. Save a project file to keep this work.')
@@ -262,6 +272,7 @@ export function ProjectWorkbench() {
         setLastAdviceUsedIdea(false)
         setAdvice(null)
         setQuestion('')
+        if (page === 'start' || page === 'manual') pendingOptionsHeadingFocus.current = true
         setPage('options')
         setNotice(
           'The earlier product project was downloaded. This product has a separate project and no transferred measurements.',
@@ -289,6 +300,7 @@ export function ProjectWorkbench() {
     setSelectedIdea(null)
     setLastAdviceUsedIdea(false)
     setQuestion('')
+    if (page === 'start' || page === 'manual') pendingOptionsHeadingFocus.current = true
     setPage('options')
     setNotice(
       note && (w.advice_notes?.length ?? 0) >= 30
@@ -581,8 +593,13 @@ export function ProjectWorkbench() {
     (showCurrentGuidance || startingGuidance.origin === 'local' || startingGuidance.guidance_origin === 'local') &&
     !PROJECT_INTAKE_FIELDS.some((field) => (startingGuidance.project_draft[field]?.value ?? '') !== (w.project[field]?.value ?? ''))
     ? startingGuidance : null
+  const earlierReportNote = !currentReportAdvice && !currentReportStartingGuidance
+    ? [...visibleSavedNotes].reverse().find((note) => PROJECT_INTAKE_FIELDS.every((field) =>
+        (note.project_snapshot[field]?.value ?? '') === (w.project[field]?.value ?? '')))
+    : undefined
   function summaryText() {
-    return formatProjectSummary(w, showHistoricalIdeas) + formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance) + (mixSummary ? `\n${mixSummary}` : '') + '\nTest your product before production.\n'
+    const guidance = formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance) || formatEarlierAdviceForReport(earlierReportNote)
+    return formatProjectSummary(w, showHistoricalIdeas) + guidance + (mixSummary ? `\n${mixSummary}` : '') + '\nTest your product before production.\n'
   }
   function downloadSummary() {
     downloadTextFile('reshivo-summary.txt', summaryText())
@@ -837,7 +854,7 @@ export function ProjectWorkbench() {
               <section className="pw-section">
                 <div className="pw-section-heading">
                   <div>
-                    <h1>Find a way to use what you have</h1>
+                    <h1 ref={optionsHeading} tabIndex={-1}>Find a way to use what you have</h1>
                     <p>
                       Get ideas for using your material. Add details if you have them; unknowns can stay blank.
                     </p>

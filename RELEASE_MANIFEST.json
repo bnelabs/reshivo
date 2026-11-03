@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T18:12:48.069352+00:00",
+  "prepared_utc": "2026-11-03T18:26:29.809662+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -51,8 +51,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 2757,
-      "sha256": "493f44a97f173c3aeffaa63b2e93c8777df26a037e993f39f7332263cadf645e"
+      "bytes": 3256,
+      "sha256": "55146c15a5f71f20311451d50ec5baf8bc4fa8986baed6dbaed19a3a9cf33d90"
     },
     {
       "path": "LICENSE",
@@ -1172,12 +1172,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 362,
-      "sha256": "c59c245849f580bba35a07fa2cbdf45a83d1c0f88c3bcf3304015f720b3c49ae"
+      "sha256": "3ad52cc5a4b62df050b33c6d8e3db8ca4c178e747b128d5d782be4b0f4959d7e"
     },
     {
       "path": "rematter/__init__.py",
       "bytes": 113,
-      "sha256": "6f6b4bb98b746da47d01e1588ccb927bd1d79c27b9ca848da7012c4e2fcd35e7"
+      "sha256": "b8d40ac7c57e72cc1dab82cad0cbc2a9e54b005b016e63c9baf42db91181f337"
     },
     {
       "path": "rematter/__main__.py",
@@ -1796,8 +1796,8 @@
     },
     {
       "path": "web/checks/readable-summary.test.mjs",
-      "bytes": 5724,
-      "sha256": "83856be84b6bae232bc87c7fe223c6b45bafe1f689ea634360b01a0bf75ee511"
+      "bytes": 6638,
+      "sha256": "3d44bd8a60454dd2fff64bcd3331f2f4fc1710ca8e024a6cfa10a9693c8d6cbb"
     },
     {
       "path": "web/checks/reference-composition.test.mjs",
@@ -1842,12 +1842,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "11e00f79a1002062af4ef884265d3fc9c42a6607089a63a9e36cae95a55a4c1d"
+      "sha256": "0f1ee746f38e88b72a3fd9f70a7117ed121224de6eca22cc82795837f95d1dbf"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "a44e2dc7aad4e60163b3f79f4d22c61d3d8f59500c98a7817d86f60e7064276b"
+      "sha256": "5915a27c791162eb068afd627d4aea2956db673aa1009e264e8ee804448a330f"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -1986,8 +1986,8 @@
     },
     {
       "path": "web/src/components/MixAdjustment.tsx",
-      "bytes": 25684,
-      "sha256": "549d0e1ed4a122650d7a1a81d3d2e6bae21dc60eaa0b46fbd7c98f22affaf961"
+      "bytes": 25769,
+      "sha256": "8e1dd0fe6a7901d2fb9f5d3b3ecd79a02788bf11b81f95e40fce6b0ebc791ca9"
     },
     {
       "path": "web/src/components/MyMixPlanner.tsx",
@@ -2011,8 +2011,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 57763,
-      "sha256": "7f879ae7055f7f9be3347a6265b980dfe859f9cd0f964a2c8629ee3f660af8e2"
+      "bytes": 58950,
+      "sha256": "0248c06b127f1b7148496fc975637d803fde45dc015075460caa4df6b4901195"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2201,8 +2201,8 @@
     },
     {
       "path": "web/src/readableSummary.ts",
-      "bytes": 16818,
-      "sha256": "0e4d06a593d1f623b9374e7a1ac9f070fb15880065776c1d90e6f8b2a363791f"
+      "bytes": 17536,
+      "sha256": "cefdab276b383f955517af34ae4482db1c7ad7b717d0a50ded9991383c2c7371"
     },
     {
       "path": "web/src/referenceComposition.ts",

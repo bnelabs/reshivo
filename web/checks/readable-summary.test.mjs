@@ -64,9 +64,22 @@ const longNodes = documentStub.body.children.slice(beforeLong).flatMap(flatten)
 assert.ok(!longNodes.some(node => node.tag === 'section' && node.classes.includes('keep-together')))
 console.log('Short mix reports stay together while long content can paginate')
 
-const { formatAdviceForReport } = await import('../src/readableSummary.ts')
+const { formatAdviceForReport, formatEarlierAdviceForReport } = await import('../src/readableSummary.ts')
 const guidance = formatAdviceForReport({ answer: 'Explore a textured surface.', next_steps: ['Check grip.'], questions: ['What surface?'], material_routes: [{ title: 'Surface layer', change: 'Add a layer.', why: 'Improve texture.', steps: ['Make a sample.'], tradeoffs: ['More work.'], check: 'Check wet grip.' }] })
 for (const text of ['Ideas and next steps', 'Explore a textured surface.', 'Surface layer', 'Make a sample.', 'Check wet grip.', 'What surface?']) assert.ok(guidance.includes(text), text)
 assert.ok(formatAdviceForReport({ reply: 'Start with a sample.', first_step: 'Identify the mix.' }).includes('Identify the mix.'))
 assert.equal(formatAdviceForReport(null), '')
 console.log('Reports include current guidance and next actions without inventing results')
+
+// Reading provenance and review state must survive into exports.
+w.records[0].conditions_confirmed = false
+const reviewPending = formatProjectSummary(w, true)
+assert.ok(reviewPending.includes('conditions need review'))
+assert.ok(reviewPending.includes('Method: Caliper.'))
+w.records[0].conditions_confirmed = true
+assert.ok(formatProjectSummary(w, true).includes('conditions reviewed'))
+const savedNote = { text: 'An earlier suggestion.', created_at: '2026-11-03T17:00:00Z', kind: 'model_proposal', provider: 'meta', model: 'example' }
+const saved = formatEarlierAdviceForReport(savedNote)
+assert.ok(saved.includes('Earlier saved guidance') && saved.includes('Readings and costs may have changed') && saved.includes('An earlier suggestion.'))
+assert.equal(formatEarlierAdviceForReport(null), '')
+console.log('Reports identify reading review state and label earlier saved guidance')

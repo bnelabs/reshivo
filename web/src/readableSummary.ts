@@ -1,5 +1,5 @@
 import { currentConfigurations } from './projectWorkspace.ts'
-import type { ProjectWorkspace } from './projectWorkspace.ts'
+import type { ProjectWorkspace, ProjectAdviceNote } from './projectWorkspace.ts'
 import { safeSetupName } from './savedGuidanceReview.ts'
 import { describeMixOutcome } from './mixCandidate.ts'
 import type { BalanceMixRequest, BalanceMixResult } from './types'
@@ -58,7 +58,7 @@ export function formatProjectSummary(workspace: ProjectWorkspace, includeIdeas: 
     const check = workspace.checks.find((item) => item.id === record.check_id)
     const name = setup ? (includeIdeas ? setup.name : safeSetupName(workspace, setup, 'Plan')) : 'Unknown plan'
     const excluded = workspace.record_exclusions?.[record.id]
-    lines.push(`- ${shown(name)} v${record.configuration_revision} / ${shown(check?.name)}: ${record.readings.map((reading) => shown(reading.value)).join(', ')} ${record.unit} (${record.data_kind === 'synthetic' ? 'example data' : 'entered readings'}${excluded ? '; excluded from comparisons' : ''}).`)
+    lines.push(`- ${shown(name)} v${record.configuration_revision} / ${shown(check?.name)}: ${record.readings.map((reading) => shown(reading.value)).join(', ')} ${record.unit} (${record.data_kind === 'synthetic' ? 'example data' : 'entered readings'}; ${record.conditions_confirmed ? 'conditions reviewed' : 'conditions need review'}${excluded ? '; excluded from comparisons' : ''}). Method: ${shown(record.method)}.`)
   }
   lines.push('', 'This summary includes saved plans and readings. Open the app for cost comparisons.', '')
   return lines.join('\n')
@@ -98,6 +98,14 @@ export function formatAdviceForReport(value: unknown): string {
   }
   if (questions.length) { lines.push('', 'Questions to answer:'); questions.forEach((question) => lines.push(`- ${question}`)) }
   return lines.join('\n') + '\n'
+}
+
+/** A saved note is historical: configuration, readings and costs may have changed. */
+export function formatEarlierAdviceForReport(note: ProjectAdviceNote | null | undefined): string {
+  if (!note || !note.text.trim()) return ''
+  const date = note.created_at.slice(0, 16).replace('T', ' ')
+  const source = note.kind === 'local_guidance' ? 'Local planning guidance' : `${note.provider} / ${note.model}`
+  return `\nEarlier saved guidance\nSaved ${date} UTC · ${source}\nReadings and costs may have changed since this guidance.\n${note.text.trim()}\n`
 }
 
 /** Explain only what follows from the entered composition values. */
@@ -195,7 +203,7 @@ export function printTextReport(text: string, sketch?: string | null): void {
   let section = doc.createElement('section')
   const firstHeading = doc.createElement('h2'); firstHeading.textContent = mixOnly ? 'Your inputs' : 'Your project'
   section.appendChild(firstHeading); main.appendChild(section)
-  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps'])
+  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps', 'Earlier saved guidance'])
   const lines = text.split('\n')
   const mixStart = mixOnly ? 0 : lines.indexOf('Reshivo — mix calculation')
   const mixLines = mixStart >= 0 ? lines.slice(mixStart).filter((line) => line.trim()) : []

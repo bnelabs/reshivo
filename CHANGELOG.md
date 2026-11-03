@@ -2,6 +2,15 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.3.1 — 2026-11-03
+
+### Fixed
+
+- Keep hidden or unavailable mix calculations out of exported reports until they are current and available again.
+- Keep the optional mix calculator closed in a new or reopened project unless the user opens it.
+- Bring the next action into view after a user continues from project intake on a small screen.
+- Show the recorded method and review state for each reading in reports. Include matching earlier saved guidance as historical when a project is reopened.
+
 ## 0.3.0 — 2026-11-03
 
 ### Changed

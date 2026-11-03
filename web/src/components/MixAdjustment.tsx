@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
 import { describeMixOutcome } from '../mixCandidate'
@@ -48,7 +48,13 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
 }) {
   const system = useUnitSystem()
   const [calculatorOpen, setCalculatorOpen] = useState(false)
-  useEffect(() => { if (calculatorOpenRequest > 0) setCalculatorOpen(true) }, [calculatorOpenRequest])
+  const lastOpenRequest = useRef(calculatorOpenRequest)
+  useEffect(() => {
+    if (calculatorOpenRequest !== lastOpenRequest.current) {
+      lastOpenRequest.current = calculatorOpenRequest
+      setCalculatorOpen(true)
+    }
+  }, [calculatorOpenRequest])
   const setups = currentSetups(w.configurations)
   const setupName = (item: (typeof setups)[number]) => showHistoricalIdeas ? item.name : safeSetupName(w, item, 'Plan')
   const [selectedSetup, setSelectedSetup] = useState(() => setups[0]?.id ?? '')
@@ -85,9 +91,9 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const massEntry = mixMassEntryState(draft, system)
   const showRange = (minimum: number | null, maximum: number | null) => minimum === maximum ? String(minimum) : `${minimum}–${maximum}`
 
-  useEffect(() => {
-    onSummary(result?.key === signature && !needsProjectReview && !needsReferenceReview ? formatMixSummary(result.request, result.value, system) : '')
-  }, [result, signature, needsProjectReview, needsReferenceReview, system, onSummary])
+  useLayoutEffect(() => {
+    onSummary(visibleResult ? formatMixSummary(visibleResult.request, visibleResult.value, system) : '')
+  }, [visibleResult, system, onSummary])
 
   useEffect(() => {
     if (result && calculatorOpen && resultCard.current) {
