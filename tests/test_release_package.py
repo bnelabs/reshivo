@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -54,6 +55,29 @@ class ReleasePackageTests(unittest.TestCase):
         self.assertEqual(files[name], b"Old demo (not included in this export) and [unexpected](missing.md)")
         with self.assertRaisesRegex(ValueError, "omitted-asset link changed"):
             release.annotate_omitted_links({name: b"[Different](another.mp4)"})
+
+    def test_historical_notice_preserves_frozen_digest_and_detects_changes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            original = b"# Original frozen protocol\n"
+            old_digest = b"def digest(path):\n    return hashlib.sha256(path.read_bytes()).hexdigest()\n"
+            files = {}
+            for protocol, script in release.HISTORICAL_PROTOCOLS.items():
+                files[protocol] = original
+                files[script] = old_digest
+            release.mark_historical_protocols(files)
+            for protocol, script in release.HISTORICAL_PROTOCOLS.items():
+                path = root / protocol
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(files[protocol])
+                scope = {"hashlib": hashlib, "ROOT": root, "PROTOCOL": protocol}
+                exec(files[script].decode(), scope)
+                self.assertEqual(scope["digest"](path), hashlib.sha256(original).hexdigest())
+                path.write_bytes(files[protocol] + b"changed")
+                self.assertNotEqual(scope["digest"](path), hashlib.sha256(original).hexdigest())
+                path.write_bytes(original)
+                with self.assertRaisesRegex(ValueError, "notice is missing or changed"):
+                    scope["digest"](path)
 
     def test_export_refuses_an_existing_destination_before_reading_git(self):
         with tempfile.TemporaryDirectory() as folder:
