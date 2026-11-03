@@ -5,6 +5,8 @@ import copy
 import json
 import math
 import re
+import socket
+import ssl
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -29,6 +31,24 @@ class ProviderCapabilityError(ValueError):
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
+
+
+def _connection_error_message(name, error):
+    # Only allowlisted types affect the message; exception text is never included.
+    reason = error.reason if isinstance(error, urllib.error.URLError) else error
+    if isinstance(reason, TimeoutError):
+        return f"{name} is taking too long. Your inputs are still here; try again."
+    if isinstance(reason, socket.gaierror):
+        detail = "The network could not find the server."
+    elif isinstance(reason, ssl.SSLError):
+        detail = "The secure connection failed."
+    elif isinstance(reason, ConnectionResetError):
+        detail = "The connection was reset."
+    elif isinstance(reason, ConnectionRefusedError):
+        detail = "The server refused the connection."
+    else:
+        detail = ""
+    return f"Could not reach {name}. " + (detail + " " if detail else "") + "Check the connection and try again."
 
 
 def _json(value):
@@ -462,14 +482,8 @@ class ProviderTransport:
             code = error.code
             error.close()
             raise ProviderTransportError(f"{name} request failed (HTTP {code}). Check the connection settings and try again.") from None
-        except TimeoutError:
-            raise ProviderTransportError(f"{name} is taking too long. Your inputs are still here; try again.") from None
-        except urllib.error.URLError as error:
-            if isinstance(error.reason, TimeoutError):
-                raise ProviderTransportError(f"{name} is taking too long. Your inputs are still here; try again.") from None
-            raise ProviderTransportError(f"Could not reach {name}. Check the connection and try again.") from None
-        except (OSError, ValueError):
-            raise ProviderTransportError(f"Could not reach {name}. Check the connection and try again.") from None
+        except (urllib.error.URLError, OSError, ValueError) as error:
+            raise ProviderTransportError(_connection_error_message(name, error)) from None
         if len(raw) > MAX_RESPONSE_BYTES:
             raise ProviderResponseError(f"{name} response exceeded the size limit.")
         if self.profile.api_key and self.profile.api_key.encode() in raw:

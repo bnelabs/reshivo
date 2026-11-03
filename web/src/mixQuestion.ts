@@ -38,3 +38,8 @@ export function mixQuestionFingerprint(workspace: ProjectWorkspace, openEpoch: n
 export function mixQuestionIsCurrent(prepared: string | null, current: string): boolean {
   return prepared === null || prepared === current
 }
+
+/** A recent calculation is offered only while its original calculation context remains current. */
+export function canReattachMixCalculation(calculation: PreparedMixCalculation | null, prepared: string | null, current: string): boolean {
+  return calculation !== null && prepared !== null && prepared === current
+}

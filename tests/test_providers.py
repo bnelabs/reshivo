@@ -2,9 +2,12 @@ import base64
 import io
 import json
 from pathlib import Path
+import socket
+import ssl
 import stat
 import tempfile
 import threading
+import traceback
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from unittest.mock import patch
@@ -366,6 +369,42 @@ class ProviderTests(unittest.TestCase):
             self.assertNotIn(KEY, str(caught.exception))
             self.assertEqual(len(transport.requests), 1)
             self.assertTrue(transport.requests[0].full_url.startswith("https://generativelanguage.googleapis.com/"))
+
+    def test_connection_categories_are_safe_for_open_and_read_failures(self):
+        failures = [
+            (TimeoutError(KEY), "taking too long"),
+            (socket.gaierror(-2, KEY), "could not find the server"),
+            (ssl.SSLError(KEY), "secure connection failed"),
+            (ConnectionResetError(KEY), "connection was reset"),
+            (ConnectionRefusedError(KEY), "server refused the connection"),
+            (OSError(KEY), "Could not reach"),
+            (ValueError(KEY), "Could not reach"),
+            (urllib.error.URLError("private " + KEY), "Could not reach"),
+        ]
+
+        class ReadFailure:
+            def __init__(self, failure): self.failure = failure
+            def open(self, request, timeout): return self
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, size): raise self.failure
+
+        for failure, text in failures:
+            for wrapped in (False, True):
+                if wrapped and isinstance(failure, urllib.error.URLError):
+                    continue
+                error = urllib.error.URLError(failure) if wrapped else failure
+                for phase in ("open", "read"):
+                    with self.subTest(category=text, wrapped=wrapped, phase=phase):
+                        client, transport = self.client("google", error)
+                        if phase == "read":
+                            client.transport.opener = ReadFailure(error)
+                        with self.assertRaises(MetaAPIError) as caught:
+                            client.generate("Check", SCHEMA, 1)
+                        self.assertIn(text, str(caught.exception))
+                        rendered = "".join(traceback.format_exception(caught.exception))
+                        self.assertNotIn(KEY, rendered)
+                        self.assertNotIn("private", rendered)
 
     def test_custom_local_service_can_run_without_a_key(self):
         client, transport = self.client("custom", reply(), api_key="")

@@ -19,7 +19,7 @@ import type { ProjectWorkspace, TrialConfiguration, TrialIdea, ProjectAdviceNote
 import type { AdvisorResult, AdvisorFollowupResult, AdvisorRoute, LocalPlanningResult } from '../types'
 import { useUnitSettings } from '../units'
 import { costRequest } from '../manufacturingCost'
-import { mixQuestionFingerprint, mixQuestionIsCurrent } from '../mixQuestion'
+import { canReattachMixCalculation, mixQuestionFingerprint, mixQuestionIsCurrent } from '../mixQuestion'
 import type { PreparedMixCalculation } from '../mixQuestion'
 import { briefFrom } from '../projectBrief'
 import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
@@ -66,6 +66,7 @@ export function ProjectWorkbench() {
   const [workspaceOpenEpoch, setWorkspaceOpenEpoch] = useState(0)
   const [mixQuestionContext, setMixQuestionContext] = useState<string | null>(null)
   const [preparedMix, setPreparedMix] = useState<PreparedMixCalculation | null>(null)
+  const [recentMixContext, setRecentMixContext] = useState<string | null>(null)
   const [previousQuestion, setPreviousQuestion] = useState('')
   const [lastAdviceUsedIdea, setLastAdviceUsedIdea] = useState(false)
   const [question, setQuestion] = useState('')
@@ -88,6 +89,7 @@ export function ProjectWorkbench() {
     adviceKind,
   })
   const currentMixQuestionContext = mixQuestionFingerprint(w, workspaceOpenEpoch)
+  const recentMixIsCurrent = canReattachMixCalculation(preparedMix, recentMixContext, currentMixQuestionContext)
   const planningPayload = {
     brief: briefFrom(w.project),
     question,
@@ -161,6 +163,8 @@ export function ProjectWorkbench() {
     if (question.trim()) setPreviousQuestion(question)
     setPreparedCheckName('')
     setMixQuestionContext(null)
+    setPreparedMix(null)
+    setRecentMixContext(null)
     request.current = null
     setBusy(false)
     setStartingGuidance(intake ?? null)
@@ -240,6 +244,8 @@ export function ProjectWorkbench() {
       setPreviousQuestion(question)
       setQuestion('')
       setMixQuestionContext(null)
+      setPreparedMix(null)
+      setRecentMixContext(null)
       setPreparedCheckName('')
       setStartingGuidance(null)
       setAdvice(null)
@@ -529,6 +535,8 @@ export function ProjectWorkbench() {
                     setPreparedCheckName('')
                     setPreviousQuestion(question)
                     setMixQuestionContext(null)
+                    setPreparedMix(null)
+                    setRecentMixContext(null)
                     setAdvice(null)
                     setStartingGuidance(null)
                     setAdviceKind('user_reported')
@@ -770,13 +778,19 @@ export function ProjectWorkbench() {
                     <textarea
                       value={question}
                       maxLength={3000}
-                      onChange={(e) => { setQuestion(e.target.value); if (!e.target.value.trim()) setMixQuestionContext(null) }}
+                      onChange={(e) => setQuestion(e.target.value)}
                       placeholder="For example: How can I make a comfortable mat from these pieces? What could I change if it does not hold together?"
                     />
                   </label>
-                  {mixQuestionContext && <div className="pw-notice">
-                    <p>This question includes a mix calculation. If its project, setup or inputs change, recalculate before sending it.</p>
-                    <button type="button" onClick={() => { setPreviousQuestion(question); setQuestion(''); setMixQuestionContext(null) }}>Clear calculation question</button>
+                  {preparedMix && (mixQuestionContext || recentMixIsCurrent) && <div className="pw-notice">
+                    <strong>{mixQuestionContext ? 'Mix calculation attached' : 'Recent mix calculation available'}</strong>
+                    <p>Setup: {(() => { const setup = w.configurations.find((item) => item.id === preparedMix.configuration_id && item.revision === preparedMix.configuration_revision); return setup ? (showHistoricalIdeas ? setup.name : safeSetupName(w, setup, 'Trial setup')) : 'Unavailable setup' })()} · version {preparedMix.configuration_revision}. Component: {preparedMix.inputs.component}.</p>
+                    <p>Portion: {preparedMix.inputs.input_mass_kg} kg, {preparedMix.inputs.input_min_percent}–{preparedMix.inputs.input_max_percent}% component. Added stock: {preparedMix.inputs.addition_name}, {preparedMix.inputs.addition_percent}% component. Trial range: {preparedMix.inputs.target_min_percent}–{preparedMix.inputs.target_max_percent}%.</p>
+                    {preparedMix.source && <p>Recorded whole-recipe reference: {(() => { const source = w.configurations.find((item) => item.id === preparedMix.source?.configuration_id && item.revision === preparedMix.source?.configuration_revision); const ingredient = source?.materials.find((item) => item.id === preparedMix.source?.component_id); return source ? `${showHistoricalIdeas ? source.name : safeSetupName(w, source, 'Recorded setup')} · version ${source.revision} · ${ingredient?.name ?? 'Unavailable ingredient'}` : 'Unavailable setup' })()}.</p>}
+                    {mixQuestionContext ? <>
+                      <p>{mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext) ? 'This calculation will be sent with your question and recalculated from these inputs.' : 'The project, setup or mix inputs changed. Recalculate before sending this calculation.'}</p>
+                      <button type="button" onClick={() => { setPreviousQuestion(question); setQuestion(''); setMixQuestionContext(null) }}>Remove calculation and clear question</button>
+                    </> : <button type="button" onClick={() => setMixQuestionContext(recentMixContext)}>Attach this calculation to my question</button>}
                   </div>}
                   {showHistoricalIdeas && previousQuestion && <details>
                     <summary>Previous question kept for reference</summary>
@@ -970,7 +984,7 @@ export function ProjectWorkbench() {
                   setW((current) => updateDraft(current))
                   setNotice('Unsaved changes. Save a project file to keep this work.')
                 }}
-                onDiscuss={(prompt, calculation) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setPreparedMix(calculation); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setPage('options') }}
+                onDiscuss={(prompt, calculation) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setPreparedMix(calculation); setRecentMixContext(currentMixQuestionContext); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setPage('options') }}
               />
             </div>
             <div hidden={page !== 'costs'}>

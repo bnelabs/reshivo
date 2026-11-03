@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mixQuestionFingerprint, mixQuestionIsCurrent, prepareMixCalculation } from '../src/mixQuestion.ts'
+import { canReattachMixCalculation, mixQuestionFingerprint, mixQuestionIsCurrent, prepareMixCalculation } from '../src/mixQuestion.ts'
 import { newProjectWorkspace, parseProjectWorkspace, serializeProjectWorkspace } from '../src/projectWorkspace.ts'
 import { mixAdjustmentRequest, savedMixAdjustment, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../src/mixAdjustment.ts'
 
@@ -26,6 +26,14 @@ for (const [field, value] of Object.entries({ inputMass: '1', inputMin: '25', in
   workspace = updateSavedMixAdjustment(workspace, workspace.case_id, destination, component, workspace.project, field, value)
 const inputs = mixAdjustmentRequest(component.name, savedMixAdjustment(workspace, destination, component))
 const binding = prepareMixCalculation(workspace, destination, component, inputs)
+const recent = mixQuestionFingerprint(workspace, 1)
+assert.equal(canReattachMixCalculation(binding, recent, recent), true, 'a detached current calculation may be explicitly reattached')
+assert.equal(canReattachMixCalculation(null, recent, recent), false, 'no calculation means nothing to attach')
+assert.equal(canReattachMixCalculation(binding, null, recent), false, 'an unbound calculation cannot be attached')
+assert.equal(canReattachMixCalculation(binding, recent, mixQuestionFingerprint({ ...workspace, checks: [{ id: 'new check' }], records: [{ id: 'new reading' }] }, 1)), true, 'independent checks do not invalidate mix arithmetic')
+assert.equal(canReattachMixCalculation(binding, recent, mixQuestionFingerprint(workspace, 2)), false, 'opening a project requires a fresh calculation')
+assert.equal(canReattachMixCalculation(binding, recent, mixQuestionFingerprint({ ...workspace, case_id: 'new case' }, 1)), false, 'a calculation cannot follow another case')
+assert.equal(canReattachMixCalculation(binding, recent, mixQuestionFingerprint({ ...workspace, configurations: [...workspace.configurations, { ...destination, revision: 2 }] }, 1)), false, 'a changed setup invalidates the attachment')
 assert.equal(binding.case_id, workspace.case_id)
 assert.equal(binding.configuration_id, 'destination')
 assert.deepEqual(binding.source, { configuration_id: 'source', configuration_revision: 1, component_id: 'paper', latest_revision_at_review: 2, basis: 'whole_recipe' })
