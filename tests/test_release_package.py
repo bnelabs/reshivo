@@ -18,12 +18,14 @@ class ReleasePackageTests(unittest.TestCase):
                      "../rematter/a.py", "/tmp/a.py", "rematter/__pycache__/a.pyc",
                      "data/research/density/access_attempts/cecon-mmc1-challenge.html",
                      "docs/demo/old-review.mp4", "examples/old-recording.mp4",
-                     "docs/SUBMISSION_FORM.md", "docs/brand/gather.svg", "docs/release-qa-old.json"):
+                     "docs/SUBMISSION_FORM.md", "docs/brand/gather.svg", "docs/release-qa-old.json",
+                     "docs/BUILD_PLAN.md", "docs/DEMO_STORY_V2_20261103.md"):
             with self.subTest(name=name):
                 self.assertFalse(release.selected(name))
         for name in ("rematter/balance.py", "web/src/App.tsx", ".env.example",
                      "data/research/density/measurements.json", "docs/API.md",
-                     "docs/ORGANIZER_EVALUATION_RESULTS_20261103.md", "web/public/reshivo-mark.svg"):
+                     "docs/ORGANIZER_EVALUATION_RESULTS_20261103.md", "web/public/reshivo-mark.svg",
+                     "deploy/reshivo.service", "deploy/nginx/reshivo.conf.example"):
             self.assertTrue(release.selected(name))
 
     def test_exact_secret_check_withholds_value_in_error(self):
