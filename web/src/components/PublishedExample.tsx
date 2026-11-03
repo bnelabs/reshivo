@@ -93,10 +93,7 @@ export function PublishedExample({
     <>
       <div className="mix-example-banner">
         <strong>Worked example · not my waste</strong>
-        <p>
-          These are published polyethylene specimens. Their density readings stay in this example
-          and are never copied into My mix.
-        </p>
+        <p>Based on density readings from published polyethylene specimens.</p>
       </div>
       <div className="product-grid">
         <form
@@ -197,8 +194,7 @@ export function PublishedExample({
                 </button>
               </div>
               <p className="product-result-context">
-                {quantity(result.volume_cm3, 2)} cm³ using {result.condition.label}. Not my
-                material.
+                {quantity(result.volume_cm3, 2)} cm³ using {result.condition.label}.
               </p>
               <div className="product-metrics">
                 <div>
@@ -220,10 +216,6 @@ export function PublishedExample({
                   {result.source_scenarios_in_target} of {result.source_scenario_count}
                 </strong>{' '}
                 source-based mass scenarios fall inside the example target.
-              </p>
-              <p className="product-scope-note">
-                This is a simulation of published specimens, not a tested counterweight or a
-                prediction of future batches.
               </p>
               <div className="product-reading-table">
                 <table>
@@ -290,9 +282,6 @@ export function PublishedExample({
                 {selected?.id === 'CECON21-PCRPE100'
                   ? 'At about 1,037.06 cm³, the five published readings give a simulated mass range of 0.998–1.004 kg. Calculate to see the individual scenarios.'
                   : 'Calculate to scale the five published density readings from this selected condition by the example volume.'}
-              </p>
-              <p className="helper">
-                This example does not describe your metal dust, binder or finished product.
               </p>
             </div>
           )}

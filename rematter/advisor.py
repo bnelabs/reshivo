@@ -10,6 +10,7 @@ from .manufacturing_cost import calculate_manufacturing_cost, compare_manufactur
 from .meta import MetaClient, MetaConfigurationError, MetaValidationError
 from .products import ProductInputError
 from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_guidance
+from .walking_guidance import has_unsafe_walking_guidance
 from .providers import ProviderConfigurationError, load_provider_profile
 from .trial_records import assess_trial_records
 
@@ -121,6 +122,8 @@ SYSTEM_PROMPT = """You are ReMatter's practical materials and product-engineerin
 Help a user turn a variable recycled input into the product and use-case results they want.
 Write with confidence and directness. Skip generic disclaimer paragraphs and repeated cautions;
 use a short label or state a specific missing input only when it changes the decision.
+Keep an unmeasured effect conditional: a proposed change may help, but does not automatically stop variation or ensure a result.
+Apply this to intermediate effects too: do not assert that a proposed gap, layer, mix or feature improves drainage, grip, cleaning or sound performance without matching measurements. Describe what to compare and what the comparison can answer.
 Do not add boilerplate such as "does not prove", "does not show", "not verified" or "not tested".
 Instead, identify the next specific check or missing detail without restating what the app labels already say.
 Return useful candidate routes, including what to change, how to try it, why it may help, its tradeoffs and what to check.
@@ -134,6 +137,7 @@ For any weighing-based adjustment, require scale capability and measurement unce
 For acoustic products, distinguish sound blocking from absorption and ask for the frequency range/installation when needed. Do not use density or tensile properties to predict acoustic performance.
 Separate observations from performance tests. Drainage, fit and visible condition can guide design; short outdoor exposure does not establish weather durability. For walking surfaces, do not propose walking or treading on an unknown wet prototype, hand feel or subjective slip feel as a slip-resistance check. The supplied floor-slip reference describes instrumented pendulum assessment by a trained operator; identify a suitable evaluation still needed for the product and installation without inventing its result or acceptance threshold. Useful design and drainage planning can continue while that test is unavailable.
 For a sound product, ask whether the job is reducing echo by absorption or blocking transmission. Say which frequencies or bands and installed configuration need to be specified. Name a matching measured property, such as frequency-dependent sound absorption coefficient for absorption or transmission loss for blocking, and the corresponding measurement still needed for that exact installation. Do not claim a result, a numeric target, a test standard or access to a laboratory that the user has not provided.
+If the user already identifies impact noise, address that path and the stated installation first. Do not describe a particular unmeasured sheet as primarily absorbing or blocking sound, or switch the goal to room echo, without a matching measurement or the user's choice. Ask about access to the source and installation before proposing changes that require it.
 A substitute comparison answers only questions for which it preserves the relevant features. A flat drawing or paper template can explore footprint and clearance; drawing a channel does not create a drainage channel, and pouring water on the drawing cannot compare the proposed product's drainage. Do not replace an unavailable performance test with a physically unrelated activity. State what a planning exercise actually answers and what still needs the real geometry, material and test. Any extra mock-up materials or tools are proposed needs, not confirmed inventory.
 Unknown cable-plastic residue may contain incompatible polymers or PVC. Do not give a heat-processing recipe for unidentified cable residue or an uncharacterized metal-dust/polymer mix. Offer a cold contained or reversible architecture while requesting the critical material identity. Do not suggest open handling, grinding, sieving or heating unknown fine metal dust as a home activity. Preparation is conditional on identified material and suitable facilities.
 For unidentified loose dust at home, never tell the user to open a container, fill it, pour, transfer, add, remove, pack or otherwise handle the loose material. Do not use ambiguous phrases such as 'add or remove fill' or 'adjust the fill' for a mass adjustment. If suitable existing presealed units are available, offer only exchanging whole units without opening them and weighing the complete assembly; if availability is unknown, say 'if available' rather than assuming it. Otherwise offer a useful enclosure, cartridge-interface or weighing-interface design decision that does not handle the dust. Ask for the metal and plastic identities and a suitable facility before any loose-material work; a generic mask or working quickly does not supply those conditions.
@@ -606,6 +610,61 @@ def _quarantine_assured_summary(value):
     return "\n\n".join(kept).strip(), quarantined
 
 
+_WALK_SURFACE = re.compile(r"\b(?:mat|floor|flooring|surface|tile|walkway|pavement|deck|carpet|footwear|shoe|sole|foot|feet|slip|traction|grip)\w*\b", re.I)
+_WALK_GRIP = re.compile(r"\b(?:wet|water|damp|slip|slippery|traction|grip|friction|slick)\w*\b", re.I)
+
+
+def _walking_surface_context(case):
+    """Recognize a bounded English walking-surface case; this is not a safety classifier."""
+    brief = case.get("brief", {})
+    text = " ".join(value for value in brief.values() if isinstance(value, str))
+    question = case.get("question")
+    if isinstance(question, str):
+        text += " " + question
+    return bool(_WALK_SURFACE.search(text))
+
+
+def _walking_guidance_in(value):
+    if isinstance(value, str):
+        return has_unsafe_walking_guidance(value)
+    if isinstance(value, dict):
+        return any(_walking_guidance_in(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_walking_guidance_in(item) for item in value)
+    return False
+
+
+def _explicit_wet_walking(value):
+    def mentions_wet_or_grip(item):
+        if isinstance(item, str):
+            return bool(_WALK_GRIP.search(item))
+        if isinstance(item, dict):
+            return any(mentions_wet_or_grip(child) for child in item.values())
+        if isinstance(item, (list, tuple)):
+            return any(mentions_wet_or_grip(child) for child in item)
+        return False
+    # The condition and the action may be in separate output fields or steps.
+    return mentions_wet_or_grip(value) and _walking_guidance_in(value)
+
+
+def _guard_prior_walking_guidance(case):
+    """Do not silently replay recognized walking tests from saved model content."""
+    history = [row.get("content", "") for row in case.get("history", []) if row.get("role") == "assistant"]
+    context = case.get("project_context", {})
+    configs = context.get("configurations", []) if isinstance(context, dict) else []
+    copied_text = [{"name": item.get("name", ""), "notes": item.get("notes", "")}
+                   for item in configs if isinstance(item, dict)]
+    prior = [history, case.get("trial_ideas", {}), case.get("route", {}), copied_text]
+    if (_walking_surface_context(case) and _walking_guidance_in(prior)) or _explicit_wet_walking(prior):
+        raise ProductInputError("An earlier idea suggests standing or walking on the product. Remove it from this request and ask for another way to check it.")
+
+
+def _guard_generated_walking_guidance(case, data):
+    """Hold recognized person-on-surface test instructions before display or storage."""
+    if (_walking_surface_context(case) and _walking_guidance_in(data)) or _explicit_wet_walking(data):
+        raise MetaValidationError("That suggestion involved standing or walking on the product. Ask for another way to check it.")
+
+
 _DUST = re.compile(r"\b(?:dust|powder|fines|fine particulate(?:s)?)\b", re.I)
 _UNKNOWN_DUST = re.compile(r"(?:\b(?:unknown|unidentified|uncharacteri[sz]ed|unspecified)\b.{0,65}\b(?:dust|powder|fines|particulates?)\b|\b(?:dust|powder|fines|particulates?)\b.{0,50}\b(?:identity|composition|type|metal)\b.{0,25}\b(?:unknown|unidentified|unspecified|unconfirmed|not identified)\b|\b(?:dust|powder|fines|particulates?)\b\s*(?:is|are|remains?)?\s*(?:unknown|unidentified|uncharacteri[sz]ed))", re.I)
 _UNKNOWN_METAL = re.compile(r"\bmetal\b.{0,35}\b(?:identity|type|composition)\b.{0,25}\b(?:unknown|unidentified|unspecified|unconfirmed|not identified)\b", re.I)
@@ -698,6 +757,7 @@ def help_with_case(request, client=None, root=ROOT):
     case = validate_request(request)
     if needs_local_metal_planning(case):
         return local_metal_planning_guidance(case)
+    _guard_prior_walking_guidance(case)
     case = _add_decision_assessment(case)
     prompt = json.dumps({
         **_model_case(case),
@@ -713,6 +773,7 @@ def help_with_case(request, client=None, root=ROOT):
     expected = {"answer", "material_routes", "engineering_routes", "next_steps", "questions", "source_ids"}
     if not isinstance(data, dict) or set(data) != expected:
         raise MetaValidationError("Meta's help response has an unexpected format")
+    _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     sources = _sources(data["source_ids"])
     answer, quarantined = _quarantine_assured_summary(_text(data["answer"], "answer", 3000, error=MetaValidationError))
@@ -739,6 +800,7 @@ def follow_up_with_case(request, client=None, root=ROOT):
     case = validate_request(request)
     if needs_local_metal_planning(case):
         return local_metal_planning_guidance(case)
+    _guard_prior_walking_guidance(case)
     case = _add_decision_assessment(case)
     prompt = json.dumps({
         **_model_case(case),
@@ -753,6 +815,7 @@ def follow_up_with_case(request, client=None, root=ROOT):
     data = generated.data
     if not isinstance(data, dict) or set(data) != {"answer", "next_steps", "questions", "source_ids"}:
         raise MetaValidationError("Meta's follow-up response has an unexpected format")
+    _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     answer, quarantined = _quarantine_assured_summary(_text(data["answer"], "answer", 3000, error=MetaValidationError))
     if not answer:
@@ -788,6 +851,7 @@ def plan_trial(request, client=None, root=ROOT):
     case = validate_trial_request(request)
     if needs_local_metal_planning(case):
         return local_metal_planning_guidance(case)
+    _guard_prior_walking_guidance(case)
     prompt = json.dumps({
         **case,
         "references": list(SOURCE_REGISTRY.values()),
@@ -801,6 +865,7 @@ def plan_trial(request, client=None, root=ROOT):
     data = generated.data
     if not isinstance(data, dict) or set(data) != TRIAL_FIELDS:
         raise MetaValidationError("Meta's trial response has an unexpected format")
+    _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     checks = _trial_rows(data["checks"], "checks", 1, 6,
                          {"property": 120, "target": 3000, "method": 1500, "if_outside": 1500})

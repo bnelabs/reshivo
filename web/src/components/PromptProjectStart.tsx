@@ -42,6 +42,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [summaryEdited, setSummaryEdited] = useState(false)
+  const localGuidance = result?.origin === 'local' || result?.guidance_origin === 'local'
   const activeRequest = useRef<AbortController | null>(null)
   const ideaInput = useRef<HTMLTextAreaElement | null>(null)
   const hasDraft = result !== null || PROJECT_INTAKE_FIELDS.some((field) => draft[field] !== null)
@@ -154,7 +155,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
             <p className="prompt-project-hint">Review the summary before updating or using the project.</p>
           </form>
           {result ? <div className="prompt-project-first-step"><h2>A useful first step</h2><p>{result.first_step}</p></div> : null}
-          {history.length ? <details className="prompt-project-history"><summary>Earlier discussion</summary>{result?.origin === 'local' && <p>Earlier AI replies are hidden for this planning case.</p>}{history.filter((entry) => result?.origin !== 'local' || entry.role === 'user').map((entry, index) => <div key={index}><strong>{entry.role === 'user' ? 'You' : 'Planning reply'}</strong><p>{entry.content}</p></div>)}</details> : null}
+          {history.length ? <details className="prompt-project-history"><summary>Earlier discussion</summary>{localGuidance && <p>Earlier AI replies are hidden for this planning case.</p>}{history.filter((entry) => !localGuidance || entry.role === 'user').map((entry, index) => <div key={index}><strong>{entry.role === 'user' ? 'You' : 'Planning reply'}</strong><p>{entry.content}</p></div>)}</details> : null}
         </div>
         <aside className="prompt-project-summary" aria-labelledby={`${id}-summary`}>
           <h2 id={`${id}-summary`}>Your project</h2><p>Review and edit before using it.</p>
@@ -171,7 +172,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
       {error ? <p role="alert" className="prompt-project-error">{error}</p> : null}
       {notice ? <p>{notice}</p> : null}
       {providerStatus?.configured === false ? <p>Some planning requests need an AI provider. <button type="button" className="prompt-project-text-button" onClick={onConfigureProvider}>Choose a provider</button></p> : null}
-      {result ? <p className="prompt-project-generation">{result.provider==='local'?'Local planning guide · no AI call':result.live?`Generated · ${result.provider} · ${result.model}`:`Saved or offline reply · ${result.provider} · ${result.model}`}</p> : null}
+      {result ? <p className="prompt-project-generation">{result.origin === 'local' ? 'Local planning guide · no AI call' : result.guidance_origin === 'local' ? `Local next step · project draft by ${result.provider} / ${result.model}` : result.live ? `Generated · ${result.provider} · ${result.model}` : `Saved or offline reply · ${result.provider} · ${result.model}`}</p> : null}
     </div>
   </section>
 }

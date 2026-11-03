@@ -566,10 +566,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                     />
                     <span>
                       Read photos
-                      <small>
-                        Requires image input. A photo does not establish a material’s physical
-                        properties.
-                      </small>
+                      <small>Requires a model that accepts images.</small>
                     </span>
                   </label>
                   {selected.capabilities.reasoning !== 'unsupported' ? (

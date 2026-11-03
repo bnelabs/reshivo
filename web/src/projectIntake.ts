@@ -29,6 +29,8 @@ export type ProjectIntakeResult = {
   model: string
   live: boolean
   origin?: 'local'
+  guidance_origin?: 'local'
+  guidance_reason?: 'floor_slip'
   usage?: Record<string, number>
   request_id?: string | null
   elapsed_ms?: number
@@ -83,7 +85,14 @@ export async function requestProjectIntake(request: ProjectIntakeRequest, signal
     || !Array.isArray(result.questions) || result.questions.length > 3
     || result.questions.some((question) => typeof question !== 'string' || !question.trim() || question.length > 350)
     || result.review_required !== true || result.interpretation_verified !== false
-    || result.ready_for_calculation !== false || result.physical_product_tested !== false || result.performance_verified !== false) {
+    || result.ready_for_calculation !== false || result.physical_product_tested !== false || result.performance_verified !== false
+    || typeof result.provider !== 'string' || !result.provider.trim() || result.provider.length > 160
+    || typeof result.model !== 'string' || !result.model.trim() || result.model.length > 200
+    || typeof result.live !== 'boolean'
+    || (result.origin !== undefined && result.origin !== 'local')
+    || (result.origin === 'local' && (result.provider !== 'local' || result.live || result.guidance_origin !== undefined))
+    || (result.guidance_origin !== undefined && (result.guidance_origin !== 'local' || result.guidance_reason !== 'floor_slip' || result.origin !== undefined || result.provider === 'local'))
+    || (result.guidance_origin === undefined && result.guidance_reason !== undefined)) {
     throw new Error('The provider returned an unusable project draft. Your idea and current details are still here; try again.')
   }
   return result

@@ -181,6 +181,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             routes = {
                 "/api/project/intake": self.server.application.project_intake,
                 "/api/project/planning-mode": self.server.application.project_planning_mode,
+                "/api/project/review-saved-guidance": self.server.application.review_saved_guidance,
                 "/api/project/trial-records": self.server.application.trial_records,
                 "/api/project/compare-decisions": self.server.application.compare_project_decisions,
                 "/api/project/manufacturing-cost": self.server.application.manufacturing_cost,
@@ -212,12 +213,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)
-            if path in {"/api/advisor/inspect-image", "/api/project/planning-mode"}:
+            if path in {"/api/advisor/inspect-image", "/api/project/planning-mode", "/api/project/review-saved-guidance"}:
                 acquired = self.server.work_slots.acquire(blocking=False)
                 if not acquired:
                     self.close_connection = True
                     raise ServiceError("service_busy", "The workbench is busy; try again", 429)
-            max_bytes = MAX_PLANNING_BODY_BYTES if path == "/api/project/planning-mode" else MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else (
+            max_bytes = MAX_PLANNING_BODY_BYTES if path in {"/api/project/planning-mode", "/api/project/review-saved-guidance"} else MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else (
                 MAX_PROJECT_BODY_BYTES if path in {"/api/project/trial-records", "/api/project/compare-costs", "/api/project/compare-decisions", "/api/advisor/help", "/api/advisor/follow-up"} else MAX_BODY_BYTES)
             body = self._body(max_bytes)
             if not acquired:

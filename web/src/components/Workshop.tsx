@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
+import { freshLegacyAdvice, legacyGuidanceTexts, reviewLegacyGuidance } from '../legacyGuidanceReview'
 import { BalanceMix } from './BalanceMix'
 import { TrialPlan } from './TrialPlan'
 import { CaseDetails } from './CaseDetails'
@@ -287,6 +288,9 @@ export function Workshop() {
     error: string
   } | null>(null)
   const [planningAttempt, setPlanningAttempt] = useState(0)
+  const [savedReview, setSavedReview] = useState<'ready' | 'checking' | 'flagged' | 'failed'>('ready')
+  const savedReviewRequest = useRef<AbortController | null>(null)
+  const savedReviewTexts = useRef<string[]>([])
   const [history, setHistory] = useState<AdvisorMessage[]>([])
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
@@ -335,7 +339,7 @@ export function Workshop() {
   }
   const planningSignature = JSON.stringify(planningRequest)
   const planningCurrent = planningState?.signature === planningSignature
-  const planningOnly = planningCurrent ? planningState.planningOnly : null
+  const planningOnly = savedReview === 'ready' && planningCurrent ? planningState.planningOnly : null
   const canRequestAdvice = planningOnly !== null && (planningOnly || Boolean(status?.configured))
 
   useEffect(() => {
@@ -377,7 +381,7 @@ export function Workshop() {
       })
     return () => controller.abort()
   }, [statusAttempt])
-  useEffect(() => () => request.current?.abort(), [])
+  useEffect(() => () => { request.current?.abort(); savedReviewRequest.current?.abort() }, [])
   useEffect(() => {
     if (!editingCase && caseArea.current) caseArea.current.scrollTop = 0
   }, [editingCase])
@@ -399,6 +403,9 @@ export function Workshop() {
   }, [plan, trial, followupResult, localGuidance])
 
   function invalidate() {
+    savedReviewRequest.current?.abort()
+    savedReviewTexts.current = []
+    setSavedReview('ready')
     setLocalGuidance(null)
     setLocalTriggerHistory([])
     setMixMode(false)
@@ -901,6 +908,36 @@ export function Workshop() {
       : plan.engineering_routes
     : []
   const chosen = selectedRoute
+  function reviewSavedAdvice(texts: string[]) {
+    savedReviewRequest.current?.abort()
+    savedReviewTexts.current = texts
+    if (!texts.length) { setSavedReview('ready'); return }
+    const controller = new AbortController()
+    savedReviewRequest.current = controller
+    setSavedReview('checking')
+    void reviewLegacyGuidance(texts, (items) =>
+      api<{ needs_review: boolean }>('/api/project/review-saved-guidance', { texts: items }, controller.signal),
+    ).then((result) => { if (!controller.signal.aborted) setSavedReview(result) })
+  }
+  function startFreshAdvice() {
+    savedReviewRequest.current?.abort()
+    savedReviewTexts.current = []
+    const fresh = freshLegacyAdvice(history)
+    setPlan(fresh.plan)
+    setFollowupResult(fresh.followup)
+    setSelectedRoute(fresh.selected_route)
+    setTrial(fresh.trial)
+    setHistory(fresh.history)
+    setRestoredPlan(false)
+    setRestoredTrial(false)
+    setRestoredFollowup(false)
+    setHasTrialFollowup(false)
+    setComparisonAdviceStale(false)
+    comparisonAdviceShown.current = false
+    setSavedReview('ready')
+    setSection('material')
+    setNotice('Your case and material drafts are ready for fresh advice.')
+  }
   function openWorkspace(saved: SavedWorkspace) {
     const hasCurrentWork =
       Object.values(brief).some((value) => value.trim()) || Boolean(plan || trial)
@@ -912,6 +949,7 @@ export function Workshop() {
     )
       return false
     request.current?.abort()
+    reviewSavedAdvice(legacyGuidanceTexts(saved))
     setLocalGuidance(null)
     setLocalTriggerHistory([])
     comparisonRequest.current = null
@@ -1052,6 +1090,15 @@ export function Workshop() {
         })}
         onOpen={openWorkspace}
       />
+      {savedReview !== 'ready' && (
+        <div className="workshop-notice" role="status">
+          {savedReview === 'checking' ? 'Checking saved advice…' : savedReview === 'failed'
+            ? 'Could not check the saved advice. Your saved file is unchanged.'
+            : 'Some saved advice needs review. Your saved file is unchanged.'}
+          {savedReview === 'failed' && <button type="button" onClick={() => reviewSavedAdvice(savedReviewTexts.current)}>Retry</button>}
+          {savedReview !== 'checking' && <button type="button" onClick={startFreshAdvice}>Start fresh advice</button>}
+        </div>
+      )}
       <ul className="workshop-progress" aria-label="Your case at a glance">
         {caseStatus.map((item, index) => (
           <li key={item.title} className={item.ready ? 'is-ready' : ''}>
@@ -1177,11 +1224,6 @@ export function Workshop() {
                 <summary>
                   Equipment, contamination and other constraints <small>Optional</small>
                 </summary>
-                {mayClearCaseData && (
-                  <p className="workshop-edit-warning">
-                    Changing contamination or process can clear recorded measurements and plans.
-                  </p>
-                )}
                 {optionalFields.map((field) => (
                   <label key={field.key}>
                     {field.label}
@@ -1282,8 +1324,7 @@ export function Workshop() {
           )}
           {planningOnly === false && (restoredPlan || restoredTrial) && (
             <p className="workshop-notice" role="status">
-              Saved Meta content · these proposals were reopened from a workspace file. No new model
-              request has run to restore them.
+              Saved Meta proposals reopened from your workspace.
             </p>
           )}
           {error && (
@@ -1759,9 +1800,7 @@ export function Workshop() {
                 <small>Published PE specimens · separate from your case</small>
               </summary>
               <p className="workshop-source-scope">
-                See how changing recycled content affected a measured property in one published
-                study. Its materials, process and specimens belong to that study. No readings are
-                copied into your case or used to qualify your product.
+                See how recycled content affected a measured property in a published study.
               </p>
               {sourceOpen && (
                 <div hidden={planningOnly !== false}>
@@ -1782,8 +1821,7 @@ export function Workshop() {
               )}
               {sourceOpen && planningOnly !== false && (
                 <p>
-                  Published blend calculations are separate from this case. Continue with the local
-                  planning guide before considering material adjustments.
+                  The published blend example is unavailable in local planning mode.
                 </p>
               )}
             </details>

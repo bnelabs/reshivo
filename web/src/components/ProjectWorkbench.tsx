@@ -16,10 +16,12 @@ import {
   PROJECT_WORKSPACE_MAX_BYTES,
 } from '../projectWorkspace'
 import type { ProjectWorkspace, TrialConfiguration, TrialIdea, ProjectAdviceNote } from '../projectWorkspace'
-import type { AdvisorBrief, AdvisorResult, AdvisorFollowupResult, AdvisorRoute, LocalPlanningResult } from '../types'
+import type { AdvisorResult, AdvisorFollowupResult, AdvisorRoute, LocalPlanningResult } from '../types'
 import { useUnitSettings } from '../units'
 import { costRequest } from '../manufacturingCost'
 import { mixQuestionFingerprint, mixQuestionIsCurrent } from '../mixQuestion'
+import { briefFrom } from '../projectBrief'
+import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
@@ -31,18 +33,6 @@ const FIELD_LABEL: Record<ProjectIntakeField, string> = {
   variation: 'What changes in your input?',
   process: 'What tools and processes can you use?',
   constraints: 'Other limits or unknowns',
-}
-function briefFrom(d: ProjectIntakeDraft): AdvisorBrief {
-  return {
-    product: d.product?.value ?? 'Product not specified',
-    input: d.input?.value ?? 'Materials not specified',
-    use_case: d.use?.value ?? 'Use not specified',
-    targets: d.priorities?.value ?? 'Requirements not yet set; help choose suitable checks',
-    variation: d.variation?.value ?? '',
-    process: d.process?.value ?? '',
-    contamination: 'Not separately characterized. Do not infer contaminant identity or amount.',
-    available_changes: d.constraints?.value ?? '',
-  }
 }
 export function ProjectWorkbench() {
   const { system, setSystem } = useUnitSettings()
@@ -80,6 +70,7 @@ export function ProjectWorkbench() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [planningMode, setPlanningMode] = useState<{ key: string; planningOnly: boolean; failed: boolean } | null>(null)
+  const [savedGuidanceReview, setSavedGuidanceReview] = useState<{ key: string; needsReview: boolean; failed: boolean } | null>(null)
   const file = useRef<HTMLInputElement>(null)
   const request = useRef<AbortController | null>(null)
   const currentProject = JSON.stringify(w.project)
@@ -106,7 +97,26 @@ export function ProjectWorkbench() {
   }
   const planningKey = JSON.stringify(planningPayload)
   const modeReady = planningMode?.key === planningKey && !planningMode.failed
-  const showHistoricalIdeas = Boolean(modeReady && !planningMode?.planningOnly)
+  const savedTexts = savedGuidanceTexts(w)
+  const savedReviewKey = JSON.stringify({ texts: savedTexts })
+  const savedReviewReady = savedTexts.length === 0 || (savedGuidanceReview?.key === savedReviewKey && !savedGuidanceReview.failed)
+  const savedNeedsReview = savedTexts.length > 0 && savedGuidanceReview?.key === savedReviewKey && savedGuidanceReview.needsReview
+  const showCurrentGuidance = Boolean(modeReady && !planningMode?.planningOnly)
+  const showHistoricalIdeas = Boolean(showCurrentGuidance && savedReviewReady && !savedNeedsReview)
+  const visibleSavedNotes = (w.advice_notes ?? []).filter((note) => modeReady && savedReviewReady && !savedNeedsReview && (showHistoricalIdeas || note.kind === 'local_guidance'))
+  useEffect(() => {
+    if (!savedTexts.length) return
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => {
+      void api<{ needs_review: boolean }>('/api/project/review-saved-guidance', JSON.parse(savedReviewKey), controller.signal)
+        .then((result) => {
+          if (typeof result.needs_review !== 'boolean') throw new Error('Invalid saved guidance review')
+          if (!controller.signal.aborted) setSavedGuidanceReview({ key: savedReviewKey, needsReview: result.needs_review, failed: false })
+        })
+        .catch(() => { if (!controller.signal.aborted) setSavedGuidanceReview({ key: savedReviewKey, needsReview: true, failed: true }) })
+    }, 200)
+    return () => { window.clearTimeout(timer); controller.abort() }
+  }, [savedReviewKey])
   useEffect(() => {
     const controller = new AbortController()
     const timer = window.setTimeout(() => {
@@ -152,12 +162,13 @@ export function ProjectWorkbench() {
     request.current = null
     setBusy(false)
     setStartingGuidance(intake ?? null)
+    const localIntakeGuidance = intake?.origin === 'local' || intake?.guidance_origin === 'local'
     const note: ProjectAdviceNote | null = intake ? {
-      id: crypto.randomUUID(), created_at: new Date().toISOString(), provider: intake.provider,
-      model: intake.model, project_snapshot: reviewProjectDraft(intake.project_draft),
+      id: crypto.randomUUID(), created_at: new Date().toISOString(), provider: localIntakeGuidance ? 'local' : intake.provider,
+      model: localIntakeGuidance ? 'Local planning guide' : intake.model, project_snapshot: reviewProjectDraft(intake.project_draft),
       configuration_versions: [], assessment_kind: 'user_reported',
       text: [intake.reply, `First step: ${intake.first_step}`, ...intake.questions.map((q) => `Question to resolve: ${q}`)].join('\n\n'),
-      kind: intake.origin === 'local' ? 'local_guidance' : 'model_proposal',
+      kind: localIntakeGuidance ? 'local_guidance' : 'model_proposal',
     } : null
     const withNote = (project: ProjectWorkspace): ProjectWorkspace =>
       note && (project.advice_notes?.length ?? 0) < 30
@@ -253,6 +264,18 @@ export function ProjectWorkbench() {
       setError('The project, setup or mix inputs changed after this calculation. Recalculate and ask again, or clear the calculation question below.')
       return
     }
+    if (!savedReviewReady) {
+      setError('The saved ideas could not be checked yet. Please try again.')
+      return
+    }
+    if (selectedIdea && !showHistoricalIdeas) {
+      setError('This saved idea is unavailable. Clear it before asking a new question.')
+      return
+    }
+    const configurationsForModel = savedNeedsReview ? w.configurations.map((c) => ({
+      ...c, name: safeSetupName(w, c, 'Trial setup'),
+      notes: c.notes.startsWith('Unverified trial idea:') ? '' : c.notes,
+    })) : w.configurations
     const activeIdea = showHistoricalIdeas ? selectedIdea : null
     if (
       activeIdea &&
@@ -283,14 +306,14 @@ export function ProjectWorkbench() {
             advice && adviceCase === currentAdviceContext && adviceQuestion && !lastAdviceUsedIdea && !activeIdea
               ? [
                   { role: 'user', content: adviceQuestion },
-                  ...(showHistoricalIdeas ? [{ role: 'assistant', content: [advice.answer, ...advice.questions].join('\n').slice(0, 3000) }] : []),
+                  ...(showCurrentGuidance ? [{ role: 'assistant', content: [advice.answer, ...advice.questions].join('\n').slice(0, 3000) }] : []),
                 ]
               : [],
           ...(w.configurations.length
             ? {
                 project_context: {
                   case_id: w.case_id,
-                  configurations: w.configurations,
+                  configurations: configurationsForModel,
                   checks: w.checks,
                   records: w.records.filter((r) => !w.record_exclusions?.[r.id]),
                   assessment_kind: adviceKind,
@@ -717,6 +740,10 @@ export function ProjectWorkbench() {
                       </button>
                     </div>
                   )}
+                  {selectedIdea && !showHistoricalIdeas && savedReviewReady && <div className="pw-notice">
+                    <p>This saved idea is unavailable for this question.</p>
+                    <button onClick={() => setSelectedIdea(null)}>Clear saved idea</button>
+                  </div>}
                   {w.records.length > 0 && (
                     <label>
                       Use these readings when helping me
@@ -749,7 +776,7 @@ export function ProjectWorkbench() {
                     <small>This text is not sent with the current question.</small>
                   </details>}
                   <div className="pw-actions">
-                    <button className="pw-primary" onClick={() => void explore()} disabled={busy || !modeReady}>
+                    <button className="pw-primary" onClick={() => void explore()} disabled={busy || !modeReady || !savedReviewReady}>
                       {busy
                         ? 'Working through your options…'
                         : question.trim()
@@ -757,7 +784,7 @@ export function ProjectWorkbench() {
                           : 'Explore my options'}
                     </button>
                     {question.trim() && (
-                      <button disabled={busy || !modeReady} onClick={() => void explore(true)}>
+                      <button disabled={busy || !modeReady || !savedReviewReady} onClick={() => void explore(true)}>
                         Explore alternatives
                       </button>
                     )}
@@ -784,11 +811,13 @@ export function ProjectWorkbench() {
                   </details>
                   {planningMode?.key === planningKey && planningMode.failed && <p role="alert">The local planning check is unavailable. Reopen the app and try again.</p>}
                   {modeReady && planningMode?.planningOnly && <p className="pw-notice">Earlier AI ideas are kept but hidden while this material needs local planning.</p>}
+                  {savedNeedsReview && <p className="pw-notice">Some saved ideas are unavailable. You can still explore new options.</p>}
+                  {savedGuidanceReview?.key === savedReviewKey && savedGuidanceReview.failed && <p role="alert">Saved suggestions could not be checked. Reopen the project and try again.</p>}
                 </section>
                 <SoundGuidance project={w.project} question={question} />
-                {modeReady && startingGuidance && !advice && (showHistoricalIdeas || startingGuidance.origin === 'local') && (
+                {modeReady && startingGuidance && !advice && (showCurrentGuidance || startingGuidance.origin === 'local' || startingGuidance.guidance_origin === 'local') && (
                   <section className="pw-answer" aria-live="polite">
-                    <span className="pw-overline">{startingGuidance.origin === 'local' ? 'Local planning guide · no AI call' : `Starting suggestion · ${startingGuidance.provider} / ${startingGuidance.model}`}</span>
+                    <span className="pw-overline">{startingGuidance.origin === 'local' ? 'Local planning guide · no AI call' : startingGuidance.guidance_origin === 'local' ? `Local next step · project draft by ${startingGuidance.provider} / ${startingGuidance.model}` : `Starting suggestion · ${startingGuidance.provider} / ${startingGuidance.model}`}</span>
                     {PROJECT_INTAKE_FIELDS.some((field) => (startingGuidance.project_draft[field]?.value ?? '') !== (w.project[field]?.value ?? '')) && (
                       <p className="pw-notice">You edited the project after this suggestion. Ask again to include your changes.</p>
                     )}
@@ -798,7 +827,7 @@ export function ProjectWorkbench() {
                     {startingGuidance.questions.length > 0 && <><h2>Still worth considering</h2><ul>{startingGuidance.questions.map((q) => <li key={q}>{q}</li>)}</ul></>}
                   </section>
                 )}
-                {modeReady && advice && adviceProject === currentProject && (showHistoricalIdeas || advice.result_kind === 'local_planning_guidance') && (
+                {modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance') && (
                   <>
                     {adviceCase !== currentAdviceContext && (
                       <p className="pw-notice">
@@ -882,11 +911,11 @@ export function ProjectWorkbench() {
                       ))}
                   </>
                 )}
-                {(w.advice_notes?.length ?? 0) > 0 && (
+                {visibleSavedNotes.length > 0 && (
                   <details className="pw-card pw-spaced">
-                    <summary>Saved planning notes ({w.advice_notes!.length})</summary>
+                    <summary>Saved planning notes ({visibleSavedNotes.length})</summary>
                     <p>Ideas saved with earlier project details.</p>
-                    {w.advice_notes!.filter((note) => modeReady && (showHistoricalIdeas || note.kind === 'local_guidance')).map((note) => (
+                    {visibleSavedNotes.map((note) => (
                       <details key={note.id}>
                         <summary>
                           {note.project_snapshot.product?.value ?? 'Project'} · {note.kind==='local_guidance'?'Local planning guide':`${note.provider} / ${note.model}`} · {note.created_at.slice(0, 16).replace('T', ' ')} UTC
@@ -908,8 +937,8 @@ export function ProjectWorkbench() {
                 onReadingKindChange={setAdviceKind}
                 onAskIdea={askAboutIdea}
                 showHistoricalIdeas={showHistoricalIdeas}
-                checkingPlanningMode={!modeReady}
-                preparedCheckName={showHistoricalIdeas ? preparedCheckName : ''}
+                checkingPlanningMode={!modeReady || !savedReviewReady}
+                preparedCheckName={showCurrentGuidance ? preparedCheckName : ''}
                 onPreparedCheckUsed={() => setPreparedCheckName('')}
               />
             </div>
@@ -918,6 +947,7 @@ export function ProjectWorkbench() {
                 key={`${w.case_id}:${workspaceOpenEpoch}`}
                 workspace={w}
                 enabled={Boolean(modeReady && !planningMode?.planningOnly)}
+                showHistoricalIdeas={showHistoricalIdeas}
                 planningContext={planningPayload}
                 onDraftChange={(updateDraft) => {
                   setW((current) => updateDraft(current))

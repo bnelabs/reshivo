@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { newCostDraft } from '../projectWorkspace'
 import type { ProjectWorkspace, CostDraft } from '../projectWorkspace'
 import { costRequest } from '../manufacturingCost'
 import { currentSetups, setupKey } from './TrialWorkspace'
 import { costIssueText, displayCostAmount, roundedWinnerCollision } from '../costDisplay'
+import { selectedCurrentSetup, setupRevisionNotice } from '../setupSelection'
+import { reuseCostComparisonDetails } from '../costComparisonSetup'
 
 type Props = {
   workspace: ProjectWorkspace
@@ -25,15 +27,25 @@ export function CostWorkspace({
   const setupName = (s: (typeof setups)[number]) =>
     !showHistoricalIdeas && (w.trial_ideas?.[setupKey(s)]?.title === s.name || s.notes.startsWith(`Unverified trial idea: ${s.name}.`))
       ? `Trial setup ${setups.findIndex((item) => item.id === s.id) + 1}` : s.name
-  const [selected, setSelected] = useState('')
+  const [selected, setSelected] = useState(() => setups[0]?.id ?? '')
+  const [versionNotice, setVersionNotice] = useState('')
+  const previousSetup = useRef<{ id: string; revision: number } | null>(null)
   const [result, setResult] = useState<any>(null)
   const [comparison, setComparison] = useState<any>(null)
   const [resultKey, setResultKey] = useState('')
   const [compareKey, setCompareKey] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const c = setups.find((s) => setupKey(s) === selected) ?? setups[0]
+  const c = selectedCurrentSetup(setups, selected)
+  const missingSelected = Boolean(selected && !setups.some((setup) => setup.id === selected))
+  useEffect(() => {
+    if (!selected && c) setSelected(c.id)
+    setVersionNotice(setupRevisionNotice(previousSetup.current, c))
+    previousSetup.current = c ? { id: c.id, revision: c.revision } : null
+  }, [selected, c?.id, c?.revision])
   const d: CostDraft = c ? (w.costs[setupKey(c)] ?? newCostDraft()) : newCostDraft()
+  const reusableDestinations = c ? setups.filter((setup) => setup.id !== c.id && !Object.hasOwn(w.costs, setupKey(setup))) : []
+  const hasComparisonDetails = [d.currency, d.functional_basis, d.acceptance_basis].some((value) => value.trim())
   function edit(patch: Partial<CostDraft>) {
     if (c) onChange({ ...w, costs: { ...w.costs, [setupKey(c)]: { ...d, ...patch } } })
   }
@@ -83,7 +95,18 @@ export function CostWorkspace({
           </p>
         </div>
       </div>
-      {!c ? (
+      {missingSelected && setups.length > 0 ? (
+        <div className="pw-empty">
+          <h2>Choose a setup</h2>
+          <p>Your earlier selection is unavailable in this project.</p>
+          <label>Trial setup
+            <select value="" onChange={(event) => setSelected(event.target.value)}>
+              <option value="" disabled>Choose a setup</option>
+              {setups.map((setup) => <option key={setupKey(setup)} value={setup.id}>{setupName(setup)} · version {setup.revision}</option>)}
+            </select>
+          </label>
+        </div>
+      ) : !c ? (
         <div className="pw-empty">
           <h2>Save a trial setup first</h2>
           <p>Its materials and amounts will be available here automatically.</p>
@@ -92,19 +115,36 @@ export function CostWorkspace({
         <>
           <label className="pw-inline-label">
             Trial setup
-            <select value={setupKey(c)} onChange={(e) => setSelected(e.target.value)}>
+            <select value={c.id} onChange={(e) => setSelected(e.target.value)}>
               {setups.map((s) => (
-                <option key={setupKey(s)} value={setupKey(s)}>
+                <option key={setupKey(s)} value={s.id}>
                   {setupName(s)} · version {s.revision}
                 </option>
               ))}
             </select>
           </label>
+          {versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}
           {error && (
             <p className="pw-error" role="alert">
               {error}
             </p>
           )}
+          {setups.length > 1 && <details className="pw-card pw-spaced">
+            <summary>Reuse comparison details</summary>
+            <p>Use these details from {setupName(c)} for setups without cost entries:</p>
+            <ul>
+              <li>Currency: {d.currency || 'not entered'}</li>
+              <li>Product and use: {d.functional_basis || 'not entered'}</li>
+              <li>What counts as usable: {d.acceptance_basis || 'not entered'}</li>
+              <li>Output: {d.mode === 'planned' ? 'planning scenario' : 'actual usable output'}</li>
+            </ul>
+            <p>Applies to: {reusableDestinations.length ? reusableDestinations.map(setupName).join(', ') : 'no untouched setups'}.</p>
+            <p>Prices, material conditions, processing costs and output amounts stay separate.</p>
+            <button type="button" disabled={!hasComparisonDetails || !reusableDestinations.length}
+              onClick={() => onChange(reuseCostComparisonDetails(w, c))}>
+              Apply to untouched setups
+            </button>
+          </details>}
           <section className="pw-card">
             <h2>1. Charged materials</h2>
             <p>

@@ -98,13 +98,12 @@ export function RequirementsPanel(p: Props) {
       <details className="model-details">
         <summary>How the model works</summary>
         <p>
-          Calculates bending under a steady load, with one end held perfectly still and the same
-          material properties throughout. Buckling, creep, fatigue and impact are not included.
+          Checks bending under a steady load with one end fixed and uniform material properties.
+          Buckling, creep, fatigue and impact are outside this check.
         </p>
         <p>
-          Lower estimate subtracts twice the sample standard deviation from the measured averages.
-          It explores lower stiffness and strength; it cannot predict how another waste batch will
-          behave.
+          The lower estimate subtracts twice the sample standard deviation from measured stiffness
+          and strength.
         </p>
       </details>
     </aside>

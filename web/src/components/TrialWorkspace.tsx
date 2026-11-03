@@ -395,7 +395,7 @@ export function TrialWorkspace({
                 {c.notes && (showHistoricalIdeas || !hasLinkedIdea(c)) && <p>{c.notes}</p>}
                 {!showHistoricalIdeas && hasLinkedIdea(c) && (
                   <p>
-                    {checkingPlanningMode ? 'Checking whether saved ideas are available for this case.' : 'Earlier AI ideas are kept in this project but unavailable in the current planning mode.'}
+                    {checkingPlanningMode ? 'Checking saved ideas.' : 'This saved idea is unavailable for reuse.'}
                   </p>
                 )}
                 {showHistoricalIdeas &&

@@ -8,6 +8,7 @@ from .materials import ROOT
 from .meta import MetaClient, MetaValidationError
 from .products import ProductInputError
 from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_guidance, literal_particle_excerpt
+from .walking_guidance import has_unsafe_walking_guidance
 
 
 DRAFT_FIELDS = ("product", "input", "variation", "use", "priorities", "process", "constraints")
@@ -28,6 +29,9 @@ For a floor mat, first clarify its job (such as comfort, grip, wear or easy clea
 it will be used and what material is available. For a sound sheet, first clarify whether
 the aim is blocking sound, reducing room echo or reducing impact noise, the sound source
 and how/where it will be installed. Ask for Hz/dB only when relevant, or use them if supplied.
+For a walking surface, never tell a person to step, stand, walk, tread, jump or place
+their foot or weight on loose material or an untested prototype to assess grip or comfort.
+Offer a sketch, installation or records comparison and identify a suitable grip evaluation.
 Other products remain open. Product, available input and a use or goal can be enough for
 conditional ideas. Do not keep asking until every detail is known: give a concrete useful
 first step with the known unknowns. That step may be a focused observation, records check
@@ -199,6 +203,26 @@ def normalize_intake_response(case, data):
     }
 
 
+def _local_planning_questions(draft):
+    """Ask about missing draft fields without inferring user facts."""
+    questions = []
+    if draft["product"] is None:
+        questions.append("What would you like to make?")
+    if draft["input"] is None:
+        questions.append("What materials do you have?")
+    if draft["use"] is None:
+        questions.append("Where and how will you use the product?")
+    if draft["priorities"] is None:
+        questions.append("What should the product do well?")
+    if draft["variation"] is None:
+        questions.append("What changes in your material?")
+    if draft["process"] is None:
+        questions.append("Which tools or processes can you use?")
+    if not questions:
+        questions.append("Which material or design change would you like to compare first?")
+    return questions[:3]
+
+
 def read_project_intake(request, *, client=None, root=ROOT):
     """Make one explicit generation call and return a source-linked draft, never apply it."""
     case = validate_intake_request(request)
@@ -232,13 +256,33 @@ def read_project_intake(request, *, client=None, root=ROOT):
             "first_step": local["answer"],
         })
         return {**result, "origin": "local", "provider": "local", "model": "Local planning guide", "live": False}
+    # An earlier model answer can itself contain an unsafe proposed action. Keep
+    # user messages and history indices intact, but do not send that answer back.
+    prompt_case = deepcopy(case)
+    for entry in prompt_case["history"]:
+        if entry["role"] == "assistant" and has_unsafe_walking_guidance(entry["content"]):
+            entry["content"] = "Earlier suggestion omitted. Continue from the user's stated details."
     generated = (client if client is not None else MetaClient(root=root)).generate(
-        json.dumps({**case, "task": "Help clarify this project and draft only the user's stated facts for review."},
+        json.dumps({**prompt_case, "task": "Help clarify this project and draft only the user's stated facts for review."},
                    ensure_ascii=False, allow_nan=False),
         project_intake_schema(), 1, system_prompt=SYSTEM_PROMPT,
         schema_name="project_intake", max_completion_tokens=4096, reasoning_effort="medium")
+    result = normalize_intake_response(case, generated.data)
+    # The literal project draft is validated independently above. If recognized
+    # risky action appears anywhere in the generated guidance, replace the whole
+    # guidance set so it cannot be displayed or replayed as an earlier suggestion.
+    guidance = [result["reply"], result["first_step"], *result["questions"]]
+    if any(has_unsafe_walking_guidance(text) for text in guidance):
+        product = "your product" if result["project_draft"]["product"] else "a possible product"
+        result.update({
+            "reply": "Let's plan the product around the material and tools you have.",
+            "first_step": f"Sketch {product} and how it would be used. Note what changes in the input, then choose one material or design change to compare.",
+            "questions": _local_planning_questions(result["project_draft"]),
+            "guidance_origin": "local",
+            "guidance_reason": "floor_slip",
+        })
     return {
-        **normalize_intake_response(case, generated.data),
+        **result,
         "provider": getattr(generated, "provider", "meta"), "model": generated.model,
         "live": bool(generated.live), "usage": generated.usage,
         "request_id": generated.request_id, "elapsed_ms": generated.elapsed_ms,
