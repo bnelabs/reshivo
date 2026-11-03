@@ -349,13 +349,19 @@ class MetaClient:
         request = urllib.request.Request(ENDPOINT, data=json.dumps(payload, allow_nan=False).encode(), method="POST", headers={"Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
         started = time.monotonic()
         try:
-            with self.opener.open(request, timeout=50) as response:
+            with self.opener.open(request, timeout=80 if reasoning_effort == "high" else 50) as response:
                 raw = response.read(512_001)
         except urllib.error.HTTPError as error:
             code = error.code
             error.close()
             raise MetaAPIError(f"Meta request failed (HTTP {code}). Try again.") from None
-        except (urllib.error.URLError, TimeoutError, OSError):
+        except TimeoutError:
+            raise MetaAPIError("Meta is taking too long. Your inputs are still here; try again.") from None
+        except urllib.error.URLError as error:
+            if isinstance(error.reason, TimeoutError):
+                raise MetaAPIError("Meta is taking too long. Your inputs are still here; try again.") from None
+            raise MetaAPIError("Could not reach Meta. Check the connection and try again.") from None
+        except OSError:
             raise MetaAPIError("Could not reach Meta. Check the connection and try again.") from None
         if len(raw) > 512_000:
             raise MetaValidationError("Meta response exceeded the size limit")

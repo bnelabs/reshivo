@@ -1,23 +1,14 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { compareMeasurementDecimals, measurementDecimalKey, parseMeasurementDecimal } from '../measurementDecimal'
-import type { AdvisorTrialResult, WorkshopCase } from '../types'
+import { isMassPercentUnit, prepareMeasuredComposition } from '../measurementTrial'
+import type { AdvisorTrialResult, ComparedSetting, MeasuredCompositionTrial, WorkshopCase } from '../types'
 import './MeasurementComparison.css'
 
 type GroupKind = 'unknown' | 'repeat' | 'specimen' | 'run' | 'batch'
 type ReadingIds = { reading_id: string; specimen_id: string; run_id: string; batch_id: string; repeat_of: string }
 type Reading = { key: number; value: string; group_kind: GroupKind; group_label: string } & ReadingIds
 type Setting = { key: number; id: string; level: string; readings: Reading[] }
-type ComparedSetting = {
-  id: string
-  level: string
-  readings: ({ value: string; group_kind: GroupKind; group_label: string; inside_target: boolean } & Record<keyof ReadingIds, string | null>)[]
-  observed_min: string
-  observed_max: string
-  reading_count: number
-  in_target_count: number
-  all_readings_in_target: boolean
-}
 type ComparisonResult = {
   result_kind: 'entered_readings_comparison'
   settings: ComparedSetting[]
@@ -38,7 +29,7 @@ const groups: { value: GroupKind; label: string }[] = [
   { value: 'batch', label: 'Separate batch' },
 ]
 
-export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftChange }: { caseData: WorkshopCase; trial?: AdvisorTrialResult; canAsk: boolean; onAsk: (question: string) => void; onDraftChange?: () => void }) {
+export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftChange, onPrepareComposition, onClearComposition, onEditCase }: { caseData: WorkshopCase; trial?: AdvisorTrialResult; canAsk: boolean; onAsk: (question: string) => void; onDraftChange?: () => void; onPrepareComposition?: (value: Omit<MeasuredCompositionTrial, 'serial'>) => void; onClearComposition?: () => void; onEditCase?: () => void }) {
   const [fields, setFields] = useState({ property_name: '', property_unit: '', input_name: '', input_unit: '', target_min: '', target_max: '', method: '' })
   const [dataKind, setDataKind] = useState<'' | 'synthetic' | 'user_reported'>('')
   const [settings, setSettings] = useState<Setting[]>([
@@ -59,6 +50,8 @@ export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftC
   const [result, setResult] = useState<{ signature: string; value: ComparisonResult } | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [mappedComponent, setMappedComponent] = useState<number | null>(null)
+  const [mappingConfirmed, setMappingConfirmed] = useState(false)
   const request = useRef<AbortController | null>(null)
   const hasDraft = useRef(false)
   const confirmed = confirmedSignature === signature
@@ -72,6 +65,8 @@ export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftC
       request.current?.abort()
       setBusy(false)
       setResult(null)
+      setMappedComponent(null)
+      setMappingConfirmed(false)
       setConfirmedSignature('')
       if (changedCase) setCaseChanged(hasDraft.current)
       if (changedTrial) {
@@ -90,6 +85,7 @@ export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftC
     request.current?.abort()
     setBusy(false)
     setResult(null)
+    setMappingConfirmed(false)
     setConfirmedSignature('')
     setError('')
   }
@@ -168,6 +164,23 @@ export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftC
     }
   }
   const visibleResult = result?.signature === signature ? result.value : null
+  const matchingSettings = visibleResult?.settings.filter((setting) => setting.all_readings_in_target) ?? []
+  function prepareComposition(setting: ComparedSetting) {
+    const prepared = prepareMeasuredComposition({ setting, inputUnit: fields.input_unit, componentId: mappedComponent, components: caseData.details.components, confirmed: mappingConfirmed })
+    if (!visibleResult || !prepared.ok || !dataKind) return
+    onPrepareComposition?.(structuredClone({
+      ...prepared.value,
+      workshop_case: caseData,
+      selected_trial: trial ?? null,
+      comparison: {
+        data_kind: dataKind,
+        property_name: fields.property_name.trim(), property_unit: fields.property_unit.trim(),
+        input_name: fields.input_name.trim(), input_unit: fields.input_unit.trim(),
+        target_min: fields.target_min.trim(), target_max: hasTargetMax ? fields.target_max.trim() : null,
+        method: fields.method.trim(), setting,
+      },
+    }))
+  }
   const comparisonSummary = visibleResult ? JSON.stringify({
     reading_type: dataKind === 'synthetic' ? 'synthetic simulation' : 'user-reported measurements, not independently verified',
     input: fields.input_name.trim(), input_unit: fields.input_unit.trim(),
@@ -192,7 +205,7 @@ export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftC
   return (
     <details className="workshop-weight-tool measurement-comparison">
       <summary><span>Compare my measurements</span><small>Check entered readings against your target</small></summary>
-      <p>Enter readings for the same material, process and product in your current case. Compare only settings with readings; if you have no matching measurements, test this exact case first.</p>
+      <p>Compare matching readings for your case’s material, process and product. If measurements are still missing, explore options or plan a trial first; this comparison needs readings for the stated conditions.</p>
       <div className="measurement-case">
         <strong>Using your current case</strong>
         <p>Material: {caseData.brief.input || 'Not entered'} · Product: {caseData.brief.product || 'Not entered'}</p>
@@ -311,6 +324,27 @@ export function MeasurementComparison({ caseData, trial, canAsk, onAsk, onDraftC
           </li>)}</ul>
         </div>)}
         <p>Measurement uncertainty and independence were not assessed. These observations do not establish future performance, batch consistency, or suitability of an untested product. Test the actual product and conditions.</p>
+        {onPrepareComposition && matchingSettings.length > 0 && <section className="measurement-next-trial" aria-label="Plan a composition trial">
+          <h3>Use a setting for your next trial</h3>
+          <p>If the changed input is a component’s mass percentage, calculate quantities at one recorded level. Your current case and readings stay unchanged.</p>
+          {!isMassPercentUnit(fields.input_unit) ? <p className="measurement-prompt">Ingredient quantities need explicit mass percentages. “{fields.input_unit}” is not a mass-percent unit. Keep this comparison; volume fractions or process settings need a different calculation.</p> : caseData.details.components.some((row) => row.name.trim()) ? <>
+            <label>Component described by “{fields.input_name}”
+              <select value={mappedComponent ?? ''} onChange={(event) => { onClearComposition?.(); setMappedComponent(event.target.value ? Number(event.target.value) : null); setMappingConfirmed(false) }}>
+                <option value="">Choose from your case</option>
+                {caseData.details.components.filter((row) => row.name.trim()).map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}
+              </select>
+            </label>
+            <label className="measurement-confirm"><input type="checkbox" checked={mappingConfirmed} onChange={(event) => { onClearComposition?.(); setMappingConfirmed(event.target.checked) }} /> These input levels are this named component’s mass percentage in the whole mix.</label>
+            {matchingSettings.map((setting) => {
+              const prepared = prepareMeasuredComposition({ setting, inputUnit: fields.input_unit, componentId: mappedComponent, components: caseData.details.components, confirmed: mappingConfirmed })
+              return <div key={setting.id} className="measurement-actions">
+                <button type="button" className="measurement-submit" disabled={!prepared.ok} onClick={() => prepareComposition(setting)}>Plan quantities at {setting.level} {fields.input_unit}</button>
+                {!prepared.ok && <p className="measurement-help">{prepared.reason}</p>}
+              </div>
+            })}
+          </> : <button type="button" className="outline-button" onClick={onEditCase}>Add named components to your case</button>}
+          <p className="measurement-help">This uses the exact entered point, without interpolation. A new mix still needs its own property tests. Process settings and volume percentages need a different calculation.</p>
+        </section>}
         <button type="button" className="outline-button" onClick={download}>Download comparison and entered identifiers</button>
         <details className="measurement-share-summary">
           <summary>What would be sent to Meta?</summary>

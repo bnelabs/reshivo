@@ -295,6 +295,42 @@ export type BalanceConfig = {
   baseline: { position_id: string; command_kg: number }
 }
 export type WorkshopCase = { brief: AdvisorBrief; details: CalculationDetails }
+export type ComparedSetting = {
+  id: string
+  level: string
+  readings: ({
+    value: string
+    group_kind: 'unknown' | 'repeat' | 'specimen' | 'run' | 'batch'
+    group_label: string
+    inside_target: boolean
+  } & Record<'reading_id' | 'specimen_id' | 'run_id' | 'batch_id' | 'repeat_of', string | null>)[]
+  observed_min: string
+  observed_max: string
+  reading_count: number
+  in_target_count: number
+  all_readings_in_target: boolean
+}
+export type MeasuredCompositionTrial = {
+  serial: number
+  componentId: number
+  componentName: string
+  exactLevel: string
+  calculatorLevel: string
+  settingId: string
+  workshop_case: WorkshopCase
+  selected_trial: AdvisorTrialResult | null
+  comparison: {
+    data_kind: 'synthetic' | 'user_reported'
+    property_name: string
+    property_unit: string
+    input_name: string
+    input_unit: string
+    target_min: string
+    target_max: string | null
+    method: string
+    setting: ComparedSetting
+  }
+}
 export type AssemblyObservationFields = {
   id: string
   kind: '' | 'user_reported' | 'simulated'

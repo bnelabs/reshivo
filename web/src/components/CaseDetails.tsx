@@ -36,28 +36,6 @@ export function CaseDetails({
         Names, amounts and targets are not inferred from your description. Leave unknown values
         blank.
       </p>
-      <div className="workshop-case-details-group">
-        <h3>Mass target</h3>
-        <p>Enter the numeric mass range once for the mass calculation and weight adjustment.</p>
-        <div className="workshop-case-component-pair">
-          <label>
-            Mass target minimum ({unitLabel('kg', system)})
-            <UnitInput
-              unit="kg"
-              value={details.mass_target_min_kg}
-              onChange={(value) => onChange({ ...details, mass_target_min_kg: value })}
-            />
-          </label>
-          <label>
-            Mass target maximum ({unitLabel('kg', system)})
-            <UnitInput
-              unit="kg"
-              value={details.mass_target_max_kg}
-              onChange={(value) => onChange({ ...details, mass_target_max_kg: value })}
-            />
-          </label>
-        </div>
-      </div>
       <label>
         Case name (optional)
         <input
@@ -67,84 +45,10 @@ export function CaseDetails({
           placeholder="Current case"
         />
       </label>
-      <details className="workshop-case-details-group product-detail">
-        <summary>Balance-point target for this product</summary>
-        <p>
-          For a product that needs a controlled balance point, define one axis and its allowed
-          centre-of-mass range. The mass-and-balance tool reuses these targets.
-        </p>
-        {!details.balance ? (
-          <button
-            type="button"
-            className="outline-button"
-            onClick={() =>
-              onChange({
-                ...details,
-                balance: { coordinate_basis: '', target_min_mm: '', target_max_mm: '' },
-              })
-            }
-          >
-            Add a balance target
-          </button>
-        ) : (
-          <>
-            <label>
-              Axis and zero point
-              <textarea
-                rows={2}
-                maxLength={1000}
-                value={details.balance.coordinate_basis}
-                onChange={(event) =>
-                  onChange({
-                    ...details,
-                    balance: { ...details.balance!, coordinate_basis: event.target.value },
-                  })
-                }
-                placeholder="Define x=0 and how the assembly and trim mass-centre positions were measured."
-              />
-            </label>
-            <div className="workshop-case-component-pair">
-              <label>
-                Balance target minimum x ({unitLabel('mm', system)})
-                <UnitInput
-                  unit="mm"
-                  value={details.balance.target_min_mm}
-                  onChange={(value) => onChange({
-                    ...details,
-                    balance: { ...details.balance!, target_min_mm: value },
-                  })}
-                />
-              </label>
-              <label>
-                Balance target maximum x ({unitLabel('mm', system)})
-                <UnitInput
-                  unit="mm"
-                  value={details.balance.target_max_mm}
-                  onChange={(value) => onChange({
-                    ...details,
-                    balance: { ...details.balance!, target_max_mm: value },
-                  })}
-                />
-              </label>
-            </div>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => {
-                const { balance: _removed, ...remaining } = details
-                onChange(remaining)
-              }}
-            >
-              Remove balance target
-            </button>
-          </>
-        )}
-      </details>
-      <details className="workshop-case-details-group product-detail">
+      <details open className="workshop-case-details-group product-detail">
         <summary>Recipe details for composition or density tools</summary>
         <p>
-          These tools use the precise materials and amounts in your processed mix. A
-          weighed-assembly check uses the mass range above.
+          Name the materials and amounts once for the composition and density tools.
         </p>
         <label>
           Amount unit
@@ -256,6 +160,104 @@ export function CaseDetails({
             placeholder="For example, dry mass or as received"
           />
         </label>
+      </details>
+      <details className="workshop-case-details-group product-detail">
+        <summary>Mass and balance targets (optional)</summary>
+        <div className="workshop-case-details-group">
+          <h3>Mass target</h3>
+          <p>Enter the numeric mass range once for the mass calculation and weight adjustment.</p>
+          <div className="workshop-case-component-pair">
+            <label>
+              Mass target minimum ({unitLabel('kg', system)})
+              <UnitInput
+                unit="kg"
+                value={details.mass_target_min_kg}
+                onChange={(value) => onChange({ ...details, mass_target_min_kg: value })}
+              />
+            </label>
+            <label>
+              Mass target maximum ({unitLabel('kg', system)})
+              <UnitInput
+                unit="kg"
+                value={details.mass_target_max_kg}
+                onChange={(value) => onChange({ ...details, mass_target_max_kg: value })}
+              />
+            </label>
+          </div>
+        </div>
+        <details className="workshop-case-details-group product-detail">
+          <summary>Balance-point target for this product</summary>
+          <p>
+            For a product that needs a controlled balance point, define one axis and its allowed
+            centre-of-mass range. The mass-and-balance tool reuses these targets.
+          </p>
+          {!details.balance ? (
+            <button
+              type="button"
+              className="outline-button"
+              onClick={() =>
+                onChange({
+                  ...details,
+                  balance: { coordinate_basis: '', target_min_mm: '', target_max_mm: '' },
+                })
+              }
+            >
+              Add a balance target
+            </button>
+          ) : (
+            <>
+              <label>
+                Axis and zero point
+                <textarea
+                  rows={2}
+                  maxLength={1000}
+                  value={details.balance.coordinate_basis}
+                  onChange={(event) =>
+                    onChange({
+                      ...details,
+                      balance: { ...details.balance!, coordinate_basis: event.target.value },
+                    })
+                  }
+                  placeholder="Define x=0 and how the assembly and trim mass-centre positions were measured."
+                />
+              </label>
+              <div className="workshop-case-component-pair">
+                <label>
+                  Balance target minimum x ({unitLabel('mm', system)})
+                  <UnitInput
+                    unit="mm"
+                    value={details.balance.target_min_mm}
+                    onChange={(value) => onChange({
+                      ...details,
+                      balance: { ...details.balance!, target_min_mm: value },
+                    })}
+                  />
+                </label>
+                <label>
+                  Balance target maximum x ({unitLabel('mm', system)})
+                  <UnitInput
+                    unit="mm"
+                    value={details.balance.target_max_mm}
+                    onChange={(value) => onChange({
+                      ...details,
+                      balance: { ...details.balance!, target_max_mm: value },
+                    })}
+                  />
+                </label>
+              </div>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  const { balance: _removed, ...remaining } = details
+                  onChange(remaining)
+                }}
+              >
+                Remove balance target
+              </button>
+            </>
+          )}
+        </details>
       </details>
     </details>
   )

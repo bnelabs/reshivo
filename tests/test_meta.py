@@ -72,6 +72,22 @@ class MetaTests(unittest.TestCase):
                         "Check this case", {}, 1, reasoning_effort=effort)
                     self.assertEqual(len(transport.requests), 1)
                     self.assertEqual(json.loads(transport.requests[0].data)["reasoning_effort"], effort)
+                    self.assertEqual(transport.timeout, 80 if effort == "high" else 50)
+
+    def test_timeout_and_connection_failures_are_distinct_without_remote_details(self):
+        class Broken:
+            def __init__(self, failure): self.failure = failure
+            def open(self, request, timeout): raise self.failure
+        with tempfile.TemporaryDirectory() as temp:
+            for failure, message in (
+                (TimeoutError("private socket detail"), "taking too long"),
+                (urllib.error.URLError(TimeoutError("private socket detail")), "taking too long"),
+                (urllib.error.URLError("private connection detail"), "Could not reach"),
+            ):
+                with self.subTest(failure=type(failure).__name__), self.assertRaises(MetaAPIError) as caught:
+                    MetaClient(Path(temp), {"MODEL_API_KEY": "fixture-generation-key"}, Broken(failure)).generate("Check", {}, 1)
+                self.assertIn(message, str(caught.exception))
+                self.assertNotIn("private", str(caught.exception))
 
     def test_invalid_reasoning_is_rejected_before_http(self):
         invalid = (None, True, False, 0, 1.0, [], {}, (), b"high", "", "LOW", " high", "high ", "maximum")

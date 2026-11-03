@@ -18,6 +18,7 @@ import type {
   AdvisorTrialResult,
   AssemblyObservationFields,
   CalculationDetails,
+  MeasuredCompositionTrial,
   WorkshopCase,
 } from '../types'
 import type { BalancePreset } from './BalancePlanner'
@@ -208,6 +209,9 @@ export function Workshop() {
   const [assemblyObservation, setAssemblyObservation] =
     useState<AssemblyObservationFields>(newAssemblyObservation)
   const [balancePreset, setBalancePreset] = useState<BalancePreset | undefined>()
+  const [compositionTrial, setCompositionTrial] = useState<MeasuredCompositionTrial | null>(null)
+  const compositionSerial = useRef(0)
+  const compositionArea = useRef<HTMLDivElement | null>(null)
   const caseData: WorkshopCase = { brief, details: calculationDetails }
   const materialKey = JSON.stringify([
     brief.input,
@@ -276,6 +280,7 @@ export function Workshop() {
   }, [plan, trial])
 
   function invalidate() {
+    setCompositionTrial(null)
     comparisonRequest.current = null
     comparisonAdviceShown.current = false
     setComparisonAdviceStale(false)
@@ -441,12 +446,16 @@ export function Workshop() {
   }
 
   function comparisonDraftChanged() {
+    setCompositionTrial(null)
+    invalidateComparisonAdvice()
+  }
+  function invalidateComparisonAdvice() {
     const pending = comparisonRequest.current
     if (pending && request.current === pending && !pending.signal.aborted) {
       pending.abort()
       comparisonRequest.current = null
       setActivity(null)
-      setNotice('Your readings changed. Stopped the request that used the previous comparison. Compare again before asking for updated advice.')
+      setNotice('Your inputs or readings changed. Stopped the request that used the previous calculation. Check the current values before asking again.')
     }
     if (comparisonAdviceShown.current) {
       setComparisonAdviceStale(true)
@@ -464,7 +473,8 @@ export function Workshop() {
     const controller = new AbortController()
     request.current?.abort()
     request.current = controller
-    comparisonRequest.current = fromComparison ? controller : null
+    const usesComparisonContext = fromComparison || Boolean(nextQuestion.trim() && (comparisonAdviceShown.current || comparisonAdviceStale))
+    comparisonRequest.current = usesComparisonContext ? controller : null
     if (fromComparison) {
       setHasTrialFollowup(false)
     }
@@ -504,10 +514,10 @@ export function Workshop() {
               .slice(0, 6000),
           }
         : null
-    const earlierHistory: AdvisorMessage[] = comparisonAdviceStale
+    const earlierHistory: AdvisorMessage[] = !nextQuestion.trim() ? [] : comparisonAdviceStale
       ? [...history.slice(-4), {
           role: 'assistant',
-          content: 'Earlier measurement-comparison advice is no longer current because the readings or trial changed. Do not treat that comparison as a current target fit; updated confirmed readings are needed.',
+          content: 'Earlier comparison or mix-trial advice is no longer current because the inputs changed. Do not treat its settings or quantities as current; a newly confirmed comparison or recalculated trial summary is needed.',
         }]
       : history
     const recentHistory = selectedContext
@@ -531,8 +541,8 @@ export function Workshop() {
         controller.signal,
       )
       if (!controller.signal.aborted) {
-        comparisonAdviceShown.current = fromComparison
-        setComparisonAdviceStale(false)
+        comparisonAdviceShown.current = usesComparisonContext
+        setComparisonAdviceStale(fromComparison ? false : usesComparisonContext && comparisonAdviceStale)
         setLastQuestion(displayQuestion.trim())
         setPlan(response)
         const prompt =
@@ -925,8 +935,8 @@ export function Workshop() {
           )}
           {comparisonAdviceStale && (
             <p className="workshop-edit-warning" role="status">
-              Meta’s earlier advice uses a previous comparison. Your readings or trial have changed.
-              Compare again and ask for updated advice before using it with these readings.
+              Meta’s earlier advice uses previous inputs. Recalculate or compare the current values,
+              then send the updated summary before using that advice for this trial.
             </p>
           )}
           {error && (
@@ -947,7 +957,7 @@ export function Workshop() {
                   {activity === 'trial'
                     ? 'Setting out what to change, what to keep fixed and how to check the result.'
                     : 'Comparing material routes, engineering choices and the next useful check.'}{' '}
-                  {elapsed}s {elapsed >= 10 && 'This can take up to a minute.'}
+                  {elapsed}s {elapsed >= 10 && 'A detailed response can take over a minute. You can stop waiting.'}
                 </p>
               </div>
               <button type="button" onClick={stopWaiting}>
@@ -1196,10 +1206,27 @@ export function Workshop() {
                 void ask(comparisonQuestion, true, 'What should I try next based on these trial readings?', true)
               }}
               onDraftChange={comparisonDraftChanged}
+              onEditCase={openCaseDetails}
+              onClearComposition={() => setCompositionTrial(null)}
+              onPrepareComposition={(value) => {
+                setCompositionTrial({ ...value, serial: ++compositionSerial.current })
+                setSection('material')
+                setFocusWorkspace(true)
+                requestAnimationFrame(() => {
+                  const details = compositionArea.current?.querySelector('details')
+                  if (details) {
+                    details.open = true
+                    details.scrollIntoView({ block: 'start' })
+                    details.querySelector<HTMLInputElement>('input[name="addition_name"]')?.focus({ preventScroll: true })
+                  }
+                })
+              }}
             />
           </div>
           <div hidden={section !== 'material'}>
-            <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} />
+            <div ref={compositionArea}>
+              <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} preparedTrial={compositionTrial} onClearPrepared={() => setCompositionTrial(null)} canAsk={Boolean(status?.configured && briefReady && !busy)} onAsk={(trialQuestion) => { void ask(trialQuestion, true, 'What should I check before trying this mix?', true) }} onDraftChange={invalidateComparisonAdvice} />
+            </div>
             <details
               className="workshop-source-example"
               onToggle={(event) => {
