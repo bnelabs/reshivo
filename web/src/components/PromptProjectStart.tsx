@@ -9,7 +9,7 @@ import './PromptProjectStart.css'
 
 export type PromptProjectStartProps = {
   initialDraft?: ProjectIntakeDraft
-  onApply: (draft: ProjectIntakeDraft) => void
+  onApply: (draft: ProjectIntakeDraft, guidance?: ProjectIntakeResult) => void
   onManualEntry: () => void
   providerStatus?: { configured: boolean; provider_name: string; model: string }
   onConfigureProvider: () => void
@@ -105,7 +105,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
 
   function applyDraft() {
     if (busy || pendingAnswers || !hasProjectContext(draft)) return
-    onApply(reviewProjectDraft(draft))
+    onApply(reviewProjectDraft(draft), result ?? undefined)
   }
 
   const draftField = (field: ProjectIntakeField) => <label className="prompt-project-field" key={field} htmlFor={`${id}-${field}`}>
@@ -119,7 +119,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
     {!hasDraft ? <>
       <div className="prompt-project-intro">
         <h1 id={`${id}-heading`}>Tell me what you want to make</h1>
-        <p>Start with the materials you have and a product idea. We’ll help you work out what to try.</p>
+        <p>Tell us what you have and what you want to make. If your material changes, explore what to adjust, compare product checks and estimate manufacturing costs.</p>
       </div>
       <form className="prompt-project-idea" onSubmit={submitIdea}>
         <label htmlFor={`${id}-idea`}>Your idea</label>
@@ -163,7 +163,6 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
           <details className="prompt-project-other"><summary>Other details</summary>{OTHER_FIELDS.map(draftField)}</details>
           <button type="button" className="prompt-project-primary" onClick={applyDraft} disabled={busy || pendingAnswers || !hasProjectContext(draft)}>Use this project</button>
           <p className="prompt-project-hint">{pendingAnswers ? 'Update the project to include your answers before continuing.' : !hasProjectContext(draft) ? 'Add a product and materials, plus a use or goal. Other details can stay unknown.' : 'Using this project confirms the details above match what you mean.'}</p>
-          <p className="prompt-project-hint">This is a planning draft, not a tested recipe.</p>
           <details className="prompt-project-sources"><summary>Where these details came from</summary>{PROJECT_INTAKE_FIELDS.map((field) => draft[field] ? <div key={field}><strong>{FIELD_LABELS[field]} · {draft[field]?.source === 'user_review' ? 'Your review or edit' : 'Your message'}</strong><blockquote>{draft[field]?.quote}</blockquote></div> : null)}</details>
         </aside>
       </div>

@@ -702,14 +702,6 @@ export function Workshop() {
                   submittedQuestion,
                 ].slice(-6),
           )
-          setPlan(null)
-          setFollowupResult(null)
-          setTrial(null)
-          setSelectedRoute(null)
-          setHistory([])
-          setRestoredPlan(false)
-          setRestoredFollowup(false)
-          setRestoredTrial(false)
           setHasTrialFollowup(false)
           setMixMode(false)
           setSection('material')
@@ -849,14 +841,6 @@ export function Workshop() {
                   .map((entry) => entry.content)
                   .slice(-6),
           )
-          setPlan(null)
-          setFollowupResult(null)
-          setTrial(null)
-          setSelectedRoute(null)
-          setHistory([])
-          setRestoredPlan(false)
-          setRestoredFollowup(false)
-          setRestoredTrial(false)
           setHasTrialFollowup(false)
           setMixMode(false)
           setSection('material')
@@ -977,13 +961,23 @@ export function Workshop() {
     },
     {
       title: 'Options',
-      detail: plan ? 'Suggestions available' : 'Not explored yet',
-      ready: Boolean(plan),
+      detail:
+        planningOnly !== false
+          ? 'Previous suggestions hidden'
+          : plan
+            ? 'Suggestions available'
+            : 'Not explored yet',
+      ready: planningOnly === false && Boolean(plan),
     },
     {
       title: 'Trial plan',
-      detail: trial ? 'Suggestion available' : 'Not planned yet',
-      ready: Boolean(trial),
+      detail:
+        planningOnly !== false
+          ? 'Previous suggestions hidden'
+          : trial
+            ? 'Suggestion available'
+            : 'Not planned yet',
+      ready: planningOnly === false && Boolean(trial),
     },
     {
       title: 'Measurements',
@@ -1114,8 +1108,7 @@ export function Workshop() {
             </details>
             {exampleLoaded && (
               <p className="workshop-example-note" role="status">
-                Hypothetical example loaded. Edit it to fit your batch; these are not material
-                measurements.
+                Example simulation loaded. Edit it to fit your batch.
               </p>
             )}
             {mayClearCaseData && (
@@ -1228,8 +1221,10 @@ export function Workshop() {
                 </p>
               )}
               <p className="workshop-submit-note">
-                Your case is sent to Meta when you select Explore options. Describe unknowns in
-                plain language.
+                {planningOnly === true
+                  ? 'This uses a local guide; no AI request is sent.'
+                  : 'Your case is sent to the selected AI service when you select Explore options.'}{' '}
+                Describe unknowns in plain language.
               </p>
             </form>
           </div>
@@ -1279,13 +1274,13 @@ export function Workshop() {
               {notice}
             </p>
           )}
-          {comparisonAdviceStale && (
+          {planningOnly === false && comparisonAdviceStale && (
             <p className="workshop-edit-warning" role="status">
               Meta’s earlier advice uses previous inputs. Recalculate or compare the current values,
               then send the updated summary before using that advice for this trial.
             </p>
           )}
-          {(restoredPlan || restoredTrial) && (
+          {planningOnly === false && (restoredPlan || restoredTrial) && (
             <p className="workshop-notice" role="status">
               Saved Meta content · these proposals were reopened from a workspace file. No new model
               request has run to restore them.
@@ -1301,11 +1296,13 @@ export function Workshop() {
               <span className="workshop-working-dot" aria-hidden="true" />
               <div>
                 <strong>
-                  {activity === 'trial'
-                    ? 'Meta is planning the selected trial'
-                    : activity === 'followup'
-                      ? 'Meta is reviewing this trial'
-                      : 'Meta is working through this batch'}
+                  {planningOnly === true
+                    ? 'Preparing local planning guidance'
+                    : activity === 'trial'
+                      ? 'Meta is planning the selected trial'
+                      : activity === 'followup'
+                        ? 'Meta is reviewing this trial'
+                        : 'Meta is working through this batch'}
                 </strong>
                 <p>
                   {activity === 'trial'
@@ -1466,10 +1463,6 @@ export function Workshop() {
                     Download plan
                   </button>
                 </div>
-                <p className="workshop-proposal-note">
-                  These are suggested next steps, not measured product performance. Review the
-                  options and test the one you choose.
-                </p>
                 {chosen &&
                   section !== 'next' &&
                   !routes.some((route) => sameRoute(route, chosen)) && (
@@ -1601,7 +1594,6 @@ export function Workshop() {
                             <p>{source.scope}</p>
                           </div>
                         ))}
-                        <p>These references do not establish the properties of your own mix.</p>
                       </details>
                     )}
                   </>
@@ -1631,10 +1623,6 @@ export function Workshop() {
                           <button type="button" onClick={openTrialMeasurements}>
                             Compare measurements from this trial <span aria-hidden="true">→</span>
                           </button>
-                          <small>
-                            No readings yet? Keep this as a proposed trial; the app has not tested
-                            your material.
-                          </small>
                         </section>
                       </>
                     ) : (
@@ -1712,7 +1700,12 @@ export function Workshop() {
             )}
           </div>
           <div
-            hidden={section === 'engineering' || (section === 'next' && mixMode)}
+            hidden={
+              planningOnly !== false ||
+              Boolean(localGuidance) ||
+              section === 'engineering' ||
+              (section === 'next' && mixMode)
+            }
             ref={comparisonArea}
           >
             <MeasurementComparison
@@ -1802,8 +1795,7 @@ export function Workshop() {
                 <small>For a product with measured mass or balance targets</small>
               </summary>
               <p>
-                These checks use measurements of a stated mix or assembly. They do not tell you
-                which binder, contamination level or process will produce a material property.
+                Use measurements for your mix or assembly.
               </p>
               <EngineeringNoteReader
                 caseData={caseData}
@@ -1836,7 +1828,9 @@ export function Workshop() {
               if (question.trim()) void ask(question)
             }}
           >
-            <label htmlFor="workshop-question">Ask Meta about this batch</label>
+            <label htmlFor="workshop-question">
+              {planningOnly === true ? 'Ask about this case' : 'Ask the AI about this batch'}
+            </label>
             <div>
               <input
                 id="workshop-question"
@@ -1858,9 +1852,13 @@ export function Workshop() {
               </button>
             </div>
             <p>
-              Uses your current brief and recent conversation.
-              {trial ? ' Includes your selected trial plan.' : ''}
-              {plan ? ' Proposed routes still need checks on the actual material and product.' : ''}
+              {planningOnly === true
+                ? 'Uses the local guide; no AI request is sent.'
+                : 'Uses your current brief and recent conversation.'}
+              {planningOnly === false && trial ? ' Includes your selected trial plan.' : ''}
+              {planningOnly === false && plan
+                ? ' Proposed routes still need checks on the actual material and product.'
+                : ''}
             </p>
           </form>
         </section>

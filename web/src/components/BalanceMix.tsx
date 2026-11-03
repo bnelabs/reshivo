@@ -131,7 +131,7 @@ export function BalanceMix({
 
   const reviewQuestion =
     linkedTrial && result
-      ? `Review this proposed composition trial and suggest the next practical preparation, process and property checks. These are synthetic or user-reported reference readings, not a validated recipe. The composition calculation is not a property prediction. Keep the current product targets; do not infer batch independence, invent a dose-response link, or promise finished properties. Trial summary:\n${JSON.stringify(
+      ? `Review this composition trial and suggest practical preparation, process and product checks. The reference readings describe the stated conditions. Trial summary:\n${JSON.stringify(
           {
             reading_type: linkedTrial.comparison.data_kind,
             reference: {
@@ -311,10 +311,6 @@ export function BalanceMix({
                 mass % across the entered input range.
               </p>
             )}
-          <p>
-            This balances the entered composition. It does not show that a product property meets
-            its target.
-          </p>
         </>
       )}
       {result.next_options.length > 0 && !linkedTrial && (
@@ -397,10 +393,7 @@ export function BalanceMix({
             {linkedTrial.comparison.setting.in_target_count} of{' '}
             {linkedTrial.comparison.setting.reading_count} entered readings in target.
           </p>
-          <p>
-            This is a new trial, not a property prediction. Keep the stated process and check the
-            new mix against every product target.
-          </p>
+          <p>Keep the stated process and check the new mix against your product targets.</p>
           <details>
             <summary>Reference method and target</summary>
             <p>{linkedTrial.comparison.method}</p>
@@ -409,8 +402,7 @@ export function BalanceMix({
               {linkedTrial.comparison.target_max === null
                 ? `at least ${linkedTrial.comparison.target_min}`
                 : `${linkedTrial.comparison.target_min}–${linkedTrial.comparison.target_max}`}{' '}
-              {linkedTrial.comparison.property_unit}. Other properties have not been checked by this
-              calculation.
+              {linkedTrial.comparison.property_unit}.
             </p>
           </details>
           <button type="button" className="text-button" onClick={onClearPrepared}>
@@ -418,10 +410,7 @@ export function BalanceMix({
           </button>
         </section>
       ) : (
-        <p>
-          Use known mass fractions and a trial composition you choose. This does not predict
-          strength, density or sound performance.
-        </p>
+        <p>Use known mass fractions and a trial composition you choose.</p>
       )}
       {linkedTrial ? (
         <details>
@@ -537,8 +526,7 @@ export function BalanceMix({
         </div>
         <p className="measurement-help">
           Name stock whose {component?.name || 'selected component'} mass fraction you know. An
-          addition with none of this component is zero percent. ReMatter does not guess the stock’s
-          composition or properties.
+          addition with none of this component is zero percent.
         </p>
         <div className="product-pair">
           <label>

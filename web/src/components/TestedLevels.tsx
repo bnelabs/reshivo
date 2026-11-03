@@ -197,7 +197,7 @@ export function TestedLevels({ active, onAsk, disabled = false }: {
           }}
         >
           <h2>Choose the material requirement</h2>
-          <p>Yield stress describes when a material starts to deform permanently under this tensile test. It is one material screen, not a complete product requirement.</p>
+          <p>Yield stress describes when a material starts to deform permanently under this tensile test.</p>
           <p className="helper">
             Only post-consumer recycled PE content changes within a selected source series. The
             virgin PE host supplies the remainder at 0–80 wt%.
@@ -323,7 +323,7 @@ export function TestedLevels({ active, onAsk, disabled = false }: {
                 <span className="workshop-eyebrow">Material choice · source specimens only</span>
                 {highestMatching && highestMatching.pcrpe_wt_percent === 0 ? <>
                   <h3>Only the virgin control has all readings inside</h3>
-                  <p>This study has no recycled-containing level with every recorded reading inside this target. It does not supply a recycling recipe for this requirement. Another material or process comparison would need its own measurements.</p>
+                  <p>No recycled-containing level in this study has every recorded reading inside this target.</p>
                 </> : highestMatching ? <>
                   <h3>{quantity(highestMatching.pcrpe_wt_percent)}% recycled PE + {quantity(100 - highestMatching.pcrpe_wt_percent)}% {result.series.virgin_host}</h3>
                   <p>The highest tested recycled content with all ten recorded readings inside this target.</p>
@@ -332,7 +332,6 @@ export function TestedLevels({ active, onAsk, disabled = false }: {
                   <h3>No tested blend has all readings inside this target</h3>
                   <p>This series does not supply a matching level. A different material or process would need its own measurements.</p>
                 </>}
-                <p className="helper">A source comparison can guide a matching trial. It does not qualify your waste or your finished product.</p>
                 {highestMatching && highestMatching.pcrpe_wt_percent > 0 && <details className="source-ingredient-amounts">
                   <summary>Ingredient amounts for this studied proportion</summary>
                   <p>Combine separate raw resins before processing. This does not calculate how to reprocess an existing moulded blend.</p>
@@ -346,7 +345,6 @@ export function TestedLevels({ active, onAsk, disabled = false }: {
                   {ingredients?.feasible && ingredients.addition_min_kg !== null && <div className="source-ingredient-result" role="status">
                     <strong>Simulation · ingredient masses only</strong>
                     <p>{massQuantity(Number(recycledMass))} kg raw PCRPE + {massQuantity(ingredients.addition_min_kg)} kg raw virgin {result.series.virgin_host} = {massQuantity(Number(recycledMass) + ingredients.addition_min_kg)} kg at {quantity(highestMatching.pcrpe_wt_percent)} mass % recycled content.</p>
-                    <p>Composition only. The published yield measurements belong to the tested specimens; they do not predict this new batch. No ingredient amounts or readings are copied into your case.</p>
                   </div>}
                 </details>}
                 {onAsk && <button type="button" className="outline-button" disabled={disabled} onClick={askAboutMaterial}>Ask Meta how to develop my mix</button>}
@@ -367,11 +365,6 @@ export function TestedLevels({ active, onAsk, disabled = false }: {
                     </strong>
                   </>
                 )}
-              </p>
-              <p className="product-scope-note">
-                This comparison describes only the specimens recorded at each tested level. It does
-                not predict an untested blend, another material, future batches or finished-product
-                consistency.
               </p>
               <div className="source-content-cards" aria-label="Measured response at tested recycled-content levels">
                 {result.levels.map((level) => <article key={level.condition_id} className={level.all_values_in_target ? 'source-content-card source-content-card-inside' : 'source-content-card'}>

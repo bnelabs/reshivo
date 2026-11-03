@@ -11,6 +11,12 @@
     Arial,
     sans-serif;
 }
+.pw-footer {
+  padding: 18px 32px;
+  color: #718078;
+  border-top: 1px solid var(--pw-border);
+  text-align: right;
+}
 .project-workbench button,
 .project-workbench input,
 .project-workbench select,
@@ -710,7 +716,8 @@
   .pw-topbar nav {
     gap: 15px;
     flex: 1;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
   .pw-topbar nav button {
     font-size: 13px;

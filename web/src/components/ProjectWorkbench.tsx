@@ -3,20 +3,23 @@ import { api } from '../api'
 import { PromptProjectStart } from './PromptProjectStart'
 import { ProviderSettings } from './ProviderSettings'
 import { SoundGuidance } from './SoundGuidance'
+import { MixAdjustment } from './MixAdjustment'
+import { CheckSuggestionHandoff } from './CheckSuggestionHandoff'
 import { TrialWorkspace, currentSetups } from './TrialWorkspace'
 import { CostWorkspace } from './CostWorkspace'
 import { emptyProjectDraft, PROJECT_INTAKE_FIELDS, reviewProjectDraft } from '../projectIntake'
-import type { ProjectIntakeDraft, ProjectIntakeField } from '../projectIntake'
+import type { ProjectIntakeDraft, ProjectIntakeField, ProjectIntakeResult } from '../projectIntake'
 import {
   newProjectWorkspace,
   parseProjectWorkspace,
   downloadProjectWorkspace,
   PROJECT_WORKSPACE_MAX_BYTES,
 } from '../projectWorkspace'
-import type { ProjectWorkspace, TrialConfiguration, TrialIdea } from '../projectWorkspace'
+import type { ProjectWorkspace, TrialConfiguration, TrialIdea, ProjectAdviceNote } from '../projectWorkspace'
 import type { AdvisorBrief, AdvisorResult, AdvisorFollowupResult, AdvisorRoute, LocalPlanningResult } from '../types'
 import { useUnitSettings } from '../units'
 import { costRequest } from '../manufacturingCost'
+import { mixQuestionFingerprint, mixQuestionIsCurrent } from '../mixQuestion'
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
@@ -45,7 +48,7 @@ export function ProjectWorkbench() {
   const { system, setSystem } = useUnitSettings()
   const [w, setW] = useState<ProjectWorkspace>(() => newProjectWorkspace())
   const [page, setPage] = useState<
-    'start' | 'manual' | 'options' | 'trials' | 'checks' | 'costs' | 'legacy'
+    'start' | 'manual' | 'options' | 'trials' | 'adjust' | 'checks' | 'costs' | 'legacy'
   >('start')
   const [providerOpen, setProviderOpen] = useState(false)
   const [status, setStatus] = useState({
@@ -57,6 +60,7 @@ export function ProjectWorkbench() {
   const [notice, setNotice] = useState('')
   const [manual, setManual] = useState<ProjectIntakeDraft>(emptyProjectDraft)
   const [advice, setAdvice] = useState<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult | null>(null)
+  const [startingGuidance, setStartingGuidance] = useState<ProjectIntakeResult | null>(null)
   const [adviceCase, setAdviceCase] = useState('')
   const [adviceProject, setAdviceProject] = useState('')
   const [adviceQuestion, setAdviceQuestion] = useState('')
@@ -67,6 +71,10 @@ export function ProjectWorkbench() {
     key: string
     idea: TrialIdea
   } | null>(null)
+  const [preparedCheckName, setPreparedCheckName] = useState('')
+  const [workspaceOpenEpoch, setWorkspaceOpenEpoch] = useState(0)
+  const [mixQuestionContext, setMixQuestionContext] = useState<string | null>(null)
+  const [previousQuestion, setPreviousQuestion] = useState('')
   const [lastAdviceUsedIdea, setLastAdviceUsedIdea] = useState(false)
   const [question, setQuestion] = useState('')
   const [busy, setBusy] = useState(false)
@@ -83,8 +91,10 @@ export function ProjectWorkbench() {
     record_exclusions: w.record_exclusions,
     costs: w.costs,
     trial_ideas: w.trial_ideas,
+    mix_adjustment_drafts: w.mix_adjustment_drafts,
     adviceKind,
   })
+  const currentMixQuestionContext = mixQuestionFingerprint(w, workspaceOpenEpoch)
   const planningPayload = {
     brief: briefFrom(w.project),
     question,
@@ -134,15 +144,29 @@ export function ProjectWorkbench() {
     setW(next)
     setNotice('Unsaved changes. Save a project file to keep this work.')
   }
-  function apply(d: ProjectIntakeDraft) {
+  function apply(d: ProjectIntakeDraft, intake?: ProjectIntakeResult) {
     request.current?.abort()
+    if (question.trim()) setPreviousQuestion(question)
+    setPreparedCheckName('')
+    setMixQuestionContext(null)
     request.current = null
     setBusy(false)
+    setStartingGuidance(intake ?? null)
+    const note: ProjectAdviceNote | null = intake ? {
+      id: crypto.randomUUID(), created_at: new Date().toISOString(), provider: intake.provider,
+      model: intake.model, project_snapshot: reviewProjectDraft(intake.project_draft),
+      configuration_versions: [], assessment_kind: 'user_reported',
+      text: [intake.reply, `First step: ${intake.first_step}`, ...intake.questions.map((q) => `Question to resolve: ${q}`)].join('\n\n'),
+      kind: intake.origin === 'local' ? 'local_guidance' : 'model_proposal',
+    } : null
+    const withNote = (project: ProjectWorkspace): ProjectWorkspace =>
+      note && (project.advice_notes?.length ?? 0) < 30
+        ? { ...project, advice_notes: [...(project.advice_notes ?? []), note] } : project
     const changed = JSON.stringify(d) !== currentProject
     if (w.project.product?.value !== d.product?.value && w.configurations.length) {
       try {
         downloadProjectWorkspace(w)
-        setW(newProjectWorkspace(reviewProjectDraft(d)))
+        setW(withNote(newProjectWorkspace(reviewProjectDraft(d))))
         setAdviceKind('user_reported')
         setSelectedIdea(null)
         setLastAdviceUsedIdea(false)
@@ -158,7 +182,7 @@ export function ProjectWorkbench() {
         return
       }
     }
-    setW({
+    setW(withNote({
       ...w,
       project: reviewProjectDraft(d),
       records: changed ? w.records.map((r) => ({ ...r, conditions_confirmed: false })) : w.records,
@@ -170,14 +194,16 @@ export function ProjectWorkbench() {
             ]),
           )
         : w.costs,
-    })
+    }))
     setAdvice(null)
     setSelectedIdea(null)
     setLastAdviceUsedIdea(false)
     setQuestion('')
     setPage('options')
     setNotice(
-      changed && w.records.length
+      note && (w.advice_notes?.length ?? 0) >= 30
+        ? 'The starting guidance stays onscreen. This project already has thirty saved planning notes, so this reply will not be in the saved file.'
+        : changed && w.records.length
         ? 'Project updated. Review the recorded test conditions before checking again.'
         : 'Project details are shared across options, trials, checks and costs. Save a file to keep them.',
     )
@@ -197,13 +223,19 @@ export function ProjectWorkbench() {
       request.current = null
       setBusy(false)
       setW(next)
+      setWorkspaceOpenEpoch((epoch) => epoch + 1)
+      setPreviousQuestion(question)
+      setQuestion('')
+      setMixQuestionContext(null)
+      setPreparedCheckName('')
+      setStartingGuidance(null)
       setAdvice(null)
       setAdviceKind('user_reported')
       setSelectedIdea(null)
       setLastAdviceUsedIdea(false)
       setPage('trials')
       setNotice(
-        'Project opened. Review imported reading conditions before recalculating; saved files contain inputs, not verified results.',
+        'Project opened. Review the test conditions before recalculating.',
       )
       setError('')
     } catch (err) {
@@ -215,6 +247,10 @@ export function ProjectWorkbench() {
   async function explore(forceOptions = false) {
     if (!modeReady) {
       setError('The local planning check is unavailable. Please try again when the app is connected.')
+      return
+    }
+    if (!mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext)) {
+      setError('The project, setup or mix inputs changed after this calculation. Recalculate and ask again, or clear the calculation question below.')
       return
     }
     const activeIdea = showHistoricalIdeas ? selectedIdea : null
@@ -274,6 +310,7 @@ export function ProjectWorkbench() {
       )
       if (request.current === controller && !controller.signal.aborted) {
         setAdvice(result)
+        setStartingGuidance(null)
         setLastAdviceUsedIdea(Boolean(activeIdea))
         setSelectedIdea(null)
         setAdviceCase(currentAdviceContext)
@@ -379,7 +416,7 @@ export function ProjectWorkbench() {
       notes:
         text.trim() && text.length <= 160
           ? ''
-          : 'This material line stands for the project input, not a verified recipe. Record the actual ingredients and amounts before treating it as one.',
+          : 'This line represents your project description. Add the ingredients and amounts when known.',
     }
     if (!advice) return
     const noteId =
@@ -403,6 +440,8 @@ export function ProjectWorkbench() {
     setPage('trials')
   }
   function askAboutIdea(configuration: TrialConfiguration, idea: TrialIdea) {
+    if (question.trim()) setPreviousQuestion(question)
+    setMixQuestionContext(null)
     setSelectedIdea({
       caseId: w.case_id,
       key: `${configuration.id}@${configuration.revision}`,
@@ -456,7 +495,11 @@ export function ProjectWorkbench() {
                     request.current?.abort()
                     setBusy(false)
                     setW(newProjectWorkspace())
+                    setPreparedCheckName('')
+                    setPreviousQuestion(question)
+                    setMixQuestionContext(null)
                     setAdvice(null)
+                    setStartingGuidance(null)
                     setAdviceKind('user_reported')
                     setSelectedIdea(null)
                     setLastAdviceUsedIdea(false)
@@ -474,7 +517,7 @@ export function ProjectWorkbench() {
               <details>
                 <summary>Preferred mass units</summary>
                 <label>
-                  New trial amounts
+                  Mass display
                   <select
                     value={system}
                     onChange={(e) => setSystem(e.target.value as typeof system)}
@@ -484,8 +527,8 @@ export function ProjectWorkbench() {
                   </select>
                 </label>
                 <p>
-                  Existing trial amounts, readings, prices and geometry retain their entered units.
-                  Earlier mass and balance tools convert their displays.
+                  New trial amounts and supported mass calculations use this display. Existing trial
+                  amounts, readings, prices and geometry retain their entered units.
                 </p>
               </details>
               <button onClick={() => setPage('legacy')}>
@@ -613,7 +656,7 @@ export function ProjectWorkbench() {
           <main className="pw-main">
             <div className="pw-topbar">
               <nav aria-label="Project workspace">
-                {(['options', 'trials', 'checks', 'costs'] as const).map((k) => (
+                {(['options', 'trials', 'adjust', 'checks', 'costs'] as const).map((k) => (
                   <button
                     key={k}
                     aria-current={page === k ? 'page' : undefined}
@@ -623,9 +666,11 @@ export function ProjectWorkbench() {
                       ? '1. Options'
                       : k === 'trials'
                         ? '2. Trials'
-                        : k === 'checks'
-                          ? '3. Checks'
-                          : '4. Costs'}
+                      : k === 'adjust'
+                          ? '3. Adjust mix'
+                          : k === 'checks'
+                            ? '4. Checks'
+                            : '5. Costs'}
                   </button>
                 ))}
               </nav>
@@ -649,11 +694,7 @@ export function ProjectWorkbench() {
                   {showHistoricalIdeas && selectedIdea && (
                     <div className="pw-notice">
                       <strong>Earlier idea selected for this question</strong>
-                      <p>
-                        This is an unverified proposal. Its numbers or assumptions may belong to an
-                        earlier situation; your recorded inputs and readings still control the
-                        checks.
-                      </p>
+                      <p>Review this idea against your current setup.</p>
                       <p>
                         <strong>{selectedIdea.idea.title}</strong> · {selectedIdea.idea.provider} /{' '}
                         {selectedIdea.idea.model}
@@ -686,10 +727,7 @@ export function ProjectWorkbench() {
                         <option value="user_reported">My entered measurements</option>
                         <option value="synthetic">Software simulation only</option>
                       </select>
-                      <small>
-                        Current setup versions only. Excluded records are not used. No physical
-                        result is predicted.
-                      </small>
+                      <small>Uses current setup versions and included readings.</small>
                     </label>
                   )}
                   <label>
@@ -697,10 +735,19 @@ export function ProjectWorkbench() {
                     <textarea
                       value={question}
                       maxLength={3000}
-                      onChange={(e) => setQuestion(e.target.value)}
+                      onChange={(e) => { setQuestion(e.target.value); if (!e.target.value.trim()) setMixQuestionContext(null) }}
                       placeholder="For example: How can I make a comfortable mat from these pieces? What could I change if it does not hold together?"
                     />
                   </label>
+                  {mixQuestionContext && <div className="pw-notice">
+                    <p>This question includes a mix calculation. If its project, setup or inputs change, recalculate before sending it.</p>
+                    <button type="button" onClick={() => { setPreviousQuestion(question); setQuestion(''); setMixQuestionContext(null) }}>Clear calculation question</button>
+                  </div>}
+                  {showHistoricalIdeas && previousQuestion && <details>
+                    <summary>Previous question kept for reference</summary>
+                    <p className="pw-saved-note">{previousQuestion}</p>
+                    <small>This text is not sent with the current question.</small>
+                  </details>}
                   <div className="pw-actions">
                     <button className="pw-primary" onClick={() => void explore()} disabled={busy || !modeReady}>
                       {busy
@@ -732,13 +779,25 @@ export function ProjectWorkbench() {
                       ? `${status.provider_name} · ${status.model}`
                       : 'Some requests need an AI connection. Local planning and calculations can work without one.'}
                   </small>
-                  <small>
-                    AI requests send this project’s current setups, selected readings, entered costs and any idea shown above to the chosen provider. Local guidance and calculations stay on this computer.
-                  </small>
+                  <details><summary>What is sent to my AI provider?</summary>
+                    <small>Your current setups, selected readings, entered costs and any idea shown above. Local calculations stay on this computer.</small>
+                  </details>
                   {planningMode?.key === planningKey && planningMode.failed && <p role="alert">The local planning check is unavailable. Reopen the app and try again.</p>}
                   {modeReady && planningMode?.planningOnly && <p className="pw-notice">Earlier AI ideas are kept but hidden while this material needs local planning.</p>}
                 </section>
                 <SoundGuidance project={w.project} question={question} />
+                {modeReady && startingGuidance && !advice && (showHistoricalIdeas || startingGuidance.origin === 'local') && (
+                  <section className="pw-answer" aria-live="polite">
+                    <span className="pw-overline">{startingGuidance.origin === 'local' ? 'Local planning guide · no AI call' : `Starting suggestion · ${startingGuidance.provider} / ${startingGuidance.model}`}</span>
+                    {PROJECT_INTAKE_FIELDS.some((field) => (startingGuidance.project_draft[field]?.value ?? '') !== (w.project[field]?.value ?? '')) && (
+                      <p className="pw-notice">You edited the project after this suggestion. Ask again to include your changes.</p>
+                    )}
+                    <p>{startingGuidance.reply}</p>
+                    <h2>A useful first step</h2>
+                    <p>{startingGuidance.first_step}</p>
+                    {startingGuidance.questions.length > 0 && <><h2>Still worth considering</h2><ul>{startingGuidance.questions.map((q) => <li key={q}>{q}</li>)}</ul></>}
+                  </section>
+                )}
                 {modeReady && advice && adviceProject === currentProject && (showHistoricalIdeas || advice.result_kind === 'local_planning_guidance') && (
                   <>
                     {adviceCase !== currentAdviceContext && (
@@ -777,6 +836,7 @@ export function ProjectWorkbench() {
                           <button
                             onClick={() => {
                               setQuestion('')
+                              setMixQuestionContext(null)
                               document
                                 .querySelector<HTMLTextAreaElement>('.pw-main textarea')
                                 ?.focus()
@@ -812,7 +872,7 @@ export function ProjectWorkbench() {
                                       <li key={i}>{t}</li>
                                     ))}
                                   </ul>
-                                  <p>{r.check}</p>
+                                  <CheckSuggestionHandoff suggestion={r.check} onPrepare={(name) => { setPreparedCheckName(name); setPage('checks') }} />
                                 </details>
                                 <button onClick={() => useRoute(r)}>Keep as a trial idea</button>
                               </article>
@@ -820,19 +880,12 @@ export function ProjectWorkbench() {
                           </div>
                         </section>
                       ))}
-                    <p className="pw-muted">
-                      These are proposals, not tested recipes or product results. Numeric checks use
-                      only the readings you enter.
-                    </p>
                   </>
                 )}
                 {(w.advice_notes?.length ?? 0) > 0 && (
                   <details className="pw-card pw-spaced">
                     <summary>Saved planning notes ({w.advice_notes!.length})</summary>
-                    <p>
-                      Historical model proposals, not measurements. Review them against the current
-                      project before acting.
-                    </p>
+                    <p>Ideas saved with earlier project details.</p>
                     {w.advice_notes!.filter((note) => modeReady && (showHistoricalIdeas || note.kind === 'local_guidance')).map((note) => (
                       <details key={note.id}>
                         <summary>
@@ -847,7 +900,7 @@ export function ProjectWorkbench() {
             )}
             <div hidden={page !== 'trials' && page !== 'checks'}>
               <TrialWorkspace
-                key={w.case_id}
+                key={`${w.case_id}:${workspaceOpenEpoch}`}
                 workspace={w}
                 onChange={update}
                 section={page === 'trials' ? 'trials' : 'checks'}
@@ -855,6 +908,22 @@ export function ProjectWorkbench() {
                 onReadingKindChange={setAdviceKind}
                 onAskIdea={askAboutIdea}
                 showHistoricalIdeas={showHistoricalIdeas}
+                checkingPlanningMode={!modeReady}
+                preparedCheckName={showHistoricalIdeas ? preparedCheckName : ''}
+                onPreparedCheckUsed={() => setPreparedCheckName('')}
+              />
+            </div>
+            <div hidden={page !== 'adjust'}>
+              <MixAdjustment
+                key={`${w.case_id}:${workspaceOpenEpoch}`}
+                workspace={w}
+                enabled={Boolean(modeReady && !planningMode?.planningOnly)}
+                planningContext={planningPayload}
+                onDraftChange={(updateDraft) => {
+                  setW((current) => updateDraft(current))
+                  setNotice('Unsaved changes. Save a project file to keep this work.')
+                }}
+                onDiscuss={(prompt) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setPage('options') }}
               />
             </div>
             <div hidden={page !== 'costs'}>
@@ -870,6 +939,7 @@ export function ProjectWorkbench() {
           </main>
         </div>
       )}
+      <footer className="pw-footer"><small>Test your product before production.</small></footer>
     </div>
   )
 }

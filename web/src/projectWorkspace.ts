@@ -1,5 +1,6 @@
 import type { ProjectIntakeDraft } from './projectIntake'
 import { validateMaterialAmount } from './checkEditing.ts'
+import type { MixAdjustmentDraft } from './mixAdjustment'
 
 export type TrialConfiguration = {
   id: string; revision: number; name: string
@@ -36,6 +37,10 @@ export type ProjectAdviceNote = {
   assessment_kind: 'synthetic' | 'user_reported'; text: string; kind: 'model_proposal' | 'local_guidance'
 }
 export type TrialIdea = {title:string;change:string;why:string;steps:string[];tradeoffs:string[];check:string;provider:string;model:string;note_id?:string}
+export type SavedMixAdjustmentDraft = {
+  case_id: string; configuration_id: string; configuration_revision: number
+  component_id: string; component_name: string; project_snapshot: ProjectIntakeDraft; values: MixAdjustmentDraft
+}
 export type ProjectWorkspace = {
   schema: 'rematter-project-v2'; case_id: string; project: ProjectIntakeDraft
   configurations: TrialConfiguration[]; checks: ProductCheck[]; records: TrialRecord[]
@@ -43,6 +48,7 @@ export type ProjectWorkspace = {
   record_exclusions?: Record<string, string>
   advice_notes?: ProjectAdviceNote[]
   trial_ideas?: Record<string,TrialIdea>
+  mix_adjustment_drafts?: SavedMixAdjustmentDraft[]
 }
 export type TrialComparisonRequest = Pick<ProjectWorkspace, 'case_id' | 'configurations' | 'checks' | 'records'> & {
   assessment_kind: 'synthetic' | 'user_reported'
@@ -90,7 +96,7 @@ function validateProjectDraft(value: unknown, label: string): void {
 export function newProjectWorkspace(project?: ProjectIntakeDraft): ProjectWorkspace {
   return { schema: PROJECT_WORKSPACE_SCHEMA, case_id: crypto.randomUUID(),
     project: project ? clone(project) : { product: null, input: null, variation: null, use: null, priorities: null, process: null, constraints: null },
-    configurations: [], checks: [], records: [], costs: {}, record_exclusions: {}, advice_notes: [], trial_ideas:{} }
+    configurations: [], checks: [], records: [], costs: {}, record_exclusions: {}, advice_notes: [], trial_ideas:{}, mix_adjustment_drafts: [] }
 }
 export function newCostDraft(): CostDraft {
   return { currency: '', mass_basis: '', functional_basis: '', acceptance_basis: '', prices: {},
@@ -113,7 +119,7 @@ export function currentConfigurations(workspace: ProjectWorkspace): TrialConfigu
 }
 
 export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
-  const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes', 'trial_ideas'], 'Workspace')
+  const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes', 'trial_ideas', 'mix_adjustment_drafts'], 'Workspace')
   if (root.schema !== PROJECT_WORKSPACE_SCHEMA) throw new Error('This is not a supported ReMatter project workspace.')
   text(root.case_id, 'Case identifier', 160, true)
   validateProjectDraft(root.project, 'Project details')
@@ -137,6 +143,31 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
     const key = configurationKey(item.id, item.revision)
     if (configurations.has(key)) throw new Error('Configuration versions must be unique; keep changed setups as new revisions.')
     configurations.set(key, item)
+  }
+  if (root.mix_adjustment_drafts !== undefined) {
+    list(root.mix_adjustment_drafts, 5000, 'Mix adjustment drafts')
+    const references = new Set<string>()
+    for (const entry of root.mix_adjustment_drafts) {
+      const draft = object(entry, ['case_id', 'configuration_id', 'configuration_revision', 'component_id', 'component_name', 'project_snapshot', 'values'], [], 'Mix adjustment draft')
+      text(draft.case_id, 'Mix adjustment case identifier', 160, true)
+      text(draft.configuration_id, 'Mix adjustment configuration identifier', 160, true)
+      revision(draft.configuration_revision)
+      text(draft.component_id, 'Mix adjustment material identifier', 160, true)
+      text(draft.component_name, 'Mix adjustment material name', 160, true)
+      validateProjectDraft(draft.project_snapshot, 'Mix adjustment project snapshot')
+      const configuration = configurations.get(configurationKey(draft.configuration_id, draft.configuration_revision))
+      if (draft.case_id !== root.case_id || !configuration) throw new Error('A mix adjustment draft must belong to this case and an exact captured setup version.')
+      const material = (configuration.materials as { id: string; name: string }[]).find((item) => item.id === draft.component_id)
+      if (!material || material.name !== draft.component_name) throw new Error('A mix adjustment draft must retain the selected material in its exact setup version.')
+      const reference = JSON.stringify([draft.configuration_id, draft.configuration_revision, draft.component_id])
+      if (references.has(reference)) throw new Error('Mix adjustment drafts must be unique for each setup version and material.')
+      references.add(reference)
+      const values = object(draft.values, ['inputMass', 'inputMin', 'inputMax', 'additionName', 'additionPercent', 'targetMin', 'targetMax'], ['inputMassOrigin'], 'Mix adjustment values')
+      for (const field of ['inputMin', 'inputMax', 'additionPercent', 'targetMin', 'targetMax']) text(values[field], `Mix adjustment ${field}`, 160)
+      text(values.inputMass, 'Mix adjustment portion mass', 168)
+      text(values.additionName, 'Mix adjustment stock name', 120)
+      if (values.inputMassOrigin !== undefined && (!['metric', 'us'].includes(values.inputMassOrigin as string) || !(values.inputMass as string).startsWith('invalid:'))) throw new Error('An invalid mass draft may record only its original metric or US unit.')
+    }
   }
   if (root.advice_notes !== undefined) {
     list(root.advice_notes, 30, 'Saved planning notes')

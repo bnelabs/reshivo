@@ -383,8 +383,7 @@ export function AssemblyMassPlanner({
             ))}
           </ul>
           <p className="helper">
-            Reweigh the complete unit after an actual adjustment. This checks mass only; retention,
-            durability, usable space and future-batch consistency remain unverified.
+            Reweigh the complete unit after an actual adjustment; check retention, durability and usable space separately.
           </p>
           <details>
             <summary>Calculation assumptions</summary>
@@ -402,8 +401,7 @@ export function AssemblyMassPlanner({
       <details className="assembly-nominal-tool">
         <summary>Nominal arithmetic when uncertainty or adjustment limits are unknown</summary>
         <p className="helper">
-          Uses only the entered mass and shared target. It does not check uncertainty or available
-          additions/removals. Enter the mass in the observation details above.
+          Enter the mass in the observation details above. This calculation excludes uncertainty and adjustment limits.
         </p>
         <button
           type="button"
@@ -422,7 +420,7 @@ export function AssemblyMassPlanner({
                 : `${nominal.status === 'add' ? 'Add' : 'Remove'} ${massInterval(nominal.adjustment_min_kg, nominal.adjustment_max_kg)} for the entered mass and target.`}
             </p>
             <p>
-              Reweigh after adjustment; this result does not establish a feasible physical change.
+              Reweigh after adjustment.
             </p>
           </div>
         )}

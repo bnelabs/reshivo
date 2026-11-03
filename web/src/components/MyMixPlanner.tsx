@@ -381,8 +381,7 @@ export function MyMixPlanner({
                 </p>
               )}
             <p className="helper">
-              The density reading can already reflect this specimen’s voids and packing. It does not
-              measure what happens when they change.
+              Density can include this specimen’s voids and packing; changes need their own readings.
             </p>
           </div>
           <div className="product-step">
@@ -620,9 +619,8 @@ export function MyMixPlanner({
                 {quantity(result.target_max_kg)} kg target.
               </p>
               <p className="product-scope-note">
-                This simulates the readings you entered at an exact assumed volume. The mean is
-                reading-weighted; repeated tests are not additional specimens or batches. These
-                scenarios do not establish finished-product consistency or predict future batches.
+                Simulation at the entered volume. The mean weights each reading; repeats remain
+                linked to their stated specimen or batch.
               </p>
               <div className="product-reading-table">
                 <table>

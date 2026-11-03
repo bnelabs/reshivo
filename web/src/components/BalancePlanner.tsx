@@ -260,8 +260,7 @@ export function BalancePlanner({
       </summary>
       <p>
         A mass correction can still leave a product off balance. Use a centre-of-mass reading for
-        this same assembly and two known trim mass-centre locations. This checks one axis; it does
-        not establish tipping safety or enclosure strength.
+        this same assembly and two known trim mass-centre locations. This checks one axis.
       </p>
       {!targetReady ? (
         <p>

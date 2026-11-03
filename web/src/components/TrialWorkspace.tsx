@@ -44,6 +44,9 @@ type Props = {
   onReadingKindChange: (kind: 'synthetic' | 'user_reported') => void
   onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea) => void
   showHistoricalIdeas: boolean
+  checkingPlanningMode: boolean
+  preparedCheckName: string
+  onPreparedCheckUsed: () => void
 }
 export function TrialWorkspace({
   workspace: w,
@@ -53,6 +56,9 @@ export function TrialWorkspace({
   onReadingKindChange,
   onAskIdea,
   showHistoricalIdeas,
+  checkingPlanningMode,
+  preparedCheckName,
+  onPreparedCheckUsed,
 }: Props) {
   const system = useUnitSystem()
   const [editing, setEditing] = useState<TrialConfiguration | null>(null)
@@ -152,14 +158,19 @@ export function TrialWorkspace({
               {
                 id: uid(),
                 name:
-                  (w.project.input?.value.length ?? 0) <= 160 ? (w.project.input?.value ?? '') : '',
+                  (w.project.input?.value.length ?? 0) <= 160
+                    ? (w.project.input?.value ?? '')
+                    : 'Project materials (see project description)',
                 amount: '',
                 unit: system === 'us' ? 'lb' : 'kg',
               },
             ],
             process: w.project.process?.value ?? '',
             geometry: '',
-            notes: '',
+            notes:
+              (w.project.input?.value.length ?? 0) > 160
+                ? 'This line represents your project description. Add the ingredients and amounts when known.'
+                : '',
           },
     )
   }
@@ -338,7 +349,7 @@ export function TrialWorkspace({
           <p>
             {section === 'trials'
               ? 'Record the whole recipe, process and shape. Changing any of them creates a new version.'
-              : 'Keep every requirement visible. A grip reading cannot answer a comfort or sound question.'}
+              : 'Keep every product requirement visible.'}
           </p>
         </div>
         {section === 'trials' && (
@@ -384,8 +395,7 @@ export function TrialWorkspace({
                 {c.notes && (showHistoricalIdeas || !hasLinkedIdea(c)) && <p>{c.notes}</p>}
                 {!showHistoricalIdeas && hasLinkedIdea(c) && (
                   <p>
-                    Earlier AI ideas are kept in this project but unavailable in the current
-                    planning mode.
+                    {checkingPlanningMode ? 'Checking whether saved ideas are available for this case.' : 'Earlier AI ideas are kept in this project but unavailable in the current planning mode.'}
                   </p>
                 )}
                 {showHistoricalIdeas &&
@@ -394,11 +404,8 @@ export function TrialWorkspace({
                     const idea = w.trial_ideas![setupKey(c)]
                     return (
                       <details>
-                        <summary>Earlier unverified idea: {idea.title}</summary>
-                        <p>
-                          This is a model proposal from {idea.provider} / {idea.model}; it may
-                          differ from the materials and process entered above.
-                        </p>
+                        <summary>Saved idea to review: {idea.title}</summary>
+                        <p className="pw-muted">Idea from {idea.provider} / {idea.model} · review against your setup</p>
                         <p>
                           <strong>Proposed change:</strong> {idea.change}
                         </p>
@@ -457,8 +464,7 @@ export function TrialWorkspace({
               </label>
               <h3>Materials in this setup</h3>
               <p className="pw-muted">
-                Include the binder and any named contaminant. Blank amounts mean unknown; they are
-                never filled from a study.
+                Include the binder and any named contaminant. Leave an amount blank if unknown.
               </p>
               {editing.materials.map((m, i) => (
                 <div className="pw-material-row" key={m.id}>
@@ -607,11 +613,7 @@ export function TrialWorkspace({
       {section === 'checks' && (
         <>
           <div className="pw-notice">
-            {kind === 'synthetic'
-              ? 'Simulation of made-up readings.'
-              : 'User-entered readings; not independently verified.'}{' '}
-            Results describe only the entered setups and test conditions. They do not predict future
-            batches.
+            {kind === 'synthetic' ? 'Simulated readings' : 'Your entered readings'} · current setups and test conditions
           </div>
           <label className="pw-inline-label">
             Show readings from
@@ -707,8 +709,7 @@ export function TrialWorkspace({
           </div>
           {(!setups.length || !w.checks.length) && (
             <p>
-              Add a trial setup and the checks that matter to it. You do not need to invent limits
-              to keep working.
+              Add a trial setup and the checks that matter to it. Limits can stay blank.
             </p>
           )}
           <button
@@ -878,15 +879,20 @@ export function TrialWorkspace({
           <div className="pw-card-grid pw-spaced">
             <section className="pw-card">
               <h2>Add a product check</h2>
+              {preparedCheckName && (
+                <div className="pw-notice">
+                  <p>Your proposed check name: <strong>{preparedCheckName}</strong></p>
+                  <p>Choose a method, unit and any limits yourself. Nothing has been saved yet.</p>
+                  <button type="button" disabled={Boolean(check.name || check.unit || check.method || check.minimum || check.maximum)} onClick={() => { setCheck({ ...check, name: preparedCheckName }); onPreparedCheckUsed() }}>Use this name in the empty draft</button>
+                  {(check.name || check.unit || check.method || check.minimum || check.maximum) && <small>Finish or clear your current draft before using this name.</small>}
+                </div>
+              )}
               {error && errorScope === 'new-check' && (
                 <p className="pw-error" role="alert">
                   {error}
                 </p>
               )}
-              <p>
-                If you do not know the right measurement, return to Options and ask. A qualitative
-                aim stays an aim until a suitable check is agreed.
-              </p>
+              <p>Need help choosing a measurement? Ask in Options.</p>
               <label>
                 What are you checking?
                 <input
@@ -1009,8 +1015,7 @@ export function TrialWorkspace({
                   <details>
                     <summary>Specimen, run or batch IDs (if known)</summary>
                     <p>
-                      Leave unknown grouping blank. Several readings do not automatically become
-                      several batches.
+                      Leave unknown grouping blank; label batches only when you can identify them.
                     </p>
                     {(
                       ['reading_id', 'specimen_id', 'run_id', 'batch_id', 'repeat_of'] as const

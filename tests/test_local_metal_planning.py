@@ -93,6 +93,30 @@ class LocalMetalPlanningTests(unittest.TestCase):
                      'Unidentified plastic powder and copper wire as binder.'):
             with self.subTest(text=text): self.assertFalse(needs_local_metal_planning({'message': text}))
 
+    def test_added_stock_reverse_metal_phrases_are_checked_without_inferring_identity(self):
+        # This is the same user-history field used by the primary mix stock preflight.
+        case = {'brief': {'input': 'Recycled rubber', 'process': 'I have a suitable facility.'},
+                'history': [{'role': 'user', 'content': ''}]}
+        for material in ('powder containing metal', 'powder with metal', 'dust with unidentified metal',
+                         'filings containing unknown metal', 'shavings mixed with metal',
+                         'particles with metallic residue', 'powder containing copper'):
+            with self.subTest(material=material):
+                case['history'][0]['content'] = 'Added stock: ' + material
+                self.assertTrue(needs_local_metal_planning(case))
+        # A named powder is identified only where it is itself the described stock;
+        # an unrelated named stream cannot identify a generic metal-containing stock.
+        case['history'][0]['content'] = 'Added stock: copper dust'
+        self.assertFalse(needs_local_metal_planning(case))
+        case['brief']['variation'] = 'A separate stock is copper dust.'
+        case['history'][0]['content'] = 'Added stock: powder with metal'
+        self.assertTrue(needs_local_metal_planning(case))
+        for material in ('unidentified recycled plastic powder', 'flour powder', 'powder with plastic',
+                         'plastic powder with copper wire', 'plastic powder containing metal bolts'):
+            with self.subTest(material=material):
+                case['brief']['variation'] = ''
+                case['history'][0]['content'] = 'Added stock: ' + material
+                self.assertFalse(needs_local_metal_planning(case))
+
     def test_named_metal_and_facility_must_bind_same_particulate_stream(self):
         context = {'brief': {'input': 'Generic metal dust', 'variation':'Copper metal dust is another stream',
                              'process':'I have access to a suitable industrial facility.'}}

@@ -395,8 +395,7 @@ export function EngineeringNoteReader({
               <Questions items={[...applied.value.questions, ...applied.value.validation_errors]} />
               {applied.value.check ? (
                 <p>
-                  The diagram uses grams and millimetres. These readings and bounds support this simulation only. Remeasure after a physical
-                  adjustment. Retention, durability and tipping safety still need their own checks.
+                  The diagram uses grams and millimetres. Remeasure after a physical adjustment; check retention, durability and tipping safety separately.
                 </p>
               ) : (
                 <p>

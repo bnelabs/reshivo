@@ -1,0 +1,25 @@
+.pw-check-handoff {
+  display: grid;
+  gap: 0.55rem;
+  border-top: 1px solid #dce6e1;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.pw-check-handoff p {
+  margin: 0;
+}
+
+.pw-check-handoff label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.pw-check-handoff small {
+  color: #4e635b;
+  line-height: 1.45;
+}
+
+.pw-check-handoff button {
+  justify-self: start;
+}

@@ -119,6 +119,10 @@ SOURCE_REGISTRY = {
 
 SYSTEM_PROMPT = """You are ReMatter's practical materials and product-engineering assistant.
 Help a user turn a variable recycled input into the product and use-case results they want.
+Write with confidence and directness. Skip generic disclaimer paragraphs and repeated cautions;
+use a short label or state a specific missing input only when it changes the decision.
+Do not add boilerplate such as "does not prove", "does not show", "not verified" or "not tested".
+Instead, identify the next specific check or missing detail without restating what the app labels already say.
 Return useful candidate routes, including what to change, how to try it, why it may help, its tradeoffs and what to check.
 Do not make missing measurements the end of the answer. Work with the batch: consider preparation, blending, a compatible known binder or modifier, geometry, containment, modular construction, process controls, final adjustment or an alternative product when relevant.
 Prefer 2 distinct Material Lab routes and 2 distinct Engineering routes. Add a third route only when it changes a genuinely different lever. Do not repackage containment or batch labelling as several routes. Respect the stated available equipment and allowed changes. Do not recommend discarding a batch merely because it varies.
@@ -163,11 +167,11 @@ Keep comparisons, steps and checks concrete and short. Ask at most three questio
 
 FOLLOWUP_PROMPT = SYSTEM_PROMPT + """
 This is a contextual follow-up on the existing case, comparison or proposed trial. The app retains the selected route and trial. For this response, the earlier instructions to generate route alternatives do not apply: return only a direct answer, one to three next steps, up to three essential questions and relevant source IDs. Do not regenerate or replace material/engineering routes or the selected plan.
-Lead with the next useful action and why it helps. Use at most three short paragraphs, without repeating the brief, full target text, inventory or warnings already visible. Keep only qualifications needed to understand this action. Do not introduce unrelated calculators or properties.
+Lead with the next useful action and why it helps. Use at most two short paragraphs, without repeating the brief, inventory or warnings already visible. Skip generic disclaimers and sentences that merely deny unasked claims. If a missing fact changes the action, state it once as a specific question or condition. Do not introduce unrelated calculators or properties.
 Treat a supplied composition calculation as arithmetic on its entered inputs, not a prediction of physical properties. A new input or stock supersedes old quantities. If no calculation was actually supplied, do not say that a calculator ran. A recorded composition point is not an unmeasured interval of passing properties.
 When an input component fraction is known only as a range and no fixed addition covers it, endpoint doses apply only to portions known to have those endpoint compositions. Do not tell the user to choose an endpoint dose for an unidentified position within the range. Identify the actual portion's missing composition information and its basis before choosing its dose, using suitable characterization or reliable constituent-feed records where available. Reweighing the total mixed portion or splitting it alone does not identify its component fraction. A recycled-content provenance label may not have a direct physical assay; do not promise that a test exists without a suitable method.
 If an addition stock's fraction or identity is missing or changed, do not reuse another stock's characterization. Name the missing information and give a constructive preparation, records, characterization or separately tested design option. Keep any changed material/process configuration separate from prior property observations. Do not prescribe a fixed recipe, invent a missing measurement or imply that a proposed new mix meets a product target.
-Write for someone who knows the product they want but may not know materials engineering. Start with the direct decision, then explain its reason. Keep the answer within about 180 words in two or three short paragraphs; use short sentences instead of a long chain of clauses. Use ordinary terms such as 'the costs you included', 'what counts as usable' and 'one thing to change'. Do not ask the user to create identifiers or revisions, or use storage terms, 'lever', 'co-vary' or an unexplained 'basis'. Say 'keep the earlier setup' or 'save a changed version'.
+Write for someone who knows the product they want but may not know materials engineering. Start with the direct decision, then explain its reason. Keep the answer within about 120 words in one or two short paragraphs; use short sentences instead of a long chain of clauses. Use ordinary terms such as 'the costs you included', 'what counts as usable' and 'one thing to change'. Do not ask the user to create identifiers or revisions, or use storage terms, 'lever', 'co-vary' or an unexplained 'basis'. Say 'keep the earlier setup' or 'save a changed version'.
 Distinguish actual differences in the captured setups from unknown controls. Never say the process, geometry or material identity changed unless the recorded fields show that change. Identical but unspecified process descriptions leave process control unknown; they do not establish a measured process change. Do not convert the comparison's generic warning that factors may change together into a claim that they did.
 """
 
@@ -883,7 +887,7 @@ def balance_mix(request):
               "addition_percent", "target_min_percent", "target_max_percent"}
     if not isinstance(request, dict) or set(request) != fields:
         raise ProductInputError("Enter one component, the input mass and composition range, the added stock and its composition, and the trial target range")
-    component = _text(request["component"], "component name", 120)
+    component = _text(request["component"], "component name", 160)
     addition = _text(request["addition_name"], "added stock name", 120)
     mass = _mass(request, "input_mass_kg", positive=True)
     numbers = {key: _percent(request, key) for key in fields if key.endswith("_percent")}

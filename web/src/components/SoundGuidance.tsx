@@ -31,9 +31,7 @@ export function SoundGuidance({ project, question = '' }: Props) {
       </ul>
       <p>
         Note the frequencies or types of noise that matter, and how the product would be mounted or
-        installed. You can sketch and plan at home; the appropriate measurements need suitable
-        equipment and a stated test setup. These are possible checks, not results or proof that a
-        product works.
+        installed. Measurements need suitable equipment and a stated test setup.
       </p>
       <p>
         <a

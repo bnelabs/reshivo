@@ -115,7 +115,6 @@ export function ProductPlanner({
             </div>
             <span>{catalog.source_groups.length} source groups</span>
           </div>
-          <p className="helper">These studies do not supply missing properties for My mix.</p>
           <div className="source-group-list">
             {catalog.source_groups.map((group) => (
               <details className="source-group" key={group.id}>

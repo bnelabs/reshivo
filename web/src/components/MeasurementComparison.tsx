@@ -418,7 +418,7 @@ export function MeasurementComparison({
         2,
       )
     : ''
-  const question = `These are my reported or synthetic observations, not a prediction. Suggest practical next checks or changes, without assuming future consistency or unmeasured properties. Comparison summary:\n${comparisonSummary}`
+  const question = `Suggest practical next checks or changes using these reported or synthetic observations. Comparison summary:\n${comparisonSummary}`
   function download() {
     if (!visibleResult) return
     const url = URL.createObjectURL(
@@ -672,9 +672,7 @@ export function MeasurementComparison({
           </select>
         </label>
         <p className="measurement-help">
-          Use the same units throughout. Decimal values, including scientific notation, are kept
-          exactly as entered. No unit conversion, estimates between settings or future-batch
-          predictions are made.
+          Use the same units throughout. Decimal values are kept exactly as entered; units are not converted.
         </p>
         {settings.map((setting, settingIndex) => (
           <fieldset key={setting.key} className="measurement-setting">
@@ -898,7 +896,7 @@ export function MeasurementComparison({
                 at least {fields.target_min} {fields.property_unit} (no upper limit)
               </>
             )}
-            . These results describe only the readings you entered.
+            .
           </p>
           {visibleResult.settings.map((setting) => (
             <div key={setting.id} className="measurement-result-row">
@@ -937,11 +935,7 @@ export function MeasurementComparison({
               </ul>
             </div>
           ))}
-          <p>
-            Measurement uncertainty and independence were not assessed. These observations do not
-            establish future performance, batch consistency, or suitability of an untested product.
-            Test the actual product and conditions.
-          </p>
+          <p className="measurement-help">Measurement uncertainty and independence have not been assessed.</p>
           {onPrepareComposition && matchingSettings.length > 0 && (
             <section className="measurement-next-trial" aria-label="Plan a composition trial">
               <h3>Use a setting for your next trial</h3>

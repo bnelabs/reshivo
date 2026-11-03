@@ -241,7 +241,7 @@ class _Calculation:
             self.ask("output.mode", "Is usable output observed or a planning estimate?", "output")
         acceptance = self.text(item.get("acceptance_basis"), "output.acceptance_basis", "output")
         if not acceptance:
-            self.ask("output.acceptance_basis", "What does usable mean for this batch? Cost does not qualify physical performance.", "output")
+            self.ask("output.acceptance_basis", "What does usable mean for this batch?", "output")
         values = {}
         if mode == "actual" and "accepted_fraction" in item:
             self.error("output", "output_mode_conflict", "Use actual usable output directly or planned gross output times acceptance, not both.", "output")

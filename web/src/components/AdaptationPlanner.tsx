@@ -523,10 +523,6 @@ export function AdaptationPlanner({
               {interval(plan.fixed_volume.volume_min_cm3, plan.fixed_volume.volume_max_cm3, 'cm³')}.
             </p>
           )}
-          <p className="helper">
-            These checks cover modeled assembled mass and occupied external fill volume only.
-            Retention, strength, durability and future batches are not established.
-          </p>
           {plan.observations.some((row) => !row.adjustable.feasible && row.diagnostics) && (
             <div className="workshop-open-questions">
               <h4>What would let this input fit?</h4>
@@ -786,8 +782,7 @@ export function AdaptationPlanner({
                 ))}
               </ul>
               <p className="helper">
-                A mass correction does not establish retention, durability or finished-product
-                consistency. Reweigh after an actual adjustment.
+                Reweigh after an actual adjustment; check retention and durability separately.
               </p>
             </div>
           )}

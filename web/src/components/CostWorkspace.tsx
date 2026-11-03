@@ -4,6 +4,7 @@ import { newCostDraft } from '../projectWorkspace'
 import type { ProjectWorkspace, CostDraft } from '../projectWorkspace'
 import { costRequest } from '../manufacturingCost'
 import { currentSetups, setupKey } from './TrialWorkspace'
+import { costIssueText, displayCostAmount, roundedWinnerCollision } from '../costDisplay'
 
 type Props = {
   workspace: ProjectWorkspace
@@ -12,10 +13,7 @@ type Props = {
   onReadingKindChange: (kind: 'user_reported' | 'synthetic') => void
   showHistoricalIdeas: boolean
 }
-const displayMoney = (value: unknown) =>
-  typeof value === 'string'
-    ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 })
-    : 'Unknown'
+const displayMoney = displayCostAmount
 export function CostWorkspace({
   workspace: w,
   onChange,
@@ -180,8 +178,7 @@ export function CostWorkspace({
             )}
             {c.materials.some((m) => m.unit === 'volume_percent') && (
               <p className="pw-notice">
-                Volume percentages do not establish charged masses. Record weighed material amounts
-                in a new setup before calculating their cost.
+                Record weighed material amounts in a new setup to calculate costs from volume percentages.
               </p>
             )}
           </section>
@@ -288,8 +285,7 @@ export function CostWorkspace({
               </h2>
             </summary>
             <p>
-              Enter what “usable” means. A count of accepted items does not establish any unmeasured
-              physical property.
+              Define what makes an item usable for this estimate.
             </p>
             <label>
               Same product / function for comparison
@@ -369,8 +365,7 @@ export function CostWorkspace({
           {result && resultKey === fingerprint && (
             <section className="pw-card pw-spaced" aria-live="polite">
               <span className="pw-overline">
-                {d.mode === 'planned' ? 'Planning simulation' : 'Simulation from entered costs'} ·
-                physical requirements not checked here
+                {d.mode === 'planned' ? 'Cost simulation · planning inputs' : 'Cost simulation · entered costs'}
               </span>
               <h2>
                 {result.status === 'complete'
@@ -407,18 +402,14 @@ export function CostWorkspace({
                     </div>
                   ))}
               </div>
-              {['errors', 'questions', 'warnings'].map(
-                (k) =>
-                  result[k]?.length > 0 && (
-                    <ul key={k}>
-                      {result[k].map((x: any, i: number) => (
-                        <li key={i}>
-                          {typeof x === 'string' ? x : (x.message ?? JSON.stringify(x))}
-                        </li>
-                      ))}
-                    </ul>
-                  ),
-              )}
+              {['errors', 'questions', 'warnings'].map((k) => {
+                const issues = (result[k] ?? []).filter((x: any) => x !== 'Usable output and unit costs are planning equivalents, not observed products.')
+                return issues.length > 0 && (
+                  <ul key={k}>
+                    {issues.map((x: any, i: number) => <li key={i}>{costIssueText(x)}</li>)}
+                  </ul>
+                )
+              })}
             </section>
           )}
           {comparison && compareKey === comparisonFingerprint && (
@@ -520,16 +511,12 @@ export function CostWorkspace({
                     {winner.configuration_ids
                       .map((id: string) => { const s = setups.find((item) => item.id === id); return s ? setupName(s) : id })
                       .join(', ')}
+                    {roundedWinnerCollision(comparison, metric) && (
+                      <small> The costs are too close to distinguish at the displayed precision. The selection uses the full entered values.</small>
+                    )}
                   </p>
                 ))}
-              <p>
-                {kind === 'synthetic'
-                  ? 'Simulation using the fictional readings selected above.'
-                  : 'Based on the measurements you entered.'}{' '}
-                This compares recorded setups only; it does not prove a finished product or predict
-                future batches. Displayed costs are rounded; the comparison uses the full entered
-                values.
-              </p>
+              <p className="pw-muted">{kind === 'synthetic' ? 'Simulated readings' : 'Your entered readings'} · recorded setups</p>
             </section>
           )}
         </>
