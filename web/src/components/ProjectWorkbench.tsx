@@ -4,6 +4,7 @@ import { api } from '../api'
 import { PromptProjectStart } from './PromptProjectStart'
 import { ProviderSettings } from './ProviderSettings'
 import { ConceptSketch } from './ConceptSketch'
+import { CheckedMixAdvice } from './CheckedMixAdvice'
 import { SoundGuidance } from './SoundGuidance'
 import { MixAdjustment } from './MixAdjustment'
 import { CheckSuggestionHandoff } from './CheckSuggestionHandoff'
@@ -393,6 +394,7 @@ export function ProjectWorkbench() {
           : null
         const text = [
           ...('guidance_adjusted' in result && result.guidance_adjusted ? ['Locally adapted for planning.'] : []),
+          ...('mix_guidance_adjusted' in result && result.mix_guidance_adjusted ? ['Mix amount corrected using the calculator.'] : []),
           `Question: ${prompt}`,
           result.answer,
           ...result.next_steps.map((step) => `Next action: ${step}`),
@@ -916,9 +918,15 @@ export function ProjectWorkbench() {
                       </p>
                     )}
                     <section className="pw-answer" aria-live="polite">
+                      {'mix_calculation' in advice && advice.mix_calculation && adviceCase === currentAdviceContext && (
+                        <CheckedMixAdvice feasible={advice.mix_calculation.result.feasible} bounds={advice.mix_calculation.result.exact_addition_kg} stock={advice.mix_calculation.inputs.addition_name} system={system} />
+                      )}
                       <span className="pw-overline">
                         {advice.result_kind==='local_planning_guidance'?'Local planning guide · no AI call':`Proposed next steps · ${advice.provider} / ${advice.model}${advice.guidance_adjusted ? ' · locally adapted for planning' : ''}`}
                       </span>
+                      {'mix_guidance_adjusted' in advice && advice.mix_guidance_adjusted && (
+                        <p className="pw-notice" role="status">A mix amount was corrected using your calculation.</p>
+                      )}
                       {advice.answer
                         .split('\n')
                         .filter(Boolean)

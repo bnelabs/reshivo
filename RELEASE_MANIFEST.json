@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T17:35:33.622616+00:00",
+  "prepared_utc": "2026-11-03T17:46:26.065707+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -41,8 +41,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 2300,
-      "sha256": "dc5c9bd95988e72565dfc516b3d8554f3d0f43bfe6dd5fb03b78c4faa6624ea7"
+      "bytes": 2353,
+      "sha256": "ae3002e1832b9e0b20bd08757be114b5a575b8c6eb0824acda49f04ddb158342"
     },
     {
       "path": ".gitignore",
@@ -51,8 +51,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 1775,
-      "sha256": "001425d5a347c0d076ad0df79b8cbc37c23d99d48b8ab5a71e46e389eec662a6"
+      "bytes": 2133,
+      "sha256": "aff6340142bf11feb002c485cd90371c5856d55f148f382d6a193ede12e0881f"
     },
     {
       "path": "LICENSE",
@@ -1172,12 +1172,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 362,
-      "sha256": "9a83bfef8d8727c265b2f0805cb46120bbcff54d65dc45842d524cc9f1a23737"
+      "sha256": "ffbb6f53381578ab64edd625410098ed435477adcb848fec4d9fa99a0a0fe285"
     },
     {
       "path": "rematter/__init__.py",
       "bytes": 113,
-      "sha256": "18a8dc159d0e873fc20f85d155b096c0d7297dc0a16da47ab16becfabeab49e7"
+      "sha256": "1abd69f90395878916a02560a83877b33f46299f70e777b94f700b28edcfc5ae"
     },
     {
       "path": "rematter/__main__.py",
@@ -1191,8 +1191,8 @@
     },
     {
       "path": "rematter/advisor.py",
-      "bytes": 91832,
-      "sha256": "86500120661e1a8ab8c63d9c4fea1513424e4be70e11c93e4303836641d822ae"
+      "bytes": 96800,
+      "sha256": "9fcc8b9152ecd7922d71a67275f8d7013a3702191b90a63fca935a26260289aa"
     },
     {
       "path": "rematter/balance.py",
@@ -1450,6 +1450,11 @@
       "sha256": "1630808c2edf9c356a6d896131acb277f8cec85c93e59a20e0626cec9ff07814"
     },
     {
+      "path": "tests/test_advisor_mix_range_guard.py",
+      "bytes": 7241,
+      "sha256": "c088e4417562b09ea7befc5f1bfa4f7df3f08c78873b6a23eb4f71b491bd097b"
+    },
+    {
       "path": "tests/test_advisor_project_context.py",
       "bytes": 22536,
       "sha256": "cfbd61422e3ec523d08ac0a26d48f3cdac245092655b95442838da18a057dfa7"
@@ -1695,6 +1700,11 @@
       "sha256": "9ff49275141d1970edce55a9a87bf751754a3d832d367fc61bb78c87b9ca2ea2"
     },
     {
+      "path": "web/checks/checked-mix-advice.test.mjs",
+      "bytes": 1240,
+      "sha256": "d79b5a1750928713b2ba1b3179ab24e81d908351c2f042cc736b53364adc9c77"
+    },
+    {
       "path": "web/checks/cost-comparison-setup.test.mjs",
       "bytes": 2866,
       "sha256": "f5ba1143511041c7408eb1d46fd478615ad3b183296c075d42bf2dab0fdb7a2f"
@@ -1827,12 +1837,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "f551b6a872f9fc6cba6ccb7690fa8bbca832b9d2bf48050345096e43ebc719fc"
+      "sha256": "d4858d67c064ec40c865814a45164800ab5066407ffaf3206a022c67a54ffc1b"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "b5878a2ccd3c0128d2ba1399b0d70e0323b7a680e658c7245feda8343f30c900"
+      "sha256": "0b505cb83707ba7021afa0c421e19d0d3ed340077e91b14a1a20afacd69e68f5"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -1893,6 +1903,11 @@
       "path": "web/src/components/CheckSuggestionHandoff.tsx",
       "bytes": 1360,
       "sha256": "a5318e275fca9824c9954b975d731baac2e25df8620f94a156ce60a4075da759"
+    },
+    {
+      "path": "web/src/components/CheckedMixAdvice.tsx",
+      "bytes": 1161,
+      "sha256": "a6da9c822c0eb80df583442aa449db12531e092ec3fdd80426efb49d97d24b4e"
     },
     {
       "path": "web/src/components/ConceptSketch.tsx",
@@ -1991,8 +2006,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 52098,
-      "sha256": "12fee2e1ffdcf527d17eafb92f899e7d2a01bb54882cc8d94e41a05a5e53e072"
+      "bytes": 52891,
+      "sha256": "15aa5440983472103da4694bfd50d828b1912a7dce591c503c0554c6d12fe801"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2211,8 +2226,8 @@
     },
     {
       "path": "web/src/types.ts",
-      "bytes": 12133,
-      "sha256": "d8d2de2d2dee7ed87f3d538e6a4a498c9750c126e38ba5cd5814e3fce740c734"
+      "bytes": 12167,
+      "sha256": "4b2cb95e98f1ec6982c887400077dcaadd1aca8532da2b87dc384611d5c60695"
     },
     {
       "path": "web/src/unitConversion.ts",

@@ -895,6 +895,109 @@ def _routes(rows, section):
     return result
 
 
+_MIX_KG_RANGE = re.compile(
+    r"(?<![\w.])(?P<low>-?\d+(?:\.\d+)?)\s*(?:kg\s*)?"
+    r"(?:to|[-–—])\s*(?P<high>-?\d+(?:\.\d+)?)\s*kg\b", re.IGNORECASE,
+)
+_MIX_ADD_BEFORE = re.compile(
+    r"\b(?:add|adding|addition|dose)(?:\s+(?:of|range|between|from|about|roughly|approximately))*\s*:?\s*$",
+    re.IGNORECASE,
+)
+_MIX_OUTCOME_AFTER = re.compile(
+    r"^\s+(?:(?:would|will|should|can)\s+)?(?:keep(?:s)?|bring(?:s)?|reach(?:es)?|"
+    r"meet(?:s)?|achieve(?:s)?|fit(?:s)?|stay(?:s)?)\b", re.IGNORECASE,
+)
+_MIX_NEGATION_BEFORE = re.compile(
+    r"\b(?:do\s+not|don['’]t|never|avoid|should\s+not|must\s+not|cannot|can['’]t)\s*$",
+    re.IGNORECASE,
+)
+_MIX_HYPOTHETICAL = re.compile(
+    r"\b(?:if|when|unless|suppose|assuming|hypothetically|hypothetical|imagine)\b",
+    re.IGNORECASE,
+)
+_MIX_QUESTION_START = re.compile(
+    r"^\s*(?:can|could|should|would|is|does|do|may)\s+(?:i|you|we|it|this|that)\b",
+    re.IGNORECASE,
+)
+_MIX_NEGATED_STATEMENT = re.compile(
+    r"\b(?:not|never|avoid|incorrect|false|inaccurate|wrong|cannot|"
+    r"don['’]t|can['’]t|doesn['’]t|isn['’]t)\b", re.IGNORECASE,
+)
+_MIX_OTHER_CONTEXT = re.compile(
+    r"\b(?:earlier|previous|prior|historical|old|other|another|different|former|last)\s+"
+    r"(?:batch|mix|plan|recipe|case|portion|material|setup|stock|target)\b", re.IGNORECASE,
+)
+_MIX_INPUT_MASS = re.compile(
+    r"(?<![\w.])(?P<mass>\d+(?:\.\d+)?)\s*kg\s+(?:input|portion|batch|mix)\b",
+    re.IGNORECASE,
+)
+
+
+def _correct_recognized_mix_ranges(case, data):
+    """Replace recognizable invalid kg addition claims; other prose is not validated."""
+    mix = case.get("mix_calculation")
+    if not mix:
+        return data, False
+    result = mix["result"]
+    exact = result["exact_addition_kg"]
+
+    def fraction(value):
+        return Fraction(int(value["numerator"]), int(value["denominator"]))
+
+    if result["feasible"]:
+        low = fraction(exact["min"])
+        high = None if exact["max"] is None else fraction(exact["max"])
+        correction = ("Mix calculation correction: This suggested range does not match your calculation. "
+                      "Use the checked amount in your mix calculation.")
+    else:
+        low = high = None
+        correction = "Mix calculation correction: No single fixed addition covers the entered range."
+    stock = mix["inputs"]["addition_name"].strip()
+    stock_after = re.compile(r"^\s+of\s+(?:the\s+)?" + re.escape(stock) + r"(?=\s|[,.!?;:]|$)", re.IGNORECASE)
+    changed = False
+
+    def correct_text(text):
+        nonlocal changed
+        # A sentence is replaced, never a numeric fragment in unrelated text.
+        parts = re.split(r"(?<=[.!?])(?=\s|$)", text)
+        for index, sentence in enumerate(parts):
+            if (sentence.rstrip().endswith("?") or _MIX_HYPOTHETICAL.search(sentence)
+                    or _MIX_QUESTION_START.search(sentence) or _MIX_NEGATED_STATEMENT.search(sentence)
+                    or _MIX_OTHER_CONTEXT.search(sentence)):
+                continue
+            stated_masses = _MIX_INPUT_MASS.finditer(sentence)
+            if any(Fraction(item.group("mass")) != Fraction(str(mix["inputs"]["input_mass_kg"])) for item in stated_masses):
+                continue
+            for match in _MIX_KG_RANGE.finditer(sentence):
+                before = sentence[max(0, match.start() - 100):match.start()]
+                after = sentence[match.end():]
+                directive = _MIX_ADD_BEFORE.search(before)
+                direct = bool(directive and not _MIX_NEGATION_BEFORE.search(before[:directive.start()]))
+                named = stock_after.match(after)
+                named_outcome = bool(named and _MIX_OUTCOME_AFTER.match(after[named.end():]))
+                if not (named and (direct or named_outcome)):
+                    continue
+                first, last = Fraction(match.group("low")), Fraction(match.group("high"))
+                if (not result["feasible"] or first > last or first < low or
+                        (high is not None and last > high)):
+                    leading = sentence[:len(sentence) - len(sentence.lstrip())]
+                    parts[index] = leading + correction
+                    changed = True
+                    break
+        return "".join(parts)
+
+    def visit(value, key=""):
+        if isinstance(value, str):
+            return value if key in {"id", "source_ids"} else correct_text(value)
+        if isinstance(value, list):
+            return [visit(item, key) for item in value]
+        if isinstance(value, dict):
+            return {field: visit(item, field) for field, item in value.items()}
+        return value
+
+    return visit(data), changed
+
+
 def help_with_case(request, client=None, root=ROOT):
     case = validate_request(request)
     if needs_local_metal_planning(case):
@@ -915,6 +1018,7 @@ def help_with_case(request, client=None, root=ROOT):
     expected = {"answer", "material_routes", "engineering_routes", "next_steps", "questions", "source_ids"}
     if not isinstance(data, dict) or set(data) != expected:
         raise MetaValidationError("Meta's help response has an unexpected format")
+    data, mix_guidance_adjusted = _correct_recognized_mix_ranges(case, data)
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     _guard_assured_fields({key: data[key] for key in ("material_routes", "engineering_routes", "next_steps", "questions")})
@@ -928,6 +1032,7 @@ def help_with_case(request, client=None, root=ROOT):
         "requested_reasoning_effort": ADVICE_REASONING_EFFORT,
         "reasoning_effort": getattr(generated, "reasoning_effort", None),
         **({"guidance_adjusted": True} if guidance_adjusted else {}),
+        **({"mix_guidance_adjusted": True} if mix_guidance_adjusted else {}),
         **({"calculation_context": case["calculation_context"]} if "calculation_context" in case else {}),
         **_project_binding(case),
         "answer": answer,
@@ -960,6 +1065,7 @@ def follow_up_with_case(request, client=None, root=ROOT):
     data = generated.data
     if not isinstance(data, dict) or set(data) != {"answer", "next_steps", "questions", "source_ids"}:
         raise MetaValidationError("Meta's follow-up response has an unexpected format")
+    data, mix_guidance_adjusted = _correct_recognized_mix_ranges(case, data)
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     _guard_assured_fields({key: data[key] for key in ("next_steps", "questions")})
@@ -973,6 +1079,7 @@ def follow_up_with_case(request, client=None, root=ROOT):
         "request_id": generated.request_id, "requested_reasoning_effort": ADVICE_REASONING_EFFORT,
         "reasoning_effort": getattr(generated, "reasoning_effort", None),
         **({"guidance_adjusted": True} if guidance_adjusted else {}),
+        **({"mix_guidance_adjusted": True} if mix_guidance_adjusted else {}),
         **({"calculation_context": case["calculation_context"]} if "calculation_context" in case else {}),
         **_project_binding(case),
         "answer": answer, "quarantined_answer": quarantined,

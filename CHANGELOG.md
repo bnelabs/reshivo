@@ -2,6 +2,13 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.2.1 — 2026-11-03
+
+### Fixed
+
+- Show an independently calculated amount alongside AI advice when a mix calculation is attached.
+- Correct a recognized misleading kilogram range in AI advice using the calculator's exact bounds, while preserving the rest of the advice. This targeted check does not validate arbitrary wording, units or other AI claims.
+
 ## 0.2.0 — 2026-11-03
 
 This is the first tagged version of the current Reshivo source repository.
