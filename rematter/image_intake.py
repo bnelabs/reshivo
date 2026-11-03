@@ -146,8 +146,10 @@ def inspect_image(request, client=None, root=ROOT):
         if not isinstance(values, list) or not minimum <= len(values) <= maximum or any(not isinstance(v, str) or not v.strip() or len(v) > 600 for v in values):
             raise MetaValidationError("Meta returned an incomplete photo response")
         result[key] = [v.strip() for v in values]
-    return {"result_kind": "visual_observations", "live": bool(generated.live), "provider": "meta",
+    return {"result_kind": "visual_observations", "live": bool(generated.live), "provider": getattr(generated, "provider", "meta"),
             "model": generated.model, "elapsed_ms": generated.elapsed_ms,
+            "usage": generated.usage, "request_id": generated.request_id,
+            "requested_reasoning_effort": "low", "reasoning_effort": getattr(generated, "reasoning_effort", None),
             "observations": result["observations"], "questions": result["questions"],
             "limits": ["A photo cannot confirm plastic type, composition, contamination or product performance. Review these suggestions."],
             "physical_product_tested": False}

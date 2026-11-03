@@ -351,11 +351,21 @@ export type AdvisorRoute = {
   check: string
 }
 export type AdvisorMessage = { role: 'user' | 'assistant'; content: string }
-export type AdvisorStatus = { configured: boolean; model: string }
+export type InferenceProviderId =
+  'meta' | 'openrouter' | 'openai' | 'google' | 'anthropic' | 'nvidia' | 'deepseek' | 'custom'
+export type AdvisorStatus = {
+  configured: boolean
+  model: string
+  provider?: InferenceProviderId
+  provider_name?: string
+  capabilities?: Record<string, unknown>
+}
 export type AdvisorResult = {
   result_kind: 'engineering_proposals'
   live: boolean
-  provider: 'meta'
+  provider: InferenceProviderId
+  requested_reasoning_effort?: 'low' | 'medium' | 'high'
+  reasoning_effort?: 'low' | 'medium' | 'high' | null
   model: string
   usage: Record<string, number>
   elapsed_ms: number
@@ -373,7 +383,9 @@ export type AdvisorResult = {
 export type AdvisorTrialResult = {
   result_kind: 'trial_proposal'
   live: boolean
-  provider: 'meta'
+  provider: InferenceProviderId
+  requested_reasoning_effort?: 'low' | 'medium' | 'high'
+  reasoning_effort?: 'low' | 'medium' | 'high' | null
   model: string
   usage: Record<string, number>
   elapsed_ms: number
@@ -395,7 +407,10 @@ export type AdvisorTrialResult = {
   physical_product_tested: false
   performance_verified: false
 }
-export type AdvisorFollowupResult = Omit<AdvisorResult, 'result_kind' | 'material_routes' | 'engineering_routes'> & {
+export type AdvisorFollowupResult = Omit<
+  AdvisorResult,
+  'result_kind' | 'material_routes' | 'engineering_routes'
+> & {
   result_kind: 'engineering_followup'
 }
 export type MassTrimResult = {

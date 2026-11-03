@@ -172,7 +172,7 @@ def read_observation_note(request, *, client=None, root=ROOT):
                         ensure_ascii=False, allow_nan=False)
     generated = (client or MetaClient(root=root)).generate(
         prompt, observation_schema(), 1, system_prompt=SYSTEM_PROMPT,
-        schema_name="assembly_observation_draft", max_completion_tokens=4096,
+        schema_name="assembly_observation_draft", max_completion_tokens=4096, reasoning_effort="low",
     )
     data = generated.data
     if not isinstance(data, dict) or set(data) != set(FIELD_ORDER):
@@ -202,7 +202,8 @@ def read_observation_note(request, *, client=None, root=ROOT):
         "result_kind": "observation_draft", "review_required": True, "fields": fields,
         "assembly_observation": {**ui, "idealFeedback": False},
         "missing_fields": missing, "questions": [QUESTIONS[field] for field in missing],
-        **case, "provider": "meta", "model": generated.model, "live": bool(generated.live),
+        **case, "provider": getattr(generated, "provider", "meta"), "model": generated.model, "live": bool(generated.live),
         "usage": generated.usage, "request_id": generated.request_id, "elapsed_ms": generated.elapsed_ms,
+        "requested_reasoning_effort": "low", "reasoning_effort": getattr(generated, "reasoning_effort", None),
         "interpretation_verified": False, "physical_product_tested": False,
     }

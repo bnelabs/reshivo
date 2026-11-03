@@ -313,12 +313,15 @@ def assist_with_adaptation(request, *, client=None, root=ROOT):
     seen_ids = set()
     model_turns, live, missing_feedback = 0, False, False
     model = str(getattr(client, "model", "unknown"))
+    provider = str(getattr(client, "provider", "meta"))
+    reasoning_effort = None
     definitions = tool_definitions()
     names = COMPUTATION_NAMES | {"present_recommendation"}
 
     def response(status, *, presentation=None, error=None):
         value = {"result_kind": "tool_backed_proposal", "status": status, "live": live,
-                 "provider": "meta", "model": model,
+                 "provider": provider, "model": model,
+                 "requested_reasoning_effort": "low", "reasoning_effort": reasoning_effort,
                  "answer": presentation["answer"] if presentation else None,
                  "answer_kind": "model_proposal", "answer_verified": False,
                  "decision": {key: presentation[key] for key in ("action", "basis_call_id")} if presentation else None,
@@ -359,7 +362,10 @@ def assist_with_adaptation(request, *, client=None, root=ROOT):
         model_trace.append(turn_trace)
         try:
             turn = client.tool_turn(messages, definitions, max_completion_tokens=4096)
+            provider = str(getattr(turn, "provider", provider))
+            reasoning_effort = getattr(turn, "reasoning_effort", None)
             turn_trace.update(assistant_message=deepcopy(turn.message), model=str(turn.model),
+                              provider=provider, requested_reasoning_effort="low", reasoning_effort=reasoning_effort,
                               live=turn.live is True, usage=deepcopy(turn.usage),
                               request_id=turn.request_id, elapsed_ms=turn.elapsed_ms)
             live = live or turn.live is True

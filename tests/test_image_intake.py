@@ -131,7 +131,7 @@ class ImageHTTPTests(unittest.TestCase):
             return {'result_kind': 'visual_observations'}
         with patch('rematter.image_intake.inspect_image', side_effect=stub):
             self.assertEqual(self.call('/api/advisor/inspect-image', payload)[0], 200)
-            self.assertEqual(self.call('/api/advisor/help', payload)[0], 413)
+            self.assertEqual(self.call('/api/advisor/help', payload)[0], 400)
             self.assertEqual(self.call('/api/advisor/inspect-image', payload, {'Origin': 'https://untrusted.example'})[0], 403)
             self.assertEqual(self.call('/api/advisor/inspect-image', payload, {'Host': 'untrusted.example'})[0], 403)
             self.assertEqual(self.call('/api/advisor/inspect-image', request(), {'Content-Length': str(MAX_IMAGE_BODY_BYTES + 1)})[0], 413)

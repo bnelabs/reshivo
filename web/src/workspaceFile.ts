@@ -68,6 +68,7 @@ const briefKeys = ['input', 'variation', 'contamination', 'product', 'use_case',
 const detailsKeys = ['label', 'components', 'amount_unit', 'amount_basis', 'mass_target_min_kg', 'mass_target_max_kg']
 const routeKeys = ['id', 'title', 'change', 'why', 'steps', 'tradeoffs', 'check']
 const metadataKeys = ['result_kind', 'live', 'provider', 'model', 'usage', 'elapsed_ms', 'request_id', 'physical_product_tested', 'performance_verified']
+const providerIds = ['meta', 'openrouter', 'openai', 'google', 'anthropic', 'nvidia', 'deepseek', 'custom']
 const snapshotKeys = ['case_data', 'unit_system', 'plan', 'selected_route', 'trial', 'history', 'measurement_draft', 'mix_draft']
 const optionalSnapshotKeys = ['followup']
 
@@ -196,8 +197,8 @@ function sources(value: unknown, label: string): void {
 
 function metadata(row: ObjectValue, label: string, caseDetails: unknown): void {
   choice(row.live, `${label} recorded live flag`, [true, false])
-  choice(row.provider, `${label} provider`, ['meta'])
-  string(row.model, `${label} model`, 120, true)
+  choice(row.provider, `${label} provider`, providerIds)
+  string(row.model, `${label} model`, 200, true)
   integer(row.elapsed_ms, `${label} recorded elapsed time`)
   if (row.request_id !== null) string(row.request_id, `${label} recorded request identifier`, 200)
   choice(row.physical_product_tested, `${label} physical-test flag`, [false])
@@ -210,6 +211,7 @@ function metadata(row: ObjectValue, label: string, caseDetails: unknown): void {
     integer(amount, `${label} recorded usage`)
   }
   if (row.requested_reasoning_effort !== undefined) choice(row.requested_reasoning_effort, `${label} recorded reasoning setting`, ['low', 'medium', 'high'])
+  if (Object.hasOwn(row, 'reasoning_effort')) choice(row.reasoning_effort, `${label} applied reasoning setting`, [null, 'low', 'medium', 'high'])
   if (row.calculation_context !== undefined) {
     details(row.calculation_context, `${label} recorded case details`)
     if (!sameData(apiCaseText(row.calculation_context), apiCaseText(caseDetails))) fail(label, 'recorded calculation context does not match this case')
@@ -218,7 +220,7 @@ function metadata(row: ObjectValue, label: string, caseDetails: unknown): void {
 
 function plan(value: unknown, caseDetails: unknown): void {
   const label = 'Saved options'
-  const row = object(value, label, [...metadataKeys, 'answer', 'material_routes', 'engineering_routes', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'calculation_context'])
+  const row = object(value, label, [...metadataKeys, 'answer', 'material_routes', 'engineering_routes', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'reasoning_effort', 'calculation_context'])
   choice(row.result_kind, label, ['engineering_proposals'])
   metadata(row, label, caseDetails)
   string(row.answer, `${label} explanation`, 3000)
@@ -239,7 +241,7 @@ function plan(value: unknown, caseDetails: unknown): void {
 
 function followup(value: unknown, caseDetails: unknown): void {
   const label = 'Saved follow-up'
-  const row = object(value, label, [...metadataKeys, 'answer', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'calculation_context'])
+  const row = object(value, label, [...metadataKeys, 'answer', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'reasoning_effort', 'calculation_context'])
   choice(row.result_kind, label, ['engineering_followup'])
   metadata(row, label, caseDetails)
   string(row.answer, `${label} explanation`, 3000, true)
@@ -251,7 +253,7 @@ function followup(value: unknown, caseDetails: unknown): void {
 
 function trial(value: unknown, caseData: ObjectValue, selectedRoute: unknown): void {
   const label = 'Saved trial'
-  const row = object(value, label, [...metadataKeys, 'route_id', 'targets', 'brief', 'selected_route', 'title', 'objective', 'comparison', 'change', 'keep_fixed', 'materials', 'steps', 'checks', 'questions', 'sources'], ['requested_reasoning_effort', 'calculation_context'])
+  const row = object(value, label, [...metadataKeys, 'route_id', 'targets', 'brief', 'selected_route', 'title', 'objective', 'comparison', 'change', 'keep_fixed', 'materials', 'steps', 'checks', 'questions', 'sources'], ['requested_reasoning_effort', 'reasoning_effort', 'calculation_context'])
   choice(row.result_kind, label, ['trial_proposal'])
   metadata(row, label, caseData.details)
   brief(row.brief, `${label} case`)

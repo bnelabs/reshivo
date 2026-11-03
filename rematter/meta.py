@@ -11,6 +11,9 @@ import urllib.request
 
 from .materials import ROOT
 from .mechanics import Requirements, Section, evaluate
+from .providers import ProviderConfigurationError, load_provider_profile
+from .provider_transport import (ProviderCapabilityError, ProviderResponseError, ProviderTransport,
+                                 ProviderTransportError, validate_generated_json)
 
 ENDPOINT = "https://api.meta.ai/v1/chat/completions"
 DEFAULT_MODEL = "muse-spark-1.3"
@@ -59,6 +62,8 @@ class Generation:
     usage: dict
     request_id: str | None
     elapsed_ms: int = 0
+    provider: str = "meta"
+    reasoning_effort: str | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +74,8 @@ class ToolTurn:
     usage: dict
     request_id: str | None
     elapsed_ms: int = 0
+    provider: str = "meta"
+    reasoning_effort: str | None = None
 
 
 MAX_TOOL_ARGUMENT_BYTES = 16_384
@@ -240,93 +247,97 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def finite_json(text):
+def finite_json(text, provider="Meta"):
     try:
         return json.loads(text, parse_constant=lambda value: (_ for _ in ()).throw(ValueError()))
     except (ValueError, TypeError, UnicodeError):
-        raise MetaValidationError("Meta's response could not be read or contains invalid numbers") from None
+        raise MetaValidationError(f"{provider}'s response could not be read or contains invalid numbers") from None
 
 
 class MetaClient:
     def __init__(self, root=ROOT, environ=None, opener=None):
-        self.key, self.model = configuration(root, environ)
+        try:
+            self.profile = load_provider_profile(root, environ)
+        except ProviderConfigurationError as error:
+            raise MetaConfigurationError(str(error)) from None
+        self.key, self.model = self.profile.api_key, self.profile.model
+        self.provider = self.profile.provider
         self.opener = opener or urllib.request.build_opener(NoRedirect)
+        self.transport = ProviderTransport(self.profile, self.opener)
+
+    def _request(self, payload, *, timeout=50, max_request_bytes=3_200_000):
+        try:
+            return self.transport.request(payload, timeout=timeout, max_request_bytes=max_request_bytes)
+        except ProviderCapabilityError as error:
+            raise MetaConfigurationError(str(error)) from None
+        except ProviderResponseError as error:
+            raise MetaValidationError(str(error)) from None
+        except ProviderTransportError as error:
+            raise MetaAPIError(str(error)) from None
 
     def tool_turn(self, messages, tools, *, max_completion_tokens=6144):
-        if not self.key:
-            raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file.")
-        if self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
+        if not self.profile.configured:
+            raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
+                                         else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
+        if self.provider == "meta" and self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
             raise MetaConfigurationError("Choose a supported standard-mode Meta reasoning model.")
         if isinstance(max_completion_tokens, bool) or not isinstance(max_completion_tokens, int) or not 1 <= max_completion_tokens <= 8192:
             raise MetaValidationError("Set a completion limit between one and 8192 tokens")
         names = _tool_definitions(tools)
         payload = {"model": self.model, "messages": _tool_messages(messages, names), "tools": tools,
                    "tool_choice": "auto", "reasoning_effort": "low", "max_completion_tokens": max_completion_tokens}
-        encoded = _tool_json(payload, "Tool request", MAX_TOOL_REQUEST_BYTES)
-        if _contains_secret(payload, self.key):
+        _tool_json(payload, "Tool request", MAX_TOOL_REQUEST_BYTES)
+        if self.key and _contains_secret(payload, self.key):
             raise MetaValidationError("Credentials must not be included in conversation messages or tool definitions")
-        request = urllib.request.Request(ENDPOINT, data=encoded, method="POST",
-                                         headers={"Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
         started = time.monotonic()
+        body = self._request(payload, timeout=50, max_request_bytes=MAX_TOOL_REQUEST_BYTES)
         try:
-            with self.opener.open(request, timeout=50) as response:
-                raw = response.read(MAX_TOOL_RESPONSE_BYTES + 1)
-        except urllib.error.HTTPError as error:
-            code = error.code
-            error.close()
-            raise MetaAPIError(f"Meta request failed (HTTP {code}). Try again.") from None
-        except (urllib.error.URLError, TimeoutError, OSError, ValueError):
-            raise MetaAPIError("Could not reach Meta. Check the connection and try again.") from None
-        if len(raw) > MAX_TOOL_RESPONSE_BYTES:
-            raise MetaValidationError("Meta response exceeded the size limit")
-        if self.key.encode() in raw:
-            raise MetaValidationError("Meta returned an unusable response")
-        try:
-            body = finite_json(raw)
             if not isinstance(body, dict):
-                raise MetaValidationError("Meta returned an incomplete tool response")
-            if _contains_secret(body, self.key):
-                raise MetaValidationError("Meta returned an unusable response")
+                raise MetaValidationError(f"{self.profile.name} returned an incomplete tool response")
+            if self.key and _contains_secret(body, self.key):
+                raise MetaValidationError(f"{self.profile.name} returned an unusable response")
             choices = body.get("choices")
             if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], dict):
-                raise MetaValidationError("Meta returned an incomplete tool response")
+                raise MetaValidationError(f"{self.profile.name} returned an incomplete tool response")
             choice = choices[0]
             reason = choice.get("finish_reason")
             if reason == "length":
-                raise MetaValidationError("Meta's response was cut short. Try a shorter brief or question.")
+                raise MetaValidationError(f"{self.profile.name}'s response was cut short. Try a shorter brief or question.")
             if reason not in ("stop", "tool_calls"):
-                raise MetaValidationError("Meta did not complete a usable tool response")
+                raise MetaValidationError(f"{self.profile.name} did not complete a usable tool response")
             message = choice.get("message")
             if not isinstance(message, dict) or message.get("role") != "assistant" or message.get("refusal"):
-                raise MetaValidationError("Meta did not return a usable assistant response")
+                raise MetaValidationError(f"{self.profile.name} did not return a usable assistant response")
             content = message.get("content")
             if content is not None and (not isinstance(content, str) or len(content) > 16_000):
-                raise MetaValidationError("Meta returned invalid or oversized assistant content")
+                raise MetaValidationError(f"{self.profile.name} returned invalid or oversized assistant content")
             calls = message.get("tool_calls")
             normalized = {"role": "assistant", "content": content}
             if calls:
                 if reason != "tool_calls":
-                    raise MetaValidationError("Meta's completion reason did not match its function calls")
+                    raise MetaValidationError(f"{self.profile.name}'s completion reason did not match its function calls")
                 normalized["tool_calls"] = _tool_calls(calls, names)
                 historical_ids = {call["id"] for prior in payload["messages"]
                                   for call in prior.get("tool_calls", [])}
                 if any(call["id"] in historical_ids for call in normalized["tool_calls"]):
-                    raise MetaValidationError("Meta reused an earlier function-call identifier")
+                    raise MetaValidationError(f"{self.profile.name} reused an earlier function-call identifier")
             elif reason != "stop" or not isinstance(content, str) or not content.strip() or calls not in (None, []):
-                raise MetaValidationError("Meta returned an empty or incomplete assistant response")
+                raise MetaValidationError(f"{self.profile.name} returned an empty or incomplete assistant response")
         except (KeyError, TypeError, ValueError, OverflowError, RecursionError, UnicodeError):
-            raise MetaValidationError("Meta returned an incomplete tool response") from None
+            raise MetaValidationError(f"{self.profile.name} returned an incomplete tool response") from None
         source_usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}
         usage = {name: value for name, value in source_usage.items()
                  if isinstance(value, int) and not isinstance(value, bool) and value >= 0}
         identity = body.get("id")
         return ToolTurn(normalized, self.model, True, usage, identity if isinstance(identity, str) else None,
-                        round((time.monotonic() - started) * 1000))
+                        round((time.monotonic() - started) * 1000), self.provider,
+                        "low" if self.profile.capabilities["reasoning"] else None)
 
     def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096, reasoning_effort="low", image_data_url=None):
-        if not self.key:
-            raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file.")
-        if self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
+        if not self.profile.configured:
+            raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
+                                         else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
+        if self.provider == "meta" and self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
             raise MetaConfigurationError("Choose a supported standard-mode Meta reasoning model.")
         if not isinstance(reasoning_effort, str) or reasoning_effort not in {"low", "medium", "high"}:
             raise MetaValidationError("Choose low, medium or high reasoning effort")
@@ -346,44 +357,42 @@ class MetaClient:
             "max_completion_tokens": max_completion_tokens,
             "reasoning_effort": reasoning_effort,
         }
-        request = urllib.request.Request(ENDPOINT, data=json.dumps(payload, allow_nan=False).encode(), method="POST", headers={"Authorization": "Bearer " + self.key, "Content-Type": "application/json"})
+        if isinstance(max_completion_tokens, bool) or not isinstance(max_completion_tokens, int) or not 1 <= max_completion_tokens <= 8192:
+            raise MetaValidationError("Set a completion limit between one and 8192 tokens")
         started = time.monotonic()
-        try:
-            with self.opener.open(request, timeout=80 if reasoning_effort == "high" else 50) as response:
-                raw = response.read(512_001)
-        except urllib.error.HTTPError as error:
-            code = error.code
-            error.close()
-            raise MetaAPIError(f"Meta request failed (HTTP {code}). Try again.") from None
-        except TimeoutError:
-            raise MetaAPIError("Meta is taking too long. Your inputs are still here; try again.") from None
-        except urllib.error.URLError as error:
-            if isinstance(error.reason, TimeoutError):
-                raise MetaAPIError("Meta is taking too long. Your inputs are still here; try again.") from None
-            raise MetaAPIError("Could not reach Meta. Check the connection and try again.") from None
-        except OSError:
-            raise MetaAPIError("Could not reach Meta. Check the connection and try again.") from None
-        if len(raw) > 512_000:
-            raise MetaValidationError("Meta response exceeded the size limit")
-        body = finite_json(raw)
+        body = self._request(payload, timeout=80 if reasoning_effort == "high" else 50)
         if not isinstance(body, dict):
-            raise MetaValidationError("Meta's response could not be read")
+            raise MetaValidationError(f"{self.profile.name}'s response could not be read")
         try:
+            if self.provider != "meta" and (not isinstance(body.get("choices"), list) or len(body["choices"]) != 1):
+                raise MetaValidationError(f"{self.profile.name} did not return a single usable report.")
             choice = body["choices"][0]
             if choice.get("finish_reason") == "length":
-                raise MetaValidationError("Meta's response was cut short. Try a shorter brief or question.")
+                raise MetaValidationError(f"{self.profile.name}'s response was cut short. Try a shorter brief or question.")
+            if self.provider != "meta" and choice.get("finish_reason") != "stop":
+                raise MetaValidationError(f"{self.profile.name} did not complete a usable report.")
             message = choice["message"]
-            if message.get("refusal"):
-                raise MetaValidationError("Meta did not return a usable response")
+            if self.provider != "meta" and message.get("role") != "assistant":
+                raise MetaValidationError(f"{self.profile.name} did not return an assistant report.")
+            if message.get("refusal") or (self.provider != "meta" and message.get("tool_calls")):
+                raise MetaValidationError(f"{self.profile.name} did not return a usable response")
             content = message["content"]
             if not isinstance(content, str) or not content.strip():
-                raise MetaValidationError("Meta returned an empty response")
+                raise MetaValidationError(f"{self.profile.name} returned an empty response")
         except (KeyError, IndexError, TypeError):
-            raise MetaValidationError("Meta returned an incomplete response") from None
+            raise MetaValidationError(f"{self.profile.name} returned an incomplete response") from None
         source_usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}
         usage = {name: value for name, value in source_usage.items() if isinstance(value, int) and not isinstance(value, bool) and value >= 0}
         identity = body.get("id")
-        return Generation(finite_json(content), self.model, True, usage, identity if isinstance(identity, str) else None, round((time.monotonic()-started)*1000))
+        data = finite_json(content, self.profile.name)
+        if self.provider != "meta":
+            try:
+                validate_generated_json(data, schema)
+            except ProviderResponseError as error:
+                raise MetaValidationError(str(error)) from None
+        return Generation(data, self.model, True, usage, identity if isinstance(identity, str) else None,
+                          round((time.monotonic()-started)*1000), self.provider,
+                          reasoning_effort if self.profile.capabilities["reasoning"] else None)
 
 
 def proposal_schema(max_candidates):
@@ -447,7 +456,7 @@ def propose_and_evaluate(material, requirements, scenario_name="lower_sensitivit
             outline = []
         candidates.append({"id": f"candidate-{index+1}", "name": row["name"], "rationale": row["rationale"], "section": dimensions, "outline": outline, "evaluation": assessment})
     return {
-        "provider": "meta", "model": generated.model, "live": bool(generated.live),
+        "provider": getattr(generated, "provider", "meta"), "model": generated.model, "live": bool(generated.live),
         "usage": generated.usage, "request_id": generated.request_id, "elapsed_ms": generated.elapsed_ms,
         "material_id": material.id, "material_scenario": state, "requirements": asdict(requirements),
         "candidates": candidates,

@@ -47,7 +47,7 @@ def _numeric_values(value, cls, defaults, name):
 
 
 class WorkbenchService:
-    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None, assist_fn=None, note_fn=None, engineering_note_fn=None, followup_fn=None):
+    def __init__(self, root=ROOT, output_root=None, meta_status_fn=None, proposal_fn=None, advisor_fn=None, trial_fn=None, assist_fn=None, note_fn=None, engineering_note_fn=None, followup_fn=None, intake_fn=None):
         self.root = Path(root).resolve()
         self.output_root = Path(output_root or self.root / "outputs/workbench").resolve()
         self.config, self.default_requirements, self.default_search = load_config(self.root / "examples/support-member.json")
@@ -59,6 +59,65 @@ class WorkbenchService:
         self.assist_fn = assist_fn
         self.note_fn = note_fn
         self.engineering_note_fn = engineering_note_fn
+        self.intake_fn = intake_fn
+
+    def inference_providers(self):
+        from .providers import provider_catalog, provider_settings, ProviderConfigurationError
+        try:
+            return {"catalog": provider_catalog(), "settings": provider_settings(self.root)}
+        except ProviderConfigurationError as error:
+            raise ServiceError("provider_configuration", str(error)) from None
+
+    def inference_settings(self, request, action):
+        from .providers import save_provider_settings, select_provider_settings, clear_provider_settings, ProviderConfigurationError
+        try:
+            _object(request, "Connection settings")
+            if action == "save":
+                return save_provider_settings(request, root=self.root)
+            _allowed(request, {"provider"}, "Connection settings")
+            if action == "select":
+                return select_provider_settings(request.get("provider"), root=self.root)
+            return clear_provider_settings(request.get("provider"), root=self.root)
+        except ProviderConfigurationError as error:
+            raise ServiceError("provider_configuration", str(error)) from None
+
+    def save_inference_settings(self, request):
+        return self.inference_settings(request, "save")
+
+    def select_inference_settings(self, request):
+        return self.inference_settings(request, "select")
+
+    def clear_inference_settings(self, request):
+        return self.inference_settings(request, "clear")
+
+    def project_intake(self, request):
+        from .project_intake import read_project_intake, validate_intake_request
+        from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError
+        from .products import ProductInputError
+        try:
+            validate_intake_request(request)
+            return self.intake_fn(request) if self.intake_fn else read_project_intake(request, root=self.root)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
+        except MetaConfigurationError as error:
+            raise ServiceError("provider_not_configured", str(error), 503) from None
+        except MetaValidationError as error:
+            raise ServiceError("invalid_model_response", str(error), 502) from None
+        except MetaAPIError as error:
+            raise ServiceError("provider_request_failed", str(error), 502) from None
+
+    def manufacturing_cost(self, request):
+        from .manufacturing_cost import calculate_manufacturing_cost
+        return calculate_manufacturing_cost(request)
+
+    def compare_manufacturing_costs(self, request):
+        from .manufacturing_cost import compare_manufacturing_costs
+        _allowed(request, {"records"}, "Cost comparison")
+        return compare_manufacturing_costs(request.get("records"))
+
+    def trial_records(self, request):
+        from .trial_records import assess_trial_records
+        return assess_trial_records(request)
 
     def meta_status(self):
         if self.meta_status_fn is not None:

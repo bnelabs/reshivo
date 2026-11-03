@@ -135,6 +135,55 @@ delete compactWithoutOptionalMetadata.requested_reasoning_effort
 delete compactWithoutOptionalMetadata.calculation_context
 assert.deepEqual(parseWorkspaceFile(serializeWorkspaceFile({ ...snapshot(), followup: compactWithoutOptionalMetadata })).followup, compactWithoutOptionalMetadata, 'optional reply metadata is not invented')
 
+for (const key of ['plan', 'trial']) {
+  assert.equal(Object.hasOwn(decoded[key], 'reasoning_effort'), false, 'historical applied effort remains unrecorded')
+  assert.equal(decoded[key].provider, recorded[key].provider, 'opening a historical result never changes its provider')
+}
+for (const provider of ['meta', 'openrouter', 'openai', 'google', 'anthropic', 'nvidia', 'deepseek', 'custom']) {
+  const mixed = { ...snapshot(), followup: followup() }
+  mixed.followup.provider = provider
+  mixed.followup.model = 'a'.repeat(200)
+  mixed.followup.requested_reasoning_effort = 'high'
+  mixed.followup.reasoning_effort = null
+  mixed.trial.provider = provider
+  mixed.trial.reasoning_effort = 'medium'
+  const restored = parseWorkspaceFile(serializeWorkspaceFile(mixed))
+  assert.deepEqual(restored.plan, original.plan, 'a later provider choice does not rebrand old options')
+  assert.equal(restored.followup.provider, provider, 'the selected provider identity survives a round-trip')
+  assert.equal(restored.followup.reasoning_effort, null, 'an unsupported control remains explicitly unapplied')
+  assert.equal(restored.followup.requested_reasoning_effort, 'high', 'requested effort does not become applied effort')
+  assert.equal(restored.trial.reasoning_effort, 'medium', 'actual effort can be recorded independently on a trial')
+}
+for (const effort of [null, 'low', 'medium', 'high']) {
+  const current = snapshot()
+  current.plan.reasoning_effort = effort
+  assert.equal(parseWorkspaceFile(serializeWorkspaceFile(current)).plan.reasoning_effort, effort)
+}
+for (const provider of ['', 'Google', 'other-service', null, false, {}, ['meta']]) {
+  const current = { ...snapshot(), followup: followup() }
+  current.followup.provider = provider
+  assert.throws(() => serializeWorkspaceFile(current), /provider/, 'provider identities use a closed allowlist')
+}
+for (const effort of ['maximum', 'automatic', '', 0, false, {}, [], undefined]) {
+  const current = snapshot()
+  current.plan.reasoning_effort = effort
+  assert.throws(() => serializeWorkspaceFile(current), /applied reasoning setting/, 'invalid applied metadata is never silently stripped')
+}
+for (const key of ['plan', 'trial', 'followup']) {
+  const current = { ...snapshot(), followup: followup() }
+  current[key].provider = 'google'
+  current[key].reasoning_effort = null
+  current[key].result_kind = 'visual_observations'
+  assert.throws(() => serializeWorkspaceFile(current), /Saved/, 'supporting another provider never widens result kinds')
+  current[key].result_kind = key === 'plan' ? 'engineering_proposals' : key === 'trial' ? 'trial_proposal' : 'engineering_followup'
+  current[key].api_key = 'PRIVATE-FIXTURE-KEY'
+  assert.throws(() => serializeWorkspaceFile(current), /unsupported field/, 'connection credentials remain outside every result format')
+}
+const longModel = snapshot()
+longModel.plan.provider = 'custom'
+longModel.plan.model = 'a'.repeat(201)
+assert.throws(() => serializeWorkspaceFile(longModel), /200/, 'recorded model names retain a bounded size')
+
 const reject = (mutate, reason, description) => {
   const changed = parseWorkspaceFile(encoded)
   mutate(changed)

@@ -11,6 +11,7 @@ from .service import ServiceError, WorkbenchService
 
 MAX_BODY_BYTES = 64 * 1024
 MAX_IMAGE_BODY_BYTES = 3 * 1024 * 1024
+MAX_PROJECT_BODY_BYTES = 512 * 1024
 
 
 class WorkbenchHTTPServer(ThreadingHTTPServer):
@@ -122,6 +123,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 self._json(application.health())
             elif path == "/api/advisor/status":
                 self._json(application.advisor_status())
+            elif path == "/api/inference/providers":
+                self._json(application.inference_providers())
             elif path == "/api/products/catalog":
                 self._json(application.product_catalog())
             elif path == "/api/products/target-series":
@@ -175,6 +178,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._guard()
             path = unquote(urlsplit(self.path).path)
             routes = {
+                "/api/project/intake": self.server.application.project_intake,
+                "/api/project/trial-records": self.server.application.trial_records,
+                "/api/project/manufacturing-cost": self.server.application.manufacturing_cost,
+                "/api/project/compare-costs": self.server.application.compare_manufacturing_costs,
+                "/api/inference/providers/save": self.server.application.save_inference_settings,
+                "/api/inference/providers/select": self.server.application.select_inference_settings,
+                "/api/inference/providers/clear": self.server.application.clear_inference_settings,
                 "/api/experiments": self.server.application.run_experiment,
                 "/api/evaluate": self.server.application.evaluate_candidate,
                 "/api/proposals": self.server.application.propose,
@@ -204,7 +214,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 if not acquired:
                     self.close_connection = True
                     raise ServiceError("service_busy", "The workbench is busy; try again", 429)
-            body = self._body(MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else MAX_BODY_BYTES)
+            max_bytes = MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else (
+                MAX_PROJECT_BODY_BYTES if path in {"/api/project/trial-records", "/api/project/compare-costs", "/api/advisor/help", "/api/advisor/follow-up"} else MAX_BODY_BYTES)
+            body = self._body(max_bytes)
             if not acquired:
                 acquired = self.server.work_slots.acquire(blocking=False)
             if not acquired:

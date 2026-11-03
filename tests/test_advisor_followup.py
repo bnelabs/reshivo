@@ -1,5 +1,6 @@
 from copy import deepcopy
 import json
+import http.client
 from pathlib import Path
 import tempfile
 import threading
@@ -179,7 +180,16 @@ class FollowupAPITests(unittest.TestCase):
         self.assertEqual(self.call({"brief": {}})[0], 400)
         for headers in ({"Host": "example.com"}, {"Origin": "https://example.com"}):
             self.assertEqual(self.call(headers=headers)[0], 403)
-        self.assertEqual(self.call({"payload": "x" * 65536})[0], 413)
+        self.assertEqual(self.call({"payload": "x" * 65536})[0], 400)
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        connection.putrequest("POST", "/api/advisor/follow-up")
+        connection.putheader("Content-Type", "application/json")
+        connection.putheader("Content-Length", str(512 * 1024 + 1))
+        connection.endheaders()
+        response = connection.getresponse()
+        self.assertEqual(response.status, 413)
+        response.read()
+        connection.close()
         self.assertTrue(self.server.work_slots.acquire(blocking=False))
         self.assertTrue(self.server.work_slots.acquire(blocking=False))
         try:

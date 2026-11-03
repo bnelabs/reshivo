@@ -277,9 +277,11 @@ def read_engineering_note(request, *, client=None, root=ROOT):
     case = validate_engineering_request(request)
     generated = (client or MetaClient(root=root)).generate(
         json.dumps({**case, "task": "Draft the stated engineering quantities for review; do not calculate or apply changes."}, ensure_ascii=False, allow_nan=False),
-        engineering_schema(), 1, system_prompt=SYSTEM_PROMPT, schema_name="engineering_note_draft", max_completion_tokens=4096)
-    return {**normalize_engineering_fields(case, generated.data), "provider": "meta", "model": generated.model,
-            "live": bool(generated.live), "usage": generated.usage, "request_id": generated.request_id, "elapsed_ms": generated.elapsed_ms}
+        engineering_schema(), 1, system_prompt=SYSTEM_PROMPT, schema_name="engineering_note_draft", max_completion_tokens=4096,
+        reasoning_effort="low")
+    return {**normalize_engineering_fields(case, generated.data), "provider": getattr(generated, "provider", "meta"), "model": generated.model,
+            "live": bool(generated.live), "usage": generated.usage, "request_id": generated.request_id, "elapsed_ms": generated.elapsed_ms,
+            "requested_reasoning_effort": "low", "reasoning_effort": getattr(generated, "reasoning_effort", None)}
 
 
 def _validated_values(values):
