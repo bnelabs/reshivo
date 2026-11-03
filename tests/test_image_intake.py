@@ -10,12 +10,12 @@ import urllib.error
 import urllib.request
 import zlib
 
-from rematter.advisor import BRIEF_FIELDS
-from rematter.image_intake import MAX_IMAGE_BYTES, inspect_image, validate_image_request
-from rematter.meta import Generation, MetaClient, MetaValidationError
-from rematter.products import ProductInputError
-from rematter.server import MAX_IMAGE_BODY_BYTES, build_server
-from rematter.service import WorkbenchService
+from reshivo.advisor import BRIEF_FIELDS
+from reshivo.image_intake import MAX_IMAGE_BYTES, inspect_image, validate_image_request
+from reshivo.meta import Generation, MetaClient, MetaValidationError
+from reshivo.products import ProductInputError
+from reshivo.server import MAX_IMAGE_BODY_BYTES, build_server
+from reshivo.service import WorkbenchService
 
 
 def png(width=2, height=2, extra=b"", bad_data=False):
@@ -129,7 +129,7 @@ class ImageHTTPTests(unittest.TestCase):
         def stub(value, root):
             validate_image_request(value)
             return {'result_kind': 'visual_observations'}
-        with patch('rematter.image_intake.inspect_image', side_effect=stub):
+        with patch('reshivo.image_intake.inspect_image', side_effect=stub):
             self.assertEqual(self.call('/api/advisor/inspect-image', payload)[0], 200)
             self.assertEqual(self.call('/api/advisor/help', payload)[0], 400)
             self.assertEqual(self.call('/api/advisor/inspect-image', payload, {'Origin': 'https://untrusted.example'})[0], 403)

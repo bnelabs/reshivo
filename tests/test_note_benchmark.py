@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from rematter.meta import Generation, MetaAPIError, MetaValidationError
+from reshivo.meta import Generation, MetaAPIError, MetaValidationError
 
 
 spec = importlib.util.spec_from_file_location("note_benchmark", Path(__file__).parents[1] / "scripts/benchmark_note_intake.py")

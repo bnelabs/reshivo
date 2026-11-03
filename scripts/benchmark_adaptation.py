@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rematter.adaptation import adjust_from_measurement, plan_adaptation
+from reshivo.adaptation import adjust_from_measurement, plan_adaptation
 
 
 DENSITIES = [round(1.5 + .15 * index, 2) for index in range(21)]

@@ -6,8 +6,8 @@ import tempfile
 import threading
 import unittest
 
-from rematter.server import build_server, MAX_PROJECT_BODY_BYTES
-from rematter.service import WorkbenchService
+from reshivo.server import build_server, MAX_PROJECT_BODY_BYTES
+from reshivo.service import WorkbenchService
 from test_decision_comparison import sample
 
 

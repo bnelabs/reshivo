@@ -8,10 +8,10 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from rematter.cli import main
-from rematter.materials import ROOT, load_materials, verify_sources
-from rematter.mechanics import Requirements, Section, evaluate, polygon_properties
-from rematter.search import SearchSpace, grid, search
+from reshivo.cli import main
+from reshivo.materials import ROOT, load_materials, verify_sources
+from reshivo.mechanics import Requirements, Section, evaluate, polygon_properties
+from reshivo.search import SearchSpace, grid, search
 
 
 class SourceTests(unittest.TestCase):

@@ -1,7 +1,7 @@
 import unittest
 
-from rematter.advisor import balance_mix
-from rematter.products import ProductInputError
+from reshivo.advisor import balance_mix
+from reshivo.products import ProductInputError
 
 
 class PrimaryMixAdjustmentTests(unittest.TestCase):

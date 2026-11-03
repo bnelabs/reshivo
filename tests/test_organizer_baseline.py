@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from rematter.providers import ProviderProfile
+from reshivo.providers import ProviderProfile
 from scripts import organizer_baseline as baseline
 
 

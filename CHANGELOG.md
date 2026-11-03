@@ -2,6 +2,14 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.5.0 — 2026-11-03
+
+### Changed
+
+- Rename the Python package and command to `reshivo`; update the service template and deployment guide. Existing service units must be updated before restarting.
+- Write new project backups with Reshivo format identifiers while continuing to open earlier backups. Older app versions do not recognize the new identifiers.
+- Rename historical example files and update their links and checksum indexes to match.
+
 ## 0.4.1 — 2026-11-03
 
 ### Fixed

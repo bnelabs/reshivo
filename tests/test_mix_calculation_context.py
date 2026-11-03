@@ -2,8 +2,8 @@ from copy import deepcopy
 import json
 import unittest
 
-from rematter.advisor import follow_up_with_case, validate_request
-from rematter.products import ProductInputError
+from reshivo.advisor import follow_up_with_case, validate_request
+from reshivo.products import ProductInputError
 from test_advisor_project_context import FixtureClient, request
 
 

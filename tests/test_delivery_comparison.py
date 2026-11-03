@@ -5,8 +5,8 @@ from pathlib import Path
 from types import SimpleNamespace
 import unittest
 
-from rematter.delivery_comparison import has_single_delivery_comparison
-from rematter.project_intake import read_project_intake
+from reshivo.delivery_comparison import has_single_delivery_comparison
+from reshivo.project_intake import read_project_intake
 from test_project_intake import simple_request, simple_response
 
 

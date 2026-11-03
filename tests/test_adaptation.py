@@ -10,10 +10,10 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.adaptation import adjust_from_measurement, adjust_observed_mass, plan_adaptation, validate_plan
-from rematter.products import ProductInputError
-from rematter.server import build_server
-from rematter.service import WorkbenchService
+from reshivo.adaptation import adjust_from_measurement, adjust_observed_mass, plan_adaptation, validate_plan
+from reshivo.products import ProductInputError
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
 
 
 def adaptation_request():
@@ -420,8 +420,8 @@ class ObservedMassTests(unittest.TestCase):
     def test_blank_recipe_and_density_are_not_needed_for_a_weighed_mass_correction(self):
         request = observed_mass_request()
         original = deepcopy(request)
-        with patch("rematter.adaptation.validate_plan", side_effect=AssertionError("No density plan needed")), \
-             patch("rematter.meta.MetaClient", side_effect=AssertionError("No provider needed")):
+        with patch("reshivo.adaptation.validate_plan", side_effect=AssertionError("No density plan needed")), \
+             patch("reshivo.meta.MetaClient", side_effect=AssertionError("No provider needed")):
             result = adjust_observed_mass(request)
         self.assertEqual(request, original)
         self.assertEqual(result["input_mode"], "observed_mass_only")
@@ -538,7 +538,7 @@ class AdaptationAPITests(unittest.TestCase):
 
     def test_plan_and_feedback_execute_without_models_or_source_datasets(self):
         with patch.object(self.service, "_materials", side_effect=AssertionError("No study needed")), \
-             patch("rematter.meta.MetaClient.generate", side_effect=AssertionError("No model request needed")):
+             patch("reshivo.meta.MetaClient.generate", side_effect=AssertionError("No model request needed")):
             status, result = self.call("/api/adaptation/plan", adaptation_request())
             self.assertEqual(status, 200)
             self.assertEqual(result["result_kind"], "simulation")
@@ -595,8 +595,8 @@ class AdaptationAPITests(unittest.TestCase):
 
     def test_direct_observed_mass_route_has_no_density_or_dataset_dependency(self):
         with patch.object(self.service, "_materials", side_effect=AssertionError("No study needed")), \
-             patch("rematter.adaptation.validate_plan", side_effect=AssertionError("No density needed")), \
-             patch("rematter.meta.MetaClient", side_effect=AssertionError("No provider needed")):
+             patch("reshivo.adaptation.validate_plan", side_effect=AssertionError("No density needed")), \
+             patch("reshivo.meta.MetaClient", side_effect=AssertionError("No provider needed")):
             status, result = self.call("/api/adaptation/observed-mass", observed_mass_request())
         self.assertEqual(status, 200)
         self.assertEqual(result["action"], "add")

@@ -9,11 +9,11 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.advisor import SOURCE_REGISTRY, SYSTEM_PROMPT, TRIAL_PROMPT, advisor_status, balance_mix, help_with_case, mass_trim, plan_trial, validate_request, validate_trial_request
-from rematter.meta import Generation, MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
-from rematter.products import ProductInputError
-from rematter.server import build_server
-from rematter.service import WorkbenchService
+from reshivo.advisor import SOURCE_REGISTRY, SYSTEM_PROMPT, TRIAL_PROMPT, advisor_status, balance_mix, help_with_case, mass_trim, plan_trial, validate_request, validate_trial_request
+from reshivo.meta import Generation, MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
+from reshivo.products import ProductInputError
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
 
 
 def brief_request():

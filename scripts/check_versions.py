@@ -29,7 +29,7 @@ def valid_semver(value):
 
 
 def module_version():
-    tree = ast.parse((ROOT / "rematter/__init__.py").read_text(encoding="utf-8"))
+    tree = ast.parse((ROOT / "reshivo/__init__.py").read_text(encoding="utf-8"))
     assignments = [
         node.value.value
         for node in tree.body
@@ -50,7 +50,7 @@ def main():
         lock = json.loads((ROOT / "web/package-lock.json").read_text(encoding="utf-8"))
         versions = {
             "pyproject.toml": python_package,
-            "rematter/__init__.py": module_version(),
+            "reshivo/__init__.py": module_version(),
             "web/package.json": frontend["version"],
             "web/package-lock.json": lock["version"],
             "web/package-lock.json (root package)": lock["packages"][""]["version"],

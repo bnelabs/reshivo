@@ -3,9 +3,9 @@ from copy import deepcopy
 import unittest
 from unittest.mock import patch
 
-from rematter.advisor import help_with_case, follow_up_with_case, plan_trial
-from rematter.project_intake import read_project_intake
-from rematter.unknown_metal_planning import needs_local_metal_planning
+from reshivo.advisor import help_with_case, follow_up_with_case, plan_trial
+from reshivo.project_intake import read_project_intake
+from reshivo.unknown_metal_planning import needs_local_metal_planning
 from test_home_unknown_dust import FakeClient, brief, payload
 
 
@@ -49,12 +49,12 @@ class LocalMetalPlanningTests(unittest.TestCase):
                 self.assertNotIn('9.8', result['answer'])
 
     def test_no_key_or_client_construction_for_local_advice(self):
-        with patch('rematter.advisor.MetaClient', side_effect=AssertionError('no provider')):
+        with patch('reshivo.advisor.MetaClient', side_effect=AssertionError('no provider')):
             self.assertEqual(follow_up_with_case(advice_request())['origin'], 'local')
 
     def test_local_intake_keeps_literal_user_words_and_no_invented_product(self):
         original = 'I have mostly metal dust and cable-plastic residue and want a counterweight.'
-        with patch('rematter.project_intake.MetaClient', side_effect=AssertionError('no provider')):
+        with patch('reshivo.project_intake.MetaClient', side_effect=AssertionError('no provider')):
             result = read_project_intake({'message': original})
         self.assertEqual(result['result_kind'], 'project_intake')
         self.assertEqual(result['origin'], 'local'); self.assertFalse(result['live'])

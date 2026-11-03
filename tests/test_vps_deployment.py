@@ -11,7 +11,7 @@ class DeploymentContractTests(unittest.TestCase):
         unit = (ROOT / "deploy/reshivo.service").read_text()
         self.assertIn("User=reshivo\n", unit)
         self.assertIn("WorkingDirectory=/opt/reshivo\n", unit)
-        self.assertIn("-m rematter serve --port 8797", unit)
+        self.assertIn("-m reshivo serve --port 8797", unit)
         self.assertNotIn("0.0.0.0", unit)
         self.assertIn("UMask=0077\n", unit)
 

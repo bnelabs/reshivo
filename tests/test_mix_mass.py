@@ -8,10 +8,10 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.mix_mass import my_mix_mass
-from rematter.products import ProductInputError
-from rematter.server import build_server
-from rematter.service import WorkbenchService
+from reshivo.mix_mass import my_mix_mass
+from reshivo.products import ProductInputError
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
 
 
 def mix_request():
@@ -56,7 +56,7 @@ class MixMassTests(unittest.TestCase):
     def test_entered_processed_density_is_scaled_without_study_substitution(self):
         request = mix_request()
         original = deepcopy(request)
-        with patch("rematter.products._checked_data", side_effect=AssertionError("A study must not be loaded")):
+        with patch("reshivo.products._checked_data", side_effect=AssertionError("A study must not be loaded")):
             result = my_mix_mass(request)
         self.assertEqual(request, original)
         self.assertEqual(result["result_kind"], "simulation")
@@ -238,7 +238,7 @@ class MixMassAPITests(unittest.TestCase):
                 error.close()
 
     def test_route_works_when_public_measurements_are_unavailable(self):
-        with patch("rematter.products._checked_data", side_effect=AssertionError("Published data is unavailable")):
+        with patch("reshivo.products._checked_data", side_effect=AssertionError("Published data is unavailable")):
             status, result = self.request(mix_request())
         self.assertEqual(status, 200)
         self.assertAlmostEqual(result["reading_scenarios"][0]["mass_kg"], 1.05)

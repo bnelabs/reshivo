@@ -53,7 +53,7 @@ def export_design(folder, material, result, requirements):
             raise ValueError("Mesh failed closure, orientation or volume verification")
         prefix = material.id + "_" + family_name
         stl_path = folder / (prefix + ".stl")
-        write_ascii_stl(stl_path, triangles, name="rematter_" + family_name)
+        write_ascii_stl(stl_path, triangles, name="reshivo_" + family_name)
         design = {
             "schema_version": 1,
             "units": {"length": "mm", "force": "N", "stress": "MPa"},

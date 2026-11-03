@@ -26,7 +26,7 @@ sudo -u reshivo -H npm --prefix /opt/reshivo/web ci
 sudo -u reshivo -H npm --prefix /opt/reshivo/web run build
 ```
 
-Node is needed to build the interface; it is not the application server. `rematter` remains the Python module name to keep existing installations and project files compatible.
+Node is needed to build the interface; it is not the application server. The application runs as `python -m reshivo`.
 
 ## 2. Configure the service
 
@@ -76,7 +76,7 @@ The example requires a password on every route and sends only the exact allowed 
 
 ## 4. Update and back up
 
-Stop the service, pull and rebuild as the same account, then start it. A failed pull or build should be fixed before restarting.
+Stop the service, pull and rebuild as the same account, then start it. A failed pull or build should be fixed before restarting. If updating from a release that used the old Python module name, update the installed systemd unit's `ExecStart` to use `python -m reshivo` first. Compare your installed unit with `deploy/reshivo.service` and preserve any local changes, then run `sudo systemctl daemon-reload` before restarting.
 
 ```sh
 sudo systemctl stop reshivo

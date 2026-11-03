@@ -63,6 +63,11 @@ assert.equal(parseWorkspaceFile(serializeWorkspaceFile(threeIdeas)).plan.materia
 threeIdeas.plan.material_routes.push({ ...threeIdeas.plan.material_routes[0], id: 'material:fourth' })
 assert.throws(() => serializeWorkspaceFile(threeIdeas), /between 0 and 3/, 'more than three saved routes are rejected')
 assert.equal(decoded.format, WORKSPACE_FORMAT)
+assert.equal(WORKSPACE_FORMAT, 'reshivo-material-workspace', 'new workspace backups use the current name')
+const legacyWorkspace = { ...JSON.parse(encoded), format: 'rematter-material-workspace' }
+const legacyOpened = parseWorkspaceFile(JSON.stringify(legacyWorkspace))
+assert.equal(legacyOpened.format, WORKSPACE_FORMAT, 'legacy workspace backups open with the current identifier')
+assert.deepEqual(legacyOpened.case_data, decoded.case_data, 'legacy workspace details are preserved')
 assert.equal(decoded.version, 1)
 assert.equal(new Date(decoded.saved_at).toISOString(), decoded.saved_at)
 for (const key of Object.keys(original)) assert.deepEqual(decoded[key], original[key], `round-trip ${key}`)

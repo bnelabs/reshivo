@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import urllib.error
 
-from rematter.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError, ToolTurn
+from reshivo.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError, ToolTurn
 
 
 KEY = "fixture-private-key"

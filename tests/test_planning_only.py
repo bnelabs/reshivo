@@ -2,10 +2,10 @@
 from copy import deepcopy
 import unittest
 
-from rematter.advisor import follow_up_with_case, help_with_case, plan_trial
-from rematter.meta import MetaValidationError
-from rematter.planning_only import is_planning_only, planning_version
-from rematter.project_intake import read_project_intake
+from reshivo.advisor import follow_up_with_case, help_with_case, plan_trial
+from reshivo.meta import MetaValidationError
+from reshivo.planning_only import is_planning_only, planning_version
+from reshivo.project_intake import read_project_intake
 from test_project_intake import FixtureClient as IntakeClient, simple_request, simple_response
 from test_wet_slip_advisor import FakeClient, follow_data, help_data, mat_request, route, trial_data
 

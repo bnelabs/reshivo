@@ -4,14 +4,14 @@ import math
 import unittest
 from unittest.mock import patch
 
-from rematter.balance import plan_shared_balance
-from rematter.engineering_intake import (
+from reshivo.balance import plan_shared_balance
+from reshivo.engineering_intake import (
     FIELD_ORDER, SYSTEM_PROMPT, engineering_schema, normalize_engineering_fields,
     prepare_engineering_draft, prepare_engineering_values, read_engineering_note,
     validate_engineering_request,
 )
-from rematter.meta import Generation, MetaAPIError, MetaValidationError
-from rematter.products import ProductInputError
+from reshivo.meta import Generation, MetaAPIError, MetaValidationError
+from reshivo.products import ProductInputError
 
 
 BASIS = "x=0 at the module centre; all trim coordinates are actual mass centres on one shared axis"
@@ -90,7 +90,7 @@ class Client:
 class EngineeringIntakeTests(unittest.TestCase):
     def test_one_call_normalizes_25_fields_without_applying_or_calculating(self):
         case = request(); original = deepcopy(case); client = Client()
-        with patch("rematter.balance.plan_balance", side_effect=AssertionError("Read must not calculate")):
+        with patch("reshivo.balance.plan_balance", side_effect=AssertionError("Read must not calculate")):
             result = read_engineering_note(case, client=client)
         self.assertEqual(case, original)
         self.assertEqual(len(result["fields"]), 25)

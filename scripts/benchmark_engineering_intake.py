@@ -13,12 +13,12 @@ import sys
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from rematter.balance import plan_shared_balance
-from rematter.engineering_intake import (FIELD_ORDER, TEXT_FIELDS, TARGET_FIELDS, read_engineering_note,
+from reshivo.balance import plan_shared_balance
+from reshivo.engineering_intake import (FIELD_ORDER, TEXT_FIELDS, TARGET_FIELDS, read_engineering_note,
                                         prepare_engineering_values, prepare_engineering_draft)
-from rematter.materials import ROOT
-from rematter.meta import MetaClient, MetaAPIError, MetaConfigurationError, MetaValidationError
-from rematter.products import ProductInputError
+from reshivo.materials import ROOT
+from reshivo.meta import MetaClient, MetaAPIError, MetaConfigurationError, MetaValidationError
+from reshivo.products import ProductInputError
 from scripts.benchmark_note_intake import OneCallClient, redacted
 
 PROTOCOL = 'engineering-intake-v1'
@@ -147,8 +147,8 @@ def run_arm(arm, fixture):
 
 def manifest():
     paths=['docs/ENGINEERING_INTAKE_PROTOCOL.md','examples/engineering-intake-task-v1.json','scripts/benchmark_engineering_intake.py',
-           'rematter/engineering_intake.py','rematter/balance.py','rematter/advisor.py','rematter/adaptation.py','rematter/meta.py',
-           'rematter/observation_intake.py','scripts/benchmark_note_intake.py']
+           'reshivo/engineering_intake.py','reshivo/balance.py','reshivo/advisor.py','reshivo/adaptation.py','reshivo/meta.py',
+           'reshivo/observation_intake.py','scripts/benchmark_note_intake.py']
     return {name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in paths}
 
 

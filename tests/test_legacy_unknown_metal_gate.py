@@ -2,12 +2,12 @@
 import unittest
 from unittest.mock import patch
 
-from rematter.engineering_agent import assist_with_adaptation
-from rematter.engineering_intake import read_engineering_note
-from rematter.image_intake import inspect_image
-from rematter.observation_intake import read_observation_note
-from rematter.products import ProductInputError
-from rematter.service import ServiceError, WorkbenchService
+from reshivo.engineering_agent import assist_with_adaptation
+from reshivo.engineering_intake import read_engineering_note
+from reshivo.image_intake import inspect_image
+from reshivo.observation_intake import read_observation_note
+from reshivo.products import ProductInputError
+from reshivo.service import ServiceError, WorkbenchService
 from test_engineering_agent import mass_only_request
 from test_engineering_intake import Client as EngineeringClient, request as engineering_request
 from test_image_intake import FixtureClient as ImageClient, request as image_request
@@ -76,10 +76,10 @@ class UnknownMetalLegacyGateTests(unittest.TestCase):
 
     def test_default_client_is_not_created_for_local_planning(self):
         for module, fn, request in (
-            ('rematter.image_intake', inspect_image, image_request()),
-            ('rematter.observation_intake', read_observation_note, observation_request()),
-            ('rematter.engineering_intake', read_engineering_note, engineering_request()),
-            ('rematter.engineering_agent', assist_with_adaptation, mass_only_request()),
+            ('reshivo.image_intake', inspect_image, image_request()),
+            ('reshivo.observation_intake', read_observation_note, observation_request()),
+            ('reshivo.engineering_intake', read_engineering_note, engineering_request()),
+            ('reshivo.engineering_agent', assist_with_adaptation, mass_only_request()),
         ):
             with self.subTest(path=module), patch(module + '.MetaClient', side_effect=AssertionError('Do not construct a provider')):
                 request['brief']['input'] = 'Unidentified metal powder'
@@ -90,10 +90,10 @@ class UnknownMetalLegacyGateTests(unittest.TestCase):
     def test_service_maps_local_fallback_to_structured_client_error_without_provider(self):
         service = WorkbenchService()
         for name, fn, request in (
-            ('rematter.image_intake', service.advisor_inspect_image, image_request()),
-            ('rematter.observation_intake', service.advisor_read_observation, observation_request()),
-            ('rematter.engineering_intake', service.advisor_read_engineering_note, engineering_request()),
-            ('rematter.engineering_agent', service.adaptation_assist, mass_only_request()),
+            ('reshivo.image_intake', service.advisor_inspect_image, image_request()),
+            ('reshivo.observation_intake', service.advisor_read_observation, observation_request()),
+            ('reshivo.engineering_intake', service.advisor_read_engineering_note, engineering_request()),
+            ('reshivo.engineering_agent', service.adaptation_assist, mass_only_request()),
         ):
             with self.subTest(path=name), patch(name + '.MetaClient', side_effect=AssertionError('Do not construct a provider')):
                 request['brief']['input'] = 'Unidentified metal powder'

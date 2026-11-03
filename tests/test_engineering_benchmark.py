@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from rematter.meta import Generation, MetaAPIError, MetaConfigurationError, ToolTurn
+from reshivo.meta import Generation, MetaAPIError, MetaConfigurationError, ToolTurn
 
 
 SPEC = importlib.util.spec_from_file_location("benchmark_engineering", Path(__file__).resolve().parents[1] / "scripts/benchmark_engineering.py")

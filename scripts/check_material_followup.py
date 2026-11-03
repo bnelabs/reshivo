@@ -11,13 +11,13 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from rematter.advisor import follow_up_with_case
-from rematter.meta import MetaClient
+from reshivo.advisor import follow_up_with_case
+from reshivo.meta import MetaClient
 from scripts.benchmark_note_intake import redacted
 
 SOURCES = ['docs/MATERIAL_FOLLOWUP_REGRESSION.md', 'scripts/check_material_followup.py',
-           'examples/material-task-v1-live.json', 'rematter/advisor.py', 'rematter/meta.py',
-           'rematter/service.py', 'rematter/server.py']
+           'examples/material-task-v1-live.json', 'reshivo/advisor.py', 'reshivo/meta.py',
+           'reshivo/service.py', 'reshivo/server.py']
 
 
 def hashes():

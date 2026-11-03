@@ -4,8 +4,8 @@ import shutil
 import tempfile
 import unittest
 
-from rematter.materials import ROOT
-from rematter.products import (
+from reshivo.materials import ROOT
+from reshivo.products import (
     ProductDataError, ProductInputError, REQUIRED_INPUTS, counterweight, product_catalog,
 )
 

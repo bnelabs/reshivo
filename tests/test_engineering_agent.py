@@ -9,15 +9,15 @@ from unittest.mock import Mock, patch
 import urllib.error
 import urllib.request
 
-from rematter.adaptation import plan_adaptation
-from rematter.engineering_agent import (
+from reshivo.adaptation import plan_adaptation
+from reshivo.engineering_agent import (
     MAX_COMPUTATION_CALLS, MAX_MODEL_TURNS, MAX_MODEL_TRACE_BYTES, MAX_SUMMARY_BYTES,
     assist_with_adaptation, validate_assist_request,
 )
-from rematter.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
-from rematter.products import ProductInputError
-from rematter.server import build_server
-from rematter.service import WorkbenchService
+from reshivo.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
+from reshivo.products import ProductInputError
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
 
 
 def assist_request():
@@ -125,7 +125,7 @@ class EngineeringAgentTests(unittest.TestCase):
         request["plan"]["observations"][0]["value_g_cm3"] = 1.5
         original = deepcopy(request)
         answer = "A larger usable enclosure is proposed; keep the recipe and target fixed, then check retention separately."
-        with patch("rematter.engineering_agent.plan_adaptation", wraps=plan_adaptation) as executed:
+        with patch("reshivo.engineering_agent.plan_adaptation", wraps=plan_adaptation) as executed:
             result, transport = self.run_script(request,
                 reply(call("compare", "compare_current_design")),
                 reply(call("capacity", "check_capacity_repair")),
@@ -199,9 +199,9 @@ class EngineeringAgentTests(unittest.TestCase):
         request = mass_only_request()
         original = deepcopy(request)
         answer = "Use the bounded mass correction with suitable sealed units and reweigh the complete assembly."
-        with patch("rematter.engineering_agent.validate_plan", side_effect=AssertionError("No plan needed")), \
-             patch("rematter.adaptation.validate_plan", side_effect=AssertionError("No density needed")), \
-             patch("rematter.service.WorkbenchService._materials", side_effect=AssertionError("No study needed")):
+        with patch("reshivo.engineering_agent.validate_plan", side_effect=AssertionError("No plan needed")), \
+             patch("reshivo.adaptation.validate_plan", side_effect=AssertionError("No density needed")), \
+             patch("reshivo.service.WorkbenchService._materials", side_effect=AssertionError("No study needed")):
             result, transport = self.run_script(request, reply(call("mass", "check_mass_feedback")),
                                                 reply(present("answer", "mass", "add_mass", answer)))
         self.assertEqual(request, original)
@@ -228,7 +228,7 @@ class EngineeringAgentTests(unittest.TestCase):
         self.assertEqual(result["model_trace"][0]["tool_results"][0]["result"], sent_summary)
 
     def test_mass_only_capacity_tools_need_a_density_plan_and_never_fake_execution(self):
-        with patch("rematter.engineering_agent.plan_adaptation", side_effect=AssertionError("No density plan")):
+        with patch("reshivo.engineering_agent.plan_adaptation", side_effect=AssertionError("No density plan")):
             result, transport = self.run_script(mass_only_request(),
                 reply(call("compare", "compare_current_design"), call("capacity", "check_capacity_repair"),
                       call("mass", "check_mass_feedback")),
@@ -440,7 +440,7 @@ class EngineeringAgentTests(unittest.TestCase):
         for name, arguments in (("compare_current_design", {"target_max_kg": 20}),
                                 ("check_capacity_repair", {"capacity": 9000}),
                                 ("check_mass_feedback", {"mass_kg": 10})):
-            with self.subTest(name=name), patch("rematter.engineering_agent.plan_adaptation") as execute:
+            with self.subTest(name=name), patch("reshivo.engineering_agent.plan_adaptation") as execute:
                 with self.assertRaises(MetaValidationError):
                     self.run_script(assist_request(), reply(call("valid", "compare_current_design"), call("invalid", name, arguments)))
                 execute.assert_not_called()
@@ -509,7 +509,7 @@ class EngineeringAgentTests(unittest.TestCase):
     def test_computation_limit_counts_only_executed_calculations(self):
         first = [call(f"compare-{index}", "compare_current_design") for index in range(4)]
         second = [call(f"compare-{index}", "compare_current_design") for index in range(4, 8)]
-        with patch("rematter.engineering_agent.plan_adaptation", wraps=plan_adaptation) as execute:
+        with patch("reshivo.engineering_agent.plan_adaptation", wraps=plan_adaptation) as execute:
             result, transport = self.run_script(assist_request(), reply(*first), reply(*second),
                 reply(present("answer", "compare-5", "adjust_volume")))
         self.assertEqual(result["status"], "completed")
@@ -520,12 +520,12 @@ class EngineeringAgentTests(unittest.TestCase):
 
     def test_elapsed_limit_prevents_more_model_calls_and_calculations(self):
         client = Mock()
-        with patch("rematter.engineering_agent.time.monotonic", side_effect=[0, 211, 211]):
+        with patch("reshivo.engineering_agent.time.monotonic", side_effect=[0, 211, 211]):
             result = assist_with_adaptation(assist_request(), client=client)
         self.assertEqual(result["status"], "limit_reached")
         self.assertEqual(result["model_turns"], 0)
         client.tool_turn.assert_not_called()
-        with patch("rematter.engineering_agent.time.monotonic", return_value=0) as clock:
+        with patch("reshivo.engineering_agent.time.monotonic", return_value=0) as clock:
             result, transport = self.run_script(assist_request(), reply(call("late", "compare_current_design")),
                                                 callback=lambda: setattr(clock, "return_value", 211))
         self.assertEqual(result["status"], "limit_reached")
@@ -533,7 +533,7 @@ class EngineeringAgentTests(unittest.TestCase):
         self.assertEqual(len(transport.requests), 1)
 
     def test_presentation_returned_after_elapsed_limit_is_not_completed(self):
-        with patch("rematter.engineering_agent.time.monotonic", return_value=0) as clock:
+        with patch("reshivo.engineering_agent.time.monotonic", return_value=0) as clock:
             requests = [0]
 
             def advance_after_second_request():
@@ -614,7 +614,7 @@ class EngineeringAssistAPITests(unittest.TestCase):
 
     def test_service_executes_runner_when_no_injected_assistance_is_set(self):
         with patch.object(self.service, "assist_fn", None), \
-             patch("rematter.engineering_agent.assist_with_adaptation", return_value={"status": "completed"}) as run:
+             patch("reshivo.engineering_agent.assist_with_adaptation", return_value={"status": "completed"}) as run:
             self.assertEqual(self.call(assist_request()), (200, {"status": "completed"}))
         run.assert_called_once_with(assist_request(), root=self.service.root)
 
@@ -659,7 +659,7 @@ class EngineeringAssistAPITests(unittest.TestCase):
             self.assertEqual(result["error"]["code"], "invalid_request")
             self.assertEqual(read_note.call_count, 1)
         with patch.object(self.service, "note_fn", None), \
-             patch("rematter.observation_intake.read_observation_note", return_value={"status": "review_required"}) as read_note:
+             patch("reshivo.observation_intake.read_observation_note", return_value={"status": "review_required"}) as read_note:
             self.assertEqual(self.call(self.note_request(), path=path), (200, {"status": "review_required"}))
             read_note.assert_called_once_with(self.note_request(), root=self.service.root)
 

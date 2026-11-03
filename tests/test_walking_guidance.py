@@ -5,9 +5,9 @@ import json
 from types import SimpleNamespace
 import unittest
 
-from rematter.project_intake import read_project_intake
-from rematter.walking_guidance import has_unsafe_walking_guidance
-from rematter.intake_grip_proxy import has_misleading_grip_proxy
+from reshivo.project_intake import read_project_intake
+from reshivo.walking_guidance import has_unsafe_walking_guidance
+from reshivo.intake_grip_proxy import has_misleading_grip_proxy
 from test_project_intake import empty_draft, record, simple_request, simple_response
 
 

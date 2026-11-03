@@ -8,10 +8,10 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.engineering_intake import normalize_engineering_fields, read_engineering_note
-from rematter.meta import Generation, MetaAPIError, MetaConfigurationError, MetaValidationError
-from rematter.server import build_server
-from rematter.service import WorkbenchService
+from reshivo.engineering_intake import normalize_engineering_fields, read_engineering_note
+from reshivo.meta import Generation, MetaAPIError, MetaConfigurationError, MetaValidationError
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
 from test_engineering_intake import Client, fields, request
 
 
@@ -78,7 +78,7 @@ class EngineeringIntakeAPITests(unittest.TestCase):
     def test_default_reader_uses_one_generation_but_apply_uses_no_model(self):
         generation = Generation(fields(), "muse-spark-1.3", False, {"total_tokens": 20}, "api-fixture", 10)
         with patch.object(self.service, "engineering_note_fn", None), \
-             patch("rematter.meta.MetaClient.generate", return_value=generation) as generate:
+             patch("reshivo.meta.MetaClient.generate", return_value=generation) as generate:
             status, draft = self.call(READ, request())
             self.assertEqual(status, 200)
             self.assertEqual(generate.call_count, 1)
@@ -94,7 +94,7 @@ class EngineeringIntakeAPITests(unittest.TestCase):
     def test_reviewed_application_returns_one_atomic_request_and_actual_joint_check(self):
         body = apply_request(); before = deepcopy(body)
         with patch.object(self.service, "_materials", side_effect=AssertionError("No study supplies this case")), \
-             patch("rematter.meta.MetaClient.generate", side_effect=AssertionError("Apply must not call a provider")):
+             patch("reshivo.meta.MetaClient.generate", side_effect=AssertionError("Apply must not call a provider")):
             status, result = self.call(APPLY, body)
         self.assertEqual(status, 200)
         self.assertEqual(body, before)
@@ -136,8 +136,8 @@ class EngineeringIntakeAPITests(unittest.TestCase):
 
     def test_missing_new_cg_error_returns_questions_without_calculating(self):
         data = fields();data["cg_uncertainty_mm"] = None
-        with patch("rematter.balance.plan_shared_balance", side_effect=AssertionError("No complete observation")) as calculate, \
-             patch("rematter.meta.MetaClient.generate", side_effect=AssertionError("Apply does not generate")):
+        with patch("reshivo.balance.plan_shared_balance", side_effect=AssertionError("No complete observation")) as calculate, \
+             patch("reshivo.meta.MetaClient.generate", side_effect=AssertionError("Apply does not generate")):
             status, result = self.call(APPLY, apply_request(data=data))
         self.assertEqual(status, 200)
         self.assertFalse(result["ready"])
@@ -152,7 +152,7 @@ class EngineeringIntakeAPITests(unittest.TestCase):
     def test_review_and_independent_acknowledgement_gate_the_calculation(self):
         for choices in ({"review_confirmed": False}, {"independent_adjustments": False}, {"review_confirmed": False, "independent_adjustments": False}):
             with self.subTest(choices=choices), \
-                 patch("rematter.balance.plan_shared_balance", side_effect=AssertionError("Review gates not met")) as calculate:
+                 patch("reshivo.balance.plan_shared_balance", side_effect=AssertionError("Review gates not met")) as calculate:
                 status, result = self.call(APPLY, apply_request(**choices))
                 self.assertEqual(status, 200)
                 self.assertFalse(result["ready"])
@@ -172,7 +172,7 @@ class EngineeringIntakeAPITests(unittest.TestCase):
         body = deepcopy(valid);body["source_fields"]["mass_kg"]["number_text"] = "1";mutations.append(body)
         body = deepcopy(valid);body["source_fields"]["cg_uncertainty_mm"] = None;mutations.append(body)
         body = deepcopy(valid);body["source_fields"]["mass_kg"]["source"] = "brief.targets";mutations.append(body)
-        with patch("rematter.balance.plan_shared_balance", side_effect=AssertionError("Invalid draft must not calculate")) as calculate:
+        with patch("reshivo.balance.plan_shared_balance", side_effect=AssertionError("Invalid draft must not calculate")) as calculate:
             for body in mutations:
                 with self.subTest(body_keys=list(body)):
                     status, result = self.call(APPLY, body)

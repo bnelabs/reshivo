@@ -27,7 +27,7 @@ Some application calls request a reasoning level. That field is sent only when t
 
 ## Local settings API (direct Python and CLI use)
 
-Functions in `rematter.providers` accept `root=ROOT, environ=None` for isolated use and testing:
+Functions in `reshivo.providers` accept `root=ROOT, environ=None` for isolated use and testing:
 
 - `provider_catalog()` returns provider names, base URLs, protocols, conservative defaults and documentation links.
 - `provider_settings(...)` returns the active connection and a masked `profiles` list.

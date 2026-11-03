@@ -4,7 +4,7 @@ Reshivo uses semantic versions and tags named `vX.Y.Z`. The frontend build shows
 
 Before tagging a release:
 
-1. Update the version in `pyproject.toml`, `rematter/__init__.py`, `web/package.json`, and both root version entries in `web/package-lock.json`.
+1. Update the version in `pyproject.toml`, `reshivo/__init__.py`, `web/package.json`, and both root version entries in `web/package-lock.json`.
 2. Add the changes to `CHANGELOG.md` and run `python3 scripts/check_versions.py` along with the project checks in the README.
 3. Tag the tested commit with the matching `vX.Y.Z` tag.
 

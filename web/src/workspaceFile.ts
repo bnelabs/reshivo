@@ -1,6 +1,7 @@
 import type { AdvisorFollowupResult, AdvisorMessage, AdvisorResult, AdvisorRoute, AdvisorTrialResult, WorkshopCase } from './types.ts'
 
-export const WORKSPACE_FORMAT = 'rematter-material-workspace'
+export const WORKSPACE_FORMAT = 'reshivo-material-workspace'
+const LEGACY_WORKSPACE_FORMAT = 'rematter-material-workspace'
 export const WORKSPACE_VERSION = 1
 export const WORKSPACE_MAX_BYTES = 1024 * 1024
 
@@ -322,7 +323,7 @@ function compositionDraft(value: unknown, components: Set<number>): void {
 
 function validate(value: unknown): asserts value is SavedWorkspace {
   const row = object(value, 'Workspace file', ['format', 'version', 'saved_at', ...snapshotKeys], optionalSnapshotKeys)
-  if (row.format !== WORKSPACE_FORMAT) fail('Workspace file', 'choose a Reshivo material-workspace file')
+  if (row.format !== WORKSPACE_FORMAT && row.format !== LEGACY_WORKSPACE_FORMAT) fail('Workspace file', 'choose a Reshivo material-workspace file')
   if (row.version !== WORKSPACE_VERSION) fail('Workspace file', 'this workspace version is not supported')
   string(row.saved_at, 'Saved date', 30, true)
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.saved_at) || !Number.isFinite(Date.parse(row.saved_at)) || new Date(row.saved_at).toISOString() !== row.saved_at)
@@ -354,7 +355,7 @@ export function parseWorkspaceFile(text: string): SavedWorkspace {
     fail('Workspace file', 'the file is not valid JSON')
   }
   validate(value)
-  return value
+  return { ...value, format: WORKSPACE_FORMAT }
 }
 
 export function serializeWorkspaceFile(snapshot: WorkspaceSnapshot): string {

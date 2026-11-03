@@ -16,7 +16,7 @@ node web/checks/measurement-trial.test.mjs
 node web/checks/workspace-file.test.mjs
 npm --prefix web ci
 npm --prefix web run build
-.venv/bin/python -m rematter serve
+.venv/bin/python -m reshivo serve
 ```
 
 No credentials are required for offline tests, source checks or building. Live Meta

@@ -1,6 +1,6 @@
 # Combined comparison of entered checks and costs
 
-`compare_project_decisions(request)` in `rematter.decision_comparison` joins independently recalculated trial checks and manufacturing-cost calculations. It makes no provider calls. This is a software decision about recorded inputs, not physical qualification, a predicted future outcome or an optimized recipe.
+`compare_project_decisions(request)` in `reshivo.decision_comparison` joins independently recalculated trial checks and manufacturing-cost calculations. It makes no provider calls. This is a software decision about recorded inputs, not physical qualification, a predicted future outcome or an optimized recipe.
 
 ## Input and bindings
 

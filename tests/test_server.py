@@ -6,10 +6,10 @@ import unittest
 import urllib.error
 import urllib.request
 
-from rematter import __version__
-from rematter.server import build_server
-from rematter.service import WorkbenchService
-from rematter.meta import Generation, propose_and_evaluate
+from reshivo import __version__
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
+from reshivo.meta import Generation, propose_and_evaluate
 
 
 class ServerTests(unittest.TestCase):

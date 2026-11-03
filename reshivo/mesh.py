@@ -204,7 +204,7 @@ def mesh_metrics(triangles) -> dict:
     }
 
 
-def write_ascii_stl(path, triangles, name="rematter") -> None:
+def write_ascii_stl(path, triangles, name="reshivo") -> None:
     """Write finite, nondegenerate triangles without changing their winding."""
     triangles = _validated_triangles(triangles)
     facets = []
@@ -214,7 +214,7 @@ def write_ascii_stl(path, triangles, name="rematter") -> None:
         if magnitude == 0 or not isfinite(magnitude):
             raise ValueError("Cannot write a degenerate triangle")
         facets.append((tuple(v / magnitude for v in normal), triangle))
-    name = re.sub(r"[^A-Za-z0-9_.-]", "_", str(name)) or "rematter"
+    name = re.sub(r"[^A-Za-z0-9_.-]", "_", str(name)) or "reshivo"
     lines = [f"solid {name}"]
     for normal, triangle in facets:
         lines.append("  facet normal " + " ".join(format(v, ".17g") for v in normal))

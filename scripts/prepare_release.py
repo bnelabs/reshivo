@@ -13,7 +13,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = {"README.md", "pyproject.toml", ".gitignore", ".env.example", "LICENSE", "LICENCE", "NOTICE"}
-PREFIXES = ("rematter/", "tests/", "scripts/", "web/", "data/", "docs/", "examples/", "deploy/", ".github/workflows/")
+PREFIXES = ("reshivo/", "tests/", "scripts/", "web/", "data/", "docs/", "examples/", "deploy/", ".github/workflows/")
 OMIT_DOCS = {
     "docs/DATA_INVENTORY.md", "docs/VERIFICATION.md", "docs/RELEASE_READINESS.md",
     "docs/AUDIO_AUDITIONS_20261103.md", "docs/DEMO_REWRITE.md", "docs/DEMO_SCRIPT.md",
@@ -40,7 +40,7 @@ OMITTED_LINKS = {
     "docs/MATERIAL_TRIAL_HANDOFF.md": ("demo/material-decision-review.mp4",),
     "docs/MATERIAL_DIRECTION_REPAIR.md": ("NARRATION_PRODUCTION.md",),
     "docs/BALANCE_SPIKE.md": ("demo/rematter-demo.mp4",),
-    "examples/organizer-run-20261103/rematter-independent-review.md": (
+    "examples/organizer-run-20261103/reshivo-independent-review.md": (
         "turn-1-after-question.jpg", "turn-2-provider-error.jpg", "turn-3-provider-error.jpg",
         "turn-4-comparison.jpg", "turn-4-response.jpg",
     ),
@@ -223,7 +223,7 @@ node web/checks/measurement-trial.test.mjs
 node web/checks/workspace-file.test.mjs
 npm --prefix web ci
 npm --prefix web run build
-.venv/bin/python -m rematter serve
+.venv/bin/python -m reshivo serve
 ```
 
 No credentials are required for offline tests, source checks or building. Live Meta

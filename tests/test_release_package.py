@@ -15,14 +15,14 @@ class ReleasePackageTests(unittest.TestCase):
     def test_selection_excludes_history_secrets_builds_and_acoustic_derivatives(self):
         for name in (".git/config", ".env", ".env.local", "AGENTS.md", "outputs/demo.json", "web/node_modules/react/index.js",
                      "web/dist/index.html", "data/research/acoustics/footwear_measurements.json",
-                     "../rematter/a.py", "/tmp/a.py", "rematter/__pycache__/a.pyc",
+                     "../reshivo/a.py", "/tmp/a.py", "reshivo/__pycache__/a.pyc",
                      "data/research/density/access_attempts/cecon-mmc1-challenge.html",
                      "docs/demo/old-review.mp4", "examples/old-recording.mp4",
                      "docs/SUBMISSION_FORM.md", "docs/brand/gather.svg", "docs/release-qa-old.json",
                      "docs/BUILD_PLAN.md", "docs/DEMO_STORY_V2_20261103.md"):
             with self.subTest(name=name):
                 self.assertFalse(release.selected(name))
-        for name in ("rematter/balance.py", "web/src/App.tsx", ".env.example",
+        for name in ("reshivo/balance.py", "web/src/App.tsx", ".env.example",
                      "data/research/density/measurements.json", "docs/API.md",
                      "docs/ORGANIZER_EVALUATION_RESULTS_20261103.md", "web/public/reshivo-mark.svg",
                      "deploy/reshivo.service", "deploy/nginx/reshivo.conf.example"):

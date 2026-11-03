@@ -3,12 +3,12 @@ from copy import deepcopy
 import json
 import unittest
 
-from rematter.advisor import (
+from reshivo.advisor import (
     FOLLOWUP_PROMPT, MANUFACTURING_COST_PROMPT, PROJECT_CONTEXT_PROMPT, SYSTEM_PROMPT,
     follow_up_with_case, help_with_case, validate_request,
 )
-from rematter.meta import Generation, MetaAPIError, MetaValidationError
-from rematter.products import ProductInputError
+from reshivo.meta import Generation, MetaAPIError, MetaValidationError
+from reshivo.products import ProductInputError
 
 
 def context():

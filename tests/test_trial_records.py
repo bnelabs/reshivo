@@ -4,7 +4,7 @@ from copy import deepcopy
 from decimal import Decimal
 import unittest
 
-from rematter.trial_records import assess_trial_records
+from reshivo.trial_records import assess_trial_records
 
 
 def configuration(identifier, amounts, revision=1):

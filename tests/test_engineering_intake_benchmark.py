@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 import unittest
 
-from rematter.balance import plan_shared_balance
-from rematter.engineering_intake import prepare_engineering_values
+from reshivo.balance import plan_shared_balance
+from reshivo.engineering_intake import prepare_engineering_values
 
 ROOT = Path(__file__).parents[1]
 spec = importlib.util.spec_from_file_location('engineering_intake_benchmark', ROOT/'scripts/benchmark_engineering_intake.py')

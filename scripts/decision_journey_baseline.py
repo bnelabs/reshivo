@@ -13,9 +13,9 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from rematter.advisor import SOURCE_REGISTRY
-from rematter.providers import load_provider_profile
-from rematter.provider_transport import ProviderTransport
+from reshivo.advisor import SOURCE_REGISTRY
+from reshivo.providers import load_provider_profile
+from reshivo.provider_transport import ProviderTransport
 
 PROTOCOL = 'docs/DECISION_JOURNEY_EVALUATION_20261103.md'
 FIXTURE = 'examples/decision-journey-fixture-20261103.json'
@@ -24,8 +24,8 @@ SCRIPT = 'scripts/decision_journey_baseline.py'
 SYSTEM = ("You are a practical materials and product planning assistant. Answer the user's decision using only "
           "the supplied case facts and calculations. Ask for missing information, describe proposed changes as "
           "conditional, and respect the stated home equipment limits.")
-SOURCES = (PROTOCOL, FIXTURE, MANIFEST, SCRIPT, 'rematter/advisor.py', 'rematter/providers.py',
-           'rematter/provider_transport.py', 'rematter/meta.py')
+SOURCES = (PROTOCOL, FIXTURE, MANIFEST, SCRIPT, 'reshivo/advisor.py', 'reshivo/providers.py',
+           'reshivo/provider_transport.py', 'reshivo/meta.py')
 VERSION = 'decision-journey-baseline-v1'
 
 

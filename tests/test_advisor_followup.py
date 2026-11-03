@@ -9,11 +9,11 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.advisor import FOLLOWUP_PROMPT, follow_up_with_case, followup_schema
-from rematter.meta import Generation, MetaAPIError, MetaConfigurationError, MetaValidationError
-from rematter.products import ProductInputError
-from rematter.server import build_server
-from rematter.service import WorkbenchService
+from reshivo.advisor import FOLLOWUP_PROMPT, follow_up_with_case, followup_schema
+from reshivo.meta import Generation, MetaAPIError, MetaConfigurationError, MetaValidationError
+from reshivo.products import ProductInputError
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
 
 
 def request_data():

@@ -1,6 +1,6 @@
 # ReMatter desk-organizer journey — independent software review
 
-Reviewed against the [frozen protocol](../../docs/ORGANIZER_EVALUATION_20261103.md), [fixture](../../examples/organizer-fixture-20261103.json), [UI observation log](rematter-ui-observations.md), saved synthetic projects and available screenshots. This is a second software reviewer, not an independent human participant; I did not operate the app or witness the live run. The log and screenshots are developer-captured, not raw provider traffic. The results concern frozen commit `ee6062e99263fec08a3cbadf4935826c24d39658` and one developer-authored synthetic case.
+Reviewed against the [frozen protocol](../../docs/ORGANIZER_EVALUATION_20261103.md), [fixture](../../examples/organizer-fixture-20261103.json), [UI observation log](reshivo-ui-observations.md), saved synthetic projects and available screenshots. This is a second software reviewer, not an independent human participant; I did not operate the app or witness the live run. The log and screenshots are developer-captured, not raw provider traffic. The results concern frozen commit `ee6062e99263fec08a3cbadf4935826c24d39658` and one developer-authored synthetic case.
 
 | Stage | Decision | Useful next action | Context fidelity | Clarity | Overall observation |
 | --- | --- | --- | --- | --- | --- |

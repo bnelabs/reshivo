@@ -12,12 +12,12 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rematter.adaptation import adjust_from_measurement, plan_adaptation
-from rematter.engineering_agent import (
+from reshivo.adaptation import adjust_from_measurement, plan_adaptation
+from reshivo.engineering_agent import (
     ACTIONS, _initial_context, assist_with_adaptation, validate_assist_request,
 )
-from rematter.materials import ROOT
-from rematter.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
+from reshivo.materials import ROOT
+from reshivo.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
 
 
 PROTOCOL = "engineering-v1"
@@ -571,7 +571,7 @@ def benchmark(mode="tools", selected=None, client_factory=MetaClient, on_progres
     protocol_hash = hashlib.sha256(protocol_path.read_bytes()).hexdigest()
     script_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     implementation_hashes = {name: hashlib.sha256((Path(ROOT) / name).read_bytes()).hexdigest()
-                             for name in ("rematter/engineering_agent.py", "rematter/adaptation.py", "rematter/meta.py")}
+                             for name in ("reshivo/engineering_agent.py", "reshivo/adaptation.py", "reshivo/meta.py")}
 
     def capture_factory(**kwargs):
         client = client_factory(**kwargs)

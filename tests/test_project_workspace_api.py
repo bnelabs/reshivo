@@ -12,10 +12,10 @@ import threading
 import unittest
 from unittest.mock import Mock, patch
 
-from rematter.materials import ROOT
-from rematter.providers import CONFIG_NAME
-from rematter.server import MAX_BODY_BYTES, MAX_PROJECT_BODY_BYTES, build_server
-from rematter.service import WorkbenchService
+from reshivo.materials import ROOT
+from reshivo.providers import CONFIG_NAME
+from reshivo.server import MAX_BODY_BYTES, MAX_PROJECT_BODY_BYTES, build_server
+from reshivo.service import WorkbenchService
 
 
 _KEY = "http-fixture-private-key"

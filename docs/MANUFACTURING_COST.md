@@ -1,6 +1,6 @@
 # Manufacturing-cost calculation contract
 
-`rematter.manufacturing_cost` is a standard-library-only, deterministic calculator:
+`reshivo.manufacturing_cost` is a standard-library-only, deterministic calculator:
 
 ```python
 calculate_manufacturing_cost(request: dict) -> dict

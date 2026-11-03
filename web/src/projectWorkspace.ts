@@ -51,7 +51,7 @@ export type SavedMixAdjustmentDraft = {
   reference?: { setup_id: string; setup_revision: number; setup_snapshot: string; component_id: string; component_name: string; basis: 'whole_recipe'; fraction: string; latest_revision_at_review: number; range?: { min: string; max: string; numerator: string; denominator: string } }
 }
 export type ProjectWorkspace = {
-  schema: 'rematter-project-v2'; case_id: string; project: ProjectIntakeDraft
+  schema: 'reshivo-project-v2'; case_id: string; project: ProjectIntakeDraft
   configurations: TrialConfiguration[]; checks: ProductCheck[]; records: TrialRecord[]
   costs: Record<string, CostDraft>
   record_exclusions?: Record<string, string>
@@ -63,7 +63,8 @@ export type ProjectWorkspace = {
 export type TrialComparisonRequest = Pick<ProjectWorkspace, 'case_id' | 'configurations' | 'checks' | 'records'> & {
   assessment_kind: 'synthetic' | 'user_reported'
 }
-export const PROJECT_WORKSPACE_SCHEMA = 'rematter-project-v2'
+export const PROJECT_WORKSPACE_SCHEMA = 'reshivo-project-v2'
+const LEGACY_PROJECT_WORKSPACE_SCHEMA = 'rematter-project-v2'
 export const PROJECT_WORKSPACE_MAX_BYTES = 4 * 1024 * 1024
 const PROJECT_FIELDS = ['product', 'input', 'variation', 'use', 'priorities', 'process', 'constraints'] as const
 const COST_FIELDS = ['currency', 'mass_basis', 'functional_basis', 'acceptance_basis', 'energy_kwh', 'energy_rate',
@@ -170,7 +171,7 @@ export function currentConfigurations(workspace: ProjectWorkspace): TrialConfigu
 
 export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
   const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes', 'trial_ideas', 'mix_adjustment_drafts', 'intake_notes'], 'Workspace')
-  if (root.schema !== PROJECT_WORKSPACE_SCHEMA) throw new Error('This is not a supported Reshivo project workspace.')
+  if (root.schema !== PROJECT_WORKSPACE_SCHEMA && root.schema !== LEGACY_PROJECT_WORKSPACE_SCHEMA) throw new Error('This is not a supported Reshivo project workspace.')
   text(root.case_id, 'Case identifier', 160, true)
   validateProjectDraft(root.project, 'Project details')
   if (root.intake_notes !== undefined) text(root.intake_notes, 'Project discussion', 20000)
@@ -370,7 +371,7 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
       if (Object.values(statuses).some((status) => !['unknown', 'known', 'excluded'].includes(status as string))) throw new Error('Each process cost status must be unknown, known or excluded.')
     }
   }
-  return clone(root) as ProjectWorkspace
+  return { ...clone(root), schema: PROJECT_WORKSPACE_SCHEMA } as ProjectWorkspace
 }
 
 export function serializeProjectWorkspace(workspace: ProjectWorkspace): string {

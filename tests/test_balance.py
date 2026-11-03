@@ -4,8 +4,8 @@ from itertools import product
 import random
 import unittest
 
-from rematter.balance import plan_balance, plan_shared_balance, balance_layout_svg
-from rematter.products import ProductInputError
+from reshivo.balance import plan_balance, plan_shared_balance, balance_layout_svg
+from reshivo.products import ProductInputError
 
 
 def fixture():
@@ -200,8 +200,8 @@ class BalanceTests(unittest.TestCase):
 class BalanceToolTests(unittest.TestCase):
     def run_script(self, request, responses):
         from test_engineering_agent import ScriptedTransport
-        from rematter.meta import MetaClient
-        from rematter.engineering_agent import assist_with_adaptation
+        from reshivo.meta import MetaClient
+        from reshivo.engineering_agent import assist_with_adaptation
         transport = ScriptedTransport(responses)
         client = MetaClient(environ={"MODEL_API_KEY": "fixture-private-key", "META_MODEL": "muse-spark-1.3"}, opener=transport)
         return assist_with_adaptation(request, client=client), transport

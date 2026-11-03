@@ -24,7 +24,7 @@ Requirements: Python 3.11 or newer, Node 24 or newer, and npm.
 python3 -m venv .venv
 npm --prefix web ci
 npm --prefix web run build
-.venv/bin/python -m rematter serve
+.venv/bin/python -m reshivo serve
 ```
 
 Open [http://127.0.0.1:8797](http://127.0.0.1:8797). The server binds to the local machine.

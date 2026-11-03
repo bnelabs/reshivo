@@ -4,9 +4,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
-from rematter.meta import Generation, MetaAPIError, MetaConfigurationError, MetaValidationError
-from rematter.products import ProductInputError
-from rematter.project_intake import (
+from reshivo.meta import Generation, MetaAPIError, MetaConfigurationError, MetaValidationError
+from reshivo.products import ProductInputError
+from reshivo.project_intake import (
     DRAFT_FIELDS, SYSTEM_PROMPT, project_intake_schema, read_project_intake, validate_intake_request,
 )
 
@@ -107,7 +107,7 @@ class ProjectIntakeTests(unittest.TestCase):
         self.assertNotIn("material_routes", schema["properties"])
 
     def test_validation_itself_never_creates_a_client(self):
-        with patch("rematter.project_intake.MetaClient", side_effect=AssertionError("No call on validation")):
+        with patch("reshivo.project_intake.MetaClient", side_effect=AssertionError("No call on validation")):
             self.assertEqual(validate_intake_request({"message": "Help me use these scraps."})["history"], [])
 
     def test_partial_idea_requests_context_but_keeps_unknowns_null(self):

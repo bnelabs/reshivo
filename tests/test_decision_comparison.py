@@ -2,9 +2,9 @@
 from copy import deepcopy
 import unittest
 
-from rematter.decision_comparison import compare_project_decisions
-from rematter.products import ProductInputError
-from rematter.advisor import help_with_case, follow_up_with_case, DECISION_ASSESSMENT_PROMPT, TRIAL_IDEA_PROMPT
+from reshivo.decision_comparison import compare_project_decisions
+from reshivo.products import ProductInputError
+from reshivo.advisor import help_with_case, follow_up_with_case, DECISION_ASSESSMENT_PROMPT, TRIAL_IDEA_PROMPT
 from test_advisor_project_context import FixtureClient, request as advisor_request, cost_requests
 
 

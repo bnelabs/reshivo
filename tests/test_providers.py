@@ -13,8 +13,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from unittest.mock import patch
 import urllib.error
 
-from rematter.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
-from rematter.providers import (CONFIG_NAME, ProviderConfigurationError, clear_provider_settings,
+from reshivo.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
+from reshivo.providers import (CONFIG_NAME, ProviderConfigurationError, clear_provider_settings,
                                 load_provider_profile, provider_catalog, provider_settings,
                                 save_provider_settings, select_provider_settings)
 

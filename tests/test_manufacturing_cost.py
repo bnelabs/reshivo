@@ -4,7 +4,7 @@ from copy import deepcopy
 from fractions import Fraction
 import unittest
 
-from rematter.manufacturing_cost import calculate_manufacturing_cost, compare_manufacturing_costs
+from reshivo.manufacturing_cost import calculate_manufacturing_cost, compare_manufacturing_costs
 
 
 def floor_request(configuration="A"):

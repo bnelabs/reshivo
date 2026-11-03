@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from rematter.mesh import extrude_polygon, mesh_metrics, write_ascii_stl
+from reshivo.mesh import extrude_polygon, mesh_metrics, write_ascii_stl
 
 
 RECTANGLE = [(0, 0), (4, 0), (4, 6), (0, 6)]

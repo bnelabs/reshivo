@@ -434,7 +434,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                 <span>{canKeepKey ? 'Replace API key' : 'API key'}</span>
                 <input
                   type="password"
-                  name="rematter-provider-key"
+                  name="reshivo-provider-key"
                   value={apiKey}
                   maxLength={4096}
                   required={data.sessionOnly && !canKeepKey}

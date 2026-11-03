@@ -8,9 +8,9 @@ import threading
 import unittest
 from unittest.mock import patch
 
-from rematter.materials import ROOT
-from rematter.server import MAX_PLANNING_BODY_BYTES, build_server
-from rematter.service import WorkbenchService
+from reshivo.materials import ROOT
+from reshivo.server import MAX_PLANNING_BODY_BYTES, build_server
+from reshivo.service import WorkbenchService
 
 
 class ReviewSavedGuidanceTests(unittest.TestCase):

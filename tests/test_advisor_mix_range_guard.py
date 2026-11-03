@@ -3,8 +3,8 @@ from copy import deepcopy
 import json
 import unittest
 
-from rematter.advisor import follow_up_with_case, help_with_case
-from rematter.meta import Generation
+from reshivo.advisor import follow_up_with_case, help_with_case
+from reshivo.meta import Generation
 from test_advisor_project_context import response
 from test_mix_calculation_context import prepared
 

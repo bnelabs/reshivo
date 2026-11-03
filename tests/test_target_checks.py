@@ -11,11 +11,11 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
 
-from rematter.materials import ROOT
-from rematter.products import ProductDataError, ProductInputError
-from rematter.server import build_server
-from rematter.service import WorkbenchService
-from rematter.target_checks import DATA_PATH, MANIFEST_PATH, REQUIRED_INPUTS, WORKBOOK_PATH, target_check, target_series
+from reshivo.materials import ROOT
+from reshivo.products import ProductDataError, ProductInputError
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
+from reshivo.target_checks import DATA_PATH, MANIFEST_PATH, REQUIRED_INPUTS, WORKBOOK_PATH, target_check, target_series
 
 
 def request(**changes):

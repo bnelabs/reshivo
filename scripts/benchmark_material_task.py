@@ -14,18 +14,18 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from rematter.advisor import (help_with_case, plan_trial, balance_mix, advisor_schema,
+from reshivo.advisor import (help_with_case, plan_trial, balance_mix, advisor_schema,
                               trial_schema, SOURCE_REGISTRY)
-from rematter.meta import MetaClient
-from rematter.products import ProductInputError
-from rematter.reading_comparison import compare_readings
+from reshivo.meta import MetaClient
+from reshivo.products import ProductInputError
+from reshivo.reading_comparison import compare_readings
 from scripts.benchmark_note_intake import redacted
 
 PROTOCOL = 'material-task-v1'
 FIXTURE = ROOT / 'examples/material-task-v1.json'
 SOURCES = ['docs/MATERIAL_TASK_PROTOCOL.md', 'examples/material-task-v1.json',
-           'scripts/benchmark_material_task.py', 'rematter/advisor.py', 'rematter/meta.py',
-           'rematter/reading_comparison.py', 'rematter/products.py', 'rematter/materials.py',
+           'scripts/benchmark_material_task.py', 'reshivo/advisor.py', 'reshivo/meta.py',
+           'reshivo/reading_comparison.py', 'reshivo/products.py', 'reshivo/materials.py',
            'web/src/measurementTrial.ts', 'web/src/measurementDecimal.ts',
            'scripts/benchmark_note_intake.py']
 PLAIN_SYSTEM = '''You are a practical materials and product-engineering assistant helping with

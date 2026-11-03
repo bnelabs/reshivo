@@ -2,8 +2,8 @@
 from copy import deepcopy
 import unittest
 
-from rematter.advisor import follow_up_with_case, help_with_case, plan_trial, SYSTEM_PROMPT, _guard_home_unknown_dust
-from rematter.meta import Generation, MetaValidationError
+from reshivo.advisor import follow_up_with_case, help_with_case, plan_trial, SYSTEM_PROMPT, _guard_home_unknown_dust
+from reshivo.meta import Generation, MetaValidationError
 
 
 def brief(material='Mostly metal dust with cable-plastic residue.'):

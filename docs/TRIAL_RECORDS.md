@@ -1,7 +1,7 @@
 # Versioned trial configurations and independent property checks
 
 ```python
-from rematter.trial_records import assess_trial_records
+from reshivo.trial_records import assess_trial_records
 result = assess_trial_records(request)
 ```
 

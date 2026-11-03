@@ -6,9 +6,9 @@ import unittest
 from unittest.mock import patch
 import zlib
 
-from rematter.concept_sketch import concept_sketch
-from rematter.providers import ProviderProfile, ProviderSession, reset_request_session, set_request_session
-from rematter.service import ServiceError
+from reshivo.concept_sketch import concept_sketch
+from reshivo.providers import ProviderProfile, ProviderSession, reset_request_session, set_request_session
+from reshivo.service import ServiceError
 
 
 def png():
@@ -30,7 +30,7 @@ class ConceptSketchTests(unittest.TestCase):
     def test_success_uses_fixed_endpoint_and_session_key(self):
         encoded = base64.b64encode(png()).decode()
         response = io.BytesIO(json.dumps({'data': [{'b64_json': encoded}]}).encode())
-        with patch('rematter.concept_sketch.urllib.request.build_opener') as factory:
+        with patch('reshivo.concept_sketch.urllib.request.build_opener') as factory:
             factory.return_value.open.return_value = response
             result = concept_sketch({'prompt': 'A recycled floor mat'}, '.')
         request = factory.return_value.open.call_args.args[0]
@@ -62,14 +62,14 @@ class ConceptSketchTests(unittest.TestCase):
             with self.subTest(request=request), self.assertRaises(ServiceError):
                 concept_sketch(request, '.')
         for data in ({'data': [{'url': 'https://example.test/file.png'}]}, {'data': [{'b64_json': base64.b64encode(b'not png').decode()}]}):
-            with self.subTest(data=data), patch('rematter.concept_sketch.urllib.request.build_opener') as factory:
+            with self.subTest(data=data), patch('reshivo.concept_sketch.urllib.request.build_opener') as factory:
                 factory.return_value.open.return_value = io.BytesIO(json.dumps(data).encode())
                 with self.assertRaises(ServiceError) as error:
                     concept_sketch({'prompt': 'mat'}, '.')
                 self.assertEqual(error.exception.code, 'sketch_unavailable')
 
     def test_upstream_error_does_not_leak_key(self):
-        with patch('rematter.concept_sketch.urllib.request.build_opener') as factory:
+        with patch('reshivo.concept_sketch.urllib.request.build_opener') as factory:
             factory.return_value.open.side_effect = OSError('secret-test-key')
             with self.assertRaises(ServiceError) as error:
                 concept_sketch({'prompt': 'mat'}, '.')

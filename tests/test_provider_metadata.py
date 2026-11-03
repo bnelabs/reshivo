@@ -4,13 +4,13 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from rematter.advisor import advisor_status, follow_up_with_case, help_with_case, plan_trial
-from rematter.engineering_agent import assist_with_adaptation
-from rematter.engineering_intake import read_engineering_note
-from rematter.image_intake import inspect_image
-from rematter.observation_intake import read_observation_note
-from rematter.providers import save_provider_settings
-from rematter.meta import MetaClient
+from reshivo.advisor import advisor_status, follow_up_with_case, help_with_case, plan_trial
+from reshivo.engineering_agent import assist_with_adaptation
+from reshivo.engineering_intake import read_engineering_note
+from reshivo.image_intake import inspect_image
+from reshivo.observation_intake import read_observation_note
+from reshivo.providers import save_provider_settings
+from reshivo.meta import MetaClient
 from tests import test_advisor, test_advisor_followup, test_engineering_agent, test_engineering_intake, test_image_intake, test_observation_intake
 
 

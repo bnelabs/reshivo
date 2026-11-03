@@ -7,10 +7,10 @@ import unittest
 import urllib.error
 import urllib.request
 
-from rematter.products import ProductInputError
-from rematter.reading_comparison import compare_readings
-from rematter.server import build_server
-from rematter.service import WorkbenchService
+from reshivo.products import ProductInputError
+from reshivo.reading_comparison import compare_readings
+from reshivo.server import build_server
+from reshivo.service import WorkbenchService
 from tests.test_advisor import brief_request, calculation_context
 
 

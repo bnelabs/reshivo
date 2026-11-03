@@ -2,8 +2,8 @@ from fractions import Fraction
 import json
 import unittest
 
-from rematter.advisor import balance_mix
-from rematter.products import ProductInputError
+from reshivo.advisor import balance_mix
+from reshivo.products import ProductInputError
 
 
 def case(**changes):

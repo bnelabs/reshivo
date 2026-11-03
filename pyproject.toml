@@ -4,14 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reshivo"
-version = "0.4.1"
+version = "0.5.0"
 description = "Plan products from changing recycled materials"
 requires-python = ">=3.11"
 dependencies = []
 
 [project.scripts]
-reshivo = "rematter.cli:main"
-rematter = "rematter.cli:main"
+reshivo = "reshivo.cli:main"
 
 [tool.setuptools]
-packages = ["rematter"]
+packages = ["reshivo"]

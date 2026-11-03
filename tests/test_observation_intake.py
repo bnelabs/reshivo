@@ -5,12 +5,12 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from rematter.meta import Generation, MetaAPIError, MetaClient, MetaValidationError
-from rematter.observation_intake import (
+from reshivo.meta import Generation, MetaAPIError, MetaClient, MetaValidationError
+from reshivo.observation_intake import (
     FIELD_ORDER, QUESTIONS, SYSTEM_PROMPT, observation_schema,
     read_observation_note, validate_note_request,
 )
-from rematter.products import ProductInputError
+from reshivo.products import ProductInputError
 
 
 NOTE = ("Simulated observation ref trial-1: complete assembly mass 950 g, weighing uncertainty 5 g. "

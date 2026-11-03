@@ -10,9 +10,9 @@ from unittest.mock import patch
 import urllib.error
 import urllib.request
 
-from rematter.providers import load_provider_profile
-from rematter.server import SessionStore, build_server
-from rematter.service import ServiceError, WorkbenchService
+from reshivo.providers import load_provider_profile
+from reshivo.server import SessionStore, build_server
+from reshivo.service import ServiceError, WorkbenchService
 
 
 class SessionServerTests(unittest.TestCase):

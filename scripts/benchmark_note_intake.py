@@ -16,9 +16,9 @@ import urllib.error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rematter.materials import ROOT
-from rematter.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
-from rematter.observation_intake import FIELD_ORDER, QUANTITY_FIELDS, read_observation_note
+from reshivo.materials import ROOT
+from reshivo.meta import MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError
+from reshivo.observation_intake import FIELD_ORDER, QUANTITY_FIELDS, read_observation_note
 
 
 PROTOCOL = "note-intake-v1"
@@ -349,7 +349,7 @@ def run_arm(arm, fixture, client_factory=MetaClient):
 
 def implementation_hashes():
     paths = ("docs/NOTE_COMPARISON_PROTOCOL.md", "scripts/benchmark_note_intake.py",
-             "rematter/observation_intake.py", "rematter/meta.py")
+             "reshivo/observation_intake.py", "reshivo/meta.py")
     return {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in paths}
 
 
@@ -445,7 +445,7 @@ def main(argv=None):
     # Only live execution reads local provider configuration; keys never enter a result record.
     secrets = ()
     if live:
-        from rematter.meta import configuration
+        from reshivo.meta import configuration
         key, model = configuration(ROOT)
         secrets = (key,)
     else:

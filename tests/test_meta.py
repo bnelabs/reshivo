@@ -5,9 +5,9 @@ import tempfile
 import unittest
 import urllib.error
 
-from rematter.materials import load_materials
-from rematter.mechanics import Requirements
-from rematter.meta import Generation, MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError, configuration, propose_and_evaluate
+from reshivo.materials import load_materials
+from reshivo.mechanics import Requirements
+from reshivo.meta import Generation, MetaAPIError, MetaClient, MetaConfigurationError, MetaValidationError, configuration, propose_and_evaluate
 
 
 class FixedClient:

@@ -1,8 +1,8 @@
 import unittest
 
-from rematter.engineering_intake import _quantity as engineering_quantity
-from rematter.observation_intake import _quantity as observation_quantity
-from rematter.meta import MetaValidationError
+from reshivo.engineering_intake import _quantity as engineering_quantity
+from reshivo.observation_intake import _quantity as observation_quantity
+from reshivo.meta import MetaValidationError
 
 
 class UnitIntakeTests(unittest.TestCase):

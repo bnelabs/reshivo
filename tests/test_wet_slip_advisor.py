@@ -4,9 +4,9 @@ import json
 from types import SimpleNamespace
 import unittest
 
-from rematter.advisor import help_with_case, follow_up_with_case, plan_trial
-from rematter.meta import MetaValidationError
-from rematter.products import ProductInputError
+from reshivo.advisor import help_with_case, follow_up_with_case, plan_trial
+from reshivo.meta import MetaValidationError
+from reshivo.products import ProductInputError
 
 
 def mat_request():
