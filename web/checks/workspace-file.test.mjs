@@ -80,6 +80,15 @@ assert.deepEqual(parseWorkspaceFile(followupEncoded).plan, original.plan, 'savin
 assert.deepEqual(parseWorkspaceFile(followupEncoded).trial, original.trial, 'saving compact advice leaves the chosen trial intact')
 assert.equal(parseWorkspaceFile(serializeWorkspaceFile({ ...snapshot(), followup: null })).followup, null, 'an explicit empty follow-up survives round-trip')
 
+const adapted = { ...snapshot(), followup: followup() }
+adapted.plan.guidance_adjusted = true
+adapted.trial.guidance_adjusted = true
+adapted.followup.guidance_adjusted = true
+const reopenedAdapted = parseWorkspaceFile(serializeWorkspaceFile(adapted))
+for (const key of ['plan', 'trial', 'followup']) assert.equal(reopenedAdapted[key].guidance_adjusted, true, `${key} keeps locally adapted provenance`)
+adapted.followup.guidance_adjusted = 'true'
+assert.throws(() => serializeWorkspaceFile(adapted), /adapted guidance marker/, 'invalid adapted provenance is rejected')
+
 const paddedCase = structuredClone(withFollowup)
 for (const key of Object.keys(paddedCase.case_data.brief))
   paddedCase.case_data.brief[key] = ` \t${paddedCase.case_data.brief[key]}\r\n`

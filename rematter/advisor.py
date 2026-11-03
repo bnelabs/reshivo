@@ -13,6 +13,7 @@ from .unknown_metal_planning import needs_local_metal_planning, local_metal_plan
 from .walking_guidance import has_unsafe_walking_guidance
 from .intake_grip_proxy import has_misleading_grip_proxy
 from .delivery_comparison import has_single_delivery_comparison
+from .planning_only import is_planning_only, planning_version
 from .providers import ProviderConfigurationError, load_provider_profile
 from .trial_records import assess_trial_records
 
@@ -132,6 +133,7 @@ Return useful candidate routes, including what to change, how to try it, why it 
 Do not make missing measurements the end of the answer. Work with the batch: consider preparation, blending, a compatible known binder or modifier, geometry, containment, modular construction, process controls, final adjustment or an alternative product when relevant.
 Prefer 2 distinct Material Lab routes and 2 distinct Engineering routes. Add a third route only when it changes a genuinely different lever. Do not repackage containment or batch labelling as several routes. Respect the stated available equipment and allowed changes. Do not recommend discarding a batch merely because it varies.
 Separate equipment the user actually states from proposed equipment and unknown capability. An earlier generated route is not proof that a tool or material is available. A generic press does not establish heated or cold processing, moulds, forming tools, drying, extraction or suitability for a mixed-polymer stream. Name any needed capability as unconfirmed and keep a useful design or preparation decision available without implying manufacturing can start. If the stated allowed changes rule out a route's required change, explain that conflict and ask what is permitted rather than silently assuming new additives, tooling or geometry are allowed.
+When the user says physical work or material handling is unavailable, give amounts as planning scenarios and restrict current actions to records, calculations or design decisions. Do not tell them to add, mix, measure or handle physical material now.
 Material Lab should identify practical material or preparation choices. If a binder identity matters, name the relevant binder family conditionally and explain how it would be selected. Engineering should include product architecture, process or a feedback adjustment that reduces reliance on an unknown material property.
 Two optional app calculations are available: final weight adjustment from a weighed assembled product, and trial-composition balancing from known mass-fraction ranges and a user-chosen composition target. Suggest the relevant tool when useful. Neither predicts other physical properties; do not derive a trial binder fraction from a strength or acoustic target without matching measured data.
 For counterweights, a sealed compartment or replaceable fill cartridge and weighing/adjusting the finished assembly can handle a mass target without guessing mixture density. Do not imply that mass alone proves strength, retention, durability or other use-case properties.
@@ -819,6 +821,7 @@ def help_with_case(request, client=None, root=ROOT):
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     _guard_assured_fields({key: data[key] for key in ("material_routes", "engineering_routes", "next_steps", "questions")})
+    data, guidance_adjusted = planning_version(data) if is_planning_only(case) else (data, False)
     sources = _sources(data["source_ids"])
     answer, quarantined = _quarantine_assured_summary(_text(data["answer"], "answer", 3000, error=MetaValidationError))
     return {
@@ -827,6 +830,7 @@ def help_with_case(request, client=None, root=ROOT):
         "request_id": generated.request_id,
         "requested_reasoning_effort": ADVICE_REASONING_EFFORT,
         "reasoning_effort": getattr(generated, "reasoning_effort", None),
+        **({"guidance_adjusted": True} if guidance_adjusted else {}),
         **({"calculation_context": case["calculation_context"]} if "calculation_context" in case else {}),
         **_project_binding(case),
         "answer": answer,
@@ -862,6 +866,7 @@ def follow_up_with_case(request, client=None, root=ROOT):
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     _guard_assured_fields({key: data[key] for key in ("next_steps", "questions")})
+    data, guidance_adjusted = planning_version(data) if is_planning_only(case) else (data, False)
     answer, quarantined = _quarantine_assured_summary(_text(data["answer"], "answer", 3000, error=MetaValidationError))
     if not answer:
         raise MetaValidationError("Meta did not return usable follow-up advice. Try a more specific question.")
@@ -870,6 +875,7 @@ def follow_up_with_case(request, client=None, root=ROOT):
         "model": generated.model, "usage": generated.usage, "elapsed_ms": generated.elapsed_ms,
         "request_id": generated.request_id, "requested_reasoning_effort": ADVICE_REASONING_EFFORT,
         "reasoning_effort": getattr(generated, "reasoning_effort", None),
+        **({"guidance_adjusted": True} if guidance_adjusted else {}),
         **({"calculation_context": case["calculation_context"]} if "calculation_context" in case else {}),
         **_project_binding(case),
         "answer": answer, "quarantined_answer": quarantined,
@@ -913,6 +919,7 @@ def plan_trial(request, client=None, root=ROOT):
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
     _guard_assured_fields({key: value for key, value in data.items() if key != "source_ids"})
+    data, guidance_adjusted = planning_version(data) if is_planning_only(case) else (data, False)
     checks = _trial_rows(data["checks"], "checks", 1, 6,
                          {"property": 120, "target": 3000, "method": 1500, "if_outside": 1500})
     for check in checks:
@@ -924,6 +931,7 @@ def plan_trial(request, client=None, root=ROOT):
         "request_id": generated.request_id,
         "requested_reasoning_effort": TRIAL_REASONING_EFFORT,
         "reasoning_effort": getattr(generated, "reasoning_effort", None),
+        **({"guidance_adjusted": True} if guidance_adjusted else {}),
         **({"calculation_context": case["calculation_context"]} if "calculation_context" in case else {}),
         "route_id": case["route"]["id"], "targets": case["brief"]["targets"],
         "brief": case["brief"], "selected_route": case["route"],

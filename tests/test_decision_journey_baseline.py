@@ -81,6 +81,24 @@ class BaselineHarnessTest(unittest.TestCase):
         self.assertEqual(events[-2]['body']['choices'][0]['finish_reason'], 'length')
         self.assertEqual(events[-1]['event'], 'failed')
 
+    def test_interrupted_clarification_is_recorded_without_another_request(self):
+        for exception in (EOFError, KeyboardInterrupt):
+            with self.subTest(exception=exception):
+                transport = FakeTransport()
+                def interrupted(_):
+                    raise exception()
+                with tempfile.TemporaryFile(mode='w+', encoding='utf-8') as stream, contextlib.redirect_stdout(io.StringIO()):
+                    result = baseline.run_baseline(self.fixture, self.profile, transport, stream, ask=interrupted)
+                    stream.seek(0)
+                    events = [json.loads(line) for line in stream]
+                self.assertFalse(result)
+                self.assertEqual(len(transport.calls), 1)
+                self.assertEqual([event['event'] for event in events], ['start', 'request', 'response', 'failed'])
+                self.assertEqual(events[-1]['turn'], 2)
+                self.assertEqual(events[-1]['phase'], 'operator_clarification')
+                self.assertEqual(events[-1]['error_type'], exception.__name__)
+                self.assertEqual(events[-1]['later_turns'], 'not attempted; no retry')
+
     def test_clarification_must_be_exact_available_fact(self):
         transport = FakeTransport()
         result, events = self.run_with(transport, ('I made this up',))

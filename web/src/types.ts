@@ -374,6 +374,7 @@ export type AdvisorStatus = {
 }
 export type AdvisorResult = {
   result_kind: 'engineering_proposals'
+  guidance_adjusted?: boolean
   live: boolean
   provider: InferenceProviderId
   requested_reasoning_effort?: 'low' | 'medium' | 'high'
@@ -394,6 +395,7 @@ export type AdvisorResult = {
 }
 export type AdvisorTrialResult = {
   result_kind: 'trial_proposal'
+  guidance_adjusted?: boolean
   live: boolean
   provider: InferenceProviderId
   requested_reasoning_effort?: 'low' | 'medium' | 'high'

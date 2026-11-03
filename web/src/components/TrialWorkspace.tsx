@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useUnitSystem } from '../units'
+import { TrialAssessmentNotices } from './TrialAssessmentNotices'
 import {
   checkHasPendingDraft,
   checkHasReadings,
@@ -112,6 +113,7 @@ export function TrialWorkspace({
   const [checkDrafts, setCheckDrafts] = useState<Record<string, ProductCheck>>({})
   const [editingCheckId, setEditingCheckId] = useState('')
   const checkEditorRef = useRef<HTMLElement | null>(null)
+  const readingSectionRef = useRef<HTMLElement | null>(null)
   useEffect(() => {
     if (editingCheckId) checkEditorRef.current?.focus()
   }, [editingCheckId])
@@ -737,14 +739,19 @@ export function TrialWorkspace({
                   {textState(c.state)}
                 </p>
               ))}
-              {assessment.errors?.map((e: any, i: number) => (
-                <p className="pw-error" key={i}>
-                  {typeof e === 'string' ? e : (e.message ?? JSON.stringify(e))}
-                </p>
-              ))}
-              {assessment.questions?.map((q: any, i: number) => (
-                <p key={i}>{typeof q === 'string' ? q : (q.message ?? JSON.stringify(q))}</p>
-              ))}
+              <TrialAssessmentNotices
+                assessment={assessment}
+                setups={setups}
+                checks={w.checks}
+                kind={kind}
+                setupName={displaySetupName}
+                onAddReading={(setup, check) => {
+                  setSelected(setupKey(setup))
+                  setSelectedCheck(check.id)
+                  setError('')
+                  readingSectionRef.current?.focus()
+                }}
+              />
               {assessment.ignored_records?.length > 0 && (
                 <p>
                   {assessment.ignored_records.length} earlier-version or other-kind record(s)
@@ -950,7 +957,7 @@ export function TrialWorkspace({
               </label>
               <button onClick={addCheck}>Save check</button>
             </section>
-            <section className="pw-card">
+            <section ref={readingSectionRef} tabIndex={-1} aria-label="Add readings" className="pw-card">
               <h2>Add readings</h2>
               {error && errorScope === 'readings' && (
                 <p className="pw-error" role="alert">

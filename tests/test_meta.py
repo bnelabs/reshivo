@@ -74,6 +74,17 @@ class MetaTests(unittest.TestCase):
                     self.assertEqual(json.loads(transport.requests[0].data)["reasoning_effort"], effort)
                     self.assertEqual(transport.timeout, 80 if effort == "high" else 50)
 
+    def test_explicit_request_timeout_is_bounded_and_passed_to_transport(self):
+        with tempfile.TemporaryDirectory() as temp:
+            transport = GenerationTransport()
+            client = MetaClient(Path(temp), {"MODEL_API_KEY": "fixture-generation-key"}, transport)
+            client.generate("Check this case", {}, 1, reasoning_effort="medium", timeout_seconds=90)
+            self.assertEqual(transport.timeout, 90)
+            for invalid in (0, 121, -1, True, 1.5, '90'):
+                with self.subTest(timeout=invalid), self.assertRaises(MetaValidationError):
+                    client.generate("Check this case", {}, 1, timeout_seconds=invalid)
+            self.assertEqual(len(transport.requests), 1)
+
     def test_timeout_and_connection_failures_are_distinct_without_remote_details(self):
         class Broken:
             def __init__(self, failure): self.failure = failure

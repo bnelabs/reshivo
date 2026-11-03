@@ -333,7 +333,7 @@ class MetaClient:
                         round((time.monotonic() - started) * 1000), self.provider,
                         "low" if self.profile.capabilities["reasoning"] else None)
 
-    def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096, reasoning_effort="low", image_data_url=None):
+    def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096, reasoning_effort="low", image_data_url=None, timeout_seconds=None):
         if not self.profile.configured:
             raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
                                          else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
@@ -359,8 +359,11 @@ class MetaClient:
         }
         if isinstance(max_completion_tokens, bool) or not isinstance(max_completion_tokens, int) or not 1 <= max_completion_tokens <= 8192:
             raise MetaValidationError("Set a completion limit between one and 8192 tokens")
+        if timeout_seconds is not None and (isinstance(timeout_seconds, bool) or not isinstance(timeout_seconds, int) or not 1 <= timeout_seconds <= 120):
+            raise MetaValidationError("Set a request timeout between one and 120 seconds")
         started = time.monotonic()
-        body = self._request(payload, timeout=80 if reasoning_effort == "high" else 50)
+        timeout = timeout_seconds if timeout_seconds is not None else (80 if reasoning_effort == "high" else 50)
+        body = self._request(payload, timeout=timeout)
         if not isinstance(body, dict):
             raise MetaValidationError(f"{self.profile.name}'s response could not be read")
         try:

@@ -30,7 +30,7 @@ export type ProjectIntakeResult = {
   live: boolean
   origin?: 'local'
   guidance_origin?: 'local'
-  guidance_reason?: 'floor_slip' | 'delivery_variation'
+  guidance_reason?: 'floor_slip' | 'delivery_variation' | 'planning_only'
   usage?: Record<string, number>
   request_id?: string | null
   elapsed_ms?: number
@@ -91,7 +91,7 @@ export async function requestProjectIntake(request: ProjectIntakeRequest, signal
     || typeof result.live !== 'boolean'
     || (result.origin !== undefined && result.origin !== 'local')
     || (result.origin === 'local' && (result.provider !== 'local' || result.live || result.guidance_origin !== undefined))
-    || (result.guidance_origin !== undefined && (result.guidance_origin !== 'local' || (result.guidance_reason !== 'floor_slip' && result.guidance_reason !== 'delivery_variation') || result.origin !== undefined || result.provider === 'local'))
+    || (result.guidance_origin !== undefined && (result.guidance_origin !== 'local' || (result.guidance_reason !== 'floor_slip' && result.guidance_reason !== 'delivery_variation' && result.guidance_reason !== 'planning_only') || result.origin !== undefined || result.provider === 'local'))
     || (result.guidance_origin === undefined && result.guidance_reason !== undefined)) {
     throw new Error('The provider returned an unusable project draft. Your idea and current details are still here; try again.')
   }

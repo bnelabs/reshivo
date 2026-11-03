@@ -11,6 +11,7 @@ from .unknown_metal_planning import needs_local_metal_planning, local_metal_plan
 from .walking_guidance import has_unsafe_walking_guidance
 from .intake_grip_proxy import has_misleading_grip_proxy
 from .delivery_comparison import has_single_delivery_comparison
+from .planning_only import is_planning_only, planning_version
 
 
 DRAFT_FIELDS = ("product", "input", "variation", "use", "priorities", "process", "constraints")
@@ -276,7 +277,7 @@ def read_project_intake(request, *, client=None, root=ROOT):
         json.dumps({**prompt_case, "task": "Help clarify this project and draft only the user's stated facts for review."},
                    ensure_ascii=False, allow_nan=False),
         project_intake_schema(), 1, system_prompt=SYSTEM_PROMPT,
-        schema_name="project_intake", max_completion_tokens=4096, reasoning_effort="medium")
+        schema_name="project_intake", max_completion_tokens=8192, reasoning_effort="medium", timeout_seconds=90)
     result = normalize_intake_response(case, generated.data)
     # The literal project draft is validated independently above. If recognized
     # risky action appears anywhere in the generated guidance, replace the whole
@@ -295,6 +296,10 @@ def read_project_intake(request, *, client=None, root=ROOT):
             "guidance_origin": "local",
             "guidance_reason": "floor_slip" if unsafe_floor else "delivery_variation",
         })
+    elif is_planning_only(case):
+        edited, changed = planning_version({key: result[key] for key in ("reply", "first_step", "questions")})
+        if changed:
+            result.update({**edited, "guidance_origin": "local", "guidance_reason": "planning_only"})
     return {
         **result,
         "provider": getattr(generated, "provider", "meta"), "model": generated.model,

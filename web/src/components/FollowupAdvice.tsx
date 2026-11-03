@@ -47,7 +47,7 @@ export function FollowupAdvice({
         </>
       )}
       <footer>
-        {restored ? 'Saved Meta response' : 'Meta response'} · {result.model} ·{' '}
+        {restored ? 'Saved Meta response' : 'Meta response'} · {result.model}{result.guidance_adjusted ? ' · locally adapted for planning' : ''} ·{' '}
         {(result.elapsed_ms / 1000).toFixed(1)} s
       </footer>
       {result.sources.length > 0 && (

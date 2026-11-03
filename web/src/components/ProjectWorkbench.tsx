@@ -342,6 +342,7 @@ export function ProjectWorkbench() {
         const noteId = crypto.randomUUID()
         setAdviceNoteId((w.advice_notes?.length ?? 0) < 30 ? noteId : null)
         const text = [
+          ...('guidance_adjusted' in result && result.guidance_adjusted ? ['Locally adapted for planning.'] : []),
           `Question: ${prompt}`,
           result.answer,
           ...result.next_steps.map((step) => `Next action: ${step}`),
@@ -837,7 +838,7 @@ export function ProjectWorkbench() {
                     )}
                     <section className="pw-answer" aria-live="polite">
                       <span className="pw-overline">
-                        {advice.result_kind==='local_planning_guidance'?'Local planning guide · no AI call':`Proposed next steps · ${advice.provider} / ${advice.model}`}
+                        {advice.result_kind==='local_planning_guidance'?'Local planning guide · no AI call':`Proposed next steps · ${advice.provider} / ${advice.model}${advice.guidance_adjusted ? ' · locally adapted for planning' : ''}`}
                       </span>
                       {advice.answer
                         .split('\n')
