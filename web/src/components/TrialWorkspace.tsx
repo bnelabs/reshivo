@@ -45,16 +45,18 @@ type Props = {
   section: 'trials' | 'checks'
   readingKind: 'synthetic' | 'user_reported'
   onReadingKindChange: (kind: 'synthetic' | 'user_reported') => void
-  onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea) => void
+  onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea, question?: string) => void
   onChooseCheck: (configuration: TrialConfiguration, idea: TrialIdea) => void
   onExploreMaterial: () => void
   onGoToPlans: () => void
   onDownloadSummary: () => void
   onPrintSummary: () => void
+  onSaveBackup: () => void
   showHistoricalIdeas: boolean
   checkingPlanningMode: boolean
   preparedCheckName: string
   preparedCheckSuggestion: string
+  preparedCheckPlanKey: string
   onPreparedCheckUsed: () => void
 }
 export function TrialWorkspace({
@@ -69,10 +71,12 @@ export function TrialWorkspace({
   onGoToPlans,
   onDownloadSummary,
   onPrintSummary,
+  onSaveBackup,
   showHistoricalIdeas,
   checkingPlanningMode,
   preparedCheckName,
   preparedCheckSuggestion,
+  preparedCheckPlanKey,
   onPreparedCheckUsed,
 }: Props) {
   const system = useUnitSystem()
@@ -89,6 +93,7 @@ export function TrialWorkspace({
   })
   const [selected, setSelected] = useState('')
   const [selectedCheck, setSelectedCheck] = useState('')
+  const [savedCheckNotice, setSavedCheckNotice] = useState('')
   const [readingDrafts, setReadingDrafts] = useState<
     Record<string, { readings: TrialRecord['readings']; confirmed: boolean }>
   >({})
@@ -135,12 +140,19 @@ export function TrialWorkspace({
       newCheckRef.current.focus({ preventScroll: true })
     }
   }, [section, preparedCheckSuggestion])
+  useEffect(() => {
+    if (section === 'checks' && preparedCheckPlanKey && currentSetups(w.configurations).some((c) => setupKey(c) === preparedCheckPlanKey)) {
+      setSelected(preparedCheckPlanKey)
+    }
+  }, [section, preparedCheckPlanKey, w.configurations])
   const readingSectionRef = useRef<HTMLElement | null>(null)
   useEffect(() => {
     if (editingCheckId) checkEditorRef.current?.focus()
   }, [editingCheckId])
   const [assessedInput, setAssessedInput] = useState('')
   const setups = currentSetups(w.configurations)
+  const suggestedPlan = setups.find((c) => setupKey(c) === preparedCheckPlanKey)
+  const suggestedIdea = suggestedPlan ? w.trial_ideas?.[setupKey(suggestedPlan)] : undefined
   const hasLinkedIdea = (configuration: TrialConfiguration) =>
     Boolean(
       w.trial_ideas?.[setupKey(configuration)] ||
@@ -255,6 +267,7 @@ export function TrialWorkspace({
     }
     onChange({ ...w, checks: [...w.checks, check] })
     setSelectedCheck(check.id)
+    setSavedCheckNotice(`“${check.name}” was added to this project. Add readings when you have them.`)
     setCheck({
       id: uid(),
       name: '',
@@ -377,8 +390,8 @@ export function TrialWorkspace({
           </h1>
           <p>
             {section === 'trials'
-              ? 'Record the whole recipe, process and shape. Changing any of them creates a new version.'
-              : 'Keep every product requirement visible.'}
+              ? 'Review your saved ideas and add details as you learn them.'
+              : 'Choose what to measure, then add readings when you have them.'}
           </p>
         </div>
         {section === 'trials' && (
@@ -392,8 +405,8 @@ export function TrialWorkspace({
           {setups.length > 0 && !editing && (
             <div className="pw-next-step">
               <div>
-                <strong>Your plan is ready to review</strong>
-                <p>Review the idea below, then choose what you want to check.</p>
+                <strong>Your ideas are in your project</strong>
+                <p>Review an idea below. Ask for more detail, plan a check, or save the project to return later.</p>
               </div>
               <div className="pw-actions">
                 <button type="button" onClick={onExploreMaterial}>Explore more ideas</button>
@@ -412,27 +425,9 @@ export function TrialWorkspace({
           )}
           <div className="pw-card-grid">
             {setups.map((c) => (
-              <article className="pw-card" key={setupKey(c)}>
-                <span className="pw-overline">Version {c.revision} · proposal / entered setup</span>
+              <article className="pw-card" key={setupKey(c)} data-plan-key={setupKey(c)} tabIndex={-1}>
+                <span className="pw-overline">Plan · version {c.revision}</span>
                 <h2>{displaySetupName(c)}</h2>
-                <ul>
-                  {c.materials.map((m) => (
-                    <li key={m.id}>
-                      {m.name} · {m.amount || 'amount unknown'} {m.amount ? m.unit : ''}
-                    </li>
-                  ))}
-                </ul>
-                <p>
-                  <strong>Process</strong>
-                  <br />
-                  {c.process || 'Not recorded'}
-                </p>
-                <p>
-                  <strong>Shape and size</strong>
-                  <br />
-                  {c.geometry || 'Not recorded'}
-                </p>
-                {c.notes && (showHistoricalIdeas || !hasLinkedIdea(c)) && <p>{c.notes}</p>}
                 {!showHistoricalIdeas && hasLinkedIdea(c) && (
                   <p>
                     {checkingPlanningMode ? 'Checking saved ideas.' : 'This saved idea is unavailable for reuse.'}
@@ -444,7 +439,7 @@ export function TrialWorkspace({
                     const idea = w.trial_ideas![setupKey(c)]
                     return (
                       <details open>
-                        <summary>Suggested plan: {idea.title}</summary>
+                        <summary>Your selected idea</summary>
                         <p>
                           <strong>Proposed change:</strong> {idea.change}
                         </p>
@@ -458,24 +453,34 @@ export function TrialWorkspace({
                           <strong>Trade-offs:</strong> {idea.tradeoffs.join(' ')}
                         </p>
                         <p>
-                          <strong>Next check:</strong> {idea.check}
+                          <strong>Suggested check:</strong> {idea.check}
                         </p>
+                        <p>Know what you want to measure? Add a check. If you are unsure, ask for help first.</p>
+                        <div className="pw-actions">
                         <button type="button" className="pw-primary" onClick={() => onChooseCheck(c, idea)}>
-                          Choose what to check
+                          Plan a product check
                         </button>
                         <button
-                          onClick={() => onAskIdea(structuredClone(c), structuredClone(idea))}
+                          onClick={() => onAskIdea(structuredClone(c), structuredClone(idea), 'Help me understand this idea for my product. What materials, equipment and steps could it need, and what should I check first? Distinguish suggestions from what I have already told you.')}
                         >
-                          Ask about this idea
+                          Ask for a clearer plan
                         </button>
-                        <small>
-                          You can review the idea before sending it to the selected AI provider.
-                        </small>
+                        <button type="button" onClick={() => onAskIdea(structuredClone(c), structuredClone(idea), 'Help me choose a useful check for this idea and explain how I could measure it. I may not have measurements or equipment yet. Do not invent a target or result.')}>
+                          Help me choose a check
+                        </button>
+                        </div>
                       </details>
                     )
                   })()}
-                <button onClick={() => start(c)}>Change this setup</button>
-                <small>Previous readings stay with version {c.revision}.</small>
+                <details>
+                  <summary>Materials, process and size</summary>
+                  <ul>{c.materials.map((m) => <li key={m.id}>{m.name} · {m.amount || 'amount not added'} {m.amount ? m.unit : ''}</li>)}</ul>
+                  <p><strong>Process:</strong> {c.process || 'Not added yet'}</p>
+                  <p><strong>Shape and size:</strong> {c.geometry || 'Not added yet'}</p>
+                  {c.notes && (showHistoricalIdeas || !hasLinkedIdea(c)) && <p>{c.notes}</p>}
+                  <button onClick={() => start(c)}>Edit plan details</button>
+                  <small>Existing readings stay with version {c.revision}.</small>
+                </details>
               </article>
             ))}
           </div>
@@ -969,7 +974,12 @@ export function TrialWorkspace({
               {preparedCheckSuggestion && <div className="pw-notice">
                 <strong>Suggested for your plan</strong>
                 <p>{preparedCheckSuggestion}</p>
-                <p>Choose what you want to check below. Nothing is saved until you add it.</p>
+                <p>Your plan is selected for future readings. To save a check, add its name, unit and method below; limits are optional.</p>
+                {suggestedPlan && suggestedIdea && <button type="button" onClick={() => onAskIdea(structuredClone(suggestedPlan), structuredClone(suggestedIdea), 'Help me choose a useful check for this idea and explain how I could measure it. I may not have measurements or equipment yet. Do not invent a target or result.')}>
+                  Help me choose what to measure
+                </button>}
+                <p>Nothing to measure yet? Your suggested check stays with the plan. You can save or print the project and return later.</p>
+                <div className="pw-actions"><button type="button" onClick={onSaveBackup}>Save backup</button><button type="button" onClick={onPrintSummary}>Print / Save as PDF</button></div>
               </div>}
               {preparedCheckName && (
                 <div className="pw-notice">
@@ -984,7 +994,8 @@ export function TrialWorkspace({
                   {error}
                 </p>
               )}
-              <p>Need help choosing a measurement? Ask in Options.</p>
+              {savedCheckNotice && <p role="status" className="pw-notice">{savedCheckNotice}</p>}
+              <p>A check needs a name, unit and method. Add a minimum or maximum if you have a target.</p>
               <label>
                 What are you checking?
                 <input

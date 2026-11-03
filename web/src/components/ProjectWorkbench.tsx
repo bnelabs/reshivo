@@ -6,6 +6,7 @@ import { ProviderSettings } from './ProviderSettings'
 import { ConceptSketch } from './ConceptSketch'
 import { CheckedMixAdvice } from './CheckedMixAdvice'
 import { SoundGuidance } from './SoundGuidance'
+import { buildIdeaComparisonQuestion } from '../ideaComparison'
 import { isSoundProject } from '../soundGuidance'
 import { MixAdjustment } from './MixAdjustment'
 import { CheckSuggestionHandoff } from './CheckSuggestionHandoff'
@@ -128,6 +129,8 @@ export function ProjectWorkbench() {
   const helpQuestion = useRef<HTMLTextAreaElement>(null)
   const optionsHeading = useRef<HTMLHeadingElement>(null)
   const pendingOptionsHeadingFocus = useRef(false)
+  const pendingPlanFocus = useRef('')
+  const pendingPlanRecheck = useRef<HTMLElement | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [inlineError, setInlineError] = useState('')
@@ -175,6 +178,17 @@ export function ProjectWorkbench() {
   useEffect(() => {
     const focusHeading = pendingOptionsHeadingFocus.current
     pendingOptionsHeadingFocus.current = false
+    const planKey = pendingPlanFocus.current
+    pendingPlanFocus.current = ''
+    if (page === 'trials' && planKey) {
+      const target = Array.from(workbench.current?.querySelectorAll<HTMLElement>('[data-plan-key]') ?? []).find((item) => item.dataset.planKey === planKey)
+      if (target) {
+        target.scrollIntoView({ block: 'start' })
+        target.focus({ preventScroll: true })
+        pendingPlanRecheck.current = target
+        return
+      }
+    }
     if (focusHeading && page === 'options' && optionsHeading.current) {
       const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
       optionsHeading.current.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' })
@@ -183,6 +197,23 @@ export function ProjectWorkbench() {
       window.scrollTo({ top: 0 })
     }
   }, [page])
+  useEffect(() => {
+    const cancelRecheck = () => { pendingPlanRecheck.current = null }
+    for (const event of ['pointerdown', 'wheel', 'touchstart', 'keydown']) window.addEventListener(event, cancelRecheck, { passive: true })
+    return () => { for (const event of ['pointerdown', 'wheel', 'touchstart', 'keydown']) window.removeEventListener(event, cancelRecheck) }
+  }, [])
+  useEffect(() => {
+    const target = pendingPlanRecheck.current
+    if (!target) return
+    if (page !== 'trials' || !target.isConnected || document.activeElement !== target) {
+      pendingPlanRecheck.current = null
+      return
+    }
+    if (!modeReady || !savedReviewReady) return
+    const rect = target.getBoundingClientRect()
+    if (rect.top >= window.innerHeight || rect.bottom <= 0) target.scrollIntoView({ block: 'start' })
+    pendingPlanRecheck.current = null
+  }, [page, modeReady, savedReviewReady, showHistoricalIdeas])
   useEffect(() => {
     if (!focusHelpQuestion || page !== 'options' || !helpQuestion.current) return
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -616,9 +647,10 @@ export function ProjectWorkbench() {
       configurations: [...w.configurations, next],
       trial_ideas: { ...w.trial_ideas, [`${next.id}@${next.revision}`]: idea },
     })
+    pendingPlanFocus.current = `${next.id}@${next.revision}`
     setPage('trials')
   }
-  function askAboutIdea(configuration: TrialConfiguration, idea: TrialIdea) {
+  function askAboutIdea(configuration: TrialConfiguration, idea: TrialIdea, questionText?: string) {
     if (question.trim()) setPreviousQuestion(question)
     setMixQuestionContext(null)
     setSelectedIdea({
@@ -626,8 +658,25 @@ export function ProjectWorkbench() {
       key: `${configuration.id}@${configuration.revision}`,
       idea: structuredClone(idea),
     })
-    setQuestion('How could I use this idea for my current setup, and what needs checking?')
+    setQuestion(questionText || 'How could I use this idea for my current setup, and what needs checking?')
+    setShowAnswerFollowup(true)
+    setFocusHelpQuestion(true)
     setPage('options')
+  }
+  function prepareIdeaComparison() {
+    if (!advice || !('material_routes' in advice)) return
+    const routes = [...advice.material_routes, ...advice.engineering_routes]
+    if (!routes.length) return
+    if (question.trim()) setPreviousQuestion(question)
+    setMixQuestionContext(null)
+    setSelectedIdea(null)
+    setQuestion(buildIdeaComparisonQuestion(routes))
+    setShowAnswerFollowup(true)
+    requestAnimationFrame(() => {
+      if (questionDetails.current) questionDetails.current.open = true
+      helpQuestion.current?.scrollIntoView({ block: 'center' })
+      helpQuestion.current?.focus({ preventScroll: true })
+    })
   }
   function save() {
     try {
@@ -1023,7 +1072,11 @@ export function ProjectWorkbench() {
                     </section>
                     {'material_routes' in advice && advice.material_routes.length + advice.engineering_routes.length > 0 && (!answerFocused || showAnswerRoutes) && <details open={showAnswerRoutes} ref={routeDetails} className="pw-card pw-spaced">
                       <summary>See the material and design ideas</summary>
-                      <p>Compare the ideas, then save one as a plan if you want to explore it.</p>
+                      <p>{advice.material_routes.length + advice.engineering_routes.length > 1
+                        ? 'Look at what each idea changes, its trade-offs and what to check. Some ideas can work together. Use one to save it as a plan and review what to do next.'
+                        : 'Review what this idea changes, its trade-offs and what to check. Use it to save a plan and review what to do next.'}</p>
+                      <button type="button" onClick={prepareIdeaComparison}>{advice.material_routes.length + advice.engineering_routes.length > 1 ? 'Help me choose' : 'Help me understand'}</button>
+                      <p className="pw-muted">This prepares an editable question with the ideas below. You decide when to send it.</p>
                       {
                       [
                         { title: 'Materials and preparation', routes: advice.material_routes },
@@ -1036,22 +1089,19 @@ export function ProjectWorkbench() {
                               <article key={r.id} className="pw-card">
                                 <h3>{r.title}</h3>
                                 <p>{r.change}</p>
+                                <p><strong>Why consider it:</strong> {r.why}</p>
+                                <p><strong>Trade-offs:</strong> {r.tradeoffs.join(' ')}</p>
+                                <p><strong>What to check:</strong> {r.check}</p>
                                 <details>
-                                  <summary>How it works and what to check</summary>
-                                  <p className="pw-muted">{r.why}</p>
+                                  <summary>See the suggested steps</summary>
                                   <ol>
                                     {r.steps.map((s, i) => (
                                       <li key={i}>{s}</li>
                                     ))}
                                   </ol>
-                                  <ul>
-                                    {r.tradeoffs.map((t, i) => (
-                                      <li key={i}>{t}</li>
-                                    ))}
-                                  </ul>
                                   <CheckSuggestionHandoff suggestion={r.check} onPrepare={(name) => { setPreparedCheckName(name); setPage('checks') }} />
                                 </details>
-                                <button onClick={() => useRoute(r)}>Save as a plan</button>
+                                <button onClick={() => useRoute(r)}>Use this idea</button>
                               </article>
                             ))}
                           </div>
@@ -1227,10 +1277,12 @@ export function ProjectWorkbench() {
                 onGoToPlans={() => setPage('trials')}
                 onDownloadSummary={downloadSummary}
                 onPrintSummary={printSummary}
+                onSaveBackup={save}
                 showHistoricalIdeas={showHistoricalIdeas}
                 checkingPlanningMode={!modeReady || !savedReviewReady}
                 preparedCheckName={showCurrentGuidance ? preparedCheckName : ''}
                 preparedCheckSuggestion={showHistoricalIdeas && preparedCheckSuggestion?.caseId === w.case_id && w.trial_ideas?.[preparedCheckSuggestion.key]?.check === preparedCheckSuggestion.text ? preparedCheckSuggestion.text : ''}
+                preparedCheckPlanKey={showHistoricalIdeas && preparedCheckSuggestion?.caseId === w.case_id && w.trial_ideas?.[preparedCheckSuggestion.key]?.check === preparedCheckSuggestion.text ? preparedCheckSuggestion.key : ''}
                 onPreparedCheckUsed={() => setPreparedCheckName('')}
               />
             </div>

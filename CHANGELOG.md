@@ -2,6 +2,17 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.6.0 — 2026-11-03
+
+### Changed
+
+- Show why each idea may help, its trade-offs and suggested check, with an option to ask for a comparison.
+- Make saved ideas easier to review, ask about and carry into a product check.
+
+### Fixed
+
+- Select the originating plan when moving from an idea to its suggested check.
+
 ## 0.5.0 — 2026-11-03
 
 ### Changed

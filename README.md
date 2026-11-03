@@ -16,6 +16,15 @@ For example, someone making an organizer can compare two material setups, explor
 
 The application was built during the Meta Global AI Developer Hackathon. Its configured hackathon workflow uses the Meta Model API for contextual assistance; calculations and comparison checks run locally. The AI connection can also be configured for other supported providers. See [inference connections](docs/INFERENCE_PROVIDERS.md).
 
+## How it works
+
+1. Describe your material, what you want to make and what matters for its use.
+2. Compare the suggested ideas by what they change, their trade-offs and what they need. Select **Help me choose** to ask the AI to compare them, or **Help me understand** when there is one idea.
+3. Select **Use this idea** to add one to your project. Review the suggested steps and ask for a clearer plan if you need one. Add material amounts, equipment and size when you know them.
+4. Choose **Plan a product check** if you know what to measure, or ask for help choosing a check. You can save the project and return when you have measurements.
+
+Use **Print / Save as PDF** for a readable report. Use **Save backup** to reopen and continue the project later.
+
 ## Get started
 
 Requirements: Python 3.11 or newer, Node 24 or newer, and npm.

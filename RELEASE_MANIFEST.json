@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T20:03:14.256453+00:00",
+  "prepared_utc": "2026-11-03T20:12:25.333717+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -51,8 +51,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 4829,
-      "sha256": "64bb7cd1af3adc94f8ae0d443d7ed9ed94ac89470388bc8766c8e8996a140779"
+      "bytes": 5145,
+      "sha256": "f08b4d26b9a6adfeb9bb18a5a47922649a93f505b069e135deed5bc06cb6f020"
     },
     {
       "path": "LICENSE",
@@ -66,8 +66,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4105,
-      "sha256": "a6173e9b5c0a8fc99bc74d27d37ffffec059d8018470fd9ccada0c4d01697e26"
+      "bytes": 4862,
+      "sha256": "e80ca2a3345936f3e889b879f75e4b116cb4c2b43d4ee3dd6577d34b87fa0e00"
     },
     {
       "path": "data/ATTRIBUTION.md",
@@ -416,8 +416,8 @@
     },
     {
       "path": "docs/DECISION_JOURNEY_EVALUATION_20261103.md",
-      "bytes": 13450,
-      "sha256": "6fa2f6c618d92cd1c7b6015486275814f63a88418bcf60b782f70621e5fce86c"
+      "bytes": 13451,
+      "sha256": "13abedbdc130ebe26dc9982ee26cc137fedbb8384a6a0800154b895ea71c9b1f"
     },
     {
       "path": "docs/DECISION_JOURNEY_RESULTS_20261103.md",
@@ -1177,12 +1177,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 329,
-      "sha256": "859b32da613fb383a4ad6c703fdb1060c153976501a918d866c8da38b251ac9c"
+      "sha256": "fb782a722cb6b9c01dfde3489bc0f5c9204ee82304f5397351df196d37afe507"
     },
     {
       "path": "reshivo/__init__.py",
       "bytes": 62,
-      "sha256": "07432f5fd1f45a2146ba9ec711c8224bc357e7411d16b3c01f3fc7227f81ed68"
+      "sha256": "964ffe5766114928d02c3acea90a6e1695026a9711861c05e26523efc15981f8"
     },
     {
       "path": "reshivo/__main__.py",
@@ -1735,6 +1735,11 @@
       "sha256": "c33ec786857d892a33233f33e991edcc8f4f1e775d8b01642f333d2e32e86dec"
     },
     {
+      "path": "web/checks/idea-comparison.test.mjs",
+      "bytes": 1507,
+      "sha256": "8d121ca87863c56eb21a9a3754564db42aa53022b8902c8ac366a2fa6e6e5159"
+    },
+    {
       "path": "web/checks/intake-edge-cases.test.mjs",
       "bytes": 1831,
       "sha256": "d0ccefea325602c06d372ca471d292482e464a857c54d54ab05cf3e7d284f598"
@@ -1857,12 +1862,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "771b290e9a5d4484e830cdcd2e75d1413ca1469e8fa65d79318acc615808bdee"
+      "sha256": "1896f38fde120fda4fa11f5faad0b2510db3e23a8ec178eaa00d4ebd3f4c35f9"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "3776c6793bac700be2c2c28721be32bc4af2a154d794d66c1983ee2da06fce52"
+      "sha256": "19a7cf8a059910774fcbb8771c5aba8be505c2016c88be2be4c13b82827e6be1"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -2026,8 +2031,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 67032,
-      "sha256": "fd128481d4ab02194b1a146f229bfd9a7f7c8a2cf26129e022a114e08530b300"
+      "bytes": 70238,
+      "sha256": "5fb2b2d7c04584194599ec9f340d9b0b53e1bcbb1d279d428ab2780fa59399ac"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2096,8 +2101,8 @@
     },
     {
       "path": "web/src/components/TrialWorkspace.tsx",
-      "bytes": 51438,
-      "sha256": "b8fb1bbb1b21a3924e1aeb3f7e29aa896eb4a83a0f8ca8e0c8c037ac99f31232"
+      "bytes": 53570,
+      "sha256": "178f40aeb31d92f86ffc514a928d7a5d799439b10cbb42c68cbac6fab0f7a347"
     },
     {
       "path": "web/src/components/Workshop.tsx",
@@ -2138,6 +2143,11 @@
       "path": "web/src/engineeringNote.ts",
       "bytes": 3696,
       "sha256": "bb2fcd15829cb81110db37c75bb49283092f2380df113a371fe885c25e738040"
+    },
+    {
+      "path": "web/src/ideaComparison.ts",
+      "bytes": 1749,
+      "sha256": "1d38c198e706db17d38736e9e735f455a9bc05c715ccb29d7851ead2879bc773"
     },
     {
       "path": "web/src/legacyGuidanceReview.ts",
