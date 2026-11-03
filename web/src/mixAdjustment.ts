@@ -3,6 +3,7 @@ import type { ProjectWorkspace, SavedMixAdjustmentDraft, TrialConfiguration } fr
 import type { ProjectIntakeDraft } from './projectIntake'
 import { toDisplay, unitLabel } from './unitConversion.ts'
 import type { UnitSystem } from './unitConversion.ts'
+import { recordedRecipeFraction } from './referenceComposition.ts'
 
 export type MixAdjustmentDraft = {
   inputMass: string
@@ -47,8 +48,61 @@ export function updateSavedMixAdjustment(workspace: ProjectWorkspace, caseId: st
   const next = { case_id: caseId, configuration_id: setup.id, configuration_revision: setup.revision,
     component_id: component.id, component_name: component.name,
     project_snapshot: index >= 0 ? old[index].project_snapshot : structuredClone(project),
-    values }
+    values,
+    ...(index >= 0 && old[index].reference && field !== 'targetMin' && field !== 'targetMax' ? { reference: old[index].reference } : {}) }
   return { ...workspace, mix_adjustment_drafts: index < 0 ? [...old, next] : old.map((item, i) => i === index ? next : item) }
+}
+
+/** Apply an explicitly reviewed whole-recipe point without replacing existing target entries. */
+export function useRecordedRecipeTarget(workspace: ProjectWorkspace, caseId: string, setup: TrialConfiguration, component: { id: string; name: string }, project: ProjectIntakeDraft, source: TrialConfiguration, sourceComponent: { id: string; name: string }, capturedLatest: number): ProjectWorkspace {
+  if (workspace.case_id !== caseId || JSON.stringify(workspace.project) !== JSON.stringify(project)) return workspace
+  const destination = workspace.configurations.find((item) => item.id === setup.id && item.revision === setup.revision)
+  const savedSource = workspace.configurations.find((item) => item.id === source.id && item.revision === source.revision)
+  const latestDestination = Math.max(...workspace.configurations.filter((item) => item.id === setup.id).map((item) => item.revision))
+  const latestSource = Math.max(...workspace.configurations.filter((item) => item.id === source.id).map((item) => item.revision))
+  if (!destination || !savedSource || latestDestination !== setup.revision || latestSource !== capturedLatest || JSON.stringify(destination) !== JSON.stringify(setup) || JSON.stringify(savedSource) !== JSON.stringify(source)) return workspace
+  if (!destination.materials.some((item) => item.id === component.id && item.name === component.name) || !savedSource.materials.some((item) => item.id === sourceComponent.id && item.name === sourceComponent.name)) return workspace
+  const point = recordedRecipeFraction(savedSource, sourceComponent.id)
+  if (!point.ok) return workspace
+  const old = workspace.mix_adjustment_drafts ?? []
+  const index = old.findIndex((item) => item.configuration_id === setup.id && item.configuration_revision === setup.revision && item.component_id === component.id)
+  const existing = index >= 0 ? old[index] : undefined
+  if (existing && (existing.component_name !== component.name || JSON.stringify(existing.project_snapshot) !== JSON.stringify(project) || existing.values.targetMin.trim() || existing.values.targetMax.trim())) return workspace
+  const draft: SavedMixAdjustmentDraft = {
+    case_id: caseId, configuration_id: setup.id, configuration_revision: setup.revision,
+    component_id: component.id, component_name: component.name,
+    project_snapshot: existing?.project_snapshot ?? structuredClone(project),
+    values: { ...(existing?.values ?? emptyMixAdjustmentDraft()), targetMin: point.value, targetMax: point.value },
+    reference: { setup_id: source.id, setup_revision: source.revision, setup_snapshot: JSON.stringify(source), component_id: sourceComponent.id,
+      component_name: sourceComponent.name, basis: 'whole_recipe', fraction: point.value, latest_revision_at_review: latestSource },
+  }
+  return { ...workspace, mix_adjustment_drafts: index < 0 ? [...old, draft] : old.map((item, i) => i === index ? draft : item) }
+}
+
+export function recordedRecipeNeedsReview(workspace: ProjectWorkspace, draft: SavedMixAdjustmentDraft | undefined): boolean {
+  const ref = draft?.reference
+  if (!ref) return false
+  const versions = workspace.configurations.filter((item) => item.id === ref.setup_id)
+  const source = versions.find((item) => item.revision === ref.setup_revision)
+  const point = source && recordedRecipeFraction(source, ref.component_id)
+  return !source || JSON.stringify(source) !== ref.setup_snapshot || !point || !point.ok || point.value !== ref.fraction || Math.max(...versions.map((item) => item.revision)) !== ref.latest_revision_at_review
+}
+
+/** Confirm that the earlier reference is still the one the user intends after a new version. */
+export function confirmRecordedRecipeReview(workspace: ProjectWorkspace, caseId: string, setup: TrialConfiguration, component: { id: string; name: string }, project: ProjectIntakeDraft, expectedLatestRevision: number): ProjectWorkspace {
+  if (workspace.case_id !== caseId || JSON.stringify(workspace.project) !== JSON.stringify(project)) return workspace
+  const destination = workspace.configurations.find((item) => item.id === setup.id && item.revision === setup.revision)
+  if (!destination || JSON.stringify(destination) !== JSON.stringify(setup) || Math.max(...workspace.configurations.filter((item) => item.id === setup.id).map((item) => item.revision)) !== setup.revision) return workspace
+  const draft = savedMixAdjustmentRecord(workspace, setup, component)
+  const ref = draft?.reference
+  if (!draft || !ref || JSON.stringify(draft.project_snapshot) !== JSON.stringify(project)) return workspace
+  const versions = workspace.configurations.filter((item) => item.id === ref.setup_id)
+  const source = versions.find((item) => item.revision === ref.setup_revision)
+  const point = source && recordedRecipeFraction(source, ref.component_id)
+  if (!source || JSON.stringify(source) !== ref.setup_snapshot || !point || !point.ok || point.value !== ref.fraction || draft.values.targetMin !== ref.fraction || draft.values.targetMax !== ref.fraction) return workspace
+  const latest = Math.max(...versions.map((item) => item.revision))
+  if (latest !== expectedLatestRevision) return workspace
+  return { ...workspace, mix_adjustment_drafts: (workspace.mix_adjustment_drafts ?? []).map((item) => item === draft ? { ...item, reference: { ...ref, latest_revision_at_review: latest } } : item) }
 }
 
 /** Explicit user review binds the same entered numbers to the current project. */

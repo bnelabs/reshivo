@@ -70,12 +70,49 @@ class PlanningOnlyTests(unittest.TestCase):
         request['history'].append({'role':'user','content':'I cannot handle the material this week.'})
         self.assertTrue(is_planning_only(request))
 
+    def test_current_handling_permission_overrides_older_restriction(self):
+        old = [{'role': 'user', 'content': 'I cannot handle the material this week.'}]
+        for request in (
+            {'brief': {'process': 'I can now handle the material safely.'}},
+            {'brief': {'process': 'No physical handling this week.'},
+             'question': 'I can now handle the material safely.', 'history': old},
+            {'message': 'I have no physical handling restrictions.', 'history': old},
+            {'history': old + [{'role': 'user', 'content': 'I can now mix the identified material.'}]},
+            {'brief': {'process': 'I can now handle the material safely.'}, 'history': old},
+        ):
+            with self.subTest(request=request):
+                self.assertFalse(is_planning_only(request))
+        self.assertTrue(is_planning_only({'message': 'No physical handling this week.'}))
+        self.assertTrue(is_planning_only({'message': 'I can handle the material later, but no physical work now.'}))
+        self.assertTrue(is_planning_only({
+            'brief': {'process': 'No physical handling this week.'},
+            'question': 'What should I do next?',
+            'history': [{'role': 'user', 'content': 'I can handle the material.'}],
+        }))
+        for text in ('I can handle the material later.', 'I can handle the material next week.',
+                     'I can handle the material when equipment arrives.'):
+            with self.subTest(future_permission=text):
+                self.assertTrue(is_planning_only({'brief': {'process': 'No physical handling this week.'},
+                                                  'question': text}))
+
+    def test_conflicting_fields_at_same_priority_remain_restricted(self):
+        for brief in (
+            {'process': 'I can handle the material.', 'constraints': 'No physical handling this week.'},
+            {'constraints': 'No physical handling this week.', 'process': 'I can handle the material.'},
+        ):
+            with self.subTest(brief=brief):
+                self.assertTrue(is_planning_only({'brief': brief}))
+        self.assertTrue(is_planning_only({'question': 'I can handle the material.',
+                                          'message': 'No physical handling this week.'}))
+
     def test_questions_negations_and_digital_steps_are_unchanged(self):
         for text in ('Add the missing synthetic wet-grip entry for current A with conditions confirmed.',
                      'Add a reading for the material.',
                      'Do not mix the rubber.',
                      'Can you sort the material later?',
-                     'Compare the synthetic grip readings.'):
+                     'Compare the synthetic grip readings.',
+                     'Add 5 kg of rubber to the cost calculator.',
+                     'Add 5 kg of rubber to the setup in the app.'):
             with self.subTest(text=text):
                 result, changed = planning_version({'answer': text})
                 self.assertFalse(changed)
@@ -83,12 +120,22 @@ class PlanningOnlyTests(unittest.TestCase):
 
     def test_compound_physical_actions_are_not_rewritten_as_a_simple_amount(self):
         for original in ('Add 0.3 kg of rubber and mix the material.',
-                         'Add 0.3 kg of rubber, then use a press.'):
+                         'Add 0.3 kg of rubber, then use a press.',
+                         'Add 0.3 kg of rubber and stir the mixture.',
+                         'Add 5 kg of rubber to the cost calculator and mix it.'):
             with self.subTest(original=original):
                 result, changed = planning_version({'answer': original})
                 self.assertTrue(changed)
                 self.assertNotIn(original, result['answer'])
                 self.assertIn('plan this step', result['answer'])
+
+    def test_advice_worded_as_a_recommendation_remains_a_planning_quantity(self):
+        data = follow_data()
+        data['answer'] = 'You should add 0.3 kg of rubber to the sample.'
+        request = mat_request(); request['brief']['process'] = 'No physical handling this week.'
+        result = follow_up_with_case(request, FakeClient(data))
+        self.assertEqual(result['answer'], 'For planning, the proposed addition is 0.3 kg of rubber to the sample.')
+        self.assertTrue(result['guidance_adjusted'])
 
     def test_intake_marks_edited_planning_guidance_and_preserves_draft(self):
         request = simple_request(); request['message'] += ' No physical handling this week.'

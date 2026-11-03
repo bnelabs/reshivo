@@ -1,0 +1,60 @@
+import assert from 'node:assert/strict'
+import { recordedRecipeFraction } from '../src/referenceComposition.ts'
+import { confirmRecordedRecipeReview, recordedRecipeNeedsReview, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../src/mixAdjustment.ts'
+import { newProjectWorkspace, parseProjectWorkspace, serializeProjectWorkspace } from '../src/projectWorkspace.ts'
+
+const recipe = (id, revision, materials) => ({ id, revision, name: id, materials, process: 'pressed', geometry: 'sheet', notes: '' })
+const item = (id, amount, unit) => ({ id, name: id, amount, unit })
+const source = recipe('source', 1, [item('paper', '250', 'g'), item('rubber', '0.75', 'kg')])
+const destination = recipe('destination', 1, [item('tracked-paper', '5', 'g'), item('feed', '95', 'g')])
+assert.deepEqual(recordedRecipeFraction(source, 'paper'), { ok: true, value: '25' }, 'mixed mass units use the same whole-recipe basis')
+assert.deepEqual(recordedRecipeFraction(recipe('r', 1, [item('a', '1', 'lb'), item('b', '16', 'oz')]), 'a'), { ok: true, value: '50' })
+assert.deepEqual(recordedRecipeFraction(recipe('r', 1, [item('a', '10', 'mass_percent'), item('b', '90', 'mass_percent')]), 'a'), { ok: true, value: '10' })
+for (const bad of [
+  [item('a', '10', 'mass_percent'), item('b', '20', 'mass_percent')],
+  [item('a', '10', 'mass_percent'), item('b', '1', 'kg')],
+  [item('a', '10', 'volume_percent'), item('b', '90', 'volume_percent')],
+  [item('a', '', 'kg'), item('b', '1', 'kg')],
+  [item('a', '-1', 'kg'), item('b', '2', 'kg')],
+  [item('a', '0', 'kg'), item('b', '0', 'kg')],
+  [item('a', '1', 'kg'), item('b', '2', 'kg')],
+]) assert.equal(recordedRecipeFraction(recipe('bad', 1, bad), 'a').ok, false, 'unknown, mixed-basis or inexact points cannot become exact targets')
+
+const w = newProjectWorkspace()
+w.configurations = [source, destination]
+const dest = destination.materials[0], src = source.materials[0]
+let next = useRecordedRecipeTarget(w, w.case_id, destination, dest, w.project, source, src, 1)
+assert.notEqual(next, w)
+let draft = savedMixAdjustmentRecord(next, destination, dest)
+assert.equal(draft.values.targetMin, '25'); assert.equal(draft.values.targetMax, '25')
+assert.equal(draft.reference.setup_id, 'source'); assert.equal(draft.reference.setup_revision, 1)
+assert.equal(draft.reference.component_id, 'paper'); assert.equal(draft.reference.basis, 'whole_recipe')
+const reopened = parseProjectWorkspace(serializeProjectWorkspace(next))
+assert.deepEqual(savedMixAdjustmentRecord(reopened, destination, dest).reference, draft.reference, 'source provenance survives Save/Open')
+
+const withOtherInputs = updateSavedMixAdjustment(next, w.case_id, destination, dest, w.project, 'inputMass', '1')
+assert.deepEqual(savedMixAdjustmentRecord(withOtherInputs, destination, dest).reference, draft.reference, 'unrelated edits retain source provenance')
+const manualEdit = updateSavedMixAdjustment(withOtherInputs, w.case_id, destination, dest, w.project, 'targetMin', '24')
+assert.equal(savedMixAdjustmentRecord(manualEdit, destination, dest).reference, undefined, 'editing the point makes the target user-entered')
+assert.equal(useRecordedRecipeTarget(next, w.case_id, destination, dest, w.project, source, src, 1), next, 'existing target is never overwritten')
+const partialTarget = updateSavedMixAdjustment(w, w.case_id, destination, dest, w.project, 'targetMax', '30')
+assert.equal(useRecordedRecipeTarget(partialTarget, w.case_id, destination, dest, w.project, source, src, 1), partialTarget, 'one existing limit is enough to prevent overwrite')
+
+const changedSource = { ...structuredClone(source), materials: [item('paper', '260', 'g'), item('rubber', '0.75', 'kg')] }
+const changedInput = { ...w, configurations: [changedSource, destination] }
+assert.equal(useRecordedRecipeTarget(changedInput, w.case_id, destination, dest, w.project, source, src, 1), changedInput, 'source edited concurrently is not silently used')
+const newerSource = { ...structuredClone(source), revision: 2 }
+const newerWorkspace = { ...next, configurations: [...next.configurations, newerSource] }
+assert.equal(recordedRecipeNeedsReview(newerWorkspace, draft), true, 'new source version requires review')
+assert.equal(useRecordedRecipeTarget({ ...w, configurations: [...w.configurations, newerSource] }, w.case_id, destination, dest, w.project, source, src, 1).mix_adjustment_drafts.length, 0, 'a newer source cannot be captured without review')
+assert.equal(confirmRecordedRecipeReview(newerWorkspace, w.case_id, destination, dest, w.project, 1), newerWorkspace, 'a review cannot silently accept a newer version than the one shown')
+const reviewed = confirmRecordedRecipeReview(newerWorkspace, w.case_id, destination, dest, w.project, 2)
+assert.equal(recordedRecipeNeedsReview(reviewed, savedMixAdjustmentRecord(reviewed, destination, dest)), false)
+assert.equal(savedMixAdjustmentRecord(reviewed, destination, dest).reference.setup_revision, 1, 'review does not switch to the newer recipe')
+const newerDestination = { ...structuredClone(destination), revision: 2 }
+const staleDest = { ...w, configurations: [...w.configurations, newerDestination] }
+assert.equal(useRecordedRecipeTarget(staleDest, w.case_id, destination, dest, w.project, source, src, 1), staleDest)
+const corrupted = JSON.parse(serializeProjectWorkspace(next))
+corrupted.configurations[0].materials[0].amount = '500'
+assert.throws(() => parseProjectWorkspace(JSON.stringify(corrupted)), /recorded recipe reference/i, 'import cannot substitute another source recipe')
+console.log('Recorded recipes hand off exact whole-recipe points with explicit source, review and no draft overwrite')

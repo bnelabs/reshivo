@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict'
+import { exactMassUnitConversion, materialUnitLabel, planMaterialUnitChange, resolveMaterialUnitChange } from '../src/materialUnitChange.ts'
+
+assert.equal(exactMassUnitConversion('1', 'lb', 'kg'), '0.45359237')
+assert.equal(exactMassUnitConversion('0.45359237', 'kg', 'lb'), '1')
+assert.equal(exactMassUnitConversion('1', 'oz', 'g'), '28.349523125')
+assert.equal(exactMassUnitConversion('1e3', 'g', 'kg'), '1')
+assert.equal(exactMassUnitConversion('0', 'lb', 'kg'), '0')
+assert.equal(exactMassUnitConversion('100', 'kg', 'lb'), null, 'repeating decimals are never rounded silently')
+assert.equal(exactMassUnitConversion('1', 'kg', 'mass_percent'), null)
+assert.equal(exactMassUnitConversion('1', 'mass_percent', 'volume_percent'), null)
+assert.equal(exactMassUnitConversion('unknown', 'kg', 'lb'), null)
+assert.equal(exactMassUnitConversion('-1', 'kg', 'g'), null)
+assert.equal(exactMassUnitConversion('1e-1000', 'kg', 'g'), null, 'bounded output is not truncated')
+assert.equal(materialUnitLabel('mass_percent'), 'mass %')
+assert.equal(materialUnitLabel('volume_percent'), 'volume %')
+assert.equal(materialUnitLabel('lb'), 'lb')
+
+const original = { id: 'binder', name: 'Binder', amount: '1', unit: 'lb' }
+const pending = planMaterialUnitChange(original, 'kg')
+assert.ok(pending)
+assert.deepEqual(original, { id: 'binder', name: 'Binder', amount: '1', unit: 'lb' })
+assert.deepEqual(resolveMaterialUnitChange(original, pending, 'convert'), { ...original, amount: '0.45359237', unit: 'kg' })
+assert.deepEqual(resolveMaterialUnitChange(original, pending, 'keep'), { ...original, amount: '1', unit: 'kg' })
+assert.deepEqual(resolveMaterialUnitChange(original, pending, 'clear'), { ...original, amount: '', unit: 'kg' })
+assert.equal(resolveMaterialUnitChange({ ...original, amount: '2' }, pending, 'convert'), null, 'stale choice cannot overwrite a new edit')
+assert.equal(resolveMaterialUnitChange({ ...original, id: 'other' }, pending, 'convert'), null, 'choice cannot attach to another material')
+assert.equal(resolveMaterialUnitChange({ ...original, unit: 'g' }, pending, 'convert'), null, 'choice cannot overwrite a different unit')
+const changedProperty = planMaterialUnitChange(original, 'mass_percent')
+assert.equal(changedProperty.exactAmount, null)
+assert.equal(resolveMaterialUnitChange(original, changedProperty, 'convert'), null)
+assert.equal(planMaterialUnitChange({ ...original, amount: '' }, 'kg'), null, 'an empty row can choose its unit first')
+console.log('Material unit changes require an explicit choice and offer exact mass conversions only')

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import { confirmSavedMixAdjustment, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment } from '../mixAdjustment'
+import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
 import type { MixAdjustmentDraft } from '../mixAdjustment'
 import type { ProjectWorkspace } from '../projectWorkspace'
 import type { AdvisorBrief, BalanceMixRequest, BalanceMixResult } from '../types'
@@ -8,6 +8,7 @@ import { UnitInput, unitLabel, useUnitSystem } from '../units'
 import { currentSetups, setupKey } from './TrialWorkspace'
 import { selectedCurrentSetup, setupRevisionNotice } from '../setupSelection'
 import { safeSetupName } from '../savedGuidanceReview'
+import { RecordedRecipeReference } from './RecordedRecipeReference'
 
 /** Arithmetic on user-entered composition, not a material-property model. */
 export type MixPlanningContext = {
@@ -44,12 +45,16 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const savedDraft = savedMixAdjustmentRecord(w, setup, material)
   const draft = savedMixAdjustment(w, setup, material)
   const needsProjectReview = mixDraftNeedsProjectReview(savedDraft, w.project)
+  const needsReferenceReview = recordedRecipeNeedsReview(w, savedDraft)
+  const referenceSource = w.configurations.find((item) => item.id === savedDraft?.reference?.setup_id && item.revision === savedDraft?.reference?.setup_revision)
+  const referenceLatest = w.configurations.filter((item) => item.id === savedDraft?.reference?.setup_id).reduce<typeof referenceSource>((latest, item) => !latest || item.revision > latest.revision ? item : latest, undefined)
   const request = material ? mixAdjustmentRequest(material.name, draft) : null
   const precisionProblem = mixAdjustmentPrecisionProblem(draft, draft.inputMassOrigin ?? system)
-  const signature = mixAdjustmentKey(w.case_id, { setup, project: w.project }, material?.id ?? '', draft)
+  const referenceVersions = savedDraft?.reference ? w.configurations.filter((item) => item.id === savedDraft.reference?.setup_id) : []
+  const signature = mixAdjustmentKey(w.case_id, { setup, project: w.project, reference: savedDraft?.reference, referenceVersions }, material?.id ?? '', draft)
   const stockKey = JSON.stringify({ ...planningContext, history: [...(planningContext.history ?? []), { role: 'user', content: `Added stock: ${draft.additionName}` }] })
   const stockReady = enabled && stockMode?.key === stockKey && !stockMode.failed && !stockMode.planningOnly
-  const canCalculate = Boolean(stockReady && !needsProjectReview)
+  const canCalculate = Boolean(stockReady && !needsProjectReview && !needsReferenceReview)
   const visibleResult = canCalculate && result?.key === signature ? result : null
   const massUnit = unitLabel('kg', system)
   const massEntry = mixMassEntryState(draft, system)
@@ -102,6 +107,15 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
     const capturedComponent = { id: material.id, name: material.name }
     const capturedProject = structuredClone(w.project)
     onDraftChange((current) => confirmSavedMixAdjustment(current, caseId, capturedSetup, capturedComponent, capturedProject))
+  }
+  function confirmReferenceReview() {
+    if (!setup || !material || !needsReferenceReview || !referenceLatest) return
+    const caseId = w.case_id
+    const capturedSetup = structuredClone(setup)
+    const capturedComponent = { id: material.id, name: material.name }
+    const capturedProject = structuredClone(w.project)
+    const capturedLatest = referenceLatest.revision
+    onDraftChange((current) => confirmRecordedRecipeReview(current, caseId, capturedSetup, capturedComponent, capturedProject, capturedLatest))
   }
   async function calculate() {
     if (!canCalculate || !request || busy) return
@@ -173,6 +187,21 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           <small>Enter zero only when you know the added stock contains none of the tracked component.</small>
           <h2>3. Choose the composition to explore</h2>
           <p>What range of {material.name} would you like to try, by mass?</p>
+          {savedDraft?.reference && <div className="pw-notice">
+            <p>Trial point: {savedDraft.reference.fraction}% of the whole recipe from {referenceSource ? setupName(referenceSource) : 'recorded setup'} · version {savedDraft.reference.setup_revision} ({savedDraft.reference.component_name}).</p>
+            {needsReferenceReview && <><p>A newer version of this reference setup exists. Compare the recipes before continuing.</p>
+              <div className="pw-form-grid">{[referenceSource, referenceLatest].filter((item): item is NonNullable<typeof item> => Boolean(item)).map((item) => <div key={JSON.stringify([item.id, item.revision])}><strong>{setupName(item)} · version {item.revision}</strong><ul>{item.materials.map((ingredient) => <li key={ingredient.id}>{ingredient.name}: {ingredient.amount || 'unknown'} {ingredient.unit}</li>)}</ul><p>Process: {item.process || 'not entered'}</p><p>Shape: {item.geometry || 'not entered'}</p></div>)}</div>
+              <button type="button" disabled={needsProjectReview} onClick={confirmReferenceReview}>Keep using this earlier recipe point</button></>}
+          </div>}
+          <RecordedRecipeReference key={JSON.stringify([setup.id, setup.revision, material.id])} workspace={w} destination={setup} component={material} setupName={setupName} targetOccupied={Boolean(draft.targetMin.trim() || draft.targetMax.trim())} appliedReference={savedDraft?.reference} disabled={needsProjectReview || needsReferenceReview} onUse={(source, sourceComponent, latestRevision) => {
+            const caseId = w.case_id
+            const capturedSetup = structuredClone(setup)
+            const capturedComponent = { id: material.id, name: material.name }
+            const capturedProject = structuredClone(w.project)
+            const capturedSource = structuredClone(source)
+            const capturedSourceComponent = { id: sourceComponent.id, name: sourceComponent.name }
+            onDraftChange((current) => useRecordedRecipeTarget(current, caseId, capturedSetup, capturedComponent, capturedProject, capturedSource, capturedSourceComponent, latestRevision))
+          }} />
           <div className="pw-form-grid">
             <label>Trial minimum (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMin} onChange={(event) => change('targetMin', event.target.value)} /></label>
             <label>Trial maximum (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMax} onChange={(event) => change('targetMax', event.target.value)} /></label>

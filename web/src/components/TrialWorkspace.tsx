@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useUnitSystem } from '../units'
 import { TrialAssessmentNotices } from './TrialAssessmentNotices'
+import { materialUnitLabel, planMaterialUnitChange, resolveMaterialUnitChange } from '../materialUnitChange'
+import type { PendingMaterialUnitChange } from '../materialUnitChange'
 import {
   checkHasPendingDraft,
   checkHasReadings,
@@ -63,6 +65,7 @@ export function TrialWorkspace({
 }: Props) {
   const system = useUnitSystem()
   const [editing, setEditing] = useState<TrialConfiguration | null>(null)
+  const [pendingUnit, setPendingUnit] = useState<PendingMaterialUnitChange | null>(null)
   const [check, setCheck] = useState<ProductCheck>({
     id: uid(),
     name: '',
@@ -149,6 +152,7 @@ export function TrialWorkspace({
   const editHasReadings = editCheck ? checkHasReadings(editCheck.id, w.records) : false
   function start(source?: TrialConfiguration) {
     setError('')
+    setPendingUnit(null)
     setEditing(
       source
         ? structuredClone(source)
@@ -177,6 +181,10 @@ export function TrialWorkspace({
     )
   }
   function saveSetup() {
+    if (pendingUnit) {
+      reportError('setup', 'Choose what to do with the material amount before saving.')
+      return
+    }
     if (w.configurations.length >= 100) {
       reportError(
         'setup',
@@ -491,28 +499,31 @@ export function TrialWorkspace({
                       value={m.amount}
                       inputMode="decimal"
                       maxLength={160}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        if (pendingUnit?.id === m.id) setPendingUnit(null)
                         setEditing({
                           ...editing,
                           materials: editing.materials.map((r, j) =>
                             j === i ? { ...r, amount: e.target.value } : r,
                           ),
                         })
-                      }
+                      }}
                     />
                   </label>
                   <label>
                     Unit
                     <select
                       value={m.unit}
-                      onChange={(e) =>
-                        setEditing({
-                          ...editing,
-                          materials: editing.materials.map((r, j) =>
-                            j === i ? { ...r, unit: e.target.value } : r,
-                          ),
-                        })
-                      }
+                      disabled={Boolean(pendingUnit && pendingUnit.id !== m.id)}
+                      onChange={(e) => {
+                        const nextUnit = e.target.value
+                        const choice = planMaterialUnitChange(m, nextUnit)
+                        if (choice) setPendingUnit(choice)
+                        else {
+                          setPendingUnit(null)
+                          setEditing({ ...editing, materials: editing.materials.map((r, j) => j === i ? { ...r, unit: nextUnit } : r) })
+                        }
+                      }}
                     >
                       {['kg', 'g', 'lb', 'oz', 't', 'mass_percent', 'volume_percent'].map((u) => (
                         <option key={u} value={u}>
@@ -529,14 +540,39 @@ export function TrialWorkspace({
                     <button
                       aria-label={`Remove material ${i + 1}`}
                       onClick={() =>
-                        setEditing({
-                          ...editing,
-                          materials: editing.materials.filter((_, j) => i !== j),
-                        })
+                        {
+                          if (pendingUnit?.id === m.id) setPendingUnit(null)
+                          setEditing({
+                            ...editing,
+                            materials: editing.materials.filter((_, j) => i !== j),
+                          })
+                        }
                       }
                     >
                       Remove
                     </button>
+                  )}
+                  {pendingUnit?.id === m.id && (
+                    <div className="pw-notice" style={{ gridColumn: '1 / -1' }} role="group" aria-label={`Choose how to change units for ${m.name || 'this material'}`}>
+                      <p>This amount is {pendingUnit.amount} {materialUnitLabel(pendingUnit.from)}. How should it change to {materialUnitLabel(pendingUnit.to)}?</p>
+                      {pendingUnit.exactAmount === null && <small>An exact conversion is unavailable for this change.</small>}
+                      {pendingUnit.exactAmount !== null && <button type="button" onClick={() => {
+                        const updated = resolveMaterialUnitChange(m, pendingUnit, 'convert')
+                        if (updated) setEditing({ ...editing, materials: editing.materials.map((r) => r.id === m.id ? updated : r) })
+                        setPendingUnit(null)
+                      }}>Convert to {pendingUnit.exactAmount} {materialUnitLabel(pendingUnit.to)}</button>}
+                      <button type="button" onClick={() => {
+                        const updated = resolveMaterialUnitChange(m, pendingUnit, 'keep')
+                        if (updated) setEditing({ ...editing, materials: editing.materials.map((r) => r.id === m.id ? updated : r) })
+                        setPendingUnit(null)
+                      }}>Keep {pendingUnit.amount} and use {materialUnitLabel(pendingUnit.to)}</button>
+                      <button type="button" onClick={() => {
+                        const updated = resolveMaterialUnitChange(m, pendingUnit, 'clear')
+                        if (updated) setEditing({ ...editing, materials: editing.materials.map((r) => r.id === m.id ? updated : r) })
+                        setPendingUnit(null)
+                      }}>Clear amount and use {materialUnitLabel(pendingUnit.to)}</button>
+                      <button type="button" onClick={() => setPendingUnit(null)}>Cancel</button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -589,10 +625,10 @@ export function TrialWorkspace({
                 />
               </label>
               <div className="pw-actions">
-                <button className="pw-primary" onClick={saveSetup}>
+                <button className="pw-primary" onClick={saveSetup} disabled={Boolean(pendingUnit)}>
                   Save this setup
                 </button>
-                <button onClick={() => setEditing(null)}>Cancel edit</button>
+                <button onClick={() => { setPendingUnit(null); setEditing(null) }}>Cancel edit</button>
               </div>
             </section>
           )}

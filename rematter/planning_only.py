@@ -8,13 +8,26 @@ from .meta import MetaValidationError
 
 
 _NO_WORK = re.compile(
-    r"\b(?:no|without)\s+(?:any\s+)?(?:(?:physical\s+)?handling|physical\s+work)\b|"
+    r"\b(?:no|without)\s+(?:any\s+)?(?:(?:physical\s+)?handling|physical\s+work)\b"
+    r"(?!\s+(?:restrictions?|limits?|limitations?|prohibitions?)\b)|"
     r"\b(?:cannot|can't|do\s+not|don't|will\s+not|won't)\s+(?:physically\s+)?"
     r"(?:handle|work\s+with)\b|(?<!not\s)\b(?:home\s+)?planning\s+only\b",
     re.I,
 )
+_ALLOW_WORK = re.compile(
+    r"\bno\s+(?:physical\s+)?handling\s+(?:restrictions?|limits?|limitations?|prohibitions?)\b|"
+    r"(?:^|[.!?]\s*|\bnow\s+)(?:i|we)\s+(?:can|may|am\s+able\s+to|are\s+able\s+to|"
+    r"am\s+allowed\s+to|are\s+allowed\s+to)\s+(?:now\s+)?(?:physically\s+)?"
+    r"(?:handle|mix|weigh|sort|process|work\s+with)\b",
+    re.I,
+)
+_FUTURE_PERMISSION = re.compile(
+    r"\b(?:later|tomorrow|eventually|soon|next\s+(?:week|month|year)|"
+    r"when|once|after|if)\b", re.I,
+)
 _ACTION = re.compile(
     r"(?:^|(?<=[.!?;])\s+|,\s*(?:then\s+)?)"
+    r"(?:(?:you|we)\s+(?:should|can|could|must|need\s+to)\s+)?"
     r"(?:please\s+|now\s+|first\s+|next\s+|then\s+|physically\s+){0,2}"
     r"(?P<verb>add|pour|transfer|weigh|mix|blend|sort|wash|rinse|melt|heat|press|cut|"
     r"mould|mold|process|handle|pack|fill|measure|make|use)\b",
@@ -31,11 +44,18 @@ _DIGITAL = re.compile(
     r"setup|target|data|question|field|information|observation|details)\b", re.I,
 )
 _NUMERIC_ADD = re.compile(
-    r"^\s*(?:please\s+|now\s+|first\s+)?add\s+"
+    r"^\s*(?:(?:you|we)\s+(?:should|can|could|must|need\s+to)\s+)?"
+    r"(?:please\s+|now\s+|first\s+)?add\s+"
     r"(?=(?:approximately\s+|about\s+|roughly\s+)?\d+(?:[.,]\d+)?\s*"
     r"(?:kg|kilograms?|g|grams?|lb|lbs|pounds?)\b)", re.I,
 )
-_SECOND_ACTION = re.compile(r"\b(?:and|then|next)\s+(?:add|pour|transfer|weigh|mix|blend|sort|wash|rinse|melt|heat|press|cut|mould|mold|process|handle|pack|fill|measure|make|use)\b", re.I)
+_COMPOUND = re.compile(r"\b(?:and|then|next)\b", re.I)
+_DIGITAL_DESTINATION = re.compile(
+    r"\b(?:to|into|in)\s+(?:(?:the|your|a)\s+)?(?:"
+    r"(?:(?:cost|mix|material|composition|price)\s+)?calculator|"
+    r"(?:app|application|spreadsheet|form)|"
+    r"setup\s+(?:in|within)\s+(?:the|your)\s+(?:app|application))\b", re.I,
+)
 _SENTENCES = re.compile(r"(?<=[.!?])(?=\s+[A-Z])")
 _LOCAL_STEP = "Use the recorded inputs to plan this step for later."
 
@@ -43,12 +63,29 @@ _LOCAL_STEP = "Use the recorded inputs to plan this step for later."
 def is_planning_only(case):
     """Read explicit user restrictions, not assistant-created history."""
     brief = case.get('brief', {})
-    texts = [value for value in brief.values() if isinstance(value, str)] if isinstance(brief, dict) else []
-    texts.extend(case.get(key, '') for key in ('message', 'question') if isinstance(case.get(key), str))
+    # A current explicit user instruction supersedes the reviewed case. Without
+    # one, the reviewed case outranks unversioned conversation history.
+    tiers = [[case[key] for key in ('question', 'message') if isinstance(case.get(key), str)]]
+    if isinstance(brief, dict):
+        tiers.append([value for value in brief.values() if isinstance(value, str)])
     history = case.get('history', [])
     if isinstance(history, list):
-        texts.extend(item.get('content', '') for item in history if isinstance(item, dict) and item.get('role') == 'user')
-    return any(_NO_WORK.search(text) for text in texts)
+        tiers.extend([[item.get('content', '')] for item in reversed(history)
+                      if isinstance(item, dict) and item.get('role') == 'user'
+                      and isinstance(item.get('content'), str)])
+    for texts in tiers:
+        # Contradictory statements at the same authority level remain restricted.
+        if any(_NO_WORK.search(text) for text in texts):
+            return True
+        for text in texts:
+            for match in _ALLOW_WORK.finditer(text):
+                # Future permission is not permission to work now.
+                sentence_start = max(text.rfind(mark, 0, match.start()) for mark in '.!?') + 1
+                end = re.search(r'[.!?]', text[match.end():])
+                sentence_end = match.end() + end.start() if end else len(text)
+                if not _FUTURE_PERMISSION.search(text[sentence_start:sentence_end]):
+                    return False
+    return False
 
 
 def _physical_action(text):
@@ -61,6 +98,9 @@ def _physical_action(text):
             measurement = _MEASUREMENT.search(rest)
             if measurement and (not material or measurement.start() < material.start()):
                 material = measurement
+        if (match.group('verb').lower() == 'add' and _DIGITAL_DESTINATION.search(rest)
+                and not _COMPOUND.search(rest)):
+            continue
         if material and (not digital or material.start() < digital.start()):
             return True
     return False
@@ -77,7 +117,7 @@ def _clean_text(text):
         leading = re.match(r"\s*", sentence).group()
         # A simple numeric addition can remain useful as an explicitly proposed
         # planning quantity. Never turn a compound handling instruction into one.
-        if _NUMERIC_ADD.match(sentence) and not _SECOND_ACTION.search(sentence):
+        if _NUMERIC_ADD.match(sentence) and not _COMPOUND.search(sentence):
             result.append(leading + _NUMERIC_ADD.sub('For planning, the proposed addition is ', sentence, count=1))
         else:
             result.append(leading + _LOCAL_STEP)
