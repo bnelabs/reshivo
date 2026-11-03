@@ -110,6 +110,12 @@ adapted.trial.guidance_adjusted = true
 adapted.followup.guidance_adjusted = true
 const reopenedAdapted = parseWorkspaceFile(serializeWorkspaceFile(adapted))
 for (const key of ['plan', 'trial', 'followup']) assert.equal(reopenedAdapted[key].guidance_adjusted, true, `${key} keeps locally adapted provenance`)
+for (const key of ['plan', 'trial', 'followup']) adapted[key].comparison_adjusted = true
+const corrected = parseWorkspaceFile(serializeWorkspaceFile(adapted))
+for (const key of ['plan', 'trial', 'followup']) assert.equal(corrected[key].comparison_adjusted, true, `${key} keeps comparison correction provenance`)
+adapted.plan.comparison_adjusted = 'yes'
+assert.throws(() => serializeWorkspaceFile(adapted), /comparison correction marker/, 'invalid correction provenance is rejected')
+adapted.plan.comparison_adjusted = true
 adapted.followup.guidance_adjusted = 'true'
 assert.throws(() => serializeWorkspaceFile(adapted), /adapted guidance marker/, 'invalid adapted provenance is rejected')
 

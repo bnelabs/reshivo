@@ -702,7 +702,7 @@ export function ProjectWorkbench() {
     : undefined
   function summaryText() {
     const guidance = formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance) || formatEarlierAdviceForReport(earlierReportNote)
-    return formatProjectSummary(w, showHistoricalIdeas) + guidance + (mixSummary ? `\n${mixSummary}` : '') + '\nTest your product before production.\n'
+    return formatProjectSummary(w, showHistoricalIdeas) + guidance + (mixSummary ? `\n${mixSummary}` : '')
   }
   function downloadSummary() {
     downloadTextFile('reshivo-summary.txt', summaryText())
@@ -1092,13 +1092,14 @@ export function ProjectWorkbench() {
                                 <p><strong>Why consider it:</strong> {r.why}</p>
                                 <p><strong>Trade-offs:</strong> {r.tradeoffs.join(' ')}</p>
                                 <p><strong>What to check:</strong> {r.check}</p>
+                                <p><strong>Steps:</strong></p>
+                                <ol>
+                                  {r.steps.map((s, i) => (
+                                    <li key={i}>{s}</li>
+                                  ))}
+                                </ol>
                                 <details>
-                                  <summary>See the suggested steps</summary>
-                                  <ol>
-                                    {r.steps.map((s, i) => (
-                                      <li key={i}>{s}</li>
-                                    ))}
-                                  </ol>
+                                  <summary>Set up this check</summary>
                                   <CheckSuggestionHandoff suggestion={r.check} onPrepare={(name) => { setPreparedCheckName(name); setPage('checks') }} />
                                 </details>
                                 <button onClick={() => useRoute(r)}>Use this idea</button>
@@ -1320,7 +1321,7 @@ export function ProjectWorkbench() {
           </main>
         </div>
       )}
-      <footer className="pw-footer"><small>Test your product before production. <span aria-hidden="true">·</span> Reshivo v{appVersion}</small></footer>
+      <footer className="pw-footer"><small>Reshivo v{appVersion}</small></footer>
     </div>
   )
 }

@@ -64,6 +64,18 @@ class FixtureClient:
 
 
 class FollowupTests(unittest.TestCase):
+    def test_short_followup_schema_keeps_older_three_item_responses_readable(self):
+        data = response_data()
+        data['next_steps'] = ['First.', 'Second.', 'Third.']
+        data['questions'] = ['First?', 'Second?', 'Third?']
+        client = FixtureClient(data)
+        result = follow_up_with_case(request_data(), client)
+        schema = client.calls[0][1]['properties']
+        self.assertEqual((schema['next_steps']['minItems'], schema['next_steps']['maxItems']), (0, 2))
+        self.assertEqual((schema['questions']['minItems'], schema['questions']['maxItems']), (0, 2))
+        self.assertEqual(result['next_steps'], data['next_steps'])
+        self.assertEqual(result['questions'], data['questions'])
+
     def test_unrelated_followup_needs_no_fake_next_step(self):
         request = request_data()
         request['question'] = 'What is the best tennis racket?'

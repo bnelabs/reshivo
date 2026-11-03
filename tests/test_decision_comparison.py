@@ -4,7 +4,7 @@ import unittest
 
 from reshivo.decision_comparison import compare_project_decisions
 from reshivo.products import ProductInputError
-from reshivo.advisor import help_with_case, follow_up_with_case, DECISION_ASSESSMENT_PROMPT, TRIAL_IDEA_PROMPT
+from reshivo.advisor import help_with_case, follow_up_with_case, DECISION_ASSESSMENT_PROMPT, TRIAL_IDEA_PROMPT, SPECIFIC_ADVICE_PROMPT
 from test_advisor_project_context import FixtureClient, request as advisor_request, cost_requests
 
 
@@ -161,7 +161,8 @@ class DecisionComparisonTests(unittest.TestCase):
                 self.assertNotIn("winners", prompt["manufacturing_cost_assessment"])
                 self.assertNotIn("111.123456789", str(prompt))
                 self.assertNotIn("777.987654321", str(prompt))
-                self.assertTrue(client.calls[0][3]["system_prompt"].endswith(DECISION_ASSESSMENT_PROMPT))
+                self.assertIn(DECISION_ASSESSMENT_PROMPT, client.calls[0][3]["system_prompt"])
+                self.assertTrue(client.calls[0][3]["system_prompt"].endswith(SPECIFIC_ADVICE_PROMPT))
 
     def test_missing_check_blocks_advisors_from_getting_a_winner(self):
         data = advisor_request()
@@ -191,7 +192,8 @@ class DecisionComparisonTests(unittest.TestCase):
                 self.assertNotIn("note_id", prompt["trial_ideas"]["AB@2"])
                 self.assertNotIn("local-private-note-id", str(prompt))
                 self.assertEqual(result["trial_ideas"], prompt["trial_ideas"])
-                self.assertTrue(client.calls[0][3]["system_prompt"].endswith(TRIAL_IDEA_PROMPT))
+                self.assertIn(TRIAL_IDEA_PROMPT, client.calls[0][3]["system_prompt"])
+                self.assertTrue(client.calls[0][3]["system_prompt"].endswith(SPECIFIC_ADVICE_PROMPT))
                 self.assertEqual(prompt["project_context"]["configurations"][-1]["materials"][0]["name"], "stock A")
 
     def test_trial_ideas_reject_old_version_unbound_context_and_extra_secret_field(self):

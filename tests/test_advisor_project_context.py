@@ -4,7 +4,7 @@ import json
 import unittest
 
 from reshivo.advisor import (
-    FOLLOWUP_PROMPT, MANUFACTURING_COST_PROMPT, PROJECT_CONTEXT_PROMPT, SYSTEM_PROMPT,
+    FOLLOWUP_PROMPT, MANUFACTURING_COST_PROMPT, PROJECT_CONTEXT_PROMPT, SPECIFIC_ADVICE_PROMPT, SYSTEM_PROMPT,
     follow_up_with_case, help_with_case, validate_request,
 )
 from reshivo.meta import Generation, MetaAPIError, MetaValidationError
@@ -116,7 +116,8 @@ class AdvisorProjectContextTests(unittest.TestCase):
         self.assertFalse(summary["physical_product_tested"])
         self.assertNotIn("configuration_versions", summary)
         self.assertTrue(options["system_prompt"].startswith(SYSTEM_PROMPT))
-        self.assertTrue(options["system_prompt"].endswith(PROJECT_CONTEXT_PROMPT))
+        self.assertIn(PROJECT_CONTEXT_PROMPT, options["system_prompt"])
+        self.assertTrue(options["system_prompt"].endswith(SPECIFIC_ADVICE_PROMPT))
 
     def test_old_and_other_kind_numbers_never_reach_either_model_prompt(self):
         for function, followup in ((help_with_case, False), (follow_up_with_case, True)):
@@ -346,7 +347,8 @@ class AdvisorProjectContextTests(unittest.TestCase):
         self.assertNotIn("manufacturing_costs", result)
         self.assertNotIn("manufacturing_cost_assessment", result)
         self.assertNotIn("manufacturing_cost_assessment", client.calls[0][0])
-        self.assertTrue(client.calls[0][3]["system_prompt"].endswith(PROJECT_CONTEXT_PROMPT))
+        self.assertIn(PROJECT_CONTEXT_PROMPT, client.calls[0][3]["system_prompt"])
+        self.assertTrue(client.calls[0][3]["system_prompt"].endswith(SPECIFIC_ADVICE_PROMPT))
 
 
 if __name__ == "__main__":

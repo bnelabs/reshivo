@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T20:12:25.333717+00:00",
+  "prepared_utc": "2026-11-03T20:30:30.444993+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -51,8 +51,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 5145,
-      "sha256": "f08b4d26b9a6adfeb9bb18a5a47922649a93f505b069e135deed5bc06cb6f020"
+      "bytes": 5539,
+      "sha256": "5374fc412e1cf8248c262a3b80b08c02c5d83c0e5e1901ff9b01b8fc65f92221"
     },
     {
       "path": "LICENSE",
@@ -1177,12 +1177,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 329,
-      "sha256": "fb782a722cb6b9c01dfde3489bc0f5c9204ee82304f5397351df196d37afe507"
+      "sha256": "f5270bb15b5a4766a6f9acccd30db1827a46bae42512364148319bcba3676934"
     },
     {
       "path": "reshivo/__init__.py",
       "bytes": 62,
-      "sha256": "964ffe5766114928d02c3acea90a6e1695026a9711861c05e26523efc15981f8"
+      "sha256": "dd47c171ce8f03de929d77d3afdafee97a48b48f059442f0378d63c3b781aa24"
     },
     {
       "path": "reshivo/__main__.py",
@@ -1195,9 +1195,14 @@
       "sha256": "dccc048713e719b66089494ed40c20d73d7b7fc2373a4eb84cb168e5cbe13f46"
     },
     {
+      "path": "reshivo/advice_corrections.py",
+      "bytes": 5950,
+      "sha256": "7b85557fecc4cdea4ca81157785b679801960141dcac089c967aee3978db208e"
+    },
+    {
       "path": "reshivo/advisor.py",
-      "bytes": 98876,
-      "sha256": "a2f9dbaeda10037a28d8b122cb9b3855449f1146326d56e06b156b38ba0606ec"
+      "bytes": 102939,
+      "sha256": "00ce9e8b969527fbb3e6abf255612ba156132696806d0854c2297c136fd5dd90"
     },
     {
       "path": "reshivo/balance.py",
@@ -1445,14 +1450,19 @@
       "sha256": "7323546a99757c170ed7ab4885a7fe3b9377551cb74d24216baa65dcea9b2f9e"
     },
     {
+      "path": "tests/test_advice_corrections.py",
+      "bytes": 9057,
+      "sha256": "9261709fe39893293579336c5aa630da8ed6432ae54609c30611efe7afaf04c7"
+    },
+    {
       "path": "tests/test_advisor.py",
-      "bytes": 47269,
-      "sha256": "eee5988191b3ec0bddf4961db08a247166ab62770c70bb1202c12f43b77cc49a"
+      "bytes": 49788,
+      "sha256": "c30d22a3d5c255b10db12a8edb7f7b4535ca60022181fa05ead07b6b69b31626"
     },
     {
       "path": "tests/test_advisor_followup.py",
-      "bytes": 11562,
-      "sha256": "e4da761dae0222787040c6476fa80a30c4e38b51893c019118b0b4abc6e9b3c3"
+      "bytes": 12283,
+      "sha256": "0f21250054ad72c8a87dd264b4596e19e34b159c70af9633b05bb9ebefdd6659"
     },
     {
       "path": "tests/test_advisor_mix_range_guard.py",
@@ -1461,8 +1471,8 @@
     },
     {
       "path": "tests/test_advisor_project_context.py",
-      "bytes": 22533,
-      "sha256": "19d3d963ed1d6f578d3722c8107bdfd2367021dc15704f89c6346779dcf95bd8"
+      "bytes": 22712,
+      "sha256": "6400899017cf07a8aa6b6d194d89b96a84db199fef7be19fc3d161b1b5c887ba"
     },
     {
       "path": "tests/test_balance.py",
@@ -1486,8 +1496,8 @@
     },
     {
       "path": "tests/test_decision_comparison.py",
-      "bytes": 14615,
-      "sha256": "7b98377977493e68893a52357e64ba20de02afb774db2d253d03ddddadcf12e0"
+      "bytes": 14821,
+      "sha256": "e8af930810b2caa4627a7d6a889ced2dbf06b71e226e9921fcdad40053968a09"
     },
     {
       "path": "tests/test_decision_comparison_http.py",
@@ -1851,8 +1861,8 @@
     },
     {
       "path": "web/checks/workspace-file.test.mjs",
-      "bytes": 23953,
-      "sha256": "dd8b381bd8fb84af85e8708eab5e41998caa18e20038ff262d19d8e6ce3ee7d4"
+      "bytes": 24476,
+      "sha256": "48cce7647e73cfa601ff297c184b965158fe31fa7c9a0dd2b184e6eedba6e910"
     },
     {
       "path": "web/index.html",
@@ -1862,12 +1872,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "1896f38fde120fda4fa11f5faad0b2510db3e23a8ec178eaa00d4ebd3f4c35f9"
+      "sha256": "582278774d74bbd2370dd8566c922ad9020270e49b2b38b3af4bd509c8c837ce"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "19a7cf8a059910774fcbb8771c5aba8be505c2016c88be2be4c13b82827e6be1"
+      "sha256": "a4b553a77854e41433ac565faaffe0f4ae745fc772ccbf65cc2fb907b78442dc"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -2031,8 +2041,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 70238,
-      "sha256": "5fb2b2d7c04584194599ec9f340d9b0b53e1bcbb1d279d428ab2780fa59399ac"
+      "bytes": 70168,
+      "sha256": "aabde0ac20818827e821f3123795b4fafee7aaeae17b6ad96012c2c2f0a6ab38"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2261,8 +2271,8 @@
     },
     {
       "path": "web/src/types.ts",
-      "bytes": 12167,
-      "sha256": "4b2cb95e98f1ec6982c887400077dcaadd1aca8532da2b87dc384611d5c60695"
+      "bytes": 12231,
+      "sha256": "1d8d9ff1ac19731c9406b82c80bd8001ab1fcb7f5b4685e872fd31119695f6ed"
     },
     {
       "path": "web/src/unitConversion.ts",
@@ -2276,8 +2286,8 @@
     },
     {
       "path": "web/src/workspaceFile.ts",
-      "bytes": 19695,
-      "sha256": "5aef3cc219867a8e8bf198b1fc2b6f500d6e2dbe5a5e072fa02db9f6bd2304ac"
+      "bytes": 19897,
+      "sha256": "d1ce932c53a7534ffcc41f612d39bc58bae59b88b7ce91314b5e5831a9fd69ad"
     },
     {
       "path": "web/tsconfig.json",

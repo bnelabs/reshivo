@@ -376,6 +376,7 @@ export type AdvisorResult = {
   result_kind: 'engineering_proposals'
   guidance_adjusted?: boolean
   mix_guidance_adjusted?: boolean
+  comparison_adjusted?: boolean
   mix_calculation?: import('./projectWorkspace').SavedMixContext & { result: { feasible: boolean; exact_addition_kg: import('./mixCandidate.ts').ExactAddition | null } }
   live: boolean
   provider: InferenceProviderId
@@ -398,6 +399,7 @@ export type AdvisorResult = {
 export type AdvisorTrialResult = {
   result_kind: 'trial_proposal'
   guidance_adjusted?: boolean
+  comparison_adjusted?: boolean
   live: boolean
   provider: InferenceProviderId
   requested_reasoning_effort?: 'low' | 'medium' | 'high'

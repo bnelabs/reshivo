@@ -346,6 +346,19 @@ class TrialTests(unittest.TestCase):
 
 
 class AdvisorTests(unittest.TestCase):
+    def test_provider_gets_a_shorter_next_step_schema_but_older_lengths_still_validate(self):
+        data = response_data()
+        data['next_steps'] = ['Step one.', 'Step two.', 'Step three.', 'Step four.', 'Step five.']
+        data['questions'] = ['Question one?', 'Question two?', 'Question three?']
+        client = FixtureClient(data)
+        result = help_with_case(brief_request(), client)
+        schema = client.calls[0][1]['properties']
+        self.assertEqual((schema['next_steps']['minItems'], schema['next_steps']['maxItems']), (0, 2))
+        self.assertEqual((schema['questions']['minItems'], schema['questions']['maxItems']), (0, 2))
+        self.assertEqual(result['next_steps'], data['next_steps'])
+        self.assertEqual(result['questions'], data['questions'])
+        self.assertIn('do not repeat equipment ownership', client.calls[0][3]['system_prompt'])
+
     def test_unrelated_question_can_return_a_redirect_without_invented_routes(self):
         request = brief_request()
         request['question'] = 'Who won the tennis match?'
@@ -392,8 +405,33 @@ class AdvisorTests(unittest.TestCase):
         prompt = options['system_prompt']
         for requirement in ('conceptual binding method', 'type of equipment',
                             'Do not ask again for information the user already supplied',
-                            'compatibility information is missing', 'not a claim of adhesion'):
+                            'compatibility information is missing', 'not a claim of adhesion',
+                            'Do not infer specific polymer identities',
+                            "do not substitute an invented qualitative dose",
+                            'cannot establish airtightness or sound',
+                            'not a substitute for an engineering or manufacturing path',
+                            'concrete reason or selection criterion',
+                            'cannot on its own separate the effects of the panel'):
             self.assertIn(requirement, prompt)
+
+    def test_specific_route_details_survive_with_no_implied_measurement(self):
+        data = response_data()
+        data['source_ids'] = []
+        data['material_routes'] = [{**route('candidate'),
+            'title': 'Examine a polyurethane binder',
+            'change': 'Consider a polyurethane binder for the identified plastic.',
+            'steps': ['Identify the plastic before selecting a binder.',
+                      'Compare binder compatibility information and plan a moulded sample.'],
+            'tradeoffs': ['Binder selection depends on the identified plastic.'],
+            'check': 'Compare adhesion using an appropriate method for the candidate material.'}]
+        data['engineering_routes'] = []
+        result = help_with_case(brief_request(), FixtureClient(data))
+        candidate = result['material_routes'][0]
+        self.assertEqual(candidate['title'], data['material_routes'][0]['title'])
+        self.assertEqual(candidate['steps'], data['material_routes'][0]['steps'])
+        self.assertEqual(result['sources'], [])
+        self.assertFalse(result['performance_verified'])
+        self.assertFalse(result['physical_product_tested'])
 
     def test_unverified_target_assurance_is_quarantined_without_losing_routes(self):
         data = response_data()

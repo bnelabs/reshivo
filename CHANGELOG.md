@@ -2,6 +2,15 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.6.1 — 2026-11-03
+
+### Changed
+
+- Ask for concrete materials, process steps and equipment when suggesting a product approach.
+- Show suggested steps directly on each idea and remove repeated generic testing text.
+- Keep generated next steps and follow-up questions focused on the most useful items.
+- Correct specific misleading comparisons observed during the mixed-plastic evaluation.
+
 ## 0.6.0 — 2026-11-03
 
 ### Changed

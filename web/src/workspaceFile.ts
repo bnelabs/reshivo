@@ -213,6 +213,7 @@ function metadata(row: ObjectValue, label: string, caseDetails: unknown): void {
   }
   if (row.requested_reasoning_effort !== undefined) choice(row.requested_reasoning_effort, `${label} recorded reasoning setting`, ['low', 'medium', 'high'])
   if (row.guidance_adjusted !== undefined && row.guidance_adjusted !== true) fail(label, 'invalid locally adapted guidance marker')
+  if (row.comparison_adjusted !== undefined && row.comparison_adjusted !== true) fail(label, 'invalid comparison correction marker')
   if (Object.hasOwn(row, 'reasoning_effort')) choice(row.reasoning_effort, `${label} applied reasoning setting`, [null, 'low', 'medium', 'high'])
   if (row.calculation_context !== undefined) {
     details(row.calculation_context, `${label} recorded case details`)
@@ -222,7 +223,7 @@ function metadata(row: ObjectValue, label: string, caseDetails: unknown): void {
 
 function plan(value: unknown, caseDetails: unknown): void {
   const label = 'Saved options'
-  const row = object(value, label, [...metadataKeys, 'answer', 'material_routes', 'engineering_routes', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'reasoning_effort', 'calculation_context', 'guidance_adjusted'])
+  const row = object(value, label, [...metadataKeys, 'answer', 'material_routes', 'engineering_routes', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'reasoning_effort', 'calculation_context', 'guidance_adjusted', 'comparison_adjusted'])
   choice(row.result_kind, label, ['engineering_proposals'])
   metadata(row, label, caseDetails)
   string(row.answer, `${label} explanation`, 3000)
@@ -243,7 +244,7 @@ function plan(value: unknown, caseDetails: unknown): void {
 
 function followup(value: unknown, caseDetails: unknown): void {
   const label = 'Saved follow-up'
-  const row = object(value, label, [...metadataKeys, 'answer', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'reasoning_effort', 'calculation_context', 'guidance_adjusted'])
+  const row = object(value, label, [...metadataKeys, 'answer', 'next_steps', 'questions', 'sources'], ['quarantined_answer', 'requested_reasoning_effort', 'reasoning_effort', 'calculation_context', 'guidance_adjusted', 'comparison_adjusted'])
   choice(row.result_kind, label, ['engineering_followup'])
   metadata(row, label, caseDetails)
   string(row.answer, `${label} explanation`, 3000, true)
@@ -255,7 +256,7 @@ function followup(value: unknown, caseDetails: unknown): void {
 
 function trial(value: unknown, caseData: ObjectValue, selectedRoute: unknown): void {
   const label = 'Saved trial'
-  const row = object(value, label, [...metadataKeys, 'route_id', 'targets', 'brief', 'selected_route', 'title', 'objective', 'comparison', 'change', 'keep_fixed', 'materials', 'steps', 'checks', 'questions', 'sources'], ['requested_reasoning_effort', 'reasoning_effort', 'calculation_context', 'guidance_adjusted'])
+  const row = object(value, label, [...metadataKeys, 'route_id', 'targets', 'brief', 'selected_route', 'title', 'objective', 'comparison', 'change', 'keep_fixed', 'materials', 'steps', 'checks', 'questions', 'sources'], ['requested_reasoning_effort', 'reasoning_effort', 'calculation_context', 'guidance_adjusted', 'comparison_adjusted'])
   choice(row.result_kind, label, ['trial_proposal'])
   metadata(row, label, caseData.details)
   brief(row.brief, `${label} case`)
