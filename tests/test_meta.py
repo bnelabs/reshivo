@@ -56,6 +56,7 @@ class MetaTests(unittest.TestCase):
         self.assertEqual(len(transport.requests), 1)
         request = transport.requests[0]
         payload = json.loads(request.data)
+        self.assertEqual(payload["model"], "muse-spark-1.3-contributor")
         self.assertEqual(payload["reasoning_effort"], "low")
         self.assertEqual(payload["max_completion_tokens"], 4096)
         self.assertEqual(transport.timeout, 50)

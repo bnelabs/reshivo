@@ -245,7 +245,7 @@ export function BalancePlanner({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = svg ? 'rematter-trim-placement.svg' : 'rematter-mass-and-balance.json'
+    link.download = svg ? 'reshivo-trim-placement.svg' : 'reshivo-mass-and-balance.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

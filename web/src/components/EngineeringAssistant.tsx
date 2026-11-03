@@ -196,7 +196,7 @@ export function EngineeringAssistant({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-engineering-run.json'
+    link.download = 'reshivo-engineering-run.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
@@ -354,7 +354,7 @@ export function EngineeringAssistant({
                       )
                       const link = document.createElement('a')
                       link.href = url
-                      link.download = 'rematter-trim-placement.svg'
+                      link.download = 'reshivo-trim-placement.svg'
                       link.click()
                       setTimeout(() => URL.revokeObjectURL(url), 1000)
                     }}

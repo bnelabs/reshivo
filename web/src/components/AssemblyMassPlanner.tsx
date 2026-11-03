@@ -137,7 +137,7 @@ export function AssemblyMassPlanner({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-assembly-mass-check.json'
+    link.download = 'reshivo-assembly-mass-check.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

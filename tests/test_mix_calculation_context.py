@@ -44,6 +44,22 @@ class MixCalculationContextTests(unittest.TestCase):
         self.assertTrue(mix["result"]["feasible"])
         self.assertIn("earlier version", client.calls[0][3]["system_prompt"])
 
+    def test_wide_target_attaches_one_fixed_solution_for_both_input_endpoints(self):
+        data = prepared()
+        data["mix_calculation"]["source"] = None
+        data["mix_calculation"]["inputs"].update(
+            input_mass_kg=1.5, input_min_percent=28, input_max_percent=32,
+            addition_percent=5, target_min_percent=18, target_max_percent=22,
+        )
+        client = FixtureClient(followup=True)
+        follow_up_with_case(data, client=client)
+        result = client.calls[0][0]["mix_calculation"]["result"]
+        self.assertTrue(result["feasible"])
+        self.assertLessEqual(result["resulting_min_percent"], result["resulting_max_percent"])
+        self.assertGreaterEqual(result["resulting_min_percent"], 18)
+        self.assertLessEqual(result["resulting_max_percent"], 22)
+        self.assertIn("BOTH endpoints", client.calls[0][3]["system_prompt"])
+
     def test_duplicate_names_use_source_id_and_version(self):
         data = prepared()
         for setup in data["project_context"]["configurations"]:

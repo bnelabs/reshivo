@@ -557,7 +557,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                       onChange={(event) => changeCapability('tool_calls', event.target.checked)}
                     />
                     <span>
-                      Use ReMatter’s calculation tools
+                      Use Reshivo’s calculation tools
                       <small>
                         Requires function calling. The model can ask the app to run its available
                         calculations.

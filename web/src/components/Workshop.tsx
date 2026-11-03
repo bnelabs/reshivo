@@ -898,7 +898,7 @@ export function Workshop() {
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-batch-plan.json'
+    link.download = 'reshivo-batch-plan.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
@@ -1462,7 +1462,7 @@ export function Workshop() {
             {!plan ? (
               <div className="workshop-start" hidden={Boolean(followupResult) || busy}>
                 <h2>What happens next?</h2>
-                <p>From your case, ReMatter helps you work through three decisions.</p>
+                <p>From your case, Reshivo helps you work through three decisions.</p>
                 <div className="workshop-start-options">
                   <div>
                     <span>2</span>

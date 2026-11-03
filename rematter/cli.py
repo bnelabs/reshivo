@@ -77,11 +77,11 @@ def export_design(folder, material, result, requirements):
 def report_text(results, requirements, scenario):
     scenario_label = "Measured averages" if scenario == "nominal" else "Lower estimate"
     lines = [
-        "# ReMatter design results", "",
+        "# Reshivo design results", "",
         "**Calculated with a bending model. The designs have not been physically tested.**", "",
         f"Load at tip: {requirements.tip_force_N:g} N. Length: {requirements.span_mm:g} mm. Width: {requirements.width_mm:g} mm. Maximum height: {requirements.max_height_mm:g} mm. Maximum tip movement: {requirements.max_tip_deflection_mm:g} mm.", "",
         f"Material values: {scenario_label}. The lower estimate uses the measured average minus twice the test-piece standard deviation (SD). This explores lower values; it is not a confidence interval or a prediction of variation between batches.", "",
-        "ReMatter searches both beam shapes across the selected size range and step sizes. The rectangular comparison is optimized too. These familiar shapes help check the calculations. This result does not show a new design method or an advantage from AI.", "",
+        "Reshivo searches both beam shapes across the selected size range and step sizes. The rectangular comparison is optimized too. These familiar shapes help check the calculations. This result does not show a new design method or an advantage from AI.", "",
         "| Material | Beam shape | Volume (mm³) | Tip movement (mm) | Stress at fixed end (MPa) | Designs checked |",
         "|---|---|---:|---:|---:|---:|",
     ]
@@ -106,7 +106,7 @@ def report_text(results, requirements, scenario):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="ReMatter: recycled-material data and calculated designs")
+    parser = argparse.ArgumentParser(description="Reshivo: recycled-material data and calculated designs")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("ingest", help="Verify source hashes and rebuild the material catalog")
     catalog = commands.add_parser("catalog", help="List tested material options")
@@ -185,5 +185,5 @@ def main(argv=None):
         print("Simulation only. No Meta model used. See report.md for the material data and what the model covers.")
         return 0 if exports else 1
     except (ValueError, TypeError, KeyError, OSError, zipfile.BadZipFile) as exc:
-        print(f"ReMatter: {exc}", file=sys.stderr)
+        print(f"Reshivo: {exc}", file=sys.stderr)
         return 2

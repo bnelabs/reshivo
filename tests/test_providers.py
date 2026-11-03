@@ -79,6 +79,10 @@ class ProviderTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
+    def test_meta_defaults_to_contributor_when_no_model_is_configured(self):
+        profile = load_provider_profile(self.root, {"MODEL_API_KEY": KEY})
+        self.assertEqual(profile.model, "muse-spark-1.3-contributor")
+
     def settings(self, provider_id, **changes):
         data = {"provider": provider_id, "model": "fixture-model", "api_key": KEY, "capabilities": dict(CAPS)}
         if provider_id == "deepseek":

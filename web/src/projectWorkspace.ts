@@ -169,7 +169,7 @@ export function currentConfigurations(workspace: ProjectWorkspace): TrialConfigu
 
 export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
   const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes', 'trial_ideas', 'mix_adjustment_drafts'], 'Workspace')
-  if (root.schema !== PROJECT_WORKSPACE_SCHEMA) throw new Error('This is not a supported ReMatter project workspace.')
+  if (root.schema !== PROJECT_WORKSPACE_SCHEMA) throw new Error('This is not a supported Reshivo project workspace.')
   text(root.case_id, 'Case identifier', 160, true)
   validateProjectDraft(root.project, 'Project details')
   list(root.configurations, 100, 'Configurations'); list(root.checks, 50, 'Checks'); list(root.records, 1000, 'Records')
@@ -388,7 +388,7 @@ export function downloadProjectWorkspace(workspace: ProjectWorkspace): void {
   const blob = new Blob([serializeProjectWorkspace(workspace)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
-  link.href = url; link.download = 'rematter-project.json'
+  link.href = url; link.download = 'reshivo-project.json'
   document.body.appendChild(link); link.click(); link.remove()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

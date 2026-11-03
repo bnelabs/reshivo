@@ -156,7 +156,7 @@ export function TestedLevels({ active, onAsk, disabled = false }: {
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-tested-input-levels.json'
+    link.download = 'reshivo-tested-input-levels.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

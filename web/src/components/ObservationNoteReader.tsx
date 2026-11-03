@@ -49,7 +49,7 @@ function downloadRecord(record: NoteRecord) {
   )
   const link = document.createElement('a')
   link.href = url
-  link.download = 'rematter-assembly-note-record.json'
+  link.download = 'reshivo-assembly-note-record.json'
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

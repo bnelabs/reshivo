@@ -16,7 +16,7 @@ from .provider_transport import (ProviderCapabilityError, ProviderResponseError,
                                  ProviderTransportError, validate_generated_json)
 
 ENDPOINT = "https://api.meta.ai/v1/chat/completions"
-DEFAULT_MODEL = "muse-spark-1.3"
+DEFAULT_MODEL = "muse-spark-1.3-contributor"
 SUPPORTED_META_MODELS = frozenset({
     "muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0",
     "muse-spark-1.3-contributor", "muse-spark-1.2-contributor",

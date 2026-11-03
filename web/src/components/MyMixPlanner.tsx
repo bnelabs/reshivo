@@ -51,7 +51,7 @@ function downloadResult(result: MixMassResult, workshopCase: WorkshopCase) {
   )
   const link = document.createElement('a')
   link.href = url
-  link.download = 'rematter-my-mix-simulation.json'
+  link.download = 'reshivo-my-mix-simulation.json'
   link.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

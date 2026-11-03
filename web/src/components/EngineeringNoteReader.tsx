@@ -213,7 +213,7 @@ export function EngineeringNoteReader({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-engineering-note.json'
+    link.download = 'reshivo-engineering-note.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

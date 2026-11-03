@@ -322,7 +322,7 @@ function compositionDraft(value: unknown, components: Set<number>): void {
 
 function validate(value: unknown): asserts value is SavedWorkspace {
   const row = object(value, 'Workspace file', ['format', 'version', 'saved_at', ...snapshotKeys], optionalSnapshotKeys)
-  if (row.format !== WORKSPACE_FORMAT) fail('Workspace file', 'choose a ReMatter material-workspace file')
+  if (row.format !== WORKSPACE_FORMAT) fail('Workspace file', 'choose a Reshivo material-workspace file')
   if (row.version !== WORKSPACE_VERSION) fail('Workspace file', 'this workspace version is not supported')
   string(row.saved_at, 'Saved date', 30, true)
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(row.saved_at) || !Number.isFinite(Date.parse(row.saved_at)) || new Date(row.saved_at).toISOString() !== row.saved_at)

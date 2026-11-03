@@ -3,13 +3,14 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rematter"
+name = "reshivo"
 version = "0.1.0"
-description = "Evidence-backed recycled-material selection and computational product design"
+description = "Plan products from changing recycled materials"
 requires-python = ">=3.11"
 dependencies = []
 
 [project.scripts]
+reshivo = "rematter.cli:main"
 rematter = "rematter.cli:main"
 
 [tool.setuptools]

@@ -195,8 +195,8 @@ class WorkbenchService:
                 from .meta import meta_status
                 status = meta_status()
             except ImportError:
-                status = {"configured": False, "model": "muse-spark-1.3"}
-        return {"configured": bool(status.get("configured")), "model": str(status.get("model", "muse-spark-1.3"))}
+                status = {"configured": False, "model": "muse-spark-1.3-contributor"}
+        return {"configured": bool(status.get("configured")), "model": str(status.get("model", "muse-spark-1.3-contributor"))}
 
     def _materials(self):
         try:
@@ -591,7 +591,7 @@ class WorkbenchService:
         folder.mkdir(parents=True, exist_ok=False)
         names = ["report.md", "results.json"]
         prefix = f"/api/experiments/{identity}/artifacts/"
-        lines = ["# ReMatter Meta design ideas", "", "Generated ideas checked with a bending model. The designs have not been physically tested.", "", f"Model: {result['model']}. Generated in this run: {result['live']}.", "", f"Material: {material.id}. [Material test data, CC BY 4.0]({SOURCE_URL}).", "", result["material_scenario"]["interpretation"], ""]
+        lines = ["# Reshivo design ideas", "", "Generated ideas checked with a bending model. The designs have not been physically tested.", "", f"Model: {result['model']}. Generated in this run: {result['live']}.", "", f"Material: {material.id}. [Material test data, CC BY 4.0]({SOURCE_URL}).", "", result["material_scenario"]["interpretation"], ""]
         for candidate in result["candidates"]:
             evaluation = candidate["evaluation"]
             if evaluation["passes_declared_screens"]:

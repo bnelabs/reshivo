@@ -435,7 +435,7 @@ export function MeasurementComparison({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-entered-reading-comparison.json'
+    link.download = 'reshivo-entered-reading-comparison.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

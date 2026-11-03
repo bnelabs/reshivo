@@ -346,7 +346,7 @@ export function AdaptationPlanner({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-input-variation-simulation.json'
+    link.download = 'reshivo-input-variation-simulation.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

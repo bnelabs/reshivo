@@ -15,7 +15,7 @@ MAX_CONFIG_BYTES = 32_768
 CAPABILITY_DEFAULTS = {"vision": False, "tool_calls": False, "structured_output": "none", "reasoning": False}
 META_CAPABILITIES = {"vision": True, "tool_calls": True, "structured_output": "json_schema", "reasoning": True}
 _CATALOG = (
-    ("meta", "Meta", "https://api.meta.ai/v1", "muse-spark-1.3", "chat_completions", "https://dev.meta.ai/docs"),
+    ("meta", "Meta", "https://api.meta.ai/v1", "muse-spark-1.3-contributor", "chat_completions", "https://dev.meta.ai/docs"),
     ("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", "", "chat_completions", "https://openrouter.ai/docs/api/reference/overview"),
     ("openai", "OpenAI", "https://api.openai.com/v1", "", "chat_completions", "https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create"),
     ("google", "Google", "https://generativelanguage.googleapis.com/v1beta", "", "google_generate_content", "https://ai.google.dev/api/generate-content"),
@@ -103,7 +103,7 @@ def _legacy(root, environ):
     for name in ("MODEL_API_KEY", "META_API_KEY", "META_MODEL"):
         if name in env:
             values[name] = env[name]
-    return ProviderProfile("meta", values.get("META_MODEL") or "muse-spark-1.3", _ROWS["meta"][2],
+    return ProviderProfile("meta", values.get("META_MODEL") or "muse-spark-1.3-contributor", _ROWS["meta"][2],
                            values.get("MODEL_API_KEY") or values.get("META_API_KEY") or "",
                            dict(META_CAPABILITIES), source="local_env")
 

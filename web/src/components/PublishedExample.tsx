@@ -85,7 +85,7 @@ export function PublishedExample({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-published-pe-simulation.json'
+    link.download = 'reshivo-published-pe-simulation.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }

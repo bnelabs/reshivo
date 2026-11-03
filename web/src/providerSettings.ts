@@ -359,7 +359,7 @@ async function request(path: string, payload?: unknown, signal?: AbortSignal): P
       throw new ProviderSettingsError('The connection request was stopped.', 'aborted')
     if (failure instanceof ProviderSettingsError) throw failure
     throw new ProviderSettingsError(
-      'Could not reach ReMatter. Your entries are still here; try again.',
+      'Could not reach Reshivo. Your entries are still here; try again.',
       'network',
     )
   } finally {

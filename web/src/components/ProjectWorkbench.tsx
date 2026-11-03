@@ -509,11 +509,12 @@ export function ProjectWorkbench() {
           }}
           className="pw-brand"
         >
-          ReMatter<span>Your upcycling engineer</span>
+          <img className="pw-brand-mark" src="/reshivo-mark.svg" alt="" />
+          Reshivo<span>Plan products from recycled materials</span>
         </a>
         <div className="pw-header-actions">
           <button onClick={() => setProviderOpen(true)}>
-            {statusLoaded && status.configured ? status.provider_name : 'AI provider'}
+            AI settings
             <span aria-hidden="true">⌄</span>
           </button>
           <details

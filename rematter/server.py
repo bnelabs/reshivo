@@ -27,7 +27,7 @@ class WorkbenchHTTPServer(ThreadingHTTPServer):
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
-    server_version = "ReMatter"
+    server_version = "Reshivo"
     sys_version = ""
 
     def setup(self):
@@ -245,7 +245,7 @@ def build_server(host="127.0.0.1", port=8797, service=None, web_root=None):
 
 def serve(host="127.0.0.1", port=8797):
     server = build_server(host, port)
-    print(f"ReMatter: http://127.0.0.1:{server.server_port}")
+    print(f"Reshivo: http://127.0.0.1:{server.server_port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

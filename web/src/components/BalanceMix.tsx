@@ -236,7 +236,7 @@ export function BalanceMix({
     )
     const link = document.createElement('a')
     link.href = url
-    link.download = 'rematter-proposed-composition-trial.json'
+    link.download = 'reshivo-proposed-composition-trial.json'
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
