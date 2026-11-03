@@ -8,10 +8,11 @@ For example, someone making an organizer can compare two material setups, explor
 
 - Turns a short description into a project brief you can review and change.
 - Helps explore material, preparation, process and product-design options.
-- Keeps trial setups, product checks, readings and manufacturing costs together.
+- Keeps plans, product checks, readings and manufacturing costs together.
 - Calculates an addition for a user-selected composition when the starting mix and addition are described by the needed quantities.
 - Compares entered readings with the user's limits and lets the user revisit the decision when another reading is added.
-- Saves and opens projects locally.
+- Exports a readable text summary or a report you can print or save as PDF; a project backup lets you reopen your work.
+- Optionally generates a concept image with a Meta connection. The image illustrates an idea and is not a technical drawing.
 
 The application was built during the Meta Global AI Developer Hackathon. Its configured hackathon workflow uses the Meta Model API for contextual assistance; calculations and comparison checks run locally. The AI connection can also be configured for other supported providers. See [inference connections](docs/INFERENCE_PROVIDERS.md).
 
@@ -30,14 +31,9 @@ Open [http://127.0.0.1:8797](http://127.0.0.1:8797). The server binds to the loc
 
 For an Ubuntu 24.04 VPS, see the [deployment guide](docs/VPS_DEPLOYMENT.md). The app keeps its backend on loopback; the guide also explains protected HTTPS access.
 
-For live assistance with the Meta Model API, place your key and model choice in a local `.env` file:
+For AI assistance, open **AI settings**, select a provider and model, and enter your own API key. Each browser session has its own connection; the web app does not use a shared server key. Keys stay in server memory, expire after 30 minutes of inactivity or a server restart, and are not included in project files. You will need to enter your key again after expiry.
 
-```dotenv
-MODEL_API_KEY=your_key_here
-META_MODEL=muse-spark-1.3-contributor
-```
-
-The Contributor model is the example tested for this project. Meta may use content sent in Contributor mode to train future models. Choose a model appropriate for your account and data, and review the provider's terms. Never commit your key. You can also use **AI settings** in the app to configure another supported provider. Keys and settings are kept separate from saved project files.
+The Meta planning model tested for this project is `muse-spark-1.3-contributor`. Meta may use content sent in Contributor mode to train future models; check the provider's terms before sharing your data. See [inference connections](docs/INFERENCE_PROVIDERS.md) for supported providers.
 
 ## What the results mean
 

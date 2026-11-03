@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T16:31:15.405059+00:00",
+  "prepared_utc": "2026-11-03T17:27:21.783621+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
-  "snapshot_mode": "immutable committed tree",
+  "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
   "software_license_present": true,
   "contains_builds_or_dependencies": false,
-  "verification_status": "Not executed by packaging; run the documented checks in this export.",
+  "verification_status": "Run the checks documented in README.md and the repository workflow for the current revision.",
   "omissions": [
-    "Git history and remote configuration",
+    "The original source export omitted Git history and remote configuration; this repository retains filtered development history.",
     "all data/research/acoustics files",
     "private full-collection inventories and local verification notes",
     "source-access challenge responses",
@@ -30,7 +30,8 @@
     "Generated a release-specific inventory rather than retaining claims about excluded files.",
     "Regenerated the two affected exported manifests for retained files; private originals remain unchanged.",
     "Adapted licensing notes for the source-only collection.",
-    "Documented that the visible development history was filtered and earlier snapshots omit source data."
+    "Documented that the visible development history was filtered and earlier snapshots omit source data.",
+    "Added browser-session AI connections, clearer project flow, readable reports, and an optional concept sketch after the original export."
   ],
   "files": [
     {
@@ -40,8 +41,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 2151,
-      "sha256": "3d360136794cc697fdc110d3c9ff8e448dd9c419b96754a417196eea98a6d5f2"
+      "bytes": 2254,
+      "sha256": "168ccbfee30bbeb3e764e6ff7a192f1278e33c2af731280221e2adbf57cbc56e"
     },
     {
       "path": ".gitignore",
@@ -60,8 +61,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 3851,
-      "sha256": "5640f1fdb8e01731a4761fda421164a23220d66d32d0b247e2ba255a9f404130"
+      "bytes": 4135,
+      "sha256": "acdffb2279d2f488ea104dada8dda7ca74cf699650cbccb6ffc73b75982b86ab"
     },
     {
       "path": "data/ATTRIBUTION.md",
@@ -360,8 +361,8 @@
     },
     {
       "path": "deploy/reshivo.service",
-      "bytes": 477,
-      "sha256": "32afd985ae9b811a3b0a28e25489deb91a9f169562c280a7950b9f480c79e511"
+      "bytes": 435,
+      "sha256": "3d8d9556e17815f6ce10df64a0f1684ed95de8e0d4944a3b5535890c2e7b46be"
     },
     {
       "path": "docs/ADAPTATION_EVALUATION.md",
@@ -445,8 +446,8 @@
     },
     {
       "path": "docs/INFERENCE_PROVIDERS.md",
-      "bytes": 10085,
-      "sha256": "08c72c4145c5fdfde2592fdf0474cbbc5947554a3d127810296d8ceb0ce55dd8"
+      "bytes": 10413,
+      "sha256": "f6609117b137bdcb50b961ee457fef997f79109c3a21906043a26f6c8bf368ce"
     },
     {
       "path": "docs/LICENSING.md",
@@ -575,8 +576,8 @@
     },
     {
       "path": "docs/VPS_DEPLOYMENT.md",
-      "bytes": 6932,
-      "sha256": "b5015a1c86084c82038bf95e275001d3e7009c8efec46782582a4cfddca79969"
+      "bytes": 6061,
+      "sha256": "58e9ef315137b6f3b28adcd6375ce34493d80cbff1e1c86e6c42fe4c36d7abbc"
     },
     {
       "path": "docs/WORKFLOW_EVALUATION_PROTOCOL.md",
@@ -1199,6 +1200,11 @@
       "sha256": "c9e2ebefdf744fbd6a496deac5726515e33d7946eb2e2e532e6735b6d06b88b5"
     },
     {
+      "path": "rematter/concept_sketch.py",
+      "bytes": 2926,
+      "sha256": "129858693b39a90a7cc9c9a47f1ddd5c4979b8ce45d2e7ccd464d0f032954df2"
+    },
+    {
       "path": "rematter/decision_comparison.py",
       "bytes": 5384,
       "sha256": "5c1aa469e03f9de8d282ee855e5da957c903eba9deb4a27c678b0a408b06ce56"
@@ -1250,8 +1256,8 @@
     },
     {
       "path": "rematter/meta.py",
-      "bytes": 27272,
-      "sha256": "9fcbd307ed64c801103127aa337769c386241ac5f2b150c9ba2193d7a053fb38"
+      "bytes": 27485,
+      "sha256": "4b2b2b94ab0cb5eaab6d2f39f0d56cc87250d9109754a5a3f4fa2fccbb6cfbf9"
     },
     {
       "path": "rematter/mix_mass.py",
@@ -1285,8 +1291,8 @@
     },
     {
       "path": "rematter/providers.py",
-      "bytes": 14721,
-      "sha256": "2400be41e5dab9584d8d512e392e1b06912dfbd46c92d2effeb2474fc29a498e"
+      "bytes": 18208,
+      "sha256": "68c764c7f16c5ef632011b9105e046540ef56db8b300daaf2a7faefb40ffde7e"
     },
     {
       "path": "rematter/quantity_guards.py",
@@ -1305,13 +1311,13 @@
     },
     {
       "path": "rematter/server.py",
-      "bytes": 13330,
-      "sha256": "ae62ccf3cf0cdcf4c3c6adc0bc50de89977f451046cd65203378071ec9fcc716"
+      "bytes": 17619,
+      "sha256": "09490e3e9cfd5ea3ac29c1e04a48a0d81a5bd29918662c0d04d2133b272195ca"
     },
     {
       "path": "rematter/service.py",
-      "bytes": 34939,
-      "sha256": "168b16d112a595aa1a00463a6be2a1e542e0f0751a71ff76c6d5b9a0f7ed4733"
+      "bytes": 35113,
+      "sha256": "a5e3957b03f95c2bd6c2541cac339babcdb73e929f1ddbb863cf8afe952a2193"
     },
     {
       "path": "rematter/target_checks.py",
@@ -1447,6 +1453,11 @@
       "path": "tests/test_balance_mix_exact.py",
       "bytes": 5521,
       "sha256": "2d7f2487a237a407fb70043ab617574d9418c465b56faf490596a7c11d28bf59"
+    },
+    {
+      "path": "tests/test_concept_sketch.py",
+      "bytes": 3965,
+      "sha256": "bb02e6eeef7c44e0c1b2a2403719f1df5a450db25471ce7d63eb4c1394431a98"
     },
     {
       "path": "tests/test_core.py",
@@ -1590,13 +1601,18 @@
     },
     {
       "path": "tests/test_project_workspace_api.py",
-      "bytes": 14780,
-      "sha256": "71f0e825611d9ad3fdcb39ae515efb7e93007c6b0239df65cfe62b87672dddd3"
+      "bytes": 14879,
+      "sha256": "bbe299332490e1bc955679fbff08747b86e408ff630461183d64a9db2794236a"
     },
     {
       "path": "tests/test_provider_metadata.py",
       "bytes": 5338,
       "sha256": "b1abfe571944cbe76be350057e071ad512e64c1b3151ada54a732ce50e357fee"
+    },
+    {
+      "path": "tests/test_provider_sessions.py",
+      "bytes": 8918,
+      "sha256": "6c42f14dfe96e15b1a4aa6cd03d8bb657b83df623d3214b6893731300e81813c"
     },
     {
       "path": "tests/test_providers.py",
@@ -1675,8 +1691,8 @@
     },
     {
       "path": "web/checks/cost-display.test.mjs",
-      "bytes": 1969,
-      "sha256": "6025509f9396e7733b073a4fe60858978e9bfca08ad262930aeab9bc484e5315"
+      "bytes": 2317,
+      "sha256": "abaf1b572bf810e2e09741bd0ac8b1d9faa8c9e6a64b57eeeaa6d7e5e4f55a80"
     },
     {
       "path": "web/checks/cost-price-unit.test.mjs",
@@ -1715,8 +1731,8 @@
     },
     {
       "path": "web/checks/mix-adjustment.test.mjs",
-      "bytes": 12658,
-      "sha256": "26321e391f960b7556317bb4359a0e8acacde9a43121db288f8d0273611970d4"
+      "bytes": 13705,
+      "sha256": "95e1ec0180d41276395a779effee41abf797c97f6c47e4f872ff8aff01861233"
     },
     {
       "path": "web/checks/mix-candidate.test.mjs",
@@ -1744,9 +1760,19 @@
       "sha256": "c3617768778c20e3c142b1a05c3c7a1ff17aac2441b37fee8af07634145dd9ed"
     },
     {
+      "path": "web/checks/provider-settings.test.mjs",
+      "bytes": 2261,
+      "sha256": "1eecc840252549ec0c0520abab9ca5b83516cb81180601772938b46b96212dbe"
+    },
+    {
       "path": "web/checks/quantity.test.mjs",
       "bytes": 484,
       "sha256": "9c288c3c6fea0e07d9a6443f09319ebe150ae93536e94b9ac478248a7b10ed99"
+    },
+    {
+      "path": "web/checks/readable-summary.test.mjs",
+      "bytes": 4874,
+      "sha256": "d2744ae1273f958b323edec5fea48900e92192e07f8c9fe0f12a07a46fa332ce"
     },
     {
       "path": "web/checks/reference-composition.test.mjs",
@@ -1859,9 +1885,14 @@
       "sha256": "a5318e275fca9824c9954b975d731baac2e25df8620f94a156ce60a4075da759"
     },
     {
+      "path": "web/src/components/ConceptSketch.tsx",
+      "bytes": 1956,
+      "sha256": "644f0d9286ba0b8f11bb52a2121acf98773b281eb7e0705d99e69d64d9ebe60d"
+    },
+    {
       "path": "web/src/components/CostWorkspace.tsx",
-      "bytes": 28412,
-      "sha256": "3ef72e8473328b0c7d41fe494013c58f635932101e2dc7b8dc9e284aade47b1e"
+      "bytes": 28960,
+      "sha256": "8497c41d12e2662c37550d363cd3c53c6b192431fcf5a210fdba8c503dd7afb7"
     },
     {
       "path": "web/src/components/DesignViewport.tsx",
@@ -1925,8 +1956,8 @@
     },
     {
       "path": "web/src/components/MixAdjustment.tsx",
-      "bytes": 21654,
-      "sha256": "9d79a3624ea7ac31e7d75d13b0b50724aff4df359e67e9af4b52a959c6e94a25"
+      "bytes": 22829,
+      "sha256": "3937bb85c3ff2e6706d5e3372cd864e45646683ed0c4317e37abd9028db2fe43"
     },
     {
       "path": "web/src/components/MyMixPlanner.tsx",
@@ -1945,13 +1976,13 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.css",
-      "bytes": 14295,
-      "sha256": "a4d17f8156cd9d26dd92f4081e70d3708c698c476cd16a9156088ac6af01e2db"
+      "bytes": 15393,
+      "sha256": "e4a1c67e8aefca625d138c7145932959807ada70bc6705d8e137fcd3980e86f9"
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 48100,
-      "sha256": "2d3ca8e1f33f10fb766fe6a54deed0233c68f862d50efb7815837fc8f66760bf"
+      "bytes": 51585,
+      "sha256": "c76f3a1f3f42da8314acc8329b7f9a8b4ffb291c9a3750f50eb48ddba0725be8"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -1970,8 +2001,8 @@
     },
     {
       "path": "web/src/components/ProviderSettings.tsx",
-      "bytes": 26559,
-      "sha256": "7503baa478413fe87e1c16ceb2ff2b8f6bacde5180d04f5deda936a85bd5331b"
+      "bytes": 27735,
+      "sha256": "2bd175a45115596837c22e67b75b60bcc36810a20941854f6ca5bf859e201e37"
     },
     {
       "path": "web/src/components/PublishedExample.tsx",
@@ -2020,8 +2051,8 @@
     },
     {
       "path": "web/src/components/TrialWorkspace.tsx",
-      "bytes": 48908,
-      "sha256": "f91f2eeb9183133d4925fce86a34aac340910d0de7c95017d9c66613bd02eb0b"
+      "bytes": 49891,
+      "sha256": "c928f08a4cca5f7220f079192ad6e6f1353204da6ad09c08301c98ef63e7a44a"
     },
     {
       "path": "web/src/components/Workshop.tsx",
@@ -2050,8 +2081,8 @@
     },
     {
       "path": "web/src/costDisplay.ts",
-      "bytes": 2626,
-      "sha256": "d636d5313ca348d2fb47deac48026f88cdadb96ca70c8adef38bdfd1862d6770"
+      "bytes": 3151,
+      "sha256": "e25061bff80e513dc1a50ddee4d4bb393a6fe8498a67bec654107f1d31896da2"
     },
     {
       "path": "web/src/costPriceUnit.ts",
@@ -2095,8 +2126,8 @@
     },
     {
       "path": "web/src/mixAdjustment.ts",
-      "bytes": 18657,
-      "sha256": "dd7ed5485fb943b8d301f0feb4f4e1715b6a802715855188c71a2e5b27f3c3df"
+      "bytes": 19008,
+      "sha256": "f30b753b95129028efab5e16211ab62e603cffdfba4e956b9aba1ad902d1d0b8"
     },
     {
       "path": "web/src/mixCandidate.ts",
@@ -2125,13 +2156,18 @@
     },
     {
       "path": "web/src/providerSettings.ts",
-      "bytes": 14183,
-      "sha256": "59e2e8dd8cf3606527a01888130be7a37dac3a01015847b6ab0a84eb0b295182"
+      "bytes": 14443,
+      "sha256": "ecd1ad333ebc5afa363bc76df57f51c7ebadb72e049c5af4e331cbb5fa5a2fb0"
     },
     {
       "path": "web/src/quantity.ts",
       "bytes": 848,
       "sha256": "0eecefeedac05c7761d238b76bfbec6aaa70f98667fce8cf6f43ddb99785f581"
+    },
+    {
+      "path": "web/src/readableSummary.ts",
+      "bytes": 14547,
+      "sha256": "a5fb4a18502998bc76c085ddeee8d263fa00e206707b2b1cf8a0cf923a88afb4"
     },
     {
       "path": "web/src/referenceComposition.ts",
@@ -2193,5 +2229,6 @@
       "bytes": 254,
       "sha256": "8cbf2dcca30fedd52cc0f446e1bba675bab3579824ae86660230091574b0075d"
     }
-  ]
+  ],
+  "source_commit_note": "source_commit identifies the original source-export baseline; changes listed below were made afterward."
 }

@@ -5,6 +5,13 @@ import { newProjectWorkspace, parseProjectWorkspace, serializeProjectWorkspace }
 const input = { inputMass: '1.4', inputMin: '46', inputMax: '46', additionName: 'Stock A', additionPercent: '0', targetMin: '35', targetMax: '35' }
 assert.equal(mixAdjustmentRequest('PCRPE', emptyMixAdjustmentDraft()), null, 'unknown values are not zero')
 assert.deepEqual(mixAdjustmentRequest('PCRPE', input), { component: 'PCRPE', input_mass_kg: 1.4, input_min_percent: 46, input_max_percent: 46, addition_name: 'Stock A', addition_percent: 0, target_min_percent: 35, target_max_percent: 35 })
+const signedPercent = { inputMass: '16300', inputMin: '15%', inputMax: '20 %', additionName: 'HDPE', additionPercent: '5%', targetMin: '50%', targetMax: '95%' }
+assert.deepEqual(mixAdjustmentRequest('Mixed plastics', signedPercent), { component: 'Mixed plastics', input_mass_kg: 16300, input_min_percent: 15, input_max_percent: 20, addition_name: 'HDPE', addition_percent: 5, target_min_percent: 50, target_max_percent: 95 }, 'percent signs are accepted without rescaling')
+for (const invalid of ['50%%', '%50', '50% extra', '50.000000000000001%', '-0%', '101%']) {
+  assert.equal(mixAdjustmentRequest('Mixed plastics', { ...signedPercent, targetMin: invalid }), null, `${invalid} is not an acceptable target`)
+}
+assert.equal(mixAdjustmentPrecisionProblem({ ...signedPercent, targetMin: '50.000000000000001%' }, 'metric'), 'trial minimum', 'precision errors remain visible with a percent sign')
+assert.equal(mixAdjustmentRequest('Mixed plastics', { ...signedPercent, inputMass: '16300%' }), null, 'percent signs are not accepted in a mass field')
 for (const [field, value] of [['inputMass','0'], ['inputMass','1e-9999'], ['inputMin',''], ['inputMax','101'], ['additionPercent','-1'], ['targetMin','36'], ['additionName',''], ['inputMin','0x10']]) {
   assert.equal(mixAdjustmentRequest('PCRPE', { ...input, [field]: value }), null, `${field}=${value} must not produce a request`)
 }

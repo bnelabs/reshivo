@@ -31,6 +31,13 @@ export function costIssueText(value: unknown): string {
   if (value && typeof value === 'object') {
     const issue = value as Record<string, unknown>
     if (typeof issue.message === 'string') return issue.message
+    if (typeof issue.field === 'string') {
+      const field = issue.field
+      if (field === 'currency') return 'Enter a currency, such as EUR.'
+      if (field === 'functional_basis') return 'Describe the product and use that these costs cover.'
+      if (field === 'mass_basis' || field.endsWith('.basis')) return 'Say whether your material amounts and prices use the same condition, such as wet or dry.'
+      if (field === 'output.acceptance_basis') return 'Describe what makes an item usable for this estimate.'
+    }
     if (typeof issue.question === 'string') return issue.question
   }
   return 'Review this cost input.'

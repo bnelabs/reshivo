@@ -50,6 +50,7 @@ export type ProviderSettings = ProviderProfileStatus & {
 export type ProviderSettingsResponse = {
   catalog: ProviderCatalogEntry[]
   settings: ProviderSettings
+  sessionOnly: boolean
 }
 
 export type ProviderDraft = {
@@ -87,13 +88,18 @@ const MAX_REQUEST_BYTES = 32_768
 const REQUEST_TIMEOUT_MS = 15_000
 
 export class ProviderSettingsError extends Error {
+  readonly kind: 'http' | 'format' | 'network' | 'timeout' | 'aborted'
+  readonly status?: number
+
   constructor(
     message: string,
-    public readonly kind: 'http' | 'format' | 'network' | 'timeout' | 'aborted',
-    public readonly status?: number,
+    kind: 'http' | 'format' | 'network' | 'timeout' | 'aborted',
+    status?: number,
   ) {
     super(message)
     this.name = 'ProviderSettingsError'
+    this.kind = kind
+    this.status = status
   }
 }
 
@@ -375,13 +381,14 @@ export async function getProviderSettings(signal?: AbortSignal): Promise<Provide
     !Array.isArray(data.catalog) ||
     data.catalog.length !== PROVIDERS.size ||
     !data.catalog.every(isCatalogEntry) ||
-    new Set(data.catalog.map((entry) => entry.id)).size !== PROVIDERS.size
+    new Set(data.catalog.map((entry) => entry.id)).size !== PROVIDERS.size ||
+    (data.session_only !== undefined && typeof data.session_only !== 'boolean')
   )
     throw new ProviderSettingsError(
       'The list of AI services could not be read. Try again.',
       'format',
     )
-  return { catalog: data.catalog, settings: parseSettings(data.settings) }
+  return { catalog: data.catalog, settings: parseSettings(data.settings), sessionOnly: data.session_only === true }
 }
 
 function settingsFromMutation(value: unknown): ProviderSettings {

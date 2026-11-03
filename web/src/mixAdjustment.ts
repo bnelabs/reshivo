@@ -141,6 +141,11 @@ export function confirmSavedMixAdjustment(workspace: ProjectWorkspace, caseId: s
 }
 
 const DECIMAL = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:e([+-]?\d+))?$/i
+/** Percent fields accept a trailing percent sign without rescaling the number. */
+function percentText(value: string): string {
+  const text = value.trim()
+  return text.endsWith('%') ? text.slice(0, -1).trim() : text
+}
 function decimalParts(value: string): { sign: string; digits: string; exponent: bigint } | null {
   const matched = DECIMAL.exec(value.trim())
   if (!matched) return null
@@ -197,13 +202,13 @@ export function mixMassCanonical(display: string, system: UnitSystem): string {
 export function mixAdjustmentPrecisionProblem(draft: MixAdjustmentDraft, system: UnitSystem): string | null {
   if (draft.inputMass.startsWith('invalid:') && mixMassInputPrecisionProblem(draft.inputMass.slice(8), system)) return 'portion mass'
   for (const [field, label] of [['inputMass','portion mass'], ['inputMin','lowest input percentage'], ['inputMax','highest input percentage'], ['additionPercent','added-stock percentage'], ['targetMin','trial minimum'], ['targetMax','trial maximum']] as const) {
-    const value = draft[field]
+    const value = field === 'inputMass' ? draft[field] : percentText(draft[field])
     if (decimalParts(value) && Number.isFinite(Number(value)) && !mixDecimalRoundTrips(value)) return label
   }
   return null
 }
-function number(value: string): number | null {
-  const s = value.trim()
+function number(value: string, percent = false): number | null {
+  const s = percent ? percentText(value) : value.trim()
   if (!s || !mixDecimalRoundTrips(s)) return null
   const parsed = Number(s)
   if (!Number.isFinite(parsed) || (parsed === 0 && /[1-9]/.test(s.split(/[eE]/)[0]))) return null
@@ -216,11 +221,11 @@ export function mixAdjustmentRequest(component: string, draft: MixAdjustmentDraf
   const addition = draft.additionName.trim()
   if (!name || name.length > 160 || !addition || addition.length > 120) return null
   const mass = number(draft.inputMass)
-  const sourceMin = number(draft.inputMin)
-  const sourceMax = number(draft.inputMax)
-  const added = number(draft.additionPercent)
-  const targetMin = number(draft.targetMin)
-  const targetMax = number(draft.targetMax)
+  const sourceMin = number(draft.inputMin, true)
+  const sourceMax = number(draft.inputMax, true)
+  const added = number(draft.additionPercent, true)
+  const targetMin = number(draft.targetMin, true)
+  const targetMax = number(draft.targetMax, true)
   const allPercentages = [sourceMin, sourceMax, added, targetMin, targetMax]
   if (mass === null || mass <= 0 || mass > 1_000_000 || allPercentages.some((v) => v === null || v < 0 || v > 100)) return null
   if (sourceMin! > sourceMax! || targetMin! > targetMax!) return null

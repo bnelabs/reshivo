@@ -70,7 +70,8 @@ class ProjectWorkspaceAPITests(unittest.TestCase):
         self.intake = Mock(return_value={"result_kind": "project_intake", "reply": "Which mat use matters first?", "questions": ["Is the mat for cushioning or slip resistance?"], "live": False})
         self.service = WorkbenchService(root=self.root, intake_fn=self.intake,
                                         meta_status_fn=lambda: {"configured": False, "model": "fixture"})
-        self.server = build_server(port=0, service=self.service, web_root=self.root / "web")
+        # These tests exercise the legacy local file-store adapter explicitly.
+        self.server = build_server(port=0, service=self.service, web_root=self.root / "web", session_mode=False)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 

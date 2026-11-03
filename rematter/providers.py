@@ -1,11 +1,13 @@
 """Local connection profiles; saving settings never contacts a remote service."""
 from dataclasses import dataclass, field
+from contextvars import ContextVar
 import ipaddress
 import json
 import os
 from pathlib import Path
 import re
 import tempfile
+import threading
 from urllib.parse import urlsplit, urlunsplit
 
 from .materials import ROOT
@@ -49,6 +51,36 @@ class ProviderProfile:
     @property
     def configured(self):
         return bool(self.model and (self.api_key or (self.provider == "custom" and _loopback(urlsplit(self.base_url).hostname))))
+
+
+class ProviderSession:
+    """Provider settings scoped to one browser session and kept only in memory."""
+    def __init__(self):
+        self.lock = threading.RLock()
+        self.active_provider = "meta"
+        self.profiles = {"meta": ProviderProfile("meta", _ROWS["meta"][3], _ROWS["meta"][2], "",
+                                                   dict(META_CAPABILITIES), source="saved")}
+
+
+_CURRENT_SESSION = ContextVar("provider_session", default=None)
+
+
+def set_request_session(session):
+    return _CURRENT_SESSION.set(session)
+
+
+def reset_request_session(token):
+    _CURRENT_SESSION.reset(token)
+
+
+def is_session_request():
+    return _CURRENT_SESSION.get() is not None
+
+
+def _session_settings(session):
+    active = session.profiles[session.active_provider]
+    return {**_status(active), "active_provider": active.provider,
+            "profiles": [_status(profile) for profile in session.profiles.values()]}
 
 
 def provider_catalog():
@@ -152,6 +184,17 @@ def _profile(payload, prior=None):
     return ProviderProfile(provider, model, base, "" if clear else key, capabilities, protocol, workspace_id=workspace)
 
 
+def can_create_browser_session(payload):
+    """Allocate a session only for a syntactically valid supported connection with a key."""
+    if not isinstance(payload, dict) or payload.get("provider") == "custom" or not payload.get("api_key"):
+        return False
+    try:
+        profile = _profile(payload)
+        return bool(profile.api_key and profile.configured)
+    except ProviderConfigurationError:
+        return False
+
+
 def _read(root):
     path = Path(root) / CONFIG_NAME
     if not path.exists() and not path.is_symlink():
@@ -206,6 +249,10 @@ def _write(root, data):
 
 
 def load_provider_profile(root=ROOT, environ=None):
+    session = _CURRENT_SESSION.get()
+    if session is not None:
+        with session.lock:
+            return session.profiles[session.active_provider]
     data = _read(root)
     identity = data["active_provider"]
     return data["profiles"].get(identity) or _legacy(root, environ)
@@ -219,6 +266,10 @@ def _status(profile):
 
 
 def provider_settings(root=ROOT, environ=None):
+    session = _CURRENT_SESSION.get()
+    if session is not None:
+        with session.lock:
+            return _session_settings(session)
     data = _read(root)
     profiles = dict(data["profiles"])
     profiles.setdefault("meta", _legacy(root, environ))
@@ -228,6 +279,16 @@ def provider_settings(root=ROOT, environ=None):
 
 
 def save_provider_settings(payload, root=ROOT, environ=None):
+    session = _CURRENT_SESSION.get()
+    if session is not None:
+        if not isinstance(payload, dict) or payload.get("provider") == "custom":
+            raise ProviderConfigurationError("Choose a listed provider for this browser session.")
+        with session.lock:
+            prior = session.profiles.get(payload.get("provider"))
+            profile = _profile(payload, prior)
+            session.profiles[profile.provider] = profile
+            session.active_provider = profile.provider
+            return _session_settings(session)
     data = _read(root)
     identity = payload.get("provider") if isinstance(payload, dict) else None
     prior = data["profiles"].get(identity) if isinstance(identity, str) else None
@@ -241,6 +302,13 @@ def save_provider_settings(payload, root=ROOT, environ=None):
 
 
 def select_provider_settings(provider_id, root=ROOT, environ=None):
+    session = _CURRENT_SESSION.get()
+    if session is not None:
+        with session.lock:
+            if not isinstance(provider_id, str) or provider_id not in session.profiles:
+                raise ProviderConfigurationError("Save this provider's connection before selecting it.")
+            session.active_provider = provider_id
+            return _session_settings(session)
     data = _read(root)
     if not isinstance(provider_id, str) or (provider_id not in data["profiles"] and provider_id != "meta"):
         raise ProviderConfigurationError("Save this provider's connection before selecting it.")
@@ -250,6 +318,21 @@ def select_provider_settings(provider_id, root=ROOT, environ=None):
 
 
 def clear_provider_settings(provider_id=None, root=ROOT, environ=None):
+    session = _CURRENT_SESSION.get()
+    if session is not None:
+        with session.lock:
+            if provider_id is not None and (not isinstance(provider_id, str) or provider_id not in _ROWS):
+                raise ProviderConfigurationError("Choose a listed inference provider.")
+            if provider_id is None:
+                session.profiles.clear()
+            else:
+                session.profiles.pop(provider_id, None)
+            if "meta" not in session.profiles:
+                session.profiles["meta"] = ProviderProfile("meta", _ROWS["meta"][3], _ROWS["meta"][2], "",
+                                                           dict(META_CAPABILITIES), source="saved")
+            if provider_id is None or session.active_provider == provider_id:
+                session.active_provider = "meta"
+            return _session_settings(session)
     if provider_id is None:
         path = Path(root) / CONFIG_NAME
         if path.is_symlink():

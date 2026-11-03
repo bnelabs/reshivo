@@ -30,7 +30,7 @@ export function CostWorkspace({
   const setups = currentSetups(w.configurations)
   const setupName = (s: (typeof setups)[number]) =>
     !showHistoricalIdeas && (w.trial_ideas?.[setupKey(s)]?.title === s.name || s.notes.startsWith(`Unverified trial idea: ${s.name}.`))
-      ? `Trial setup ${setups.findIndex((item) => item.id === s.id) + 1}` : s.name
+      ? `Plan ${setups.findIndex((item) => item.id === s.id) + 1}` : s.name
   const [selected, setSelected] = useState(() => setups[0]?.id ?? '')
   const [versionNotice, setVersionNotice] = useState('')
   const previousSetup = useRef<{ id: string; revision: number } | null>(null)
@@ -109,7 +109,7 @@ export function CostWorkspace({
         <div className="pw-empty">
           <h2>Choose a setup</h2>
           <p>Your earlier selection is unavailable in this project.</p>
-          <label>Trial setup
+          <label>Plan
             <select value="" onChange={(event) => setSelected(event.target.value)}>
               <option value="" disabled>Choose a setup</option>
               {setups.map((setup) => <option key={setupKey(setup)} value={setup.id}>{setupName(setup)} · version {setup.revision}</option>)}
@@ -118,13 +118,13 @@ export function CostWorkspace({
         </div>
       ) : !c ? (
         <div className="pw-empty">
-          <h2>Save a trial setup first</h2>
+          <h2>Save a plan first</h2>
           <p>Its materials and amounts will be available here automatically.</p>
         </div>
       ) : (
         <>
           <label className="pw-inline-label">
-            Trial setup
+            Plan
             <select value={c.id} onChange={(e) => setSelected(e.target.value)}>
               {setups.map((s) => (
                 <option key={setupKey(s)} value={s.id}>
@@ -158,7 +158,7 @@ export function CostWorkspace({
           <section className="pw-card">
             <h2>1. Charged materials</h2>
             <p>
-              These are the amounts already saved in this setup. Change a recipe in Trials, so
+              These are the amounts already saved in this setup. Change a recipe in Plans, so
               earlier costs retain their original version.
             </p>
             <div className="pw-form-grid">
@@ -172,7 +172,7 @@ export function CostWorkspace({
                 />
               </label>
               <label>
-                Amount and price basis
+                Material condition for amounts and prices (for example, wet or dry)
                 <input
                   value={d.mass_basis}
                   maxLength={160}
@@ -451,7 +451,7 @@ export function CostWorkspace({
             <button disabled={busy || Boolean(pendingPriceUnit) || setups.length < 2} onClick={() => calculate(true)}>
               Compare checks and costs
             </button>
-            {setups.length < 2 && <small>Add another trial setup to compare.</small>}
+            {setups.length < 2 && <small>Add another plan to compare.</small>}
           </div>
           {result && resultKey === fingerprint && (
             <section className="pw-card pw-spaced" aria-live="polite">
@@ -494,10 +494,19 @@ export function CostWorkspace({
                   ))}
               </div>
               {['errors', 'questions', 'warnings'].map((k) => {
-                const issues = (result[k] ?? []).filter((x: any) => x !== 'Usable output and unit costs are planning equivalents, not observed products.')
+                const issues: string[] = Array.from(new Set<string>((result[k] ?? [])
+                  .filter((x: any) => x !== 'Usable output and unit costs are planning equivalents, not observed products.')
+                  .map((x: any) => {
+                    const materialField = typeof x?.field === 'string' ? /^materials\.(\d+)\.(unit_price|quantity)$/.exec(x.field) : null
+                    if (materialField) {
+                      const material = c.materials[Number(materialField[1])]
+                      if (material) return `Enter ${materialField[2] === 'unit_price' ? 'a price' : 'an amount'} for ${material.name}.`
+                    }
+                    return costIssueText(x)
+                  })))
                 return issues.length > 0 && (
                   <ul key={k}>
-                    {issues.map((x: any, i: number) => <li key={i}>{costIssueText(x)}</li>)}
+                    {issues.map((x, i) => <li key={i}>{x}</li>)}
                   </ul>
                 )
               })}
@@ -535,7 +544,7 @@ export function CostWorkspace({
                     {comparison.configurations?.map((entry: any) => (
                       <tr key={entry.id}>
                         <th>
-                          {setups.find((s) => s.id === entry.id && s.revision === entry.revision) ? setupName(setups.find((s) => s.id === entry.id && s.revision === entry.revision)!) : 'Trial setup'} <small>Version {entry.revision}</small>
+                          {setups.find((s) => s.id === entry.id && s.revision === entry.revision) ? setupName(setups.find((s) => s.id === entry.id && s.revision === entry.revision)!) : 'Plan'} <small>Version {entry.revision}</small>
                         </th>
                         <td>
                           {displayMoney(

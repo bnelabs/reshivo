@@ -46,6 +46,9 @@ type Props = {
   readingKind: 'synthetic' | 'user_reported'
   onReadingKindChange: (kind: 'synthetic' | 'user_reported') => void
   onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea) => void
+  onAdjustMix: () => void
+  onDownloadSummary: () => void
+  onPrintSummary: () => void
   showHistoricalIdeas: boolean
   checkingPlanningMode: boolean
   preparedCheckName: string
@@ -58,6 +61,9 @@ export function TrialWorkspace({
   readingKind: kind,
   onReadingKindChange,
   onAskIdea,
+  onAdjustMix,
+  onDownloadSummary,
+  onPrintSummary,
   showHistoricalIdeas,
   checkingPlanningMode,
   preparedCheckName,
@@ -133,7 +139,7 @@ export function TrialWorkspace({
       configuration.notes.startsWith(`Unverified trial idea: ${configuration.name}.`))
   const displaySetupName = (configuration: TrialConfiguration) =>
     hideCopiedName(configuration)
-      ? `Trial setup ${setups.findIndex((s) => s.id === configuration.id) + 1}`
+      ? `Plan ${setups.findIndex((s) => s.id === configuration.id) + 1}`
       : configuration.name
   const inputKey = JSON.stringify({
     configurations: w.configurations,
@@ -353,7 +359,7 @@ export function TrialWorkspace({
         <div>
           <h1>
             {section === 'trials'
-              ? 'Keep each trial setup together'
+              ? 'Your material plans'
               : 'Check what matters to your product'}
           </h1>
           <p>
@@ -364,20 +370,31 @@ export function TrialWorkspace({
         </div>
         {section === 'trials' && (
           <button className="pw-primary" onClick={() => start()}>
-            Add a trial setup
+            Add a plan
           </button>
         )}
       </div>
       {section === 'trials' && (
         <>
+          {setups.length > 0 && !editing && (
+            <div className="pw-next-step">
+              <div>
+                <strong>Ready to explore a changing mix?</strong>
+                <p>Choose a setup and enter how your material varies.</p>
+              </div>
+              <button className="pw-primary" type="button" onClick={onAdjustMix}>
+                Next: Adjust mix →
+              </button>
+            </div>
+          )}
           {!setups.length && !editing && (
             <div className="pw-empty">
-              <h2>Your first trial starts here</h2>
+              <h2>Your first plan starts here</h2>
               <p>
                 Use an option as a starting point, then record the materials and process you
                 actually plan to compare. Unknown amounts can stay blank.
               </p>
-              <button onClick={() => start()}>Record a setup</button>
+              <button onClick={() => start()}>Create a plan</button>
             </div>
           )}
           <div className="pw-card-grid">
@@ -413,9 +430,8 @@ export function TrialWorkspace({
                   (() => {
                     const idea = w.trial_ideas![setupKey(c)]
                     return (
-                      <details>
-                        <summary>Saved idea to review: {idea.title}</summary>
-                        <p className="pw-muted">Idea from {idea.provider} / {idea.model} · review against your setup</p>
+                      <details open>
+                        <summary>Suggested plan: {idea.title}</summary>
                         <p>
                           <strong>Proposed change:</strong> {idea.change}
                         </p>
@@ -447,12 +463,19 @@ export function TrialWorkspace({
               </article>
             ))}
           </div>
+          {setups.length > 0 && !editing && (
+            <div className="pw-spaced">
+              <button type="button" onClick={onDownloadSummary}>Download readable summary</button>
+              <button type="button" onClick={onPrintSummary}>Print / Save as PDF</button>
+              <p className="pw-muted">A text summary of your plans and recorded readings. Use Save backup to reopen the project later.</p>
+            </div>
+          )}
           {editing && (
             <section className="pw-card pw-editor">
               <h2>
                 {w.configurations.some((c) => c.id === editing.id)
                   ? 'Create the next version'
-                  : 'New trial setup'}
+                  : 'New plan'}
               </h2>
               {error && errorScope === 'setup' && (
                 <p className="pw-error" role="alert">
@@ -473,6 +496,7 @@ export function TrialWorkspace({
                 />
               </label>
               <h3>Materials in this setup</h3>
+              <p>Add each material separately to track changes in the mix.</p>
               <p className="pw-muted">
                 Include the binder and any named contaminant. Leave an amount blank if unknown.
               </p>
@@ -668,7 +692,7 @@ export function TrialWorkspace({
               <caption>Current setups and all product checks</caption>
               <thead>
                 <tr>
-                  <th>Trial setup</th>
+                  <th>Plan</th>
                   {w.checks.map((c) => (
                     <th key={c.id}>
                       {c.name}
@@ -747,7 +771,7 @@ export function TrialWorkspace({
           </div>
           {(!setups.length || !w.checks.length) && (
             <p>
-              Add a trial setup and the checks that matter to it. Limits can stay blank.
+              {!setups.length ? 'Add a plan first, then add the checks that matter to it.' : 'Add a product check below. Limits can stay blank.'}
             </p>
           )}
           <button
@@ -769,7 +793,7 @@ export function TrialWorkspace({
                   <strong>
                     {setups.find((s) => s.id === c.id)
                       ? displaySetupName(setups.find((s) => s.id === c.id)!)
-                      : 'Trial setup'}
+                      : 'Plan'}
                     :{' '}
                   </strong>
                   {textState(c.state)}
@@ -1001,7 +1025,7 @@ export function TrialWorkspace({
                 </p>
               )}
               <label>
-                Trial setup
+                Plan
                 <select
                   value={selected}
                   onChange={(e) => {
@@ -1113,7 +1137,7 @@ export function TrialWorkspace({
                   <p>
                     <strong>
                       {((configuration) =>
-                        configuration ? displaySetupName(configuration) : 'Trial setup')(
+                        configuration ? displaySetupName(configuration) : 'Plan')(
                         w.configurations.find(
                           (c) =>
                             c.id === r.configuration_id && c.revision === r.configuration_revision,

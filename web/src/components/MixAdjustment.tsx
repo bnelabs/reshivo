@@ -13,6 +13,7 @@ import { currentSetups, setupKey } from './TrialWorkspace'
 import { selectedCurrentSetup, setupRevisionNotice } from '../setupSelection'
 import { safeSetupName } from '../savedGuidanceReview'
 import { RecordedRecipeReference } from './RecordedRecipeReference'
+import { downloadTextFile, explainUnreachableMix, formatMixSummary, printTextReport } from '../readableSummary'
 
 /** Arithmetic on user-entered composition, not a material-property model. */
 export type MixPlanningContext = {
@@ -22,22 +23,24 @@ export type MixPlanningContext = {
   project_context: { configurations: { id: string; revision: number; process: string; geometry: string; materials: { name: string }[] }[] }
 }
 
-export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss }: {
+export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss, onSummary }: {
   workspace: ProjectWorkspace
   enabled: boolean
   showHistoricalIdeas: boolean
   planningContext: MixPlanningContext
+  onSummary: (summary: string) => void
   onDraftChange: (update: (current: ProjectWorkspace) => ProjectWorkspace) => void
   onDiscuss?: (question: string, calculation: PreparedMixCalculation) => void
 }) {
   const system = useUnitSystem()
   const setups = currentSetups(w.configurations)
-  const setupName = (item: (typeof setups)[number]) => showHistoricalIdeas ? item.name : safeSetupName(w, item, 'Trial setup')
+  const setupName = (item: (typeof setups)[number]) => showHistoricalIdeas ? item.name : safeSetupName(w, item, 'Plan')
   const [selectedSetup, setSelectedSetup] = useState(() => setups[0]?.id ?? '')
   const [selectedMaterial, setSelectedMaterial] = useState('')
   const [versionNotice, setVersionNotice] = useState('')
   const previousSetup = useRef<{ id: string; revision: number } | null>(null)
   const [result, setResult] = useState<{ key: string; request: BalanceMixRequest; value: BalanceMixResult } | null>(null)
+  const resultCard = useRef<HTMLDivElement>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [stockMode, setStockMode] = useState<{ key: string; planningOnly: boolean; failed: boolean } | null>(null)
@@ -63,6 +66,17 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const massUnit = unitLabel('kg', system)
   const massEntry = mixMassEntryState(draft, system)
   const showRange = (minimum: number | null, maximum: number | null) => minimum === maximum ? String(minimum) : `${minimum}–${maximum}`
+
+  useEffect(() => {
+    onSummary(result?.key === signature && !needsProjectReview && !needsReferenceReview ? formatMixSummary(result.request, result.value, system) : '')
+  }, [result, signature, needsProjectReview, needsReferenceReview, system, onSummary])
+
+  useEffect(() => {
+    if (result && resultCard.current) {
+      resultCard.current.scrollIntoView({ block: 'start' })
+      resultCard.current.focus({ preventScroll: true })
+    }
+  }, [result])
 
   useEffect(() => {
     if (!selectedSetup && setup) setSelectedSetup(setup.id)
@@ -148,9 +162,9 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   }
 
   if (!enabled) return <section className="pw-section"><h1>Adjust a mix</h1><p>Adjustment calculations are unavailable while this case is being checked or needs local planning. See Options for guidance.</p></section>
-  if (missingSelected && setups.length > 0) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>Choose a setup</h2><p>Your earlier selection is unavailable in this project.</p><label>Trial setup<select value="" onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}><option value="" disabled>Choose a setup</option>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label></div></section>
+  if (missingSelected && setups.length > 0) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>Choose a setup</h2><p>Your earlier selection is unavailable in this project.</p><label>Plan<select value="" onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}><option value="" disabled>Choose a setup</option>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label></div></section>
   if (missingSelectedMaterial && setup && setup.materials.length > 0) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>Choose a component</h2><p>Your earlier component is unavailable in this version of {setupName(setup)}.</p><label>Component you want to track<select value="" onChange={(event) => setSelectedMaterial(event.target.value)}><option value="" disabled>Choose a component</option>{setup.materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></section>
-  if (!setup || !material) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>{setup ? 'Add a material to this setup' : 'Add a setup first'}</h2>{setup && <label>Trial setup<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>}{versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}<p>Your saved materials will be available here. Enter a material in Trials, then return to calculate an adjustment.</p></div></section>
+  if (!setup || !material) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>{setup ? 'Add a material to this setup' : 'Add a setup first'}</h2>{setup && <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>}{versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}<p>Your saved materials will be available here. Enter a material in Plans, then return to calculate an adjustment.</p></div></section>
 
   return (
     <section className="pw-section">
@@ -158,7 +172,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
       <p className="pw-muted">Enter values you know or want to explore.</p>
       <div className="pw-card">
         <div className="pw-form-grid">
-          <label>Trial setup<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>
+          <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>
           <label>Component you want to track<select value={material.id} onChange={(event) => setSelectedMaterial(event.target.value)}>{setup.materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
         </div>
         {versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}
@@ -192,7 +206,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           <h2>3. Choose the composition to explore</h2>
           <p>What range of {material.name} would you like to try, by mass?</p>
           {savedDraft?.reference && <div className="pw-notice">
-            <p>{savedDraft.reference.range ? `Rounded trial range: ${savedDraft.reference.range.min}–${savedDraft.reference.range.max}% (source fraction ${savedDraft.reference.range.numerator}/${savedDraft.reference.range.denominator})` : `Trial point: ${savedDraft.reference.fraction}%`} of the whole recipe from {referenceSource ? setupName(referenceSource) : 'recorded setup'} · version {savedDraft.reference.setup_revision} ({savedDraft.reference.component_name}).</p>
+            <p>{savedDraft.reference.range ? `Rounded plan range: ${savedDraft.reference.range.min}–${savedDraft.reference.range.max}% (source fraction ${savedDraft.reference.range.numerator}/${savedDraft.reference.range.denominator})` : `Plan point: ${savedDraft.reference.fraction}%`} of the whole recipe from {referenceSource ? setupName(referenceSource) : 'recorded setup'} · version {savedDraft.reference.setup_revision} ({savedDraft.reference.component_name}).</p>
             {needsReferenceReview && <><p>A newer version of this reference setup exists. Compare the recipes before continuing.</p>
               <div className="pw-form-grid">{[referenceSource, referenceLatest].filter((item): item is NonNullable<typeof item> => Boolean(item)).map((item) => <div key={JSON.stringify([item.id, item.revision])}><strong>{setupName(item)} · version {item.revision}</strong><ul>{item.materials.map((ingredient) => <li key={ingredient.id}>{ingredient.name}: {ingredient.amount || 'unknown'} {ingredient.unit}</li>)}</ul><p>Process: {item.process || 'not entered'}</p><p>Shape: {item.geometry || 'not entered'}</p></div>)}</div>
               <button type="button" disabled={needsProjectReview} onClick={confirmReferenceReview}>Keep using this earlier recipe point</button></>}
@@ -207,11 +221,11 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
             onDraftChange((current) => useRecordedRecipeTarget(current, caseId, capturedSetup, capturedComponent, capturedProject, capturedSource, capturedSourceComponent, latestRevision))
           }} />
           <div className="pw-form-grid">
-            <label>Trial minimum (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMin} onChange={(event) => change('targetMin', event.target.value)} /></label>
-            <label>Trial maximum (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMax} onChange={(event) => change('targetMax', event.target.value)} /></label>
+            <label>Minimum to explore (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMin} onChange={(event) => change('targetMin', event.target.value)} /></label>
+            <label>Maximum to explore (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMax} onChange={(event) => change('targetMax', event.target.value)} /></label>
           </div>
           <div className="pw-actions"><button className="pw-primary" type="submit" disabled={!request || !canCalculate || busy}>{busy ? 'Calculating…' : 'Calculate an addition'}</button></div>
-          {!request && <small>Enter a positive portion mass, both ends of each range, and the added stock and its fraction. Percentages must be between zero and one hundred.</small>}
+          {!request && <small>Enter a positive portion mass, both ends of each range, and the added stock and its fraction. Percentages must be between zero and one hundred; you can include the % sign.</small>}
           {precisionProblem && <p className="pw-error" role="alert">The {precisionProblem} has more precision than the calculator can preserve. Enter a shorter number or a range that accurately represents what you know.</p>}
           <small>Your project file saves these entries with this setup version. It does not save the calculation result.</small>
           {stockMode?.key === stockKey && stockMode.planningOnly && !stockMode.failed && <p className="pw-notice">This added stock needs local planning first. Identify the material and its handling conditions before using the adjustment calculator.</p>}
@@ -219,15 +233,17 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
         </form>
         {error && <p className="pw-error" role="alert">{error}</p>}
       </div>
-      {visibleResult && <div className="pw-card pw-spaced" aria-live="polite">
+      {visibleResult && <div ref={resultCard} tabIndex={-1} className="pw-card pw-spaced" aria-live="polite">
         <span className="pw-overline">Composition simulation · entered setup and values</span>
         {visibleResult.value.feasible ? <>
           <h2>Amount to explore</h2>
           <MixAdditionResult result={visibleResult.value} system={system} />
         </> : <>
           <h2>No single addition fits the whole range</h2>
-          <p>For the entered stock, no fixed addition reaches your chosen composition across the full input range. If the actual fraction of this portion becomes known, enter that value and recalculate. You can also explore a different characterized stock or trial range.</p>
+          <p>{explainUnreachableMix(visibleResult.request) ?? 'For the entered stock, no fixed addition reaches your chosen composition across the full input range. If the actual fraction of this portion becomes known, enter that value and recalculate. You can also explore a different characterized stock or composition range.'}</p>
         </>}
+        <button type="button" onClick={() => downloadTextFile('reshivo-mix-result.txt', formatMixSummary(visibleResult.request, visibleResult.value, system))}>Download result as text</button>
+        <button type="button" onClick={() => { try { printTextReport(formatMixSummary(visibleResult.request, visibleResult.value, system)) } catch (e) { setError((e as Error).message) } }}>Print / Save as PDF</button>
         {onDiscuss && <button onClick={discuss}>Ask about this result</button>}
       </div>}
     </section>

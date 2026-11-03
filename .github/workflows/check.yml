@@ -55,4 +55,6 @@ jobs:
       - run: node checks/check-editing.test.mjs
       - run: node checks/trial-assessment-notices.test.mjs
       - run: node checks/sound-guidance.test.mjs
+      - run: node checks/provider-settings.test.mjs
+      - run: node checks/readable-summary.test.mjs
       - run: npm run build

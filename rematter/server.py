@@ -1,9 +1,13 @@
 """Loopback-only HTTP service for the local engineering workbench."""
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from collections import OrderedDict
 import json
 import mimetypes
 from pathlib import Path
+import re
+import secrets
 import threading
+import time
 from urllib.parse import quote, unquote, urlsplit
 
 from .materials import ROOT
@@ -13,17 +17,83 @@ MAX_BODY_BYTES = 64 * 1024
 MAX_IMAGE_BODY_BYTES = 3 * 1024 * 1024
 MAX_PROJECT_BODY_BYTES = 512 * 1024
 MAX_PLANNING_BODY_BYTES = 4 * 1024 * 1024
+SESSION_TTL_SECONDS = 1800
+MAX_SESSIONS = 512
+
+
+class SessionStore:
+    """A bounded, expiring store of browser-specific provider settings."""
+    def __init__(self, ttl=SESSION_TTL_SECONDS, maximum=MAX_SESSIONS, clock=time.monotonic):
+        self.ttl = ttl
+        self.maximum = maximum
+        self.clock = clock
+        self.lock = threading.Lock()
+        self.entries = OrderedDict()
+        self.stop_event = threading.Event()
+        self.cleaner = None
+
+    def purge_expired(self):
+        now = self.clock()
+        with self.lock:
+            while self.entries and next(iter(self.entries.values()))[0] <= now:
+                self.entries.popitem(last=False)
+
+    def start_cleanup(self, interval=30):
+        def clean():
+            while not self.stop_event.wait(interval):
+                self.purge_expired()
+        self.cleaner = threading.Thread(target=clean, daemon=True, name="session-cleanup")
+        self.cleaner.start()
+
+    def close(self):
+        self.stop_event.set()
+        if self.cleaner is not None:
+            self.cleaner.join(timeout=1)
+        with self.lock:
+            self.entries.clear()
+
+    def open(self, cookie_headers, create=True):
+        from .providers import ProviderSession
+        candidates = []
+        for header in cookie_headers:
+            for part in header.split(";"):
+                name, sep, value = part.strip().partition("=")
+                if sep and name == "reshivo_session":
+                    candidates.append(value)
+        proposed = candidates[0] if len(candidates) == 1 and re.fullmatch(r"[A-Za-z0-9_-]{43}", candidates[0]) else None
+        now = self.clock()
+        with self.lock:
+            while self.entries and next(iter(self.entries.values()))[0] <= now:
+                self.entries.popitem(last=False)
+            if proposed in self.entries:
+                _, session = self.entries.pop(proposed)
+                identity = proposed
+            else:
+                if not create:
+                    return None, ProviderSession()
+                if len(self.entries) >= self.maximum:
+                    raise ServiceError("session_capacity", "Too many active sessions; try again later.", 503)
+                identity, session = secrets.token_urlsafe(32), ProviderSession()
+            self.entries[identity] = (now + self.ttl, session)
+            return identity, session
 
 
 class WorkbenchHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
     request_queue_size = 8
 
-    def __init__(self, address, service, web_root):
+    def __init__(self, address, service, web_root, session_mode=True):
         self.application = service
         self.web_root = Path(web_root).resolve()
         self.work_slots = threading.BoundedSemaphore(2)
+        self.session_mode = session_mode
+        self.sessions = SessionStore()
         super().__init__(address, WorkbenchHandler)
+        self.sessions.start_cleanup()
+
+    def server_close(self):
+        self.sessions.close()
+        super().server_close()
 
 
 class WorkbenchHandler(BaseHTTPRequestHandler):
@@ -60,6 +130,8 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Cache-Control", "no-store" if self.path.startswith("/api") else "no-cache")
+        if getattr(self, "_session_cookie", None):
+            self.send_header("Set-Cookie", f"reshivo_session={self._session_cookie}; Path=/; Max-Age={SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Strict")
         if getattr(self, "allowed_origin", None):
             self.send_header("Access-Control-Allow-Origin", self.allowed_origin)
             self.send_header("Vary", "Origin")
@@ -114,9 +186,15 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._error(error)
 
     def do_GET(self):
+        self._session_cookie = None
+        session_token = None
         try:
             self._guard()
             path = unquote(urlsplit(self.path).path)
+            if self.server.session_mode and (path == "/api" or path.startswith("/api/")):
+                from .providers import set_request_session
+                self._session_cookie, session = self.server.sessions.open(self.headers.get_all("Cookie", []), create=False)
+                session_token = set_request_session(session)
             application = self.server.application
             if path == "/api/bootstrap":
                 self._json(application.bootstrap())
@@ -154,6 +232,10 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             return
         except Exception:
             self._error(ServiceError("internal_error", "The local service could not complete this request", 500))
+        finally:
+            if session_token is not None:
+                from .providers import reset_request_session
+                reset_request_session(session_token)
 
     def _static(self, path):
         segments = path.split("/")
@@ -175,11 +257,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         acquired = False
+        self._session_cookie = None
+        session_token = None
         try:
             self._guard()
             path = unquote(urlsplit(self.path).path)
             routes = {
                 "/api/project/intake": self.server.application.project_intake,
+                "/api/project/concept-sketch": self.server.application.concept_sketch,
                 "/api/project/planning-mode": self.server.application.project_planning_mode,
                 "/api/project/review-saved-guidance": self.server.application.review_saved_guidance,
                 "/api/project/trial-records": self.server.application.trial_records,
@@ -221,6 +306,12 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             max_bytes = MAX_PLANNING_BODY_BYTES if path in {"/api/project/planning-mode", "/api/project/review-saved-guidance"} else MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else (
                 MAX_PROJECT_BODY_BYTES if path in {"/api/project/trial-records", "/api/project/compare-costs", "/api/project/compare-decisions", "/api/advisor/help", "/api/advisor/follow-up"} else MAX_BODY_BYTES)
             body = self._body(max_bytes)
+            if self.server.session_mode and (path == "/api" or path.startswith("/api/")):
+                from .providers import can_create_browser_session, set_request_session
+                self._session_cookie, session = self.server.sessions.open(
+                    self.headers.get_all("Cookie", []),
+                    create=path == "/api/inference/providers/save" and can_create_browser_session(body))
+                session_token = set_request_session(session)
             if not acquired:
                 acquired = self.server.work_slots.acquire(blocking=False)
             if not acquired:
@@ -235,12 +326,15 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
         finally:
             if acquired:
                 self.server.work_slots.release()
+            if session_token is not None:
+                from .providers import reset_request_session
+                reset_request_session(session_token)
 
 
-def build_server(host="127.0.0.1", port=8797, service=None, web_root=None):
+def build_server(host="127.0.0.1", port=8797, service=None, web_root=None, session_mode=True):
     if host not in {"127.0.0.1", "localhost"}:
         raise ValueError("The workbench server accepts only a loopback bind host")
-    return WorkbenchHTTPServer((host, port), service or WorkbenchService(), web_root or ROOT / "web/dist")
+    return WorkbenchHTTPServer((host, port), service or WorkbenchService(), web_root or ROOT / "web/dist", session_mode=session_mode)
 
 
 def serve(host="127.0.0.1", port=8797):

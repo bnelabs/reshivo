@@ -1,8 +1,8 @@
 # Inference connections
 
-Reshivo can keep one local profile for each of Meta, OpenRouter, OpenAI, Google, Anthropic, NVIDIA, DeepSeek and a custom endpoint. Exactly one profile is active. Saving or selecting a profile makes no network request. A failed request never switches to another profile, model or key.
+In the web app, each browser session configures its own connection for Meta, OpenRouter, OpenAI, Google, Anthropic, NVIDIA or DeepSeek. One profile is active at a time. Saving or selecting a profile makes no network request. A failed request never switches to another provider, model or key. Browser settings live in server memory, expire after 30 minutes of inactivity or a restart, and never fall back to a server environment or settings file. Custom endpoints are unavailable in browser sessions.
 
-The existing Meta connection in `.env` remains the default. Its supported model names, request fields and tool conversation interface remain compatible with the previous implementation.
+The direct local Python and CLI interfaces retain their separate file and environment configuration; they are not used as a fallback for web sessions.
 
 The Meta connection accepts `muse-spark-1.3-contributor` and `muse-spark-1.2-contributor` for generation and tool conversations. The default is `muse-spark-1.3-contributor`; you can explicitly choose another supported model. Meta describes Contributor mode as permitting use of submitted content to train future models; see [Meta pricing and rate limits](https://dev.meta.ai/docs/pricing-rate-limits). Availability and capabilities depend on the account. On 3 November 2026, one direct request using this account and a synthetic “Reply with exactly OK.” prompt returned the `muse-spark-1.3-contributor` identifier and a completed stop. A separate synthetic low-effort structured-JSON request through the app's `MetaClient.generate` also succeeded, with 157 completion tokens reported. These two calls establish only those specific request outcomes. Contributor-mode tool calling and the 1.2 Contributor model were not tested live. Both additions have offline transport tests.
 
@@ -25,7 +25,7 @@ Except for the existing supported Meta models, the app does not guess a model na
 
 Some application calls request a reasoning level. That field is sent only when the configured connection supports the implemented control. Returned `Generation.reasoning_effort` and `ToolTurn.reasoning_effort` identify the effort actually sent, or `None` when omitted. A requested level alone is not confirmation that it was applied. Native Google/Anthropic reasoning controls are not implemented in this version.
 
-## Local settings API
+## Local settings API (direct Python and CLI use)
 
 Functions in `rematter.providers` accept `root=ROOT, environ=None` for isolated use and testing:
 
@@ -58,11 +58,11 @@ Example save payload, with placeholder values:
 
 An omitted or blank key keeps the saved key only when both provider and base URL match. Setting `clear_api_key: true` with no replacement explicitly clears that profile's key. A first explicit Meta profile may retain the original `.env` key when its endpoint matches. Changing the endpoint never silently transfers the old key.
 
-Settings are stored in `.env.providers.json`, already covered by the repository's ignore rules, with file mode `0600`. Multiple profiles are retained in `{active_provider, profiles}`. The file contains credentials in local plaintext; it is not an encrypted vault. Status shows `key_configured` and a fixed mask, never a key suffix or plaintext key. Symlinks, invalid settings, unsafe permissions and unreadable files are rejected rather than silently using another connection. Clearing all saved profiles can recover a damaged settings file.
+For direct local use without a browser session, settings are stored in `.env.providers.json`, already covered by the repository's ignore rules, with file mode `0600`. Multiple profiles are retained in `{active_provider, profiles}`. The file contains credentials in local plaintext; it is not an encrypted vault. Status shows `key_configured` and a fixed mask, never a key suffix or plaintext key. Symlinks, invalid settings, unsafe permissions and unreadable files are rejected rather than silently using another connection. Clearing all saved profiles can recover a damaged settings file.
 
 ## Transport and output limits
 
-Connections use HTTPS. Plain HTTP is permitted only for the custom endpoint on `localhost` or a literal loopback address. Custom remote endpoints must use HTTPS and an API key. Named providers require their official host; use Custom endpoint deliberately for a gateway or proxy. URLs cannot include embedded credentials, query parameters or fragments. Supply the API **base URL**, excluding the final method path.
+Connections use HTTPS. Custom endpoints are limited to direct local use, not browser sessions. Plain HTTP is permitted only for the custom endpoint on `localhost` or a literal loopback address. Custom remote endpoints must use HTTPS and an API key. Named providers require their official host; use Custom endpoint deliberately for a gateway or proxy. URLs cannot include embedded credentials, query parameters or fragments. Supply the API **base URL**, excluding the final method path.
 
 The transport refuses redirects, retries and fallbacks. It bounds generation requests to 3.2 MB, tool requests to 192 KiB, responses to 512 kB and completion requests to 8,192 tokens. HTTP errors expose a status code rather than the remote response body. Credentials are rejected in request content and returned JSON. Keys are sent in authentication headers, never URL parameters.
 

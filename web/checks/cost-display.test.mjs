@@ -11,8 +11,10 @@ assert.equal(displayCostAmount('0.' + '0'.repeat(400) + '1'), '1e-401')
 assert.equal(displayCostAmount('9'.repeat(400)), '1e+400')
 assert.equal(displayCostAmount(null), 'Unknown')
 assert.equal(displayCostAmount('NaN'), 'Unknown')
-assert.equal(costIssueText({field:'output.acceptance_basis', question:'What makes an item usable?', category:'output'}), 'What makes an item usable?')
+assert.equal(costIssueText({field:'output.acceptance_basis', question:'What makes an item usable?', category:'output'}), 'Describe what makes an item usable for this estimate.')
 assert.equal(costIssueText({field:'materials.0', message:'Enter a price.'}), 'Enter a price.')
+assert.equal(costIssueText({field:'functional_basis', question:'technical wording'}), 'Describe the product and use that these costs cover.')
+assert.equal(costIssueText({field:'materials.0.basis', question:'technical wording'}), 'Say whether your material amounts and prices use the same condition, such as wet or dry.')
 assert.equal(costIssueText({field:'unknown'}), 'Review this cost input.')
 
 const comparison = {

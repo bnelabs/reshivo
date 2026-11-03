@@ -54,6 +54,10 @@ def configuration(root=ROOT, environ=None):
 
 
 def meta_status():
+    from .providers import is_session_request
+    if is_session_request():
+        profile = load_provider_profile()
+        return {"configured": profile.configured, "model": profile.model}
     key, model = configuration()
     return {"configured": bool(key), "model": model}
 
@@ -269,6 +273,13 @@ class MetaClient:
         self.opener = opener or urllib.request.build_opener(NoRedirect)
         self.transport = ProviderTransport(self.profile, self.opener)
 
+    def _not_connected(self):
+        from .providers import is_session_request
+        if is_session_request():
+            return f"{self.profile.name} is not connected. Add your model and API key in AI settings."
+        return ("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
+                else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
+
     def _request(self, payload, *, timeout=50, max_request_bytes=3_200_000):
         try:
             return self.transport.request(payload, timeout=timeout, max_request_bytes=max_request_bytes)
@@ -281,8 +292,7 @@ class MetaClient:
 
     def tool_turn(self, messages, tools, *, max_completion_tokens=6144):
         if not self.profile.configured:
-            raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
-                                         else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
+            raise MetaConfigurationError(self._not_connected())
         if self.provider == "meta" and self.model not in SUPPORTED_META_MODELS:
             raise MetaConfigurationError("Choose a supported Meta reasoning model.")
         if isinstance(max_completion_tokens, bool) or not isinstance(max_completion_tokens, int) or not 1 <= max_completion_tokens <= 8192:
@@ -339,8 +349,7 @@ class MetaClient:
 
     def generate(self, prompt, schema, max_candidates, *, system_prompt=None, schema_name="geometry_candidates", max_completion_tokens=4096, reasoning_effort="low", image_data_url=None, timeout_seconds=None):
         if not self.profile.configured:
-            raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
-                                         else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
+            raise MetaConfigurationError(self._not_connected())
         if self.provider == "meta" and self.model not in SUPPORTED_META_MODELS:
             raise MetaConfigurationError("Choose a supported Meta reasoning model.")
         if not isinstance(reasoning_effort, str) or reasoning_effort not in {"low", "medium", "high"}:

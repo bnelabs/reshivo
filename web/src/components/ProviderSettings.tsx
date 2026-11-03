@@ -56,9 +56,9 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
   const [notice, setNotice] = useState('')
   const [confirmRemoval, setConfirmRemoval] = useState<'current' | 'all' | null>(null)
 
-  function applySettings(settings: Settings, catalog = data?.catalog) {
+  function applySettings(settings: Settings, catalog = data?.catalog, sessionOnly = data?.sessionOnly ?? false) {
     if (!catalog) return
-    setData({ catalog, settings })
+    setData({ catalog, settings, sessionOnly })
     setDraft(draftForProvider(settings.active_provider, catalog, settings))
     setApiKey('')
     setConfirmRemoval(null)
@@ -74,7 +74,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
     try {
       const next = await getProviderSettings(controller.signal)
       if (controller.signal.aborted || request.current !== controller || !openRef.current) return
-      applySettings(next.settings, next.catalog)
+      applySettings(next.settings, next.catalog, next.sessionOnly)
     } catch (failure) {
       if (!controller.signal.aborted && request.current === controller && openRef.current)
         setError(providerSettingsError(failure))
@@ -172,11 +172,11 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
       } else {
         const next = await getProviderSettings(controller.signal)
         if (controller.signal.aborted || request.current !== controller || !openRef.current) return
-        applySettings(next.settings, next.catalog)
+        applySettings(next.settings, next.catalog, next.sessionOnly)
       }
       setNotice(
         kind === 'clear'
-          ? `Saved connections updated. ${settings.provider_name} is now selected. Your original Meta setup is unchanged.`
+          ? `Connections updated. ${settings.provider_name} is now selected.`
           : `${settings.provider_name} is selected for your next AI request. No AI request was made.`,
       )
       savedRef.current?.()
@@ -262,7 +262,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
 
       {loading ? (
         <p className="provider-settings-loading" role="status">
-          Loading your saved connections…
+          Loading AI connections…
         </p>
       ) : null}
 
@@ -282,12 +282,12 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
           <details className="provider-settings-removal">
             <summary>Reset saved connections</summary>
             <p>
-              If saved settings cannot be opened, you can remove them and return to your original
-              Meta setup. Saved keys will need to be entered again.
+              If settings cannot be opened, you can clear your connections and start again. Keys
+              will need to be entered again.
             </p>
             {confirmRemoval === 'all' ? (
               <div className="provider-settings-confirm">
-                <p>Remove all saved AI connections from this computer?</p>
+                <p>Remove all AI connections?</p>
                 <button
                   type="button"
                   className="provider-settings-danger"
@@ -328,12 +328,16 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
             <p className="provider-settings-active-model">{active.model || 'Model not set'}</p>
             <p>
               {active.configured
-                ? 'Connection details saved. Access is checked when you ask for help.'
-                : 'Add the missing connection details to use AI help.'}
+                ? data.sessionOnly
+                  ? 'Connected for this session. Access is checked when you ask for help.'
+                  : 'Connection details saved. Access is checked when you ask for help.'
+                : data.sessionOnly
+                  ? 'Add your own API key to use AI help.'
+                  : 'Add the missing connection details to use AI help.'}
             </p>
             <h3>Your connections</h3>
             <ul>
-              {data.settings.profiles.map((profile) => (
+              {data.settings.profiles.filter((profile) => !data.sessionOnly || profile.provider !== 'custom').map((profile) => (
                 <li
                   key={profile.provider}
                   className={profile.provider === draft.provider ? 'is-editing' : undefined}
@@ -350,7 +354,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                       {profile.provider === active.provider
                         ? 'Selected'
                         : profile.configured
-                          ? 'Saved'
+                          ? data.sessionOnly ? 'Ready' : 'Saved'
                           : 'Needs setup'}
                     </small>
                   </button>
@@ -364,7 +368,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                           selectProviderSettings(profile.provider, signal),
                         )
                       }
-                      aria-label={`Use saved ${profile.provider_name} connection`}
+                      aria-label={`Use ${profile.provider_name} connection`}
                     >
                       Use
                     </button>
@@ -373,8 +377,9 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
               ))}
             </ul>
             <p className="provider-settings-private">
-              Keys stay in a private settings file on this computer. They are never included in your
-              project downloads.
+              {data.sessionOnly
+                ? 'Your key stays in server memory for this browser session and expires after 30 minutes of inactivity or a server restart. It is not included in project downloads.'
+                : 'Keys stay in a private settings file on this computer. They are never included in your project downloads.'}
             </p>
           </aside>
 
@@ -387,7 +392,7 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                   value={draft.provider}
                   onChange={(event) => choose(event.target.value as ProviderId)}
                 >
-                  {data.catalog.map((entry) => (
+                  {data.catalog.filter((entry) => !data.sessionOnly || entry.id !== 'custom').map((entry) => (
                     <option key={entry.id} value={entry.id}>
                       {entry.name}
                     </option>
@@ -432,25 +437,28 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                   name="rematter-provider-key"
                   value={apiKey}
                   maxLength={4096}
+                  required={data.sessionOnly && !canKeepKey}
                   autoComplete="new-password"
                   autoCapitalize="none"
                   spellCheck={false}
                   aria-describedby={keyHelpId}
                   placeholder={
                     canKeepKey
-                      ? 'Leave blank to keep your saved key'
+                      ? data.sessionOnly ? 'Leave blank to keep your key for this session' : 'Leave blank to keep your saved key'
                       : 'Paste a key from this service'
                   }
                   onChange={(event) => setApiKey(event.target.value)}
                 />
                 <small id={keyHelpId}>
                   {canKeepKey
-                    ? 'A blank field keeps the key saved for this service and address.'
+                    ? data.sessionOnly ? 'A blank field keeps the key for this session.' : 'A blank field keeps the key saved for this service and address.'
                     : savedProfile?.key_configured && !sameEndpoint
                       ? 'The address changed. Enter a key for the new address; your old key will not be reused.'
                       : draft.provider === 'custom'
                         ? 'A local service can work without a key. Remote services require one.'
-                        : 'The key is stored locally after you save. It is never shown again here.'}
+                        : data.sessionOnly
+                          ? 'Your key stays in server memory for this session and is never shown again here.'
+                          : 'The key is stored locally after you save. It is never shown again here.'}
                 </small>
               </label>
 
@@ -621,8 +629,8 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                   {action === 'save' ? 'Saving…' : 'Save and use'}
                 </button>
                 <p>
-                  Saving stores your settings. This service is contacted only when you ask for AI
-                  help.
+                  {data.sessionOnly ? 'Your connection lasts for this session. ' : 'Saving stores your settings. '}
+                  The service is contacted only when you ask for AI help.
                 </p>
               </div>
             </fieldset>
@@ -630,14 +638,15 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
             <details className="provider-settings-removal">
               <summary>Remove saved connections</summary>
               <p>
-                Removing saved settings does not erase your original Meta setup. Removed keys must
-                be entered again.
+                {data.sessionOnly
+                  ? 'Remove connection details and keys from this browser session.'
+                  : 'Removing saved settings does not erase your original Meta setup. Removed keys must be entered again.'}
               </p>
               {confirmRemoval ? (
                 <div className="provider-settings-confirm">
                   <p>
                     {confirmRemoval === 'all'
-                      ? 'Remove all saved AI connections from this computer?'
+                      ? data.sessionOnly ? 'Remove all AI connections from this session?' : 'Remove all saved AI connections from this computer?'
                       : `Remove the saved ${active.provider_name} connection?`}
                   </p>
                   <button

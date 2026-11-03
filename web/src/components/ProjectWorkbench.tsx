@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { PromptProjectStart } from './PromptProjectStart'
 import { ProviderSettings } from './ProviderSettings'
+import { ConceptSketch } from './ConceptSketch'
 import { SoundGuidance } from './SoundGuidance'
 import { MixAdjustment } from './MixAdjustment'
 import { CheckSuggestionHandoff } from './CheckSuggestionHandoff'
@@ -23,6 +24,7 @@ import { canReattachMixCalculation, mixQuestionFingerprint, mixQuestionIsCurrent
 import type { PreparedMixCalculation } from '../mixQuestion'
 import { briefFrom } from '../projectBrief'
 import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
+import { downloadTextFile, formatProjectSummary, printTextReport } from '../readableSummary'
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
@@ -44,10 +46,13 @@ export function ProjectWorkbench() {
   const [providerOpen, setProviderOpen] = useState(false)
   const [status, setStatus] = useState({
     configured: false,
+    provider: '',
     provider_name: 'AI provider',
     model: '',
   })
   const [statusLoaded, setStatusLoaded] = useState(false)
+  const [sketch, setSketch] = useState<{ caseId: string; product: string; image: string } | null>(null)
+  const [mixSummary, setMixSummary] = useState('')
   const [notice, setNotice] = useState('')
   const [manual, setManual] = useState<ProjectIntakeDraft>(emptyProjectDraft)
   const [advice, setAdvice] = useState<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult | null>(null)
@@ -72,6 +77,8 @@ export function ProjectWorkbench() {
   const [question, setQuestion] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [inlineError, setInlineError] = useState('')
+  const workbench = useRef<HTMLDivElement>(null)
   const [planningMode, setPlanningMode] = useState<{ key: string; planningOnly: boolean; failed: boolean } | null>(null)
   const [savedGuidanceReview, setSavedGuidanceReview] = useState<{ key: string; needsReview: boolean; failed: boolean } | null>(null)
   const file = useRef<HTMLInputElement>(null)
@@ -138,6 +145,7 @@ export function ProjectWorkbench() {
       const result = await api<any>('/api/inference/providers')
       setStatus({
         configured: result.settings.configured,
+        provider: result.settings.provider,
         provider_name: result.settings.provider_name,
         model: result.settings.model,
       })
@@ -147,6 +155,35 @@ export function ProjectWorkbench() {
       setStatusLoaded(true)
     }
   }
+  useEffect(() => {
+    const root = workbench.current
+    if (!root) return
+    const observer = new MutationObserver((changes) => {
+      for (const change of changes) {
+        const target = change.target instanceof Element ? change.target : change.target.parentElement
+        if (target?.closest('.pw-global-error')) continue
+        const alerts = Array.from(change.addedNodes).flatMap((added) => {
+          if (!(added instanceof Element)) return []
+          return added.matches('[role=alert]') ? [added] : Array.from(added.querySelectorAll('[role=alert]'))
+        })
+        const containingAlert = target?.closest('[role=alert]')
+        if (containingAlert) alerts.push(containingAlert)
+        for (const alert of alerts) {
+          if (!alert.isConnected || alert.getClientRects().length === 0 || getComputedStyle(alert).visibility === 'hidden') continue
+          const message = alert.textContent?.trim()
+          if (message) setInlineError(message)
+        }
+        for (const removed of Array.from(change.removedNodes)) {
+          if (!(removed instanceof Element)) continue
+          const alert = removed.matches('[role=alert]') ? removed : removed.querySelector('[role=alert]')
+          const message = alert?.textContent?.trim()
+          if (message) setInlineError((current) => current === message ? '' : current)
+        }
+      }
+    })
+    observer.observe(root, { childList: true, characterData: true, subtree: true })
+    return () => observer.disconnect()
+  }, [])
   useEffect(() => {
     void refreshProvider()
     return () => request.current?.abort()
@@ -222,7 +259,7 @@ export function ProjectWorkbench() {
         ? 'The starting guidance stays onscreen. This project already has thirty saved planning notes, so this reply will not be in the saved file.'
         : changed && w.records.length
         ? 'Project updated. Review the recorded test conditions before checking again.'
-        : 'Project details are shared across options, trials, checks and costs. Save a file to keep them.',
+        : 'Project details are shared across options, plans, checks and costs. Save a backup to keep them.',
     )
   }
   function manualEntry() {
@@ -281,7 +318,7 @@ export function ProjectWorkbench() {
       return
     }
     const configurationsForModel = savedNeedsReview ? w.configurations.map((c) => ({
-      ...c, name: safeSetupName(w, c, 'Trial setup'),
+      ...c, name: safeSetupName(w, c, 'Plan'),
       notes: c.notes.startsWith('Unverified trial idea:') ? '' : c.notes,
     })) : w.configurations
     const activeIdea = showHistoricalIdeas ? selectedIdea : null
@@ -491,15 +528,24 @@ export function ProjectWorkbench() {
     try {
       downloadProjectWorkspace(w)
       setNotice(
-        'Project file saved. It contains your entered inputs; API keys are kept separately on this computer.',
+        'Project backup saved. Open this file later to continue your work. API keys are not included.',
       )
     } catch (e) {
       setError((e as Error).message)
     }
   }
+  const currentSketch = sketch?.caseId === w.case_id && sketch.product === (w.project.product?.value ?? '') ? sketch.image : null
+  function summaryText() { return formatProjectSummary(w, showHistoricalIdeas) + (mixSummary ? `\n${mixSummary}` : '') }
+  function downloadSummary() {
+    downloadTextFile('reshivo-summary.txt', summaryText())
+  }
+  function printSummary() {
+    try { printTextReport(summaryText(), currentSketch) }
+    catch (e) { setError((e as Error).message) }
+  }
   const hasProject = Boolean(w.project.product || w.project.input)
   return (
-    <div className="project-workbench">
+    <div className="project-workbench" ref={workbench}>
       <header className="pw-header">
         <a
           href="#"
@@ -524,8 +570,10 @@ export function ProjectWorkbench() {
           >
             <summary>Menu</summary>
             <div className="pw-menu">
-              <button onClick={() => file.current?.click()}>Open project</button>
-              <button onClick={save}>Save project</button>
+              <button onClick={() => file.current?.click()}>Open project backup</button>
+              <button onClick={save}>Save project backup</button>
+              <button onClick={downloadSummary}>Download readable summary</button>
+              <button onClick={printSummary}>Print / Save as PDF</button>
               <button
                 onClick={() => {
                   try {
@@ -567,7 +615,7 @@ export function ProjectWorkbench() {
                   </select>
                 </label>
                 <p>
-                  New trial amounts and supported mass calculations use this display. Existing trial
+                  New plan amounts and supported mass calculations use this display. Existing plan
                   amounts, readings, prices and geometry retain their entered units.
                 </p>
               </details>
@@ -602,9 +650,13 @@ export function ProjectWorkbench() {
           </button>
         </div>
       )}
-      {error && (
-        <div className="pw-global-error" role="alert">
-          {error}
+      {(error || inlineError) && (
+        <div className="pw-global-error" role="region" aria-label="Something needs your attention">
+          <div>
+            <strong>Let's sort this out</strong>
+            <p role={error ? 'alert' : undefined}>{error || inlineError}</p>
+          </div>
+          <button type="button" onClick={() => { setError(''); setInlineError('') }} aria-label="Dismiss message">×</button>
         </div>
       )}
       {page === 'start' ? (
@@ -689,7 +741,7 @@ export function ProjectWorkbench() {
               Edit project
             </button>
             <small>
-              {currentSetups(w.configurations).length} current trial setup(s) · {w.checks.length}{' '}
+              {currentSetups(w.configurations).length} current plan(s) · {w.checks.length}{' '}
               product check(s)
             </small>
           </aside>
@@ -705,7 +757,7 @@ export function ProjectWorkbench() {
                     {k === 'options'
                       ? '1. Options'
                       : k === 'trials'
-                        ? '2. Trials'
+                        ? '2. Plans'
                       : k === 'adjust'
                           ? '3. Adjust mix'
                           : k === 'checks'
@@ -715,8 +767,8 @@ export function ProjectWorkbench() {
                 ))}
               </nav>
               <div className="pw-actions">
-                <button onClick={() => file.current?.click()}>Open</button>
-                <button onClick={save}>Save</button>
+                <button onClick={() => file.current?.click()}>Open backup</button>
+                <button onClick={save}>Save backup</button>
               </div>
             </div>
             {page === 'options' && (
@@ -726,10 +778,12 @@ export function ProjectWorkbench() {
                     <h1>Find a way to use what you have</h1>
                     <p>
                       Explore changes to the materials, preparation, process or product design. Then
-                      keep a trial setup to compare.
+                      save a plan to compare.
                     </p>
                   </div>
                 </div>
+                <div className="pw-spaced"><button type="button" onClick={() => setPage('trials')}>Continue to plans →</button></div>
+                {status.provider === 'meta' && status.configured && <ConceptSketch image={currentSketch} onImage={(image) => setSketch(image ? { caseId: w.case_id, product: w.project.product?.value ?? '', image } : null)} />}
                 <section className="pw-card">
                   {showHistoricalIdeas && selectedIdea && (
                     <div className="pw-notice">
@@ -785,8 +839,8 @@ export function ProjectWorkbench() {
                   </label>
                   {preparedMix && (mixQuestionContext || recentMixIsCurrent) && <div className="pw-notice">
                     <strong>{mixQuestionContext ? 'Mix calculation attached' : 'Recent mix calculation available'}</strong>
-                    <p>Setup: {(() => { const setup = w.configurations.find((item) => item.id === preparedMix.configuration_id && item.revision === preparedMix.configuration_revision); return setup ? (showHistoricalIdeas ? setup.name : safeSetupName(w, setup, 'Trial setup')) : 'Unavailable setup' })()} · version {preparedMix.configuration_revision}. Component: {preparedMix.inputs.component}.</p>
-                    <p>Portion: {preparedMix.inputs.input_mass_kg} kg, {preparedMix.inputs.input_min_percent}–{preparedMix.inputs.input_max_percent}% component. Added stock: {preparedMix.inputs.addition_name}, {preparedMix.inputs.addition_percent}% component. Trial range: {preparedMix.inputs.target_min_percent}–{preparedMix.inputs.target_max_percent}%.</p>
+                    <p>Setup: {(() => { const setup = w.configurations.find((item) => item.id === preparedMix.configuration_id && item.revision === preparedMix.configuration_revision); return setup ? (showHistoricalIdeas ? setup.name : safeSetupName(w, setup, 'Plan')) : 'Unavailable setup' })()} · version {preparedMix.configuration_revision}. Component: {preparedMix.inputs.component}.</p>
+                    <p>Portion: {preparedMix.inputs.input_mass_kg} kg, {preparedMix.inputs.input_min_percent}–{preparedMix.inputs.input_max_percent}% component. Added stock: {preparedMix.inputs.addition_name}, {preparedMix.inputs.addition_percent}% component. Chosen range: {preparedMix.inputs.target_min_percent}–{preparedMix.inputs.target_max_percent}%.</p>
                     {preparedMix.source && <p>Recorded whole-recipe reference: {(() => { const source = w.configurations.find((item) => item.id === preparedMix.source?.configuration_id && item.revision === preparedMix.source?.configuration_revision); const ingredient = source?.materials.find((item) => item.id === preparedMix.source?.component_id); return source ? `${showHistoricalIdeas ? source.name : safeSetupName(w, source, 'Recorded setup')} · version ${source.revision} · ${ingredient?.name ?? 'Unavailable ingredient'}` : 'Unavailable setup' })()}.</p>}
                     {mixQuestionContext ? <>
                       <p>{mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext) ? 'This calculation will be sent with your question and recalculated from these inputs.' : 'The project, setup or mix inputs changed. Recalculate before sending this calculation.'}</p>
@@ -875,7 +929,7 @@ export function ProjectWorkbench() {
                         ))}
                       </ol>
                       <button onClick={() => setPage('trials')}>
-                        Record or update a trial setup
+                        Record or update a plan
                       </button>
                       {advice.questions.length > 0 && (
                         <div className="pw-question-box">
@@ -926,7 +980,7 @@ export function ProjectWorkbench() {
                                   </ul>
                                   <CheckSuggestionHandoff suggestion={r.check} onPrepare={(name) => { setPreparedCheckName(name); setPage('checks') }} />
                                 </details>
-                                <button onClick={() => useRoute(r)}>Keep as a trial idea</button>
+                                <button onClick={() => useRoute(r)}>Save as a plan</button>
                               </article>
                             ))}
                           </div>
@@ -968,6 +1022,9 @@ export function ProjectWorkbench() {
                 readingKind={adviceKind}
                 onReadingKindChange={setAdviceKind}
                 onAskIdea={askAboutIdea}
+                onAdjustMix={() => setPage('adjust')}
+                onDownloadSummary={downloadSummary}
+                onPrintSummary={printSummary}
                 showHistoricalIdeas={showHistoricalIdeas}
                 checkingPlanningMode={!modeReady || !savedReviewReady}
                 preparedCheckName={showCurrentGuidance ? preparedCheckName : ''}
@@ -976,6 +1033,7 @@ export function ProjectWorkbench() {
             </div>
             <div hidden={page !== 'adjust'}>
               <MixAdjustment
+                onSummary={setMixSummary}
                 key={`${w.case_id}:${workspaceOpenEpoch}`}
                 workspace={w}
                 enabled={Boolean(modeReady && !planningMode?.planningOnly)}

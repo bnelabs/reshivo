@@ -8,7 +8,6 @@ Type=simple
 User=reshivo
 Group=reshivo
 WorkingDirectory=/opt/reshivo
-EnvironmentFile=-/etc/reshivo/reshivo.env
 ExecStart=/opt/reshivo/.venv/bin/python -m rematter serve --port 8797
 Restart=on-failure
 RestartSec=5

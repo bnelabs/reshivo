@@ -2,7 +2,7 @@
 
 This setup runs the app as a dedicated user on `127.0.0.1:8797`. It does not publish the app by itself. You can use an SSH tunnel, or put the supplied authenticated HTTPS proxy in front of it when you have a domain and certificate. Nothing here needs to be run until you choose to deploy.
 
-Reshivo currently has one shared set of AI connection settings and no separate user accounts. Anyone who can access the app can change those settings and use its configured provider, potentially incurring charges. Use it as a protected, single-operator instance. A password-protected demo does not provide anonymous judge access; decide separately how judges will access it.
+Each visitor enters their own AI provider key in the app. Browser connection settings are kept in server memory for that session and expire after 30 minutes of inactivity or a restart; the web app does not fall back to a server-wide key. The service has no user accounts. Use HTTPS and appropriate access and rate limits when exposing it to the internet. Provider charges apply to the visitor's own account.
 
 ## 1. Prepare the machine
 
@@ -17,7 +17,7 @@ sudo install -d -o reshivo -g reshivo -m 0750 /opt/reshivo
 
 If `reshivo` or `/opt/reshivo` already exists, inspect it rather than replacing it. Clone the repository **you choose to deploy** into the empty directory. Configure a read-only deploy key or other Git credentials for the `reshivo` account outside the checkout if the repository is private. The example leaves the repository URL for you to supply:
 
-The private development repository contains restricted material in its Git history. Keep it private. If publishing source, first review and publish the separate history-free source export; do not change the development repository's visibility.
+The private development repository contains restricted material in its Git history. Keep it private. The separate `bnelabs/reshivo` repository contains the reviewed source release and a filtered development history; keep the original development repository private.
 
 ```sh
 sudo -u reshivo -H git clone YOUR_REPOSITORY_URL /opt/reshivo
@@ -30,17 +30,7 @@ Node is needed to build the interface; it is not the application server. `rematt
 
 ## 2. Configure the service
 
-To use a server-side model key, create a root-owned environment file without putting the key in shell history or Git:
-
-```sh
-sudo test -d /etc/reshivo || sudo install -d -m 0700 /etc/reshivo
-sudo sh -c 'umask 077; [ -e /etc/reshivo/reshivo.env ] || : > /etc/reshivo/reshivo.env'
-sudo chown root:root /etc/reshivo/reshivo.env
-sudo chmod 0600 /etc/reshivo/reshivo.env
-sudoedit /etc/reshivo/reshivo.env
-```
-
-In the editor, set `MODEL_API_KEY` to your own key and, if desired, set `META_MODEL=muse-spark-1.3-contributor`. Do not commit this file. The service reads the file through systemd; its contents take precedence over a checkout `.env`. A provider profile saved in the app takes precedence over the environment for that active provider. If changing the environment does not change the active connection, review or clear that saved profile in **AI settings**. The Contributor model may use submitted content to train future models; choose settings appropriate to the data and provider terms.
+No server-wide model key is needed for browser users. Each visitor configures their own connection in **AI settings**. The Meta Contributor model may use submitted content to train future models; users should check their provider's terms.
 
 ```sh
 sudo install -m 0644 /opt/reshivo/deploy/reshivo.service /etc/systemd/system/reshivo.service
@@ -66,6 +56,7 @@ Use `-c` only to create a new password file. If `/etc/reshivo/htpasswd` already 
 
 ```sh
 sudo apt install -y nginx apache2-utils
+sudo install -d -m 0750 /etc/reshivo
 sudo htpasswd -c /etc/reshivo/htpasswd YOUR_LOGIN
 sudo chown root:www-data /etc/reshivo/htpasswd
 sudo chmod 0640 /etc/reshivo/htpasswd
@@ -96,6 +87,6 @@ sudo systemctl start reshivo
 sudo systemctl status reshivo --no-pager
 ```
 
-If the service fails, inspect `sudo journalctl -u reshivo -n 100 --no-pager`. Do not put keys in logs or issue reports. The optional provider settings saved through the app live in `/opt/reshivo/.env.providers.json` with mode 0600; model credentials in `/etc/reshivo/reshivo.env` and nginx's password file also need protected backup. `/opt/reshivo/outputs/` holds optional server-side experiment artifacts. Project work is saved by the user in their browser/downloaded project file; back up those files separately. Never commit or publish credentials, local provider settings or private outputs.
+If the service fails, inspect `sudo journalctl -u reshivo -n 100 --no-pager`. Do not put keys in logs or issue reports. Browser-session keys are kept in memory and are not backed up. `/opt/reshivo/outputs/` holds optional server-side experiment artifacts. Users can download a project backup and open it later; back up those files separately. Never commit credentials or private outputs.
 
 The systemd and nginx configuration are deployment examples, not a tested multi-user production service. Check your own server, access controls, TLS and backup arrangement before sharing access.

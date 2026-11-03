@@ -62,9 +62,9 @@ class WorkbenchService:
         self.intake_fn = intake_fn
 
     def inference_providers(self):
-        from .providers import provider_catalog, provider_settings, ProviderConfigurationError
+        from .providers import provider_catalog, provider_settings, ProviderConfigurationError, is_session_request
         try:
-            return {"catalog": provider_catalog(), "settings": provider_settings(self.root)}
+            return {"catalog": provider_catalog(), "settings": provider_settings(self.root), "session_only": is_session_request()}
         except ProviderConfigurationError as error:
             raise ServiceError("provider_configuration", str(error)) from None
 
@@ -89,6 +89,10 @@ class WorkbenchService:
 
     def clear_inference_settings(self, request):
         return self.inference_settings(request, "clear")
+
+    def concept_sketch(self, request):
+        from .concept_sketch import concept_sketch
+        return concept_sketch(request, self.root)
 
     def project_intake(self, request):
         from .project_intake import read_project_intake, validate_intake_request
@@ -574,7 +578,7 @@ class WorkbenchService:
         try:
             from .meta import MetaAPIError, MetaConfigurationError, MetaValidationError, propose_and_evaluate
         except ImportError:
-            raise ServiceError("meta_unavailable", "Meta generation is not configured; add MODEL_API_KEY to the local .env file", 503) from None
+            raise ServiceError("meta_unavailable", "AI generation is unavailable on this installation.", 503) from None
         try:
             result = propose_and_evaluate(materials[0], requirements, scenario_name=scenario, max_candidates=count)
             return self._save_proposals(result, materials[0], requirements)
