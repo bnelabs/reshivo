@@ -2,6 +2,18 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.7.0 — 2026-11-03
+
+### Added
+
+- Build a product illustration from the current project and selected plan, with an optional dimensioned rectangular section from user-entered sizes.
+- Include current cost and check results, plan history, reading groups and cost details in the printable project report.
+
+### Changed
+
+- Give the project helper room for specific materials, equipment and practical steps, with brief, relevant cautions.
+- Redesign the printable report with a clearer layout and separate project notes.
+
 ## 0.6.1 — 2026-11-03
 
 ### Changed

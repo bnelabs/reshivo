@@ -64,17 +64,37 @@ class FixtureClient:
 
 
 class FollowupTests(unittest.TestCase):
-    def test_short_followup_schema_keeps_older_three_item_responses_readable(self):
+    def test_followup_schema_allows_three_steps_without_more_questions(self):
         data = response_data()
         data['next_steps'] = ['First.', 'Second.', 'Third.']
         data['questions'] = ['First?', 'Second?', 'Third?']
         client = FixtureClient(data)
         result = follow_up_with_case(request_data(), client)
         schema = client.calls[0][1]['properties']
-        self.assertEqual((schema['next_steps']['minItems'], schema['next_steps']['maxItems']), (0, 2))
+        self.assertEqual((schema['next_steps']['minItems'], schema['next_steps']['maxItems']), (0, 3))
         self.assertEqual((schema['questions']['minItems'], schema['questions']['maxItems']), (0, 2))
         self.assertEqual(result['next_steps'], data['next_steps'])
         self.assertEqual(result['questions'], data['questions'])
+
+    def test_detailed_process_answer_keeps_practical_choices_and_unknowns(self):
+        request = request_data()
+        request['brief'].update(input='Clean polypropylene flakes', process='Equipment not specified',
+                                product='Protective cover', use_case='Cover a non-load-bearing enclosure',
+                                targets='Fit the enclosure; stiffness target not set')
+        request['question'] = 'Explain the proposed forming method, material choice and equipment in detail.'
+        data = {'answer': 'Consider a flat mould and heated press for identified polypropylene flakes. '
+                          'Select the processing settings from the identified material and equipment information.',
+                'next_steps': ['Check the identity and condition of the flakes.',
+                               'Choose a mould and press sized for the cover.',
+                               'Plan a fit check for the resulting cover.'],
+                'questions': [], 'source_ids': []}
+        client = FixtureClient(data)
+        result = follow_up_with_case(request, client)
+        self.assertEqual(result['answer'], data['answer'])
+        self.assertEqual(result['next_steps'], data['next_steps'])
+        self.assertEqual(client.calls[0][0]['question'], request['question'])
+        self.assertIn('Give the detail the question requires', client.calls[0][3]['system_prompt'])
+        self.assertNotIn('120 words', client.calls[0][3]['system_prompt'])
 
     def test_unrelated_followup_needs_no_fake_next_step(self):
         request = request_data()

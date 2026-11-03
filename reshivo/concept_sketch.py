@@ -20,15 +20,16 @@ def concept_sketch(request, root):
     if not isinstance(request, dict) or set(request) != {"prompt"}:
         raise ServiceError("invalid_request", "Enter a short description for the sketch.")
     prompt = request["prompt"]
-    if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 1200:
-        raise ServiceError("invalid_request", "Enter a sketch description of up to 1,200 characters.")
+    if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 30000:
+        raise ServiceError("invalid_request", "Enter a sketch description of up to 30,000 characters.")
     if not is_session_request():
         raise ServiceError("provider_not_configured", "Connect your Meta account in this browser to create a sketch.", 403)
     profile = load_provider_profile(root)
     if profile.provider != "meta" or not profile.api_key:
         raise ServiceError("provider_not_configured", "Select Meta and enter your own API key to create a sketch.", 400)
-    payload = {"model": "muse-image-1.0", "prompt": "Product concept sketch, not a technical drawing: " + prompt.strip(),
-               "n": 1, "output_format": "png", "response_format": "b64_json"}
+    payload = {"model": "muse-image-1.0", "prompt": "Create a clean technical-style product concept illustration based on the following project. Show the exterior only, without cutaways or internal layers. Use the provided facts; do not invent or display numerical dimensions, labels, materials, or performance values. This is an illustrative concept, not a verified technical drawing. Project details:\n" + prompt.strip(),
+               "n": 1, "output_format": "png", "response_format": "b64_json",
+               "tool_enablement": {"enable_image_search": False, "enable_web_search": False, "enable_shell": False}}
     request_obj = urllib.request.Request(_IMAGE_URL, data=json.dumps(payload).encode("utf-8"),
         headers={"Authorization": "Bearer " + profile.api_key, "Content-Type": "application/json"}, method="POST")
     try:

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T20:30:30.444993+00:00",
+  "prepared_utc": "2026-11-03T20:40:03.017298+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -31,7 +31,8 @@
     "Regenerated the two affected exported manifests for retained files; private originals remain unchanged.",
     "Adapted licensing notes for the source-only collection.",
     "Documented that the visible development history was filtered and earlier snapshots omit source data.",
-    "Added browser-session AI connections, clearer project flow, readable reports, and an optional concept sketch after the original export."
+    "Added browser-session AI connections, clearer project flow, readable reports, and an optional concept sketch after the original export.",
+    "Improved project-specific advice, sketch context and dimensioned section, and printable reports in version 0.7.0."
   ],
   "files": [
     {
@@ -41,8 +42,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 2401,
-      "sha256": "284c0686b21d7ca2f6e17f42809a45070579ed3b20bc61b101d7e71e75b4bd85"
+      "bytes": 2499,
+      "sha256": "77ec5af2163ad13a6ac2d04bb41b36a3453e442e66370303746c4ef43f35e953"
     },
     {
       "path": ".gitignore",
@@ -51,8 +52,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 5539,
-      "sha256": "5374fc412e1cf8248c262a3b80b08c02c5d83c0e5e1901ff9b01b8fc65f92221"
+      "bytes": 6059,
+      "sha256": "f369e320cd3d8beab6faab1ac35deb701731cc3cbf2a5f46cd6bede0f181ab10"
     },
     {
       "path": "LICENSE",
@@ -66,8 +67,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4862,
-      "sha256": "e80ca2a3345936f3e889b879f75e4b116cb4c2b43d4ee3dd6577d34b87fa0e00"
+      "bytes": 5045,
+      "sha256": "b6d6a2ecbe1b9f007d99ba30c9438dc43c7a20289697019cc81f533353fdf114"
     },
     {
       "path": "data/ATTRIBUTION.md",
@@ -1177,12 +1178,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 329,
-      "sha256": "f5270bb15b5a4766a6f9acccd30db1827a46bae42512364148319bcba3676934"
+      "sha256": "794ceb9e66b9a2b8ca1571be891e55e595f9581d570671871eec173878df0f23"
     },
     {
       "path": "reshivo/__init__.py",
       "bytes": 62,
-      "sha256": "dd47c171ce8f03de929d77d3afdafee97a48b48f059442f0378d63c3b781aa24"
+      "sha256": "9c5f9bd5eb2e7d65a98904ae4ad749f5787589a4ae058f2505daa52bb4b7cdc6"
     },
     {
       "path": "reshivo/__main__.py",
@@ -1201,8 +1202,8 @@
     },
     {
       "path": "reshivo/advisor.py",
-      "bytes": 102939,
-      "sha256": "00ce9e8b969527fbb3e6abf255612ba156132696806d0854c2297c136fd5dd90"
+      "bytes": 104526,
+      "sha256": "ff15f8640885d3e6c5feceb671d11c5404ce7ed862330c80c33bbe557ac841ac"
     },
     {
       "path": "reshivo/balance.py",
@@ -1216,8 +1217,8 @@
     },
     {
       "path": "reshivo/concept_sketch.py",
-      "bytes": 2926,
-      "sha256": "129858693b39a90a7cc9c9a47f1ddd5c4979b8ce45d2e7ccd464d0f032954df2"
+      "bytes": 3347,
+      "sha256": "e6a1bfd7b7968717f1e919f34469263c09b2c99ba202ed562e5e6eddf6839792"
     },
     {
       "path": "reshivo/decision_comparison.py",
@@ -1461,8 +1462,8 @@
     },
     {
       "path": "tests/test_advisor_followup.py",
-      "bytes": 12283,
-      "sha256": "0f21250054ad72c8a87dd264b4596e19e34b159c70af9633b05bb9ebefdd6659"
+      "bytes": 13780,
+      "sha256": "857c1ab83d9f094df4f056beb611220d14da872f638469b8c7141f4968d79fa7"
     },
     {
       "path": "tests/test_advisor_mix_range_guard.py",
@@ -1486,8 +1487,8 @@
     },
     {
       "path": "tests/test_concept_sketch.py",
-      "bytes": 3959,
-      "sha256": "75bd0bfb0897275a836615f3831f9270c2c4159b0d91c4cc99e84ba87e6f53c7"
+      "bytes": 4225,
+      "sha256": "78c8644df133744140f747eae792605df336d1675e7f3a6bf3d4385b74b1fd8d"
     },
     {
       "path": "tests/test_core.py",
@@ -1826,13 +1827,18 @@
     },
     {
       "path": "web/checks/readable-summary.test.mjs",
-      "bytes": 6805,
-      "sha256": "8547d211e269be02505c68912d5aa04ecfd7d318075556d63d3fd2d77d44bc0f"
+      "bytes": 9312,
+      "sha256": "fd00cf0375dce2e6efa736d21d4bc62e035aac531897885b69f332688c1ee346"
     },
     {
       "path": "web/checks/reference-composition.test.mjs",
       "bytes": 9199,
       "sha256": "581f6bb806f4ad9b9e7bdef0a7c1f287daff198b720a212846bd02a027a312bc"
+    },
+    {
+      "path": "web/checks/report-results.test.mjs",
+      "bytes": 3250,
+      "sha256": "a39483867add2eb3ca19cad4500d600883f34501f5c6502476341fb5e433f8b8"
     },
     {
       "path": "web/checks/saved-guidance-review.test.mjs",
@@ -1843,6 +1849,11 @@
       "path": "web/checks/setup-selection.test.mjs",
       "bytes": 1713,
       "sha256": "9dd514e5423369928d93e7482d35ee2609f800f39167c392cf72931ae28630e5"
+    },
+    {
+      "path": "web/checks/sketch-context.test.mjs",
+      "bytes": 2228,
+      "sha256": "18d758e0021b0cb611c3aea9adc06df9d03a61fdc8bee6c949a2a43c1bf999d4"
     },
     {
       "path": "web/checks/sound-guidance.test.mjs",
@@ -1872,12 +1883,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "582278774d74bbd2370dd8566c922ad9020270e49b2b38b3af4bd509c8c837ce"
+      "sha256": "1d5dd634b1f211e06734eaeda13e83137dd8c9615b29ea7c5e7e3d4649bc3605"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "a4b553a77854e41433ac565faaffe0f4ae745fc772ccbf65cc2fb907b78442dc"
+      "sha256": "d0db3af557d3ed7cdd1560528d4dfcc3362e72bb54ae438b6b0967e20fb70371"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -1946,13 +1957,13 @@
     },
     {
       "path": "web/src/components/ConceptSketch.tsx",
-      "bytes": 1956,
-      "sha256": "644f0d9286ba0b8f11bb52a2121acf98773b281eb7e0705d99e69d64d9ebe60d"
+      "bytes": 6018,
+      "sha256": "d1d75781929fec8ff72836e33808c8df5d68f34a0de4b39148160df085ee4a64"
     },
     {
       "path": "web/src/components/CostWorkspace.tsx",
-      "bytes": 30757,
-      "sha256": "b4cac6147a7e335950fe1da6d56a38a2a8cd0ea5774b56d6cadb7e4627ab718a"
+      "bytes": 31324,
+      "sha256": "0b37a62e71f1549b0a54d477acaefb2831f795a80a8b5392e32554efe801b2c2"
     },
     {
       "path": "web/src/components/DesignViewport.tsx",
@@ -2041,8 +2052,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 70168,
-      "sha256": "aabde0ac20818827e821f3123795b4fafee7aaeae17b6ad96012c2c2f0a6ab38"
+      "bytes": 71187,
+      "sha256": "e826240e906b6f004f26a18a30746a5bfef5a40297210c3707796b102a743271"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2111,8 +2122,8 @@
     },
     {
       "path": "web/src/components/TrialWorkspace.tsx",
-      "bytes": 53570,
-      "sha256": "178f40aeb31d92f86ffc514a928d7a5d799439b10cbb42c68cbac6fab0f7a347"
+      "bytes": 53982,
+      "sha256": "c8070f51b7c81b9b5c693c4099f1c42e40d3c81954a4e008a7d983205c5f941d"
     },
     {
       "path": "web/src/components/Workshop.tsx",
@@ -2236,8 +2247,8 @@
     },
     {
       "path": "web/src/readableSummary.ts",
-      "bytes": 17637,
-      "sha256": "7c5c6d82891f7ac01b3c3cfd292491b9104062a2982204d91fca3a20f96f3b50"
+      "bytes": 21737,
+      "sha256": "f60f7d5e632ce5a9b907eab3a8fa6a3f035cd483c3312bac81a9cc5b19d83acb"
     },
     {
       "path": "web/src/referenceComposition.ts",
@@ -2245,14 +2256,29 @@
       "sha256": "3e92cc3ee0a8c8b2f4530afa80b82d2220bdc39b108183c8b26ec493319c3e07"
     },
     {
+      "path": "web/src/reportResults.ts",
+      "bytes": 6472,
+      "sha256": "b53d7cd160726b462d20bc16d1e9a19d261980e3a0624f9e6efabaa4e0eb531e"
+    },
+    {
       "path": "web/src/savedGuidanceReview.ts",
       "bytes": 1002,
       "sha256": "73705a794ad60e8dc05240580fd3762c4ac8610f4310b6ce44e22330a4a61576"
     },
     {
+      "path": "web/src/sectionDrawing.ts",
+      "bytes": 2943,
+      "sha256": "0135d3c866362d849493bf64cc6bab4792534372c574b40e6632d79badcc26d5"
+    },
+    {
       "path": "web/src/setupSelection.ts",
       "bytes": 713,
       "sha256": "ad650356f2f2baf5f4b9c847c42d35d16f88815d175691e6bc0f60b1521f0c92"
+    },
+    {
+      "path": "web/src/sketchContext.ts",
+      "bytes": 2444,
+      "sha256": "15288fab617dadf270ef43caf662c95388c4fec0c93a561ebee73c122713b5f8"
     },
     {
       "path": "web/src/soundGuidance.ts",

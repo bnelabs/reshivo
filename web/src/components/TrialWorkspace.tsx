@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useUnitSystem } from '../units'
+import { formatCheckResults, reportResultContext } from '../reportResults'
+import type { ReportResultKind } from '../reportResults'
 import { TrialAssessmentNotices } from './TrialAssessmentNotices'
 import { materialUnitLabel, planMaterialUnitChange, resolveMaterialUnitChange } from '../materialUnitChange'
 import type { PendingMaterialUnitChange } from '../materialUnitChange'
@@ -58,6 +60,7 @@ type Props = {
   preparedCheckSuggestion: string
   preparedCheckPlanKey: string
   onPreparedCheckUsed: () => void
+  onReportResult: (kind: ReportResultKind, text: string, context: string) => void
 }
 export function TrialWorkspace({
   workspace: w,
@@ -78,6 +81,7 @@ export function TrialWorkspace({
   preparedCheckSuggestion,
   preparedCheckPlanKey,
   onPreparedCheckUsed,
+  onReportResult,
 }: Props) {
   const system = useUnitSystem()
   const [editing, setEditing] = useState<TrialConfiguration | null>(null)
@@ -363,6 +367,7 @@ export function TrialWorkspace({
   async function assess() {
     setBusy(true)
     setError('')
+    const reportContext = reportResultContext(w, kind, showHistoricalIdeas)
     try {
       const result = await api<any>('/api/project/trial-records', {
         case_id: w.case_id,
@@ -373,6 +378,7 @@ export function TrialWorkspace({
       })
       setAssessment(result)
       setAssessedInput(inputKey)
+      onReportResult('checks', formatCheckResults(result, w, kind, showHistoricalIdeas), reportContext)
     } catch (e) {
       reportError('assess', (e as Error).message)
     } finally {

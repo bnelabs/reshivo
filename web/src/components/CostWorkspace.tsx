@@ -10,6 +10,8 @@ import { reuseCostComparisonDetails } from '../costComparisonSetup'
 import { currentPriceUnit, enteredMaterialPrice, exactPriceUnitConversion, resolvePriceUnit } from '../costPriceUnit'
 import type { PendingPriceUnit, PriceUnit } from '../costPriceUnit'
 import { useUnitSystem } from '../units'
+import { formatComparisonResult, formatCostResult, reportResultContext } from '../reportResults'
+import type { ReportResultKind } from '../reportResults'
 
 type Props = {
   workspace: ProjectWorkspace
@@ -19,6 +21,7 @@ type Props = {
   showHistoricalIdeas: boolean
   onGoToPlans: () => void
   active: boolean
+  onReportResult: (kind: ReportResultKind, text: string, context: string) => void
 }
 const displayMoney = displayCostAmount
 export function CostWorkspace({
@@ -29,6 +32,7 @@ export function CostWorkspace({
   showHistoricalIdeas,
   onGoToPlans,
   active,
+  onReportResult,
 }: Props) {
   const system = useUnitSystem()
   const setups = currentSetups(w.configurations)
@@ -105,17 +109,20 @@ export function CostWorkspace({
     }
     setBusy(true)
     setError('')
+    const reportContext = reportResultContext(w, kind, showHistoricalIdeas)
     try {
       if (compare) {
         const value = await api<any>('/api/project/compare-decisions', decisionRequest)
         pendingFocus.current = activePage.current ? { kind: 'comparison', key: comparisonFingerprint } : null
         setComparison(value)
         setCompareKey(comparisonFingerprint)
+        onReportResult('comparison', formatComparisonResult(value, w, kind, showHistoricalIdeas), reportContext)
       } else {
         const value = await api<any>('/api/project/manufacturing-cost', currentRequest)
         pendingFocus.current = activePage.current ? { kind: 'result', key: fingerprint } : null
         setResult(value)
         setResultKey(fingerprint)
+        if (c) onReportResult('cost', formatCostResult(value, setupName(c), c.revision, d.currency, d.mode), reportContext)
       }
     } catch (e) {
       setError((e as Error).message)

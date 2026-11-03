@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { newProjectWorkspace, newCostDraft } from '../src/projectWorkspace.ts'
-import { formatProjectSummary, explainUnreachableMix, formatMixSummary } from '../src/readableSummary.ts'
+import { formatProjectSummary, formatProjectNotes, explainUnreachableMix, formatMixSummary } from '../src/readableSummary.ts'
 const field = value => ({ value, source: 'user_review', quote: value })
 const w = newProjectWorkspace()
 w.project.product = field('Floor mat')
@@ -13,8 +13,20 @@ w.checks = [{id:'c',name:'Thickness',unit:'mm',minimum:'4',maximum:'6',method:'C
 w.records = [{id:'r',case_id:w.case_id,configuration_id:'a',configuration_revision:1,check_id:'c',unit:'mm',method:'Caliper',data_kind:'synthetic',conditions_confirmed:true,readings:[{value:'5'}]}]
 const visible = formatProjectSummary(w,true)
 for (const text of ['Floor mat','Shape the layer','Measure thickness','Thickness','example data','Energy: unknown','Labour: excluded','2 EUR/kg']) assert.ok(visible.includes(text),text)
-assert.ok(visible.includes(w.intake_notes), 'the report retains the user’s setup answers')
+assert.ok(formatProjectNotes(w).includes(w.intake_notes), 'the report appendix retains the user’s setup answers')
 assert.ok(!visible.includes('999'), 'an unknown cost must not expose stale values as known')
+const detailed = structuredClone(w)
+detailed.configurations.push({ ...structuredClone(detailed.configurations[0]), revision: 2, process: 'Cold press', notes: 'Use a flat mould.' })
+detailed.costs['a@2'] = { ...newCostDraft(), currency: 'EUR', mode: 'planned', mass_basis: 'Dry feed', functional_basis: 'One panel', acceptance_basis: 'Flat panel',
+  batch_mass_kg: '12', gross_count: '8', accepted_fraction: '0.9', prices: {m:'2'} }
+detailed.records[0].readings = [{ value:'5', reading_id:'R1', specimen_id:'S1', run_id:'Run 1', batch_id:'Batch A' },
+  { value:'5.1', reading_id:'R2', specimen_id:'S1', run_id:'Run 1', batch_id:'Batch A', repeat_of:'R1' }]
+detailed.record_exclusions = {r:'Instrument was reset'}
+const complete = formatProjectSummary(detailed, true)
+for (const text of ['version 1', 'Earlier version', 'version 2', 'Use a flat mould.', 'Dry feed', 'One panel', 'Flat panel',
+  'Batch mass (kg): 12', 'Planned items: 8', 'Expected usable fraction: 0.9', 'Specimen: S1', 'Run: Run 1',
+  'Batch: Batch A', 'Repeat of: R1', 'Instrument was reset']) assert.ok(complete.includes(text), text)
+assert.ok(!complete.includes('Batch: Batch B'), 'the report must not infer a second batch')
 const hidden = formatProjectSummary(w,false)
 assert.ok(!hidden.includes('Shape the layer'))
 assert.ok(!hidden.includes('Layered idea'))
@@ -85,3 +97,17 @@ const saved = formatEarlierAdviceForReport(savedNote)
 assert.ok(saved.includes('Earlier saved guidance') && saved.includes('Readings and costs may have changed') && saved.includes('An earlier suggestion.'))
 assert.equal(formatEarlierAdviceForReport(null), '')
 console.log('Reports identify reading review state and label earlier saved guidance')
+
+const { parseRectangularSection } = await import('../src/sectionDrawing.ts')
+const priorChildren = documentStub.body.children.length
+printTextReport('Reshivo — project summary\nProduct: Panel', 'data:image/png;base64,aGVsbG8=', parseRectangularSection('120', '3', 'cm'))
+const visualNodes = documentStub.body.children.slice(priorChildren).flatMap(flatten)
+assert.ok(visualNodes.some(node => node.tag === 'img' && node.alt === 'Generated product concept'))
+assert.ok(visualNodes.some(node => node.tag === 'text' && node.textContent === 'Span 120 cm'))
+assert.ok(visualNodes.some(node => node.tag === 'text' && node.textContent === 'Thickness 3 cm'))
+assert.ok(visualNodes.some(node => node.tag === 'figcaption' && node.textContent.includes('AI-generated')))
+const afterVisual = documentStub.body.children.length
+printTextReport('Reshivo — project summary', 'data:image/svg+xml;base64,aGVsbG8=', {span:'bad',thickness:'3',unit:'cm',spanMm:1200,thicknessMm:30})
+const invalidNodes = documentStub.body.children.slice(afterVisual).flatMap(flatten)
+assert.ok(!invalidNodes.some(node => node.tag === 'figure'), 'invalid images and dimensions must not make empty or unsafe figures')
+console.log('Reports include safe project visuals and reject invalid section dimensions')

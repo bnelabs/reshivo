@@ -4,6 +4,9 @@ import { api } from '../api'
 import { PromptProjectStart } from './PromptProjectStart'
 import { ProviderSettings } from './ProviderSettings'
 import { ConceptSketch } from './ConceptSketch'
+import { sketchFingerprint } from '../sketchContext'
+import type { RectangularSection } from '../sectionDrawing'
+import { reportResultContext, type ReportResultKind } from '../reportResults'
 import { CheckedMixAdvice } from './CheckedMixAdvice'
 import { SoundGuidance } from './SoundGuidance'
 import { buildIdeaComparisonQuestion } from '../ideaComparison'
@@ -28,7 +31,7 @@ import { canReattachMixCalculation, mixQuestionFingerprint, mixQuestionIsCurrent
 import type { PreparedMixCalculation } from '../mixQuestion'
 import { briefFrom } from '../projectBrief'
 import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
-import { downloadTextFile, formatAdviceForReport, formatEarlierAdviceForReport, formatProjectSummary, printTextReport } from '../readableSummary'
+import { downloadTextFile, formatAdviceForReport, formatEarlierAdviceForReport, formatProjectNotes, formatProjectSummary, printTextReport } from '../readableSummary'
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
@@ -87,7 +90,9 @@ export function ProjectWorkbench() {
     model: '',
   })
   const [statusLoaded, setStatusLoaded] = useState(false)
-  const [sketch, setSketch] = useState<{ caseId: string; product: string; image: string } | null>(null)
+  const [sketch, setSketch] = useState<{ fingerprint: string; image: string } | null>(null)
+  const [section, setSection] = useState<{ fingerprint: string; section: RectangularSection } | null>(null)
+  const [reportResults, setReportResults] = useState<Partial<Record<ReportResultKind, { text: string; context: string }>>>({})
   const [mixSummary, setMixSummary] = useState('')
   const [notice, setNotice] = useState('')
   const [manual, setManual] = useState<ProjectIntakeDraft>(emptyProjectDraft)
@@ -688,7 +693,9 @@ export function ProjectWorkbench() {
       setError((e as Error).message)
     }
   }
-  const currentSketch = sketch?.caseId === w.case_id && sketch.product === (w.project.product?.value ?? '') ? sketch.image : null
+  const drawingFingerprint = sketchFingerprint(w, showHistoricalIdeas)
+  const currentSketch = sketch?.fingerprint === drawingFingerprint ? sketch.image : null
+  const currentSection = section?.fingerprint === drawingFingerprint ? section.section : null
   const currentReportAdvice = modeReady && advice && adviceProject === currentProject &&
     adviceCase === currentAdviceContext && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance')
     ? advice : null
@@ -702,13 +709,19 @@ export function ProjectWorkbench() {
     : undefined
   function summaryText() {
     const guidance = formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance) || formatEarlierAdviceForReport(earlierReportNote)
-    return formatProjectSummary(w, showHistoricalIdeas) + guidance + (mixSummary ? `\n${mixSummary}` : '')
+    const context = reportResultContext(w, adviceKind, showHistoricalIdeas)
+    const results = (['checks', 'cost', 'comparison'] as const).map((kind) => reportResults[kind])
+      .filter((entry) => entry?.context === context).map((entry) => entry!.text).join('')
+    return formatProjectSummary(w, showHistoricalIdeas) + guidance + (mixSummary ? `\n${mixSummary}` : '') + results + formatProjectNotes(w)
+  }
+  function rememberReportResult(kind: ReportResultKind, text: string, context: string) {
+    setReportResults((current) => ({ ...current, [kind]: { text, context } }))
   }
   function downloadSummary() {
     downloadTextFile('reshivo-summary.txt', summaryText())
   }
   function printSummary() {
-    try { printTextReport(summaryText(), currentSketch) }
+    try { printTextReport(summaryText(), currentSketch, currentSection) }
     catch (e) { setError((e as Error).message) }
   }
   function exploreMyMaterial() {
@@ -1014,14 +1027,8 @@ export function ProjectWorkbench() {
                         .map((p, i) => (
                           <p key={i}>{p}</p>
                         ))}
-                      {advice.next_steps.length > 0 && <><h2>Start here</h2>
-                      <p>{advice.next_steps[0]}</p></>}
-                      {advice.next_steps.length > 1 && !answerFocused && <details>
-                        <summary>See the other suggested steps</summary>
-                        <ol start={2}>
-                          {advice.next_steps.slice(1).map((step, i) => <li key={i}>{step}</li>)}
-                        </ol>
-                      </details>}
+                      {advice.next_steps.length > 0 && <><h2>What to do next</h2>
+                      <ol>{advice.next_steps.map((step, i) => <li key={i}>{step}</li>)}</ol></>}
                       <div className="pw-actions pw-spaced">
                         {('material_routes' in advice ? advice.material_routes.length + advice.engineering_routes.length > 0 : advice.next_steps.length > 0) && <button className="pw-primary" type="button" onClick={() => {
                           if ('material_routes' in advice) {
@@ -1258,13 +1265,14 @@ export function ProjectWorkbench() {
                     ))}
                   </details>
                 )}
-                {!answerFocused && status.provider === 'meta' && status.configured && <ConceptSketch image={currentSketch} onImage={(image) => setSketch(image ? { caseId: w.case_id, product: w.project.product?.value ?? '', image } : null)} />}
+                <ConceptSketch workspace={w} includeIdeas={showHistoricalIdeas} canGenerate={status.provider === 'meta' && status.configured} image={currentSketch} section={currentSection} onImage={(image, fingerprint) => setSketch(image ? { fingerprint, image } : null)} onSection={(value, fingerprint) => setSection(value ? { fingerprint, section: value } : null)} onConfigureProvider={() => setProviderOpen(true)} />
               </section>
             )}
             <div hidden={page !== 'trials' && page !== 'checks'}>
               <TrialWorkspace
                 key={`${w.case_id}:${workspaceOpenEpoch}`}
                 workspace={w}
+                onReportResult={rememberReportResult}
                 onChange={update}
                 section={page === 'trials' ? 'trials' : 'checks'}
                 readingKind={adviceKind}
@@ -1312,6 +1320,7 @@ export function ProjectWorkbench() {
                 onGoToPlans={() => setPage('trials')}
                 key={w.case_id}
                 workspace={w}
+                onReportResult={rememberReportResult}
                 onChange={update}
                 readingKind={adviceKind}
                 onReadingKindChange={setAdviceKind}

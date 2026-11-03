@@ -12,7 +12,7 @@ For example, someone making an organizer can compare two material setups, explor
 - Calculates an addition for a user-selected composition when the starting mix and addition are described by the needed quantities.
 - Compares entered readings with the user's limits and lets the user revisit the decision when another reading is added.
 - Exports a readable text summary or a report you can print or save as PDF; a project backup lets you reopen your work.
-- Optionally generates a concept image with a Meta connection. The image illustrates an idea and is not a technical drawing.
+- Creates an optional AI concept illustration from your project using a Meta connection, and a dimensioned rectangular section from your own measurements.
 
 The application was built during the Meta Global AI Developer Hackathon. Its configured hackathon workflow uses the Meta Model API for contextual assistance; calculations and comparison checks run locally. The AI connection can also be configured for other supported providers. See [inference connections](docs/INFERENCE_PROVIDERS.md).
 
@@ -23,7 +23,7 @@ The application was built during the Meta Global AI Developer Hackathon. Its con
 3. Select **Use this idea** to add one to your project. Review the suggested steps and ask for a clearer plan if you need one. Add material amounts, equipment and size when you know them.
 4. Choose **Plan a product check** if you know what to measure, or ask for help choosing a check. You can save the project and return when you have measurements.
 
-Use **Print / Save as PDF** for a readable report. Use **Save backup** to reopen and continue the project later.
+Open **Picture your idea** to create an illustration or enter dimensions for a section. Use **Print / Save as PDF** to include them in your report. Illustrations and sections stay in the current session. Use **Save backup** to reopen the rest of your project later.
 
 ## Get started
 

@@ -39,6 +39,9 @@ class ConceptSketchTests(unittest.TestCase):
         self.assertEqual(request.get_header('Authorization'), 'Bearer secret-test-key')
         self.assertEqual(sent['model'], 'muse-image-1.0')
         self.assertEqual(sent['n'], 1)
+        self.assertIn('exterior only', sent['prompt'])
+        self.assertIn('without cutaways or internal layers', sent['prompt'])
+        self.assertEqual(sent['tool_enablement'], {'enable_image_search': False, 'enable_web_search': False, 'enable_shell': False})
         self.assertEqual(sent['output_format'], 'png')
         self.assertEqual(sent['response_format'], 'b64_json')
         self.assertTrue(result['image_data_url'].endswith(encoded))
@@ -58,7 +61,7 @@ class ConceptSketchTests(unittest.TestCase):
             reset_request_session(token)
 
     def test_rejects_bad_input_and_images(self):
-        for request in ({}, {'prompt': ''}, {'prompt': 'x' * 1201}, {'prompt': 'mat', 'url': 'https://example.test'}):
+        for request in ({}, {'prompt': ''}, {'prompt': 'x' * 30001}, {'prompt': 'mat', 'url': 'https://example.test'}):
             with self.subTest(request=request), self.assertRaises(ServiceError):
                 concept_sketch(request, '.')
         for data in ({'data': [{'url': 'https://example.test/file.png'}]}, {'data': [{'b64_json': base64.b64encode(b'not png').decode()}]}):

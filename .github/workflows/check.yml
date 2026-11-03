@@ -59,5 +59,7 @@ jobs:
       - run: node checks/sound-guidance.test.mjs
       - run: node checks/provider-settings.test.mjs
       - run: node checks/readable-summary.test.mjs
+      - run: node checks/report-results.test.mjs
+      - run: node checks/sketch-context.test.mjs
       - run: node checks/checked-mix-advice.test.mjs
       - run: npm run build

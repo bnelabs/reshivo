@@ -5,6 +5,8 @@ import { describeMixOutcome } from './mixCandidate.ts'
 import type { BalanceMixRequest, BalanceMixResult } from './types'
 import { toDisplay } from './unitConversion.ts'
 import type { UnitSystem } from './unitConversion.ts'
+import { appendRectangularSection, parseRectangularSection } from './sectionDrawing.ts'
+import type { RectangularSection } from './sectionDrawing.ts'
 
 const shown = (value: string | null | undefined) => value?.trim() || 'Not entered'
 
@@ -15,25 +17,32 @@ export function formatProjectSummary(workspace: ProjectWorkspace, includeIdeas: 
     ['Product', 'product'], ['Materials', 'input'], ['What changes', 'variation'],
     ['Use', 'use'], ['What matters', 'priorities'], ['Process', 'process'], ['Constraints', 'constraints'],
   ] as const) lines.push(`${label}: ${shown(workspace.project[field]?.value)}`)
-  if (workspace.intake_notes?.trim()) lines.push('', 'Setup answers', workspace.intake_notes.trim())
   lines.push('', 'Plans')
-  const setups = currentConfigurations(workspace)
+  const setups = workspace.configurations
+  const current = new Set(currentConfigurations(workspace).map((setup) => `${setup.id}@${setup.revision}`))
   if (!setups.length) lines.push('No plans recorded yet.')
   for (const [index, setup] of setups.entries()) {
     const name = includeIdeas ? setup.name : safeSetupName(workspace, setup, `Plan ${index + 1}`)
     lines.push('', `${shown(name)} — version ${setup.revision}`)
+    if (!current.has(`${setup.id}@${setup.revision}`)) lines.push('Earlier version')
     if (!setup.materials.length) lines.push('Materials: Not entered')
     for (const material of setup.materials) lines.push(`- ${shown(material.name)}: ${shown(material.amount)}${material.amount.trim() ? ` ${material.unit.replaceAll('_', ' ')}` : ''}`)
     lines.push(`Process: ${shown(setup.process)}`, `Shape and size: ${shown(setup.geometry)}`)
     const idea = includeIdeas ? workspace.trial_ideas?.[`${setup.id}@${setup.revision}`] : undefined
+    const linkedIdea = Boolean(workspace.trial_ideas?.[`${setup.id}@${setup.revision}`] || setup.notes.startsWith('Unverified trial idea:'))
+    if (setup.notes.trim() && (includeIdeas || !linkedIdea)) lines.push(`Plan notes: ${setup.notes}`)
     if (idea) {
-      lines.push(`Suggested change: ${idea.change}`, `Why: ${idea.why}`, 'Steps to consider:')
+      lines.push(`Idea source: ${idea.provider} / ${idea.model}`, `Suggested change: ${idea.change}`, `Why: ${idea.why}`, 'Steps to consider:')
       idea.steps.forEach((step, i) => lines.push(`${i + 1}. ${step}`))
       lines.push(`Trade-offs: ${idea.tradeoffs.join(' ')}`, `Next check: ${idea.check}`)
     }
     const cost = workspace.costs[`${setup.id}@${setup.revision}`]
     if (cost) {
       lines.push(`Cost inputs (${shown(cost.currency)}; ${cost.mode === 'planned' ? 'planned' : 'actual'}):`)
+      for (const [label, value] of [
+        ['Cost basis', cost.mass_basis], ['Product and use', cost.functional_basis],
+        ['What counts as usable', cost.acceptance_basis], ['Batch mass (kg)', cost.batch_mass_kg],
+      ]) if (value?.trim()) lines.push(`${label}: ${value}`)
       for (const material of setup.materials) {
         const price = cost.prices[material.id]
         lines.push(`- ${shown(material.name)}: ${shown(price)}${price?.trim() ? ` ${cost.currency}/${cost.price_units?.[material.id] ?? 'kg'}` : ''}`)
@@ -44,6 +53,10 @@ export function formatProjectSummary(workspace: ProjectWorkspace, includeIdeas: 
       lines.push(energy === 'known' ? `- Energy: ${shown(cost.energy_kwh)} kWh at ${shown(cost.energy_rate)} ${cost.currency}/kWh` : `- Energy: ${energy}`)
       lines.push(labor === 'known' ? `- Labour: ${shown(cost.labor_hours)} hours at ${shown(cost.labor_rate)} ${cost.currency}/hour` : `- Labour: ${labor}`)
       lines.push(other === 'known' ? `- ${shown(cost.other_name)}: ${shown(cost.other_charge)} ${cost.currency}` : `- Other charge: ${other}`)
+      const output = cost.mode === 'actual'
+        ? [['Usable items', cost.usable_count], ['Usable mass (kg)', cost.usable_mass_kg], ['Usable area (m²)', cost.usable_area_m2]]
+        : [['Planned items', cost.gross_count], ['Planned mass (kg)', cost.gross_mass_kg], ['Planned area (m²)', cost.gross_area_m2], ['Expected usable fraction', cost.accepted_fraction]]
+      for (const [label, value] of output) if (value?.trim()) lines.push(`${label}: ${value}`)
     }
   }
   if (!includeIdeas && Object.keys(workspace.trial_ideas ?? {}).length) lines.push('', 'Some saved suggestions need review in the app before they can be included.')
@@ -60,9 +73,24 @@ export function formatProjectSummary(workspace: ProjectWorkspace, includeIdeas: 
     const name = setup ? (includeIdeas ? setup.name : safeSetupName(workspace, setup, 'Plan')) : 'Unknown plan'
     const excluded = workspace.record_exclusions?.[record.id]
     lines.push(`- ${shown(name)} v${record.configuration_revision} / ${shown(check?.name)}: ${record.readings.map((reading) => shown(reading.value)).join(', ')} ${record.unit} (${record.data_kind === 'synthetic' ? 'example data' : 'entered readings'}; ${record.conditions_confirmed ? 'conditions reviewed' : 'conditions need review'}${excluded ? '; excluded from comparisons' : ''}). Method: ${shown(record.method)}.`)
+    if (excluded) lines.push(`  Exclusion reason: ${excluded}`)
+    if (record.readings.some((reading) => reading.reading_id || reading.specimen_id || reading.run_id || reading.batch_id || reading.repeat_of)) {
+      record.readings.forEach((reading, index) => {
+        const groups = [
+          ['Reading ID', reading.reading_id], ['Specimen', reading.specimen_id], ['Run', reading.run_id],
+          ['Batch', reading.batch_id], ['Repeat of', reading.repeat_of],
+        ].filter(([, value]) => value?.trim()).map(([label, value]) => `${label}: ${value}`)
+        lines.push(`  Reading ${index + 1}: ${shown(reading.value)} ${record.unit}${groups.length ? `; ${groups.join('; ')}` : ''}`)
+      })
+    }
   }
-  lines.push('', 'This summary includes saved plans and readings. Open the app for cost comparisons.', '')
+  lines.push('')
   return lines.join('\n')
+}
+
+/** Keep the user's discussion in an appendix after the current project and guidance. */
+export function formatProjectNotes(workspace: ProjectWorkspace): string {
+  return workspace.intake_notes?.trim() ? `\nProject notes\nEarlier discussion provided by you:\n${workspace.intake_notes.trim()}\n` : ''
 }
 
 /** Include only guidance the caller has confirmed is current and visible. */
@@ -138,7 +166,7 @@ export function downloadTextFile(name: string, text: string): void {
 }
 
 /** User-controlled print dialog supports paper or Save as PDF without a remote service. */
-export function printTextReport(text: string, sketch?: string | null): void {
+export function printTextReport(text: string, sketch?: string | null, sectionDrawing?: RectangularSection | null): void {
   const report = window.open('', '_blank')
   if (!report) throw new Error('Allow pop-ups to open the printable report, then try again.')
   const doc = report.document
@@ -146,31 +174,35 @@ export function printTextReport(text: string, sketch?: string | null): void {
   doc.title = mixOnly ? 'Reshivo mix calculation' : 'Reshivo project report'
   const style = doc.createElement('style')
   style.textContent = `
-    @page { margin: 17mm 18mm; }
+    @page { margin: 15mm 17mm 17mm; }
     * { box-sizing: border-box; }
-    body { margin: 0; color: #172d25; background: #edf2ed; font: 14px/1.55 Inter, Arial, sans-serif; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { margin: 0; color: #20342d; background: #eef2ed; font: 14px/1.52 Inter, Arial, sans-serif; }
     .actions { max-width: 880px; margin: 22px auto 12px; padding: 0 24px; }
-    button { background: #164e42; color: white; border: 0; border-radius: 6px; padding: 11px 17px; font: inherit; font-weight: 600; cursor: pointer; }
-    main { max-width: 880px; margin: 0 auto 30px; padding: 50px 55px 46px; background: #fff; box-shadow: 0 2px 18px #173f3512; }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid #d8e3da; }
-    .brand { display: flex; align-items: center; gap: 10px; color: #172d25; font-size: 24px; font-weight: 700; letter-spacing: -1px; }
-    .brand svg { width: 31px; height: 31px; flex: none; }
-    .report-label { color: #62776a; font-size: 10px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; }
-    .hero { padding: 28px 0 12px; }
-    .eyebrow { margin: 0 0 6px; color: #52815b; font-size: 10px; letter-spacing: 1.2px; font-weight: 700; text-transform: uppercase; }
-    h1 { margin: 0; color: #163f34; font-size: 30px; line-height: 1.14; letter-spacing: -.7px; }
-    section { margin-top: 23px; }
-    h2 { margin: 0 0 11px; padding-bottom: 7px; border-bottom: 1px solid #dce8df; color: #173f35; font-size: 16px; letter-spacing: -.2px; break-after: avoid; }
+    button { background: #154b3e; color: white; border: 0; border-radius: 6px; padding: 11px 17px; font: inherit; font-weight: 600; cursor: pointer; }
+    main { max-width: 880px; margin: 0 auto 30px; padding: 44px 56px 48px; background: #fff; box-shadow: 0 8px 28px #173f3514; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid #d9e5dc; }
+    .brand { display: flex; align-items: center; gap: 9px; color: #163d33; font-size: 22px; font-weight: 700; letter-spacing: -.8px; }
+    .brand svg { width: 29px; height: 29px; flex: none; }
+    .report-label { color: #637b6c; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .hero { position: relative; margin-top: 23px; padding: 26px 28px 28px; color: #fff; background: #16483b; border-radius: 5px; overflow: hidden; break-inside: avoid; }
+    .hero::after { content: ''; position: absolute; right: 0; bottom: 0; width: 24%; height: 6px; background: #9ac27f; }
+    .eyebrow { margin: 0 0 8px; color: #c4ddbb; font-size: 10px; letter-spacing: 1.35px; font-weight: 700; text-transform: uppercase; }
+    h1 { position: relative; margin: 0; color: #fff; font-size: 28px; line-height: 1.16; letter-spacing: -.6px; overflow-wrap: anywhere; }
+    .hero-subtitle { margin: 8px 0 0; color: #d9ebe0; font-size: 12px; }
+    section { margin-top: 24px; }
+    h2 { margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid #dce8df; color: #173f35; font-size: 16px; letter-spacing: -.15px; break-after: avoid; }
     h3 { margin: 17px 0 8px; color: #173f35; font-size: 14px; break-after: avoid; }
-    .line { margin: 5px 0; overflow-wrap: anywhere; white-space: pre-wrap; }
-    .key { color: #536e60; font-weight: 600; }
+    .line { margin: 5px 0; overflow-wrap: anywhere; white-space: pre-wrap; orphans: 2; widows: 2; }
+    .key { color: #4f6b5d; font-weight: 650; }
     .item { padding-left: 13px; text-indent: -13px; }
     .spacer { height: 4px; }
-    figure { margin: 24px 0 5px; padding: 14px; border: 1px solid #dce8df; break-inside: avoid; }
-    img { display: block; max-width: 100%; max-height: 95mm; margin: auto; object-fit: contain; }
-    figcaption { margin-top: 8px; color: #62776a; font-size: 11px; }
+    .visuals { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 23px; break-inside: avoid; }
+    figure { margin: 0; padding: 14px; border: 1px solid #d9e6dc; background: #f6f9f4; border-radius: 5px; break-inside: avoid; }
+    img { display: block; max-width: 100%; max-height: 78mm; margin: auto; object-fit: contain; }
+    figcaption { margin-top: 8px; color: #526d5f; font-size: 11px; }
     footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #d8e3da; color: #718078; font-size: 10px; }
-    @media print { section.keep-together { break-inside: avoid; } body { background: white; font-size: 10.5pt; } .actions { display: none; } main { max-width: none; margin: 0; padding: 0; box-shadow: none; } .hero { padding-top: 22px; } h1 { font-size: 25pt; } section { margin-top: 18px; } }
+    @media print { section.keep-together { break-inside: avoid; } body { background: white; font-size: 10.5pt; } .actions { display: none; } main { max-width: none; margin: 0; padding: 0; box-shadow: none; } .hero { margin-top: 18px; padding: 20px 23px 23px; } h1 { font-size: 23pt; } section { margin-top: 18px; } }
   `
   doc.head.appendChild(style)
   const actions = doc.createElement('div'); actions.className = 'actions'
@@ -188,39 +220,51 @@ export function printTextReport(text: string, sketch?: string | null): void {
     ['#173f35', 'M59 63h56v43a9 9 0 0 1-9 9H75L59 63Z'],
   ]) { const part = doc.createElementNS(ns, 'path'); part.setAttribute('fill', fill); part.setAttribute('d', path); mark.appendChild(part) }
   const brandName = doc.createElement('span'); brandName.textContent = 'Reshivo'; brand.append(mark, brandName)
-  const reportLabel = doc.createElement('span'); reportLabel.className = 'report-label'; reportLabel.textContent = 'Your workspace'
+  const reportLabel = doc.createElement('span'); reportLabel.className = 'report-label'; reportLabel.textContent = mixOnly ? 'Mix calculation' : 'Project report'
   header.append(brand, reportLabel)
   const hero = doc.createElement('div'); hero.className = 'hero'
-  const eyebrow = doc.createElement('p'); eyebrow.className = 'eyebrow'; eyebrow.textContent = 'Material to product'
-  const title = doc.createElement('h1'); title.textContent = mixOnly ? 'Mix calculation' : 'Project report'
-  hero.append(eyebrow, title); main.append(header, hero)
+  const eyebrow = doc.createElement('p'); eyebrow.className = 'eyebrow'; eyebrow.textContent = mixOnly ? 'Your calculation' : 'Material to product'
+  const product = text.split('\n').find((line) => line.startsWith('Product: '))?.slice('Product: '.length).trim()
+  const title = doc.createElement('h1'); title.textContent = mixOnly ? 'Mix calculation' : product && product !== 'Not entered' ? product : 'Project report'
+  const subtitle = doc.createElement('p'); subtitle.className = 'hero-subtitle'; subtitle.textContent = mixOnly ? 'Inputs and calculated result' : 'Your materials, plans and product checks'
+  hero.append(eyebrow, title, subtitle); main.append(header, hero)
   let picture: HTMLImageElement | null = null
+  const visuals = doc.createElement('div'); visuals.className = 'visuals'
+  let hasVisual = false
   if (sketch && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(sketch)) {
     const figure = doc.createElement('figure'); picture = doc.createElement('img')
     picture.alt = 'Generated product concept'; picture.src = sketch
-    const caption = doc.createElement('figcaption'); caption.textContent = 'Concept image, not a technical drawing.'
-    figure.append(picture, caption); main.appendChild(figure)
+    const caption = doc.createElement('figcaption'); caption.textContent = 'AI-generated concept; details are not verified.'
+    figure.append(picture, caption); visuals.appendChild(figure); hasVisual = true
   }
-  let section = doc.createElement('section')
+  const section = sectionDrawing && parseRectangularSection(sectionDrawing.span, sectionDrawing.thickness, sectionDrawing.unit)
+  if (section) {
+    const figure = doc.createElement('figure')
+    appendRectangularSection(doc, figure, section)
+    const caption = doc.createElement('figcaption'); caption.textContent = 'Rectangular section from your dimensions.'
+    figure.appendChild(caption); visuals.appendChild(figure); hasVisual = true
+  }
+  if (hasVisual) main.appendChild(visuals)
+  let reportSection = doc.createElement('section')
   const firstHeading = doc.createElement('h2'); firstHeading.textContent = mixOnly ? 'Your inputs' : 'Your project'
-  section.appendChild(firstHeading); main.appendChild(section)
-  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps', 'Earlier saved guidance'])
+  reportSection.appendChild(firstHeading); main.appendChild(reportSection)
+  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps', 'Earlier saved guidance', 'Project notes', 'Cost results', 'Decision results', 'Cost result', 'Cost comparison', 'Check results'])
   const lines = text.split('\n')
   const mixStart = mixOnly ? 0 : lines.indexOf('Reshivo — mix calculation')
   const mixLines = mixStart >= 0 ? lines.slice(mixStart).filter((line) => line.trim()) : []
   const keepMixTogether = mixLines.length <= 14 && mixLines.join('').length <= 1000
-  if (mixOnly && keepMixTogether) section.classList.add('keep-together')
+  if (mixOnly && keepMixTogether) reportSection.classList.add('keep-together')
   if (lines[0] === 'Reshivo — project summary' || lines[0] === 'Reshivo — mix calculation') lines.shift()
   for (const line of lines) {
     const sectionName = line === 'Reshivo — mix calculation' ? 'Mix calculation' : line
     if (headings.has(line) || line === 'Reshivo — mix calculation') {
-      section = doc.createElement('section')
-      if (line === 'Reshivo — mix calculation' && keepMixTogether) section.classList.add('keep-together')
+      reportSection = doc.createElement('section')
+      if (line === 'Reshivo — mix calculation' && keepMixTogether) reportSection.classList.add('keep-together')
       const heading = doc.createElement('h2'); heading.textContent = sectionName
-      section.appendChild(heading); main.appendChild(section); continue
+      reportSection.appendChild(heading); main.appendChild(reportSection); continue
     }
-    if (!line.trim()) { const spacer = doc.createElement('div'); spacer.className = 'spacer'; section.appendChild(spacer); continue }
-    if (/ — version \d+$/.test(line)) { const heading = doc.createElement('h3'); heading.textContent = line; section.appendChild(heading); continue }
+    if (!line.trim()) { const spacer = doc.createElement('div'); spacer.className = 'spacer'; reportSection.appendChild(spacer); continue }
+    if (/ — version \d+$/.test(line)) { const heading = doc.createElement('h3'); heading.textContent = line; reportSection.appendChild(heading); continue }
     const row = doc.createElement('p'); row.className = 'line'
     if (line.startsWith('- ')) row.classList.add('item')
     const separator = line.indexOf(': ')
@@ -228,9 +272,9 @@ export function printTextReport(text: string, sketch?: string | null): void {
       const label = doc.createElement('span'); label.className = 'key'; label.textContent = line.slice(0, separator + 1)
       row.append(label, doc.createTextNode(line.slice(separator + 1)))
     } else row.textContent = line
-    section.appendChild(row)
+    reportSection.appendChild(row)
   }
-  const footer = doc.createElement('footer'); footer.textContent = 'Reshivo · Your material-to-product workspace'
+  const footer = doc.createElement('footer'); footer.textContent = 'Reshivo · Project report'
   main.appendChild(footer); doc.body.append(actions, main)
   report.focus()
   if (picture && !picture.complete) {
