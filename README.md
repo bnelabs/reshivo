@@ -45,6 +45,8 @@ An entered reading, a calculated composition and an AI suggestion each answer a 
 
 ## Development and checks
 
+The commit history retains dated application, frontend and test changes from the hackathon. Earlier commits were filtered to remove old research data, documents, examples and media; their commit IDs therefore changed, and those earlier snapshots may not build on their own. The latest commit contains the complete source package.
+
 ```sh
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/verify_research.py

@@ -29,7 +29,8 @@
     "Marked two historical protocols; their baseline verifiers hash the original frozen bytes after checking the exact notice.",
     "Generated a release-specific inventory rather than retaining claims about excluded files.",
     "Regenerated the two affected exported manifests for retained files; private originals remain unchanged.",
-    "Adapted licensing notes for the source-only collection."
+    "Adapted licensing notes for the source-only collection.",
+    "Documented that the visible development history was filtered and earlier snapshots omit source data."
   ],
   "files": [
     {
@@ -59,8 +60,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 3520,
-      "sha256": "a5a4dfdbac02c0e35b236e3c5a47469b0748be4639ff40d782f59c87fe505efe"
+      "bytes": 3851,
+      "sha256": "5640f1fdb8e01731a4761fda421164a23220d66d32d0b247e2ba255a9f404130"
     },
     {
       "path": "data/ATTRIBUTION.md",
