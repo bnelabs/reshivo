@@ -417,6 +417,12 @@ export function ProviderSettings({ open, onClose, onSaved }: ProviderSettingsPro
                     'Check the documentation for your endpoint.'
                   )}
                 </small>
+                {draft.provider === 'meta' && ['muse-spark-1.3-contributor', 'muse-spark-1.2-contributor'].includes(draft.model) && (
+                  <small>
+                    Contributor mode lets Meta use submitted content to train future models.{' '}
+                    <a href="https://dev.meta.ai/docs/pricing-rate-limits" target="_blank" rel="noopener noreferrer">Meta details ↗</a>
+                  </small>
+                )}
               </label>
 
               <label className="provider-settings-field">

@@ -17,6 +17,10 @@ from .provider_transport import (ProviderCapabilityError, ProviderResponseError,
 
 ENDPOINT = "https://api.meta.ai/v1/chat/completions"
 DEFAULT_MODEL = "muse-spark-1.3"
+SUPPORTED_META_MODELS = frozenset({
+    "muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0",
+    "muse-spark-1.3-contributor", "muse-spark-1.2-contributor",
+})
 
 
 class MetaConfigurationError(Exception):
@@ -279,8 +283,8 @@ class MetaClient:
         if not self.profile.configured:
             raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
                                          else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
-        if self.provider == "meta" and self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
-            raise MetaConfigurationError("Choose a supported standard-mode Meta reasoning model.")
+        if self.provider == "meta" and self.model not in SUPPORTED_META_MODELS:
+            raise MetaConfigurationError("Choose a supported Meta reasoning model.")
         if isinstance(max_completion_tokens, bool) or not isinstance(max_completion_tokens, int) or not 1 <= max_completion_tokens <= 8192:
             raise MetaValidationError("Set a completion limit between one and 8192 tokens")
         names = _tool_definitions(tools)
@@ -337,8 +341,8 @@ class MetaClient:
         if not self.profile.configured:
             raise MetaConfigurationError("Meta is not connected. Set MODEL_API_KEY in the local .env file." if self.provider == "meta"
                                          else f"{self.profile.name} is not connected. Set its model and API key in connection settings.")
-        if self.provider == "meta" and self.model not in {"muse-spark-1.3", "muse-spark-1.2", "muse-wonder-1.0"}:
-            raise MetaConfigurationError("Choose a supported standard-mode Meta reasoning model.")
+        if self.provider == "meta" and self.model not in SUPPORTED_META_MODELS:
+            raise MetaConfigurationError("Choose a supported Meta reasoning model.")
         if not isinstance(reasoning_effort, str) or reasoning_effort not in {"low", "medium", "high"}:
             raise MetaValidationError("Choose low, medium or high reasoning effort")
         if image_data_url is not None:

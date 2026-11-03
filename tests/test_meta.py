@@ -74,6 +74,20 @@ class MetaTests(unittest.TestCase):
                     self.assertEqual(json.loads(transport.requests[0].data)["reasoning_effort"], effort)
                     self.assertEqual(transport.timeout, 80 if effort == "high" else 50)
 
+    def test_contributor_models_support_explicit_high_reasoning(self):
+        with tempfile.TemporaryDirectory() as temp:
+            for model in ("muse-spark-1.3-contributor", "muse-spark-1.2-contributor"):
+                with self.subTest(model=model):
+                    transport = GenerationTransport()
+                    client = MetaClient(Path(temp), {"MODEL_API_KEY": "fixture-generation-key", "META_MODEL": model}, transport)
+                    result = client.generate("Check this case", {}, 1, reasoning_effort="high")
+                    payload = json.loads(transport.requests[0].data)
+                    self.assertEqual(payload["model"], model)
+                    self.assertEqual(payload["reasoning_effort"], "high")
+                    self.assertEqual(result.model, model)
+                    self.assertEqual(result.reasoning_effort, "high")
+                    self.assertEqual(transport.timeout, 80)
+
     def test_explicit_request_timeout_is_bounded_and_passed_to_transport(self):
         with tempfile.TemporaryDirectory() as temp:
             transport = GenerationTransport()

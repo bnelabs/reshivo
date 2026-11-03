@@ -100,6 +100,17 @@ class MetaToolTests(unittest.TestCase):
         self.assertEqual(result.message, {"role": "assistant", "content": "The checked result is ready."})
         self.assertNotIn("tool_calls", result.message)
 
+    def test_contributor_models_can_request_a_tool_turn(self):
+        for model in ("muse-spark-1.3-contributor", "muse-spark-1.2-contributor"):
+            with self.subTest(model=model):
+                transport = Transport(reply([call()]))
+                result = self.client(transport, model=model).tool_turn([{"role": "user", "content": "Check this case."}], tools())
+                payload = json.loads(transport.requests[0].data)
+                self.assertEqual(payload["model"], model)
+                self.assertEqual(payload["reasoning_effort"], "low")
+                self.assertEqual(result.model, model)
+                self.assertEqual(result.message["tool_calls"][0]["function"]["name"], "check_mass")
+
     def test_complete_tool_history_is_sent_with_matching_results(self):
         messages = [{"role": "user", "content": "Check the case."},
                     {"role": "assistant", "content": None, "tool_calls": [call()]},
