@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T20:40:03.017298+00:00",
+  "prepared_utc": "2026-11-03T21:05:36.808152+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -32,7 +32,8 @@
     "Adapted licensing notes for the source-only collection.",
     "Documented that the visible development history was filtered and earlier snapshots omit source data.",
     "Added browser-session AI connections, clearer project flow, readable reports, and an optional concept sketch after the original export.",
-    "Improved project-specific advice, sketch context and dimensioned section, and printable reports in version 0.7.0."
+    "Improved project-specific advice, sketch context and dimensioned section, and printable reports in version 0.7.0.",
+    "Improved comparison flow, local project recovery, unit entry and bounded work capacity in version 0.8.0."
   ],
   "files": [
     {
@@ -42,8 +43,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 2499,
-      "sha256": "77ec5af2163ad13a6ac2d04bb41b36a3453e442e66370303746c4ef43f35e953"
+      "bytes": 2550,
+      "sha256": "d6a2daf0a0b72a14e533a105162676964c88a545c0f354bf745458f03879a359"
     },
     {
       "path": ".gitignore",
@@ -52,8 +53,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 6059,
-      "sha256": "f369e320cd3d8beab6faab1ac35deb701731cc3cbf2a5f46cd6bede0f181ab10"
+      "bytes": 6791,
+      "sha256": "b861042e8d06e08409b7741fdf9e6516b5cda9603c81984f435a8bdc26e8368b"
     },
     {
       "path": "LICENSE",
@@ -67,8 +68,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 5045,
-      "sha256": "b6d6a2ecbe1b9f007d99ba30c9438dc43c7a20289697019cc81f533353fdf114"
+      "bytes": 5289,
+      "sha256": "261980e24e9df3bcda33e18cc04b150549dde737b7a7d1e9fc3b26aaaba030c0"
     },
     {
       "path": "data/ATTRIBUTION.md",
@@ -1178,12 +1179,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 329,
-      "sha256": "794ceb9e66b9a2b8ca1571be891e55e595f9581d570671871eec173878df0f23"
+      "sha256": "1f081d212b698b2ced0cd7664818d711bd452b74f4da5534c113461f4d7284a7"
     },
     {
       "path": "reshivo/__init__.py",
       "bytes": 62,
-      "sha256": "9c5f9bd5eb2e7d65a98904ae4ad749f5787589a4ae058f2505daa52bb4b7cdc6"
+      "sha256": "5540743a0ee1ed4bba5fe4fc8209d96363bcb71639eca83eb3d2eab36703295a"
     },
     {
       "path": "reshivo/__main__.py",
@@ -1202,8 +1203,8 @@
     },
     {
       "path": "reshivo/advisor.py",
-      "bytes": 104526,
-      "sha256": "ff15f8640885d3e6c5feceb671d11c5404ce7ed862330c80c33bbe557ac841ac"
+      "bytes": 105322,
+      "sha256": "b953b155c12dec752f5f4cf12e3bc7e803f57e1590b5f40b29a263fab2117bd1"
     },
     {
       "path": "reshivo/balance.py",
@@ -1327,8 +1328,8 @@
     },
     {
       "path": "reshivo/server.py",
-      "bytes": 17619,
-      "sha256": "09490e3e9cfd5ea3ac29c1e04a48a0d81a5bd29918662c0d04d2133b272195ca"
+      "bytes": 18508,
+      "sha256": "995e8f1536bae38cafc51e246cd04ac82740f423bcfa9cb418725501823f6eb9"
     },
     {
       "path": "reshivo/service.py",
@@ -1547,8 +1548,8 @@
     },
     {
       "path": "tests/test_image_intake.py",
-      "bytes": 7677,
-      "sha256": "69cdd65318f1845f70c9c0fdc33dbf3c7ae06b0d20df015e79725f06b99c3da7"
+      "bytes": 7667,
+      "sha256": "29479951f3e3e29a94302d7d639a5c6fd7c0085eb0bc3f3a862fc2bb64781d75"
     },
     {
       "path": "tests/test_legacy_unknown_metal_gate.py",
@@ -1632,8 +1633,8 @@
     },
     {
       "path": "tests/test_project_planning_mode.py",
-      "bytes": 6059,
-      "sha256": "8413558399880da95066bb8bdeaa52e07d89de6cfb06170660a52868b4603239"
+      "bytes": 8430,
+      "sha256": "4ac6179fdc07558254e5a10aa1b9ed1d21c0f068517e3d50ae1d4349d11b455c"
     },
     {
       "path": "tests/test_project_workspace_api.py",
@@ -1782,8 +1783,8 @@
     },
     {
       "path": "web/checks/mix-adjustment.test.mjs",
-      "bytes": 13705,
-      "sha256": "95e1ec0180d41276395a779effee41abf797c97f6c47e4f872ff8aff01861233"
+      "bytes": 14644,
+      "sha256": "56997993225a08e732350329fcf65286c210a0106a7e548531bfec634a829b6d"
     },
     {
       "path": "web/checks/mix-candidate.test.mjs",
@@ -1804,6 +1805,11 @@
       "path": "web/checks/mix-question.test.mjs",
       "bytes": 6796,
       "sha256": "a2299baec957fe190bb20d64dc17f3c027471133b26a7d63eea216e46b3aa8a6"
+    },
+    {
+      "path": "web/checks/project-autosave.test.mjs",
+      "bytes": 4124,
+      "sha256": "728d7c207a1390a30f922f28135356dd43213803de708a744dcfce485e42713f"
     },
     {
       "path": "web/checks/project-brief.test.mjs",
@@ -1832,8 +1838,8 @@
     },
     {
       "path": "web/checks/reference-composition.test.mjs",
-      "bytes": 9199,
-      "sha256": "581f6bb806f4ad9b9e7bdef0a7c1f287daff198b720a212846bd02a027a312bc"
+      "bytes": 11107,
+      "sha256": "60dc337fcc974a1bc0ec68bf139867d2204af9d26ac3b5c66289a71c26847c00"
     },
     {
       "path": "web/checks/report-results.test.mjs",
@@ -1883,12 +1889,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "1d5dd634b1f211e06734eaeda13e83137dd8c9615b29ea7c5e7e3d4649bc3605"
+      "sha256": "3ffb2065271ca9c3fa96794b1b0d572ef5ed832efffa040e6cd3f73a6ebc6e32"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "d0db3af557d3ed7cdd1560528d4dfcc3362e72bb54ae438b6b0967e20fb70371"
+      "sha256": "2557ddfb5ac1d0923e26d8e656e06722235ab63acc2f1dd20fb3e28603baaff7"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -2027,8 +2033,8 @@
     },
     {
       "path": "web/src/components/MixAdjustment.tsx",
-      "bytes": 25769,
-      "sha256": "8e1dd0fe6a7901d2fb9f5d3b3ecd79a02788bf11b81f95e40fce6b0ebc791ca9"
+      "bytes": 27737,
+      "sha256": "ed1358ad259b5b6846c21c917cb6cdb8e816db3246c0288d4310e6f3a60cb225"
     },
     {
       "path": "web/src/components/MyMixPlanner.tsx",
@@ -2052,8 +2058,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 71187,
-      "sha256": "e826240e906b6f004f26a18a30746a5bfef5a40297210c3707796b102a743271"
+      "bytes": 75626,
+      "sha256": "2e646e0f8c01134ba136b03422dbfe71a49d197506974a5f80a587a289fe2dca"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2122,8 +2128,8 @@
     },
     {
       "path": "web/src/components/TrialWorkspace.tsx",
-      "bytes": 53982,
-      "sha256": "c8070f51b7c81b9b5c693c4099f1c42e40d3c81954a4e008a7d983205c5f941d"
+      "bytes": 56196,
+      "sha256": "976ba8ba1776755b1db67264cc39cba54d477fa7a9447e886d6e789f3d44c44a"
     },
     {
       "path": "web/src/components/Workshop.tsx",
@@ -2202,8 +2208,8 @@
     },
     {
       "path": "web/src/mixAdjustment.ts",
-      "bytes": 19008,
-      "sha256": "f30b753b95129028efab5e16211ab62e603cffdfba4e956b9aba1ad902d1d0b8"
+      "bytes": 18985,
+      "sha256": "a24ad4aae10b375399780927e13c4fcfc9adb94088e4d67bf3e3adfe1e62a608"
     },
     {
       "path": "web/src/mixCandidate.ts",
@@ -2219,6 +2225,11 @@
       "path": "web/src/mixQuestion.ts",
       "bytes": 2915,
       "sha256": "4c02d273f7ca3c3eb620c5df98eeaa58571c9090260cb9269136839bc85fe36d"
+    },
+    {
+      "path": "web/src/projectAutosave.ts",
+      "bytes": 4523,
+      "sha256": "8fa5f299f05fde67a8cc1061c13fd9c23adf5402127509561af9c0e36915d3fa"
     },
     {
       "path": "web/src/projectBrief.ts",
@@ -2247,8 +2258,8 @@
     },
     {
       "path": "web/src/readableSummary.ts",
-      "bytes": 21737,
-      "sha256": "f60f7d5e632ce5a9b907eab3a8fa6a3f035cd483c3312bac81a9cc5b19d83acb"
+      "bytes": 21755,
+      "sha256": "39cadfbd899368fbbf1fb36c0f8fc468f47efeb4db85f2ca4fb25c9dbafa89aa"
     },
     {
       "path": "web/src/referenceComposition.ts",
@@ -2262,8 +2273,8 @@
     },
     {
       "path": "web/src/savedGuidanceReview.ts",
-      "bytes": 1002,
-      "sha256": "73705a794ad60e8dc05240580fd3762c4ac8610f4310b6ce44e22330a4a61576"
+      "bytes": 2612,
+      "sha256": "e180340af013f2cc4fb21e92a132da0b319c4110e69bf5cf196f8f67accfbdac"
     },
     {
       "path": "web/src/sectionDrawing.ts",
@@ -2307,8 +2318,8 @@
     },
     {
       "path": "web/src/units.tsx",
-      "bytes": 2865,
-      "sha256": "9a77df20b39e5a168bde4578c3b12cff85842efef980a1f948e829fd638a46a7"
+      "bytes": 3076,
+      "sha256": "3d5f6070b5d56568585b351a6c4ce39166fe4fd5af7a64d42fef8fffbd7d353e"
     },
     {
       "path": "web/src/workspaceFile.ts",

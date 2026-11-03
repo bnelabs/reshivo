@@ -248,7 +248,7 @@ export function printTextReport(text: string, sketch?: string | null, sectionDra
   let reportSection = doc.createElement('section')
   const firstHeading = doc.createElement('h2'); firstHeading.textContent = mixOnly ? 'Your inputs' : 'Your project'
   reportSection.appendChild(firstHeading); main.appendChild(reportSection)
-  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps', 'Earlier saved guidance', 'Project notes', 'Cost results', 'Decision results', 'Cost result', 'Cost comparison', 'Check results'])
+  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps', 'Ideas compared', 'Earlier saved guidance', 'Project notes', 'Cost results', 'Decision results', 'Cost result', 'Cost comparison', 'Check results'])
   const lines = text.split('\n')
   const mixStart = mixOnly ? 0 : lines.indexOf('Reshivo — mix calculation')
   const mixLines = mixStart >= 0 ? lines.slice(mixStart).filter((line) => line.trim()) : []

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { recordedRecipeFraction } from '../src/referenceComposition.ts'
 import { confirmRecordedRecipeReview, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../src/mixAdjustment.ts'
-import { newProjectWorkspace, parseProjectWorkspace, serializeProjectWorkspace } from '../src/projectWorkspace.ts'
+import { newProjectWorkspace, newCostDraft, parseProjectWorkspace, serializeProjectWorkspace } from '../src/projectWorkspace.ts'
+import { renamePlanLabel } from '../src/savedGuidanceReview.ts'
 
 const recipe = (id, revision, materials) => ({ id, revision, name: id, materials, process: 'pressed', geometry: 'sheet', notes: '' })
 const item = (id, amount, unit) => ({ id, name: id, amount, unit })
@@ -40,6 +41,25 @@ assert.equal(draft.reference.component_id, 'paper'); assert.equal(draft.referenc
 assert.match(recordedRecipeDiscussion(next, destination, dest, w.project, (s) => s.name), /source, version 1.*exact source fraction and chosen target are 25%/i)
 const reopened = parseProjectWorkspace(serializeProjectWorkspace(next))
 assert.deepEqual(savedMixAdjustmentRecord(reopened, destination, dest).reference, draft.reference, 'source provenance survives Save/Open')
+
+const renameBase = { ...next,
+  trial_ideas: { 'source@1': { title: 'source', change: 'change', why: 'reason', steps: ['step'], tradeoffs: ['tradeoff'], check: 'check', provider: 'fixture', model: 'fixture' } },
+  checks: [{ id:'check', name:'Grip', unit:'N', method:'measured', minimum:'1', maximum:'3', required:true }],
+  records: [{ id:'record', case_id:w.case_id, configuration_id:'source', configuration_revision:1, check_id:'check', unit:'N', method:'measured', data_kind:'user_reported', conditions_confirmed:true, readings:[{ value:'2', specimen_id:'specimen' }] }],
+  costs: { 'source@1': newCostDraft() },
+}
+const renamed = renamePlanLabel(renameBase, source, 'My board')
+assert.ok(renamed)
+assert.equal(renamed.configurations[0].name, 'My board')
+assert.equal(renamed.configurations[0].revision, 1, 'name-only edit retains the exact plan revision')
+assert.deepEqual(renamed.records, renameBase.records, 'all readings stay linked to that revision')
+assert.deepEqual(renamed.costs, renameBase.costs, 'cost entries are unchanged')
+assert.deepEqual({ ...renamed.configurations[0], name: source.name }, source, 'the label is the only plan field changed')
+assert.equal(savedMixAdjustmentRecord(renamed, destination, dest).reference.setup_snapshot, JSON.stringify(renamed.configurations[0]), 'references follow the label without changing the recipe')
+assert.doesNotThrow(() => parseProjectWorkspace(serializeProjectWorkspace(renamed)), 'renamed plan and references survive save and open')
+assert.equal(renamePlanLabel(renameBase, source, 'source'), null, 'held AI name cannot be silently reintroduced')
+assert.equal(renamePlanLabel(renameBase, source, ' '.repeat(3)), null)
+assert.equal(renamePlanLabel(renameBase, { ...source, process:'changed' }, 'My board'), null, 'a stale captured plan cannot overwrite other changes')
 
 const withOtherInputs = updateSavedMixAdjustment(next, w.case_id, destination, dest, w.project, 'inputMass', '1')
 assert.deepEqual(savedMixAdjustmentRecord(withOtherInputs, destination, dest).reference, draft.reference, 'unrelated edits retain source provenance')

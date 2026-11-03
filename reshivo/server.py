@@ -19,6 +19,15 @@ MAX_PROJECT_BODY_BYTES = 512 * 1024
 MAX_PLANNING_BODY_BYTES = 4 * 1024 * 1024
 SESSION_TTL_SECONDS = 1800
 MAX_SESSIONS = 512
+WORK_WAIT_SECONDS = 3
+LOCAL_ROUTES = frozenset({
+    '/api/project/planning-mode', '/api/project/review-saved-guidance',
+    '/api/project/trial-records', '/api/project/compare-decisions',
+    '/api/project/manufacturing-cost', '/api/project/compare-costs',
+    '/api/advisor/balance-mix',
+    '/api/inference/providers/save', '/api/inference/providers/select',
+    '/api/inference/providers/clear',
+})
 
 
 class SessionStore:
@@ -86,6 +95,8 @@ class WorkbenchHTTPServer(ThreadingHTTPServer):
         self.application = service
         self.web_root = Path(web_root).resolve()
         self.work_slots = threading.BoundedSemaphore(2)
+        self.local_slots = threading.BoundedSemaphore(2)
+        self.waiting_slots = threading.BoundedSemaphore(4)
         self.session_mode = session_mode
         self.sessions = SessionStore()
         super().__init__(address, WorkbenchHandler)
@@ -257,6 +268,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         acquired = False
+        slots = None
         self._session_cookie = None
         session_token = None
         try:
@@ -298,8 +310,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)
+            slots = self.server.local_slots if path in LOCAL_ROUTES else self.server.work_slots
             if path in {"/api/advisor/inspect-image", "/api/project/planning-mode", "/api/project/review-saved-guidance"}:
-                acquired = self.server.work_slots.acquire(blocking=False)
+                acquired = slots.acquire(blocking=False)
                 if not acquired:
                     self.close_connection = True
                     raise ServiceError("service_busy", "The workbench is busy; try again", 429)
@@ -313,9 +326,14 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                     create=path == "/api/inference/providers/save" and can_create_browser_session(body))
                 session_token = set_request_session(session)
             if not acquired:
-                acquired = self.server.work_slots.acquire(blocking=False)
+                acquired = slots.acquire(blocking=False)
+                if not acquired and slots is self.server.work_slots and self.server.waiting_slots.acquire(blocking=False):
+                    try:
+                        acquired = slots.acquire(timeout=WORK_WAIT_SECONDS)
+                    finally:
+                        self.server.waiting_slots.release()
             if not acquired:
-                raise ServiceError("service_busy", "Two calculations are already running; try again shortly", 429)
+                raise ServiceError("service_busy", "The app is busy. Please try again in a moment.", 429)
             self._json(routes[path](body))
         except ServiceError as error:
             self._error(error)
@@ -325,7 +343,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             self._error(ServiceError("internal_error", "The local service could not complete this request", 500))
         finally:
             if acquired:
-                self.server.work_slots.release()
+                slots.release()
             if session_token is not None:
                 from .providers import reset_request_session
                 reset_request_session(session_token)

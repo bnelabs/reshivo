@@ -2,6 +2,21 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.8.0 — 2026-11-04
+
+### Added
+
+- Recover project details and saved guidance from this browser after a reload. Connected AI keys remain separate.
+- Recalculate an eligible saved mix draft from its entered inputs when reopening a project.
+
+### Changed
+
+- Show idea cards with the answer and send the comparison directly when choosing **Help me choose**.
+- Keep local checks separate from AI request capacity and briefly queue busy AI requests.
+- Select the only available plan and check when adding a reading; sample details remain optional.
+- Keep unfinished mass entries editable in their original units when changing display units.
+- Explain when a saved idea name is unavailable and let the user choose a recognizable name.
+
 ## 0.7.0 — 2026-11-03
 
 ### Added

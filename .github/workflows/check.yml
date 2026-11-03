@@ -39,6 +39,7 @@ jobs:
       - run: node checks/measurement-trial.test.mjs
       - run: node checks/workspace-file.test.mjs
       - run: node checks/project-workspace.test.mjs
+      - run: node checks/project-autosave.test.mjs
       - run: node checks/manufacturing-cost.test.mjs
       - run: node checks/cost-price-unit.test.mjs
       - run: node checks/cost-display.test.mjs

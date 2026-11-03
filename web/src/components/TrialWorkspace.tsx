@@ -3,6 +3,7 @@ import { api } from '../api'
 import { useUnitSystem } from '../units'
 import { formatCheckResults, reportResultContext } from '../reportResults'
 import type { ReportResultKind } from '../reportResults'
+import { renamePlanLabel } from '../savedGuidanceReview'
 import { TrialAssessmentNotices } from './TrialAssessmentNotices'
 import { materialUnitLabel, planMaterialUnitChange, resolveMaterialUnitChange } from '../materialUnitChange'
 import type { PendingMaterialUnitChange } from '../materialUnitChange'
@@ -85,6 +86,9 @@ export function TrialWorkspace({
 }: Props) {
   const system = useUnitSystem()
   const [editing, setEditing] = useState<TrialConfiguration | null>(null)
+  const [nameWasEdited, setNameWasEdited] = useState(false)
+  const [rename, setRename] = useState<{ captured: TrialConfiguration; name: string } | null>(null)
+  const [renameError, setRenameError] = useState('')
   const [pendingUnit, setPendingUnit] = useState<PendingMaterialUnitChange | null>(null)
   const [check, setCheck] = useState<ProductCheck>({
     id: uid(),
@@ -178,6 +182,10 @@ export function TrialWorkspace({
     kind,
   })
   const fresh = assessedInput === inputKey
+  useEffect(() => {
+    if (!selected && setups.length === 1) setSelected(setupKey(setups[0]))
+    if (!selectedCheck && w.checks.length === 1) setSelectedCheck(w.checks[0].id)
+  }, [selected, selectedCheck, w.configurations, w.checks])
   const selectedSetup = setups.find((c) => setupKey(c) === selected)
   const property = w.checks.find((c) => c.id === selectedCheck)
   const originalEditCheck = w.checks.find((c) => c.id === editingCheckId)
@@ -188,6 +196,7 @@ export function TrialWorkspace({
   function start(source?: TrialConfiguration) {
     setError('')
     setPendingUnit(null)
+    setNameWasEdited(false)
     setEditing(
       source
         ? structuredClone(source)
@@ -229,6 +238,10 @@ export function TrialWorkspace({
     }
     if (!editing?.name.trim() || !editing.materials.some((m) => m.name.trim())) {
       reportError('setup', 'Name the setup and at least one material. Amounts may stay unknown.')
+      return
+    }
+    if (hideCopiedName(editing)) {
+      reportError('setup', 'Choose a different plan name while the saved idea is unavailable.')
       return
     }
     if (editing.materials.some((m) => !m.name.trim())) {
@@ -434,6 +447,19 @@ export function TrialWorkspace({
               <article className="pw-card" key={setupKey(c)} data-plan-key={setupKey(c)} tabIndex={-1}>
                 <span className="pw-overline">Plan · version {c.revision}</span>
                 <h2>{displaySetupName(c)}</h2>
+                {hideCopiedName(c) && <div className="pw-notice">
+                  <p>The saved name matches guidance that is being checked or is unavailable. Choose a new name to make this plan easy to recognize.</p>
+                  {rename?.captured.id === c.id && rename.captured.revision === c.revision ? <>
+                    <label>New plan name<input autoFocus maxLength={120} value={rename.name} onChange={(event) => { setRename({ ...rename, name: event.target.value }); setRenameError('') }} /></label>
+                    <p>Only the name changes. Your readings and costs stay with this plan.</p>
+                    {renameError && <p className="pw-error" role="alert">{renameError}</p>}
+                    <div className="pw-actions"><button type="button" onClick={() => {
+                      const renamed = renamePlanLabel(w, rename.captured, rename.name)
+                      if (!renamed) { setRenameError('Enter a different name. If the plan changed, cancel and try again.'); return }
+                      onChange(renamed); setRename(null); setRenameError('')
+                    }}>Save name</button><button type="button" onClick={() => { setRename(null); setRenameError('') }}>Cancel</button></div>
+                  </> : <button type="button" onClick={() => { setRename({ captured: structuredClone(c), name: '' }); setRenameError('') }}>Choose a plan name</button>}
+                </div>}
                 {!showHistoricalIdeas && hasLinkedIdea(c) && (
                   <p>
                     {checkingPlanningMode ? 'Checking saved ideas.' : 'This saved idea is unavailable for reuse.'}
@@ -512,14 +538,14 @@ export function TrialWorkspace({
               <label>
                 Plan name
                 <input
-                  value={hideCopiedName(editing) ? '' : editing.name}
+                  value={hideCopiedName(editing) && !nameWasEdited ? '' : editing.name}
                   placeholder={
                     hideCopiedName(editing)
-                      ? 'Saved name unavailable in this planning mode'
+                      ? 'Enter a new plan name'
                       : undefined
                   }
                   maxLength={120}
-                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                  onChange={(e) => { setNameWasEdited(true); setEditing({ ...editing, name: e.target.value }) }}
                 />
               </label>
               <h3>Materials in this plan</h3>
@@ -1061,6 +1087,7 @@ export function TrialWorkspace({
             </section>
             <section ref={readingSectionRef} tabIndex={-1} aria-label="Add readings" className="pw-card">
               <h2>Add readings</h2>
+              <p>Enter the values you measured. You can add sample details if you know them.</p>
               {error && errorScope === 'readings' && (
                 <p className="pw-error" role="alert">
                   {error}
@@ -1122,7 +1149,7 @@ export function TrialWorkspace({
                     />
                   </label>
                   <details>
-                    <summary>Specimen, run or batch IDs (if known)</summary>
+                    <summary>Sample details (optional)</summary>
                     <p>
                       Leave unknown grouping blank; label batches only when you can identify them.
                     </p>

@@ -35,7 +35,7 @@ export function UnitSystemToggle() {
   )
 }
 
-export function UnitInput({ value, onChange, unit, disabled = false, maxLength, canonicalize, invalidMessage = 'Enter a valid number.' }: {
+export function UnitInput({ value, onChange, unit, disabled = false, maxLength, canonicalize, invalidMessage = 'Enter a valid number.', displaySystem, onFocus, onBlur }: {
   value: string
   onChange: (value: string) => void
   unit: CanonicalUnit
@@ -43,8 +43,12 @@ export function UnitInput({ value, onChange, unit, disabled = false, maxLength, 
   maxLength?: number
   canonicalize?: (display: string, unit: CanonicalUnit, system: UnitSystem) => string
   invalidMessage?: string
+  displaySystem?: UnitSystem
+  onFocus?: () => void
+  onBlur?: () => void
 }) {
-  const system = useUnitSystem()
+  const currentSystem = useUnitSystem()
+  const system = displaySystem ?? currentSystem
   const [draft, setDraft] = useState(() => toDisplay(value, unit, system))
   const latest = useRef({ value, system })
   const invalid = value.startsWith('invalid:') || (value.trim() !== '' && !Number.isFinite(Number(value)))
@@ -63,6 +67,8 @@ export function UnitInput({ value, onChange, unit, disabled = false, maxLength, 
         value={draft}
         disabled={disabled}
         aria-invalid={invalid}
+        onFocus={onFocus}
+        onBlur={onBlur}
         onChange={(event) => {
           const next = event.target.value
           const canonical = canonicalize ? canonicalize(next, unit, system) : toCanonical(next, unit, system)

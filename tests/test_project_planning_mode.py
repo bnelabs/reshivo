@@ -79,6 +79,49 @@ class PlanningModeHTTPTests(unittest.TestCase):
         body["project_context"]["configurations"][0]["notes"] = "untrusted generated note"
         self.assertEqual(self.call(body)[0], 400)
 
+    def test_local_planning_stays_available_when_model_work_is_busy(self):
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        try:
+            self.assertEqual(self.call(request_body())[:2], (200, {"planning_only": False}))
+        finally:
+            self.server.work_slots.release()
+            self.server.work_slots.release()
+
+    def test_model_work_waits_briefly_for_a_free_slot(self):
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        release = threading.Timer(0.2, self.server.work_slots.release)
+        release.start()
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        try:
+            with patch("reshivo.server.WORK_WAIT_SECONDS", 1), patch.object(
+                self.server.application, "project_intake", return_value={"ready": True}
+            ):
+                connection.request("POST", "/api/project/intake", b'{}', {"Content-Type": "application/json"})
+                response = connection.getresponse()
+                self.assertEqual((response.status, json.loads(response.read())), (200, {"ready": True}))
+        finally:
+            connection.close()
+            release.join()
+            self.server.work_slots.release()
+
+    def test_model_waiting_queue_is_bounded(self):
+        for _ in range(2): self.assertTrue(self.server.work_slots.acquire(timeout=1))
+        for _ in range(4): self.assertTrue(self.server.waiting_slots.acquire(timeout=1))
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=5)
+        try:
+            with patch.object(self.server.application, "project_intake") as intake:
+                connection.request("POST", "/api/project/intake", b'{}', {"Content-Type": "application/json"})
+                response = connection.getresponse()
+                result = json.loads(response.read())
+                self.assertEqual((response.status, result["error"]["code"]), (429, "service_busy"))
+                intake.assert_not_called()
+        finally:
+            connection.close()
+            for _ in range(4): self.server.waiting_slots.release()
+            for _ in range(2): self.server.work_slots.release()
+
     def test_rejects_unsupported_fields_and_unbounded_or_malformed_values(self):
         cases = []
         body = request_body(); body["brief"]["extra"] = "value"; cases.append(body)

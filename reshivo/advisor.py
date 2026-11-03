@@ -76,8 +76,10 @@ DECISION_ASSESSMENT_PROMPT = """
 The optional decision_assessment is freshly computed from the user's current setups,
 the selected kind of readings, all required checks and comparable entered costs.
 Use its decisions, not a lowest-cost-only result, when discussing which setup to choose.
-If a decision is null, do not name a winner; clearly say which checks or costs need
-attention and suggest a practical next step. A setup with a required check outside its
+If a decision is null, do not present a confirmed cost-and-check winner. You may still
+recommend a concrete plan to explore next when the supplied facts justify it: say why,
+which missing check or cost could change the choice, and the next action. Do not invent
+the missing result or present an untested plan as passing. A setup with a required check outside its
 target is not a candidate even when cheaper. Optional checks remain visible. A result
 describes only the entered readings and entered costs; it does not qualify a physical
 product, establish causation, predict new mixtures or guarantee later batches. Explain
@@ -159,6 +161,13 @@ enough detail to understand the proposed materials, their roles, the sequence, e
 trade-offs and the next decision. Give each relevant path its own distinct information.
 For changing input, explain which named variation matters and what the user could change
 in response, without inventing a numeric threshold or predicting an unmeasured property.
+When proposing a comparison to learn the effect of one input, hold the preparation,
+process, shape and measurement method consistent across options unless a change in one
+is explicitly the subject of the comparison. If the user's material is divided into
+different fractions, explain a plausible next route for each fraction rather than leaving
+one without a purpose. Do not claim that a design is less sensitive to variation without
+a matching measurement or validated model. Cite a study only for its own material,
+varied input, process and measured property; it does not establish a different effect.
 Replace vague instructions such as 'use a suitable binder', 'optimize the mix' or
 'ensure quality' with a named candidate or a concrete selection criterion and action.
 When a specific selection cannot be made from the available information, say what fact

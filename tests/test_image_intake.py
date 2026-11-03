@@ -137,8 +137,8 @@ class ImageHTTPTests(unittest.TestCase):
             self.assertEqual(self.call('/api/advisor/inspect-image', request(), {'Content-Length': str(MAX_IMAGE_BODY_BYTES + 1)})[0], 413)
 
     def test_saturated_work_slots_reject_before_generation(self):
-        self.assertTrue(self.server.work_slots.acquire(blocking=False))
-        self.assertTrue(self.server.work_slots.acquire(blocking=False))
+        self.assertTrue(self.server.work_slots.acquire(timeout=1))
+        self.assertTrue(self.server.work_slots.acquire(timeout=1))
         try:
             status, result = self.call('/api/advisor/inspect-image', request())
             self.assertEqual(status, 429)

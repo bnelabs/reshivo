@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { confirmSavedMixAdjustment, emptyMixAdjustmentDraft, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDecimalRoundTrips, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment } from '../src/mixAdjustment.ts'
 import { newProjectWorkspace, parseProjectWorkspace, serializeProjectWorkspace } from '../src/projectWorkspace.ts'
+import { toDisplay } from '../src/unitConversion.ts'
 
 const input = { inputMass: '1.4', inputMin: '46', inputMax: '46', additionName: 'Stock A', additionPercent: '0', targetMin: '35', targetMax: '35' }
 assert.equal(mixAdjustmentRequest('PCRPE', emptyMixAdjustmentDraft()), null, 'unknown values are not zero')
@@ -123,12 +124,19 @@ const restoredDraft = savedMixAdjustment(restoredWithOrigin, fullSetup, material
 assert.equal(restoredDraft.inputMass, `invalid:${raw}`)
 assert.equal(restoredDraft.inputMassOrigin, 'us')
 assert.deepEqual(mixMassEntryState(restoredDraft, 'us'), { invalid:true, locked:false, origin:'us', enteredUnit:'lb', displayValue:`invalid:${raw}` })
-assert.deepEqual(mixMassEntryState(restoredDraft, 'metric'), { invalid:true, locked:true, origin:'us', enteredUnit:'lb', displayValue:`invalid:${raw}` })
+assert.deepEqual(mixMassEntryState(restoredDraft, 'metric'), { invalid:true, locked:false, origin:'us', enteredUnit:'lb', displayValue:`invalid:${raw}` }, 'unfinished values remain editable in their original units after a unit switch')
 assert.equal(mixAdjustmentRequest('PCRPE', restoredDraft), null, 'switching units cannot make unfinished text calculable')
+assert.equal(mixMassCanonical('2.5', 'us'), '1.133980925', 'editing continues in the original pounds after the display changes')
+assert.equal(toDisplay(mixMassCanonical('2.5', 'us'), 'kg', 'metric'), '1.133980925', 'leaving the field shows the converted metric value')
 const corrected = updateSavedMixAdjustment(restoredWithOrigin, 'case', fullSetup, material, initial.project, 'inputMass', mixMassCanonical('1.4', 'us'), 'us')
 assert.equal(savedMixAdjustment(corrected, fullSetup, material).inputMass, '0.635029318')
 assert.equal(Object.hasOwn(savedMixAdjustment(corrected, fullSetup, material), 'inputMassOrigin'), false, 'a corrected canonical mass needs no origin marker')
 assert.equal(mixMassEntryState(savedMixAdjustment(corrected, fullSetup, material), 'metric').locked, false)
+const recoveredLegacy = updateSavedMixAdjustment(reopened, 'case', fullSetup, material, reopened.project, 'inputMass', legacyInvalid.inputMass, 'us')
+const recoveredDraft = savedMixAdjustment(recoveredLegacy, fullSetup, material)
+assert.equal(recoveredDraft.inputMassOrigin, 'us', 'an explicit choice records the originally entered unit')
+assert.equal(mixMassEntryState(recoveredDraft, 'metric').locked, false)
+assert.equal(mixAdjustmentRequest('PCRPE', recoveredDraft), null, 'choosing an origin never makes invalid text calculable')
 const unicodeMax = '🙂'.repeat(80)
 assert.equal(unicodeMax.length, 160, 'field bounds match browser UTF-16 length')
 const invalidUnicode = updateSavedMixAdjustment(edited, 'case', fullSetup, material, initial.project, 'inputMass', mixMassCanonical(unicodeMax, 'us'), 'us')

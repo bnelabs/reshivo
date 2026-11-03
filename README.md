@@ -23,7 +23,9 @@ The application was built during the Meta Global AI Developer Hackathon. Its con
 3. Select **Use this idea** to add one to your project. Review the suggested steps and ask for a clearer plan if you need one. Add material amounts, equipment and size when you know them.
 4. Choose **Plan a product check** if you know what to measure, or ask for help choosing a check. You can save the project and return when you have measurements.
 
-Open **Picture your idea** to create an illustration or enter dimensions for a section. Use **Print / Save as PDF** to include them in your report. Illustrations and sections stay in the current session. Use **Save backup** to reopen the rest of your project later.
+Open **Picture your idea** to create an illustration or enter dimensions for a section. Use **Print / Save as PDF** to include them in your report. Illustrations and sections stay in the current session.
+
+Project details save in this browser and can be recovered after a reload. Connected AI keys are not part of the project save. Use **Save backup** to move a project to another device, or **Menu → Local project recovery** to remove this project's local copies. Other open tabs can save the project again.
 
 ## Get started
 

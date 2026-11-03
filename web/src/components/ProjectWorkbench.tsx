@@ -7,6 +7,7 @@ import { ConceptSketch } from './ConceptSketch'
 import { sketchFingerprint } from '../sketchContext'
 import type { RectangularSection } from '../sectionDrawing'
 import { reportResultContext, type ReportResultKind } from '../reportResults'
+import { createProjectAutosave } from '../projectAutosave'
 import { CheckedMixAdvice } from './CheckedMixAdvice'
 import { SoundGuidance } from './SoundGuidance'
 import { buildIdeaComparisonQuestion } from '../ideaComparison'
@@ -35,6 +36,7 @@ import { downloadTextFile, formatAdviceForReport, formatEarlierAdviceForReport, 
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
+const AUTOSAVE_DISABLED_KEY = 'reshivo:project-autosave:disabled'
 const FIELD_LABEL: Record<ProjectIntakeField, string> = {
   product: 'What do you want to make?',
   input: 'What materials do you have?',
@@ -77,10 +79,20 @@ function intakeHistory(notes?: string) {
 
 export function ProjectWorkbench() {
   const { system, setSystem } = useUnitSettings()
-  const [w, setW] = useState<ProjectWorkspace>(() => newProjectWorkspace())
+  const [autosave] = useState(() => {
+    try { return createProjectAutosave(window.localStorage, window.sessionStorage) }
+    catch { return null }
+  })
+  const [autosaveEnabled, setAutosaveEnabled] = useState(() => {
+    try { return Boolean(autosave) && window.sessionStorage.getItem(AUTOSAVE_DISABLED_KEY) !== '1' }
+    catch { return false }
+  })
+  const [autosaveError, setAutosaveError] = useState(autosave ? '' : 'Local saving is unavailable. Save a backup to keep your work.')
+  const [w, setW] = useState<ProjectWorkspace>(() => autosaveEnabled ? autosave?.recovered?.workspace ?? newProjectWorkspace() : newProjectWorkspace())
+  const [restoreCalculations, setRestoreCalculations] = useState(Boolean(autosaveEnabled && autosave?.recovered))
   const [page, setPage] = useState<
     'start' | 'manual' | 'options' | 'trials' | 'adjust' | 'checks' | 'costs' | 'legacy'
-  >('start')
+  >(() => autosaveEnabled && autosave?.recovered && hasProjectContext(autosave.recovered.workspace.project) ? 'options' : 'start')
   const [calculatorOpenRequest, setCalculatorOpenRequest] = useState(0)
   const [providerOpen, setProviderOpen] = useState(false)
   const [status, setStatus] = useState({
@@ -94,17 +106,16 @@ export function ProjectWorkbench() {
   const [section, setSection] = useState<{ fingerprint: string; section: RectangularSection } | null>(null)
   const [reportResults, setReportResults] = useState<Partial<Record<ReportResultKind, { text: string; context: string }>>>({})
   const [mixSummary, setMixSummary] = useState('')
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState(autosaveEnabled && autosave?.recovered ? 'Your project was restored from this browser.' : '')
   const [manual, setManual] = useState<ProjectIntakeDraft>(emptyProjectDraft)
   const [advice, setAdvice] = useState<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult | null>(null)
   const [showWorkspaceTools, setShowWorkspaceTools] = useState(false)
   const adviceResult = useRef<HTMLElement>(null)
   const questionDetails = useRef<HTMLDetailsElement>(null)
-  const routeDetails = useRef<HTMLDetailsElement>(null)
-  const [showAnswerRoutes, setShowAnswerRoutes] = useState(false)
+  const routeDetails = useRef<HTMLElement>(null)
+  const [comparisonOrigin, setComparisonOrigin] = useState<{ context: string; advice: AdvisorResult; noteId: string | null } | null>(null)
   const [showAnswerFollowup, setShowAnswerFollowup] = useState(false)
   useEffect(() => {
-    setShowAnswerRoutes(false)
     setShowAnswerFollowup(false)
   }, [advice])
   const pendingAdviceFocus = useRef<{ result: AdvisorResult | AdvisorFollowupResult | LocalPlanningResult; question: string } | null>(null)
@@ -319,9 +330,13 @@ export function ProjectWorkbench() {
     void refreshProvider()
     return () => request.current?.abort()
   }, [])
+  useEffect(() => {
+    if (!autosaveEnabled || !autosave) return
+    try { autosave.save(w); setAutosaveError('') }
+    catch { setAutosaveError('Local saving failed. Save a backup to keep your work.') }
+  }, [w, autosave, autosaveEnabled])
   function update(next: ProjectWorkspace) {
     setW(next)
-    setNotice('Unsaved changes. Save a project file to keep this work.')
   }
   function apply(d: ProjectIntakeDraft, intake?: ProjectIntakeResult, discussion?: string) {
     request.current?.abort()
@@ -392,7 +407,7 @@ export function ProjectWorkbench() {
         ? 'The starting guidance stays onscreen. This project already has thirty saved planning notes, so this reply will not be in the saved file.'
         : changed && w.records.length
         ? 'Project updated. Review the recorded test conditions before checking again.'
-        : 'Project details are shared across options, plans, checks and costs. Save a backup to keep them.',
+        : autosaveEnabled ? 'Your project is saved in this browser. Connected AI keys are not included.' : 'Project details follow you across options, plans, checks and costs. Save a backup to keep them.',
     )
   }
   function manualEntry() {
@@ -410,6 +425,7 @@ export function ProjectWorkbench() {
       request.current = null
       setBusy(false)
       setW(next)
+      setRestoreCalculations(true)
       setWorkspaceOpenEpoch((epoch) => epoch + 1)
       setPreviousQuestion(question)
       setQuestion('')
@@ -433,13 +449,13 @@ export function ProjectWorkbench() {
       e.target.value = ''
     }
   }
-  async function explore(forceOptions = false) {
+  async function explore(forceOptions = false, comparison?: { question: string; advice: AdvisorResult; noteId: string | null }) {
     pendingAdviceFocus.current = null
     if (!modeReady) {
       setError('The local planning check is unavailable. Please try again when the app is connected.')
       return
     }
-    if (!mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext)) {
+    if (!comparison && !mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext)) {
       setError('The project, setup or mix inputs changed after this calculation. Recalculate and ask again, or clear the calculation question below.')
       return
     }
@@ -447,7 +463,7 @@ export function ProjectWorkbench() {
       setError('The saved ideas could not be checked yet. Please try again.')
       return
     }
-    if (selectedIdea && !showHistoricalIdeas) {
+    if (!comparison && selectedIdea && !showHistoricalIdeas) {
       setError('This saved idea is unavailable. Clear it before asking a new question.')
       return
     }
@@ -455,7 +471,7 @@ export function ProjectWorkbench() {
       ...c, name: safeSetupName(w, c, 'Plan'),
       notes: c.notes.startsWith('Unverified trial idea:') ? '' : c.notes,
     })) : w.configurations
-    const activeIdea = showHistoricalIdeas ? selectedIdea : null
+    const activeIdea = !comparison && showHistoricalIdeas ? selectedIdea : null
     if (
       activeIdea &&
       (activeIdea.caseId !== w.case_id ||
@@ -473,11 +489,11 @@ export function ProjectWorkbench() {
     const controller = new AbortController()
     request.current = controller
     const prompt =
-      question.trim() ||
+      comparison?.question || question.trim() ||
       'Help me choose a practical first approach for this product. Explain the material, preparation, process or design changes I could try and the trade-offs. If I do not know the right performance measurements, help me choose them in plain language. Ask only the essential missing questions.'
     try {
       const result = await api<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult>(
-        forceOptions || !question.trim() ? '/api/advisor/help' : '/api/advisor/follow-up',
+        forceOptions || (!comparison && !question.trim()) ? '/api/advisor/help' : '/api/advisor/follow-up',
         {
           brief: briefFrom(w.project),
           question: prompt,
@@ -502,7 +518,7 @@ export function ProjectWorkbench() {
                 },
               }
             : {}),
-          ...(mixQuestionContext && preparedMix ? { mix_calculation: preparedMix } : {}),
+          ...(!comparison && mixQuestionContext && preparedMix ? { mix_calculation: preparedMix } : {}),
           ...(w.configurations.some((c) => w.costs[`${c.id}@${c.revision}`])
             ? {
                 manufacturing_costs: currentSetups(w.configurations)
@@ -517,6 +533,7 @@ export function ProjectWorkbench() {
       if (request.current === controller && !controller.signal.aborted) {
         if (!usableAdvice(result)) throw new Error('We could not use that reply. Your project is still here; please try again.')
         pendingAdviceFocus.current = currentPage.current === 'options' ? { result, question } : null
+        setComparisonOrigin(comparison ? { context: currentAdviceContext, advice: comparison.advice, noteId: comparison.noteId } : null)
         setAdvice(result)
         setShowWorkspaceTools(false)
         setStartingGuidance(null)
@@ -588,7 +605,7 @@ export function ProjectWorkbench() {
         setNotice(
           (w.advice_notes?.length ?? 0) >= 30
             ? 'This reply remains onscreen. The project already contains thirty saved planning notes.'
-            : result.result_kind==='local_planning_guidance'?'Local planning guidance retained. Save the project file to keep it.':'Planning reply retained as a proposal. Save the project file to keep it.',
+            : autosaveEnabled ? 'Your answer is saved in this browser.' : 'Save a backup to keep this answer.',
         )
       }
     } catch (e) {
@@ -601,6 +618,10 @@ export function ProjectWorkbench() {
     }
   }
   function useRoute(r: AdvisorRoute) {
+    if (adviceCase !== currentAdviceContext) {
+      setError('Your project changed. Ask for fresh ideas before saving a plan.')
+      return
+    }
     if (w.configurations.length >= 100) {
       setError(
         'This project already has 100 setup versions. Save it and start a separate project to add more.',
@@ -633,9 +654,11 @@ export function ProjectWorkbench() {
           ? ''
           : 'This line represents your project description. Add the ingredients and amounts when known.',
     }
-    if (!advice) return
+    const sourceAdvice = advice && 'material_routes' in advice ? advice : comparisonOrigin?.context === currentAdviceContext ? comparisonOrigin.advice : null
+    if (!sourceAdvice) return
+    const sourceNoteId = sourceAdvice === comparisonOrigin?.advice ? comparisonOrigin.noteId : adviceNoteId
     const noteId =
-      adviceNoteId && w.advice_notes?.some((note) => note.id === adviceNoteId) ? adviceNoteId : null
+      sourceNoteId && w.advice_notes?.some((note) => note.id === sourceNoteId) ? sourceNoteId : null
     const idea = {
       title: r.title,
       change: r.change,
@@ -643,8 +666,8 @@ export function ProjectWorkbench() {
       steps: [...r.steps],
       tradeoffs: [...r.tradeoffs],
       check: r.check,
-      provider: advice.provider,
-      model: advice.model,
+      provider: sourceAdvice.provider,
+      model: sourceAdvice.model,
       ...(noteId ? { note_id: noteId } : {}),
     }
     update({
@@ -668,20 +691,18 @@ export function ProjectWorkbench() {
     setFocusHelpQuestion(true)
     setPage('options')
   }
-  function prepareIdeaComparison() {
-    if (!advice || !('material_routes' in advice)) return
-    const routes = [...advice.material_routes, ...advice.engineering_routes]
+  function compareIdeas() {
+    const source = advice && 'material_routes' in advice ? advice : comparisonOrigin?.context === currentAdviceContext ? comparisonOrigin.advice : null
+    if (!source || busy) return
+    if (adviceCase !== currentAdviceContext) {
+      setError('Your project changed. Ask for fresh ideas before comparing them.')
+      return
+    }
+    const routes = [...source.material_routes, ...source.engineering_routes]
     if (!routes.length) return
-    if (question.trim()) setPreviousQuestion(question)
-    setMixQuestionContext(null)
-    setSelectedIdea(null)
-    setQuestion(buildIdeaComparisonQuestion(routes))
-    setShowAnswerFollowup(true)
-    requestAnimationFrame(() => {
-      if (questionDetails.current) questionDetails.current.open = true
-      helpQuestion.current?.scrollIntoView({ block: 'center' })
-      helpQuestion.current?.focus({ preventScroll: true })
-    })
+    if (!status.configured && !planningMode?.planningOnly) { setProviderOpen(true); return }
+    void explore(false, { question: buildIdeaComparisonQuestion(routes), advice: source,
+      noteId: source === comparisonOrigin?.advice ? comparisonOrigin.noteId : adviceNoteId })
   }
   function save() {
     try {
@@ -696,6 +717,7 @@ export function ProjectWorkbench() {
   const drawingFingerprint = sketchFingerprint(w, showHistoricalIdeas)
   const currentSketch = sketch?.fingerprint === drawingFingerprint ? sketch.image : null
   const currentSection = section?.fingerprint === drawingFingerprint ? section.section : null
+  const displayedIdeas = adviceCase === currentAdviceContext && advice && 'material_routes' in advice ? advice : showHistoricalIdeas && comparisonOrigin?.context === currentAdviceContext && adviceCase === currentAdviceContext ? comparisonOrigin.advice : null
   const currentReportAdvice = modeReady && advice && adviceProject === currentProject &&
     adviceCase === currentAdviceContext && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance')
     ? advice : null
@@ -709,10 +731,12 @@ export function ProjectWorkbench() {
     : undefined
   function summaryText() {
     const guidance = formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance) || formatEarlierAdviceForReport(earlierReportNote)
+    const comparedIdeas = currentReportAdvice && showHistoricalIdeas && comparisonOrigin?.context === currentAdviceContext
+      ? formatAdviceForReport(comparisonOrigin.advice).replace('Ideas and next steps', 'Ideas compared') : ''
     const context = reportResultContext(w, adviceKind, showHistoricalIdeas)
     const results = (['checks', 'cost', 'comparison'] as const).map((kind) => reportResults[kind])
       .filter((entry) => entry?.context === context).map((entry) => entry!.text).join('')
-    return formatProjectSummary(w, showHistoricalIdeas) + guidance + (mixSummary ? `\n${mixSummary}` : '') + results + formatProjectNotes(w)
+    return formatProjectSummary(w, showHistoricalIdeas) + guidance + comparedIdeas + (mixSummary ? `\n${mixSummary}` : '') + results + formatProjectNotes(w)
   }
   function rememberReportResult(kind: ReportResultKind, text: string, context: string) {
     setReportResults((current) => ({ ...current, [kind]: { text, context } }))
@@ -774,7 +798,13 @@ export function ProjectWorkbench() {
                     downloadProjectWorkspace(w)
                     request.current?.abort()
                     setBusy(false)
-                    setW(newProjectWorkspace())
+                    const blank = newProjectWorkspace()
+                    if (autosaveEnabled && autosave) {
+                      try { autosave.save(blank, true) }
+                      catch { setAutosaveError('Local saving failed. Save a backup to keep your work.') }
+                    }
+                    setW(blank)
+                    setRestoreCalculations(false)
                     setPreparedCheckName('')
                     setPreviousQuestion(question)
                     setMixQuestionContext(null)
@@ -797,6 +827,15 @@ export function ProjectWorkbench() {
               </button>
               <button onClick={() => setProviderOpen(true)}>AI connections</button>
               <details>
+                <summary>Local project recovery</summary>
+                <p>{autosaveError || (autosaveEnabled ? 'Project data is saved in this browser. Connected AI keys are not included.' : 'Local saving is off for this tab.')}</p>
+                {autosaveEnabled && <p>Removing local copies clears this project from this browser; another open tab may save it again.</p>}
+                {autosave && (autosaveEnabled ? <button type="button" onClick={() => {
+                  try { autosave.forget(w); setAutosaveEnabled(false); window.sessionStorage.setItem(AUTOSAVE_DISABLED_KEY, '1'); setNotice('Local copies of this project were removed. Local saving is off for this tab.') }
+                  catch { setAutosaveError('Could not remove local project copies. Check browser storage settings.') }
+                }}>Remove saved copies of this project from this browser</button> : <button type="button" onClick={() => { try { window.sessionStorage.removeItem(AUTOSAVE_DISABLED_KEY); setAutosaveEnabled(true) } catch { setAutosaveError('Local saving is unavailable. Save a backup to keep your work.') } }}>Turn on local saving</button>)}
+              </details>
+              <details>
                 <summary>Preferred mass units</summary>
                 <label>
                   Mass display
@@ -813,9 +852,10 @@ export function ProjectWorkbench() {
                   amounts, readings, prices and geometry retain their entered units.
                 </p>
               </details>
-              <button onClick={() => setPage('legacy')}>
-                Earlier workspace &amp; detailed tools
-              </button>
+              <details>
+                <summary>More tools</summary>
+                <button onClick={() => setPage('legacy')}>Open earlier workspace</button>
+              </details>
               <button
                 onClick={() => {
                   setNotice(
@@ -845,6 +885,7 @@ export function ProjectWorkbench() {
           </button>
         </div>
       )}
+      {autosaveError && <div className="pw-notice" role="status">{autosaveError}</div>}
       {(error || inlineError) && (
         <div className="pw-global-error" role="region" aria-label="Something needs your attention">
           <div>
@@ -1002,6 +1043,11 @@ export function ProjectWorkbench() {
                     </div>
                   </section>
                 )}
+                {!advice && !startingGuidance && earlierReportNote && <section className="pw-card pw-spaced" aria-label="Previous answer">
+                  <h2>Previous answer</h2>
+                  <p>This answer was saved earlier. Ask again if your project details or measurements have changed.</p>
+                  <p className="pw-saved-note">{earlierReportNote.text}</p>
+                </section>}
                 {modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance') && (
                   <>
                     {adviceCase !== currentAdviceContext && (
@@ -1030,13 +1076,11 @@ export function ProjectWorkbench() {
                       {advice.next_steps.length > 0 && <><h2>What to do next</h2>
                       <ol>{advice.next_steps.map((step, i) => <li key={i}>{step}</li>)}</ol></>}
                       <div className="pw-actions pw-spaced">
-                        {('material_routes' in advice ? advice.material_routes.length + advice.engineering_routes.length > 0 : advice.next_steps.length > 0) && <button className="pw-primary" type="button" onClick={() => {
-                          if ('material_routes' in advice) {
-                            setShowAnswerRoutes(true)
-                            requestAnimationFrame(() => routeDetails.current?.scrollIntoView({ block: 'start' }))
-                          } else setPage('trials')
+                        {(displayedIdeas ? displayedIdeas.material_routes.length + displayedIdeas.engineering_routes.length > 0 : advice.next_steps.length > 0) && <button className="pw-primary" type="button" onClick={() => {
+                          if (displayedIdeas) routeDetails.current?.scrollIntoView({ block: 'start' })
+                          else setPage('trials')
                         }}>
-                          {'material_routes' in advice ? 'Compare ideas' : 'Open plans'}
+                          {displayedIdeas ? 'See ideas' : 'Open plans'}
                         </button>}
                         <button type="button" onClick={() => {
                           if (!advice.next_steps.length && !('material_routes' in advice && advice.material_routes.length + advice.engineering_routes.length > 0)) setQuestion('')
@@ -1077,17 +1121,16 @@ export function ProjectWorkbench() {
                         <button type="button" onClick={printSummary}>Print / Save as PDF</button>
                       </div>}
                     </section>
-                    {'material_routes' in advice && advice.material_routes.length + advice.engineering_routes.length > 0 && (!answerFocused || showAnswerRoutes) && <details open={showAnswerRoutes} ref={routeDetails} className="pw-card pw-spaced">
-                      <summary>See the material and design ideas</summary>
-                      <p>{advice.material_routes.length + advice.engineering_routes.length > 1
+                    {displayedIdeas && displayedIdeas.material_routes.length + displayedIdeas.engineering_routes.length > 0 && <section ref={routeDetails} className="pw-card pw-spaced" aria-label="Your ideas">
+                      <h2>Your ideas</h2>
+                      <p>{displayedIdeas.material_routes.length + displayedIdeas.engineering_routes.length > 1
                         ? 'Look at what each idea changes, its trade-offs and what to check. Some ideas can work together. Use one to save it as a plan and review what to do next.'
                         : 'Review what this idea changes, its trade-offs and what to check. Use it to save a plan and review what to do next.'}</p>
-                      <button type="button" onClick={prepareIdeaComparison}>{advice.material_routes.length + advice.engineering_routes.length > 1 ? 'Help me choose' : 'Help me understand'}</button>
-                      <p className="pw-muted">This prepares an editable question with the ideas below. You decide when to send it.</p>
+                      <button type="button" disabled={busy || !modeReady || !savedReviewReady || !statusLoaded} onClick={compareIdeas}>{busy ? 'Comparing…' : displayedIdeas.material_routes.length + displayedIdeas.engineering_routes.length > 1 ? 'Help me choose' : 'Help me understand'}</button>
                       {
                       [
-                        { title: 'Materials and preparation', routes: advice.material_routes },
-                        { title: 'Shape and assembly', routes: advice.engineering_routes },
+                        { title: 'Materials and preparation', routes: displayedIdeas.material_routes },
+                        { title: 'Shape and assembly', routes: displayedIdeas.engineering_routes },
                       ].filter((group) => group.routes.length).map((group) => (
                         <section key={group.title}>
                           <h2>{group.title}</h2>
@@ -1115,7 +1158,7 @@ export function ProjectWorkbench() {
                           </div>
                         </section>
                       ))}
-                    </details>}
+                    </section>}
                   </>
                 )}
                 {(!answerFocused || showAnswerFollowup) && <details className="pw-card" ref={questionDetails} open={showAnswerFollowup || !(modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance'))}>
@@ -1297,6 +1340,7 @@ export function ProjectWorkbench() {
             </div>
             <div hidden={page !== 'adjust'}>
               <MixAdjustment
+                restoreCalculations={restoreCalculations}
                 calculatorOpenRequest={calculatorOpenRequest}
                 onGoToPlans={() => setPage('trials')}
                 onGoToChecks={() => setPage('checks')}
@@ -1309,7 +1353,6 @@ export function ProjectWorkbench() {
                 planningContext={planningPayload}
                 onDraftChange={(updateDraft) => {
                   setW((current) => updateDraft(current))
-                  setNotice('Unsaved changes. Save a project file to keep this work.')
                 }}
                 onDiscuss={(prompt, calculation) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setPreparedMix(calculation); setRecentMixContext(currentMixQuestionContext); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setPage('options') }}
               />

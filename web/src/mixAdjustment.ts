@@ -175,7 +175,7 @@ export function mixMassEntryState(draft: MixAdjustmentDraft, system: UnitSystem)
   const origin = invalid ? draft.inputMassOrigin : undefined
   return {
     invalid,
-    locked: invalid && (!origin || origin !== system),
+    locked: invalid && !origin,
     origin,
     enteredUnit: invalid ? (origin ? unitLabel('kg', origin) : 'unit not recorded') : unitLabel('kg', system),
     displayValue: invalid && !text.startsWith('invalid:') ? `invalid:${text}` : text,

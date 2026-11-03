@@ -9,6 +9,7 @@ import type { MixAdjustmentDraft } from '../mixAdjustment'
 import type { ProjectWorkspace } from '../projectWorkspace'
 import type { AdvisorBrief, BalanceMixRequest, BalanceMixResult } from '../types'
 import { UnitInput, unitLabel, useUnitSystem } from '../units'
+import type { UnitSystem } from '../unitConversion'
 import { currentSetups, setupKey } from './TrialWorkspace'
 import { selectedCurrentSetup, setupRevisionNotice } from '../setupSelection'
 import { safeSetupName } from '../savedGuidanceReview'
@@ -33,7 +34,7 @@ export type MixPlanningContext = {
   project_context: { configurations: { id: string; revision: number; process: string; geometry: string; materials: { name: string }[] }[] }
 }
 
-export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss, onSummary, onGoToPlans, onGoToChecks, onAskForHelp, calculatorOpenRequest }: {
+export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss, onSummary, onGoToPlans, onGoToChecks, onAskForHelp, calculatorOpenRequest, restoreCalculations = false }: {
   workspace: ProjectWorkspace
   enabled: boolean
   showHistoricalIdeas: boolean
@@ -43,6 +44,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   onGoToChecks: () => void
   onAskForHelp: () => void
   calculatorOpenRequest: number
+  restoreCalculations?: boolean
   onDraftChange: (update: (current: ProjectWorkspace) => ProjectWorkspace) => void
   onDiscuss?: (question: string, calculation: PreparedMixCalculation) => void
 }) {
@@ -56,15 +58,23 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
     }
   }, [calculatorOpenRequest])
   const setups = currentSetups(w.configurations)
+  const recoveredDraft = restoreCalculations ? [...(w.mix_adjustment_drafts ?? [])].reverse().find((saved) => {
+    const current = setups.find((item) => item.id === saved.configuration_id && item.revision === saved.configuration_revision)
+    const component = current?.materials.find((item) => item.id === saved.component_id && item.name === saved.component_name)
+    return saved.case_id === w.case_id && component && mixAdjustmentRequest(component.name, saved.values)
+      && !mixAdjustmentPrecisionProblem(saved.values, saved.values.inputMassOrigin ?? system)
+      && !mixDraftNeedsProjectReview(saved, w.project) && !recordedRecipeNeedsReview(w, saved)
+  }) : undefined
   const setupName = (item: (typeof setups)[number]) => showHistoricalIdeas ? item.name : safeSetupName(w, item, 'Plan')
-  const [selectedSetup, setSelectedSetup] = useState(() => setups[0]?.id ?? '')
-  const [selectedMaterial, setSelectedMaterial] = useState('')
+  const [selectedSetup, setSelectedSetup] = useState(() => recoveredDraft?.configuration_id ?? setups[0]?.id ?? '')
+  const [selectedMaterial, setSelectedMaterial] = useState(() => recoveredDraft?.component_id ?? '')
   const [versionNotice, setVersionNotice] = useState('')
   const previousSetup = useRef<{ id: string; revision: number } | null>(null)
   const [result, setResult] = useState<{ key: string; request: BalanceMixRequest; value: BalanceMixResult } | null>(null)
   const resultCard = useRef<HTMLDivElement>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [massEditingSystem, setMassEditingSystem] = useState<UnitSystem | null>(null)
   const [stockMode, setStockMode] = useState<{ key: string; planningOnly: boolean; failed: boolean } | null>(null)
   const pending = useRef<AbortController | null>(null)
   const setup = selectedCurrentSetup(setups, selectedSetup)
@@ -87,6 +97,10 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const stockReady = enabled && stockMode?.key === stockKey && !stockMode.failed && !stockMode.planningOnly
   const canCalculate = Boolean(stockReady && !needsProjectReview && !needsReferenceReview)
   const visibleResult = canCalculate && result?.key === signature ? result : null
+  // Only the first complete, still-current saved draft is recalculated. Later edits
+  // invalidate that result and require the normal explicit calculation action.
+  const restoreSignature = useRef(restoreCalculations && savedDraft && request ? signature : null)
+  const restoreAttempted = useRef(false)
   const massUnit = unitLabel('kg', system)
   const massEntry = mixMassEntryState(draft, system)
   const showRange = (minimum: number | null, maximum: number | null) => minimum === maximum ? String(minimum) : `${minimum}–${maximum}`
@@ -133,13 +147,13 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
     return () => { window.clearTimeout(timer); controller.abort() }
   }, [stockKey, enabled])
 
-  function change(field: Exclude<keyof MixAdjustmentDraft, 'inputMassOrigin'>, value: string) {
+  function change(field: Exclude<keyof MixAdjustmentDraft, 'inputMassOrigin'>, value: string, massOrigin: UnitSystem = system) {
     if (!setup || !material) return
     const caseId = w.case_id
     const capturedSetup = structuredClone(setup)
     const capturedComponent = { id: material.id, name: material.name }
     const capturedProject = structuredClone(w.project)
-    onDraftChange((current) => updateSavedMixAdjustment(current, caseId, capturedSetup, capturedComponent, capturedProject, field, value, system))
+    onDraftChange((current) => updateSavedMixAdjustment(current, caseId, capturedSetup, capturedComponent, capturedProject, field, value, massOrigin))
   }
   function confirmProjectReview() {
     if (!setup || !material || !needsProjectReview) return
@@ -175,6 +189,11 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
       if (pending.current === controller) { pending.current = null; setBusy(false) }
     }
   }
+  useEffect(() => {
+    if (restoreAttempted.current || !restoreSignature.current || restoreSignature.current !== signature || !canCalculate || !request || busy) return
+    restoreAttempted.current = true
+    void calculate()
+  }, [canCalculate, signature, request, busy])
   function discuss() {
     if (!visibleResult || !onDiscuss || !setup || !material) return
     const { request: input, value } = visibleResult
@@ -219,9 +238,9 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
         <form onSubmit={(event) => { event.preventDefault(); void calculate() }}>
           <h2>1. Describe the portion you have</h2>
           <div className="pw-form-grid">
-            <label>Mass of this portion ({massEntry.enteredUnit})<UnitInput unit="kg" value={massEntry.displayValue} disabled={massEntry.locked} maxLength={160} invalidMessage="" canonicalize={(display, _unit, unitSystem) => mixMassCanonical(display, unitSystem)} onChange={(value) => change('inputMass', value)} /></label>
+            <label>Mass of this portion ({massEntry.invalid ? massEntry.enteredUnit : unitLabel('kg', massEditingSystem ?? system)})<UnitInput unit="kg" value={massEntry.displayValue} disabled={massEntry.locked} maxLength={160} invalidMessage="" displaySystem={massEditingSystem ?? massEntry.origin ?? system} onFocus={() => setMassEditingSystem(massEntry.origin ?? system)} onBlur={() => setMassEditingSystem(null)} canonicalize={(display, _unit, unitSystem) => mixMassCanonical(display, unitSystem)} onChange={(value) => change('inputMass', value, massEditingSystem ?? massEntry.origin ?? system)} /></label>
           </div>
-          {massEntry.invalid && <p className="pw-notice">{massEntry.origin ? `This unfinished value was entered in ${massEntry.enteredUnit}. ${massEntry.locked ? `Switch back to ${massEntry.enteredUnit} to correct it, or clear it and re-enter it in ${massUnit}.` : 'Correct it before calculating.'}` : `This older unfinished value has no recorded unit. Clear it and re-enter it in ${massUnit} before calculating; its original unit cannot be inferred.`} {massEntry.locked && <button type="button" onClick={() => change('inputMass', '')}>Clear and re-enter in {massUnit}</button>}</p>}
+          {massEntry.invalid && <div className="pw-notice">{massEntry.origin ? <p>Finish editing this value in {massEntry.enteredUnit}.{massEntry.origin !== system && ` It will convert to ${massUnit} when you leave the field.`}</p> : <><p>This saved value has no unit recorded. Choose the unit you originally entered to finish editing it.</p><div className="pw-actions"><button type="button" onClick={() => change('inputMass', massEntry.displayValue, 'metric')}>It was kg</button><button type="button" onClick={() => change('inputMass', massEntry.displayValue, 'us')}>It was lb</button><button type="button" onClick={() => change('inputMass', '')}>Clear value</button></div></>}</div>}
           <p>How much of this portion is {material.name}, by mass? If you know one value, enter it in both boxes.</p>
           {fullPortion && <p className="pw-notice">100% to 100% treats the whole portion as {material.name}. It does not show how materials inside that stream vary.</p>}
           <div className="pw-form-grid">
@@ -269,7 +288,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
             {stockMode?.key === stockKey && stockMode.failed && <p>The local check could not be completed. Change an entry or reopen the app to retry.</p>}
           </div>}
           {precisionProblem && <p className="pw-error" role="alert">The {precisionProblem} has more precision than the calculator can preserve. Enter a shorter number or a range that accurately represents what you know.</p>}
-          <small>Your project file saves these entries with this setup version. It does not save the calculation result.</small>
+          <small>Your project saves these entries with this setup. A complete, unchanged calculation is recalculated when you return.</small>
         </form>
         {error && <p className="pw-error" role="alert">{error}</p>}
       </div>
