@@ -108,6 +108,14 @@ for (const value of ['', 'unknown', 'about 5 kg', ' -4 ', '0', '-0', '0.1', '1e1
 for (const value of ['-0.1', '-1e-1000', '1e1001', '1e-1001', '1.00e-999', 'x'.repeat(161)])
   assert.ok(validateMaterialAmount(value), value)
 assert.ok(validateMaterialAmount(1))
+for (const unit of ['mass_percent', 'volume_percent']) {
+  for (const value of ['0', '100', '100.000', '1e2', '١٠٠', 'unknown', 'about 150'])
+    assert.equal(validateMaterialAmount(value, unit), null, `${value} ${unit}`)
+  for (const value of ['100.000000000000000000001', '101', ' 101 ', '1.01e2', '١٠١'])
+    assert.equal(validateMaterialAmount(value, unit), 'A material percentage cannot be more than 100%.', `${value} ${unit}`)
+}
+assert.equal(validateMaterialAmount('150', 'kg'), null)
+assert.equal(validateMaterialAmount('150'), null, 'older saved drafts remain loadable')
 console.log(
   'Setup amounts preserve unknown text and reject negative or out-of-range numeric values',
 )

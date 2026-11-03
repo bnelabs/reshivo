@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
+import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
 import type { MixAdjustmentDraft } from '../mixAdjustment'
 import type { ProjectWorkspace } from '../projectWorkspace'
 import type { AdvisorBrief, BalanceMixRequest, BalanceMixResult } from '../types'
@@ -140,7 +140,8 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
     const outcome = value.feasible
       ? `Estimated addition: ${value.addition_min_kg === 0 ? 'none needed' : value.addition_min_kg === value.addition_max_kg ? `approximately ${value.addition_min_kg} kg` : `approximately ${value.addition_min_kg} kg to ${value.addition_max_kg === null ? 'an unbounded maximum' : `${value.addition_max_kg} kg`}`}. Example: approximately ${value.example_addition_kg} kg gives approximately ${showRange(value.resulting_min_percent, value.resulting_max_percent)} mass percent ${input.component}.`
       : 'No single addition fits the whole entered range.'
-    onDiscuss(`Help me interpret this mix simulation for ${setupName(setup)}, version ${setup.revision} (ID ${setup.id}), and suggest the next actions and product checks.\n\nPortion: ${input.input_mass_kg} kg, with ${showRange(input.input_min_percent, input.input_max_percent)} mass percent ${input.component}. Added stock: ${input.addition_name}, with ${input.addition_percent} mass percent ${input.component}. Chosen mix: ${showRange(input.target_min_percent, input.target_max_percent)} mass percent ${input.component}.\n\n${outcome} Figures are approximate and assume complete, loss-free mixing.`)
+    const source = material ? recordedRecipeDiscussion(w, setup, material, w.project, setupName) : ''
+    onDiscuss(`Help me interpret this mix simulation for ${setupName(setup)}, version ${setup.revision} (ID ${setup.id}), and suggest the next actions and product checks.\n\nPortion: ${input.input_mass_kg} kg, with ${showRange(input.input_min_percent, input.input_max_percent)} mass percent ${input.component}. Added stock: ${input.addition_name}, with ${input.addition_percent} mass percent ${input.component}. Chosen mix: ${showRange(input.target_min_percent, input.target_max_percent)} mass percent ${input.component}.${source ? `\n\n${source}` : ''}\n\n${outcome} Figures are approximate and assume complete, loss-free mixing.`)
   }
 
   if (!enabled) return <section className="pw-section"><h1>Adjust a mix</h1><p>Adjustment calculations are unavailable while this case is being checked or needs local planning. See Options for guidance.</p></section>
@@ -188,7 +189,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           <h2>3. Choose the composition to explore</h2>
           <p>What range of {material.name} would you like to try, by mass?</p>
           {savedDraft?.reference && <div className="pw-notice">
-            <p>Trial point: {savedDraft.reference.fraction}% of the whole recipe from {referenceSource ? setupName(referenceSource) : 'recorded setup'} · version {savedDraft.reference.setup_revision} ({savedDraft.reference.component_name}).</p>
+            <p>{savedDraft.reference.range ? `Rounded trial range: ${savedDraft.reference.range.min}–${savedDraft.reference.range.max}% (source fraction ${savedDraft.reference.range.numerator}/${savedDraft.reference.range.denominator})` : `Trial point: ${savedDraft.reference.fraction}%`} of the whole recipe from {referenceSource ? setupName(referenceSource) : 'recorded setup'} · version {savedDraft.reference.setup_revision} ({savedDraft.reference.component_name}).</p>
             {needsReferenceReview && <><p>A newer version of this reference setup exists. Compare the recipes before continuing.</p>
               <div className="pw-form-grid">{[referenceSource, referenceLatest].filter((item): item is NonNullable<typeof item> => Boolean(item)).map((item) => <div key={JSON.stringify([item.id, item.revision])}><strong>{setupName(item)} · version {item.revision}</strong><ul>{item.materials.map((ingredient) => <li key={ingredient.id}>{ingredient.name}: {ingredient.amount || 'unknown'} {ingredient.unit}</li>)}</ul><p>Process: {item.process || 'not entered'}</p><p>Shape: {item.geometry || 'not entered'}</p></div>)}</div>
               <button type="button" disabled={needsProjectReview} onClick={confirmReferenceReview}>Keep using this earlier recipe point</button></>}

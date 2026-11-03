@@ -201,7 +201,7 @@ export function TrialWorkspace({
       return
     }
     for (const material of editing.materials) {
-      const problem = validateMaterialAmount(material.amount)
+      const problem = validateMaterialAmount(material.amount, material.unit)
       if (problem) {
         reportError('setup', `${material.name}: ${problem}`)
         return

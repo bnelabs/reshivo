@@ -48,6 +48,10 @@ assert.throws(()=>serializeProjectWorkspace({...planned,trial_ideas:{'AB@2':{...
 assert.throws(()=>serializeProjectWorkspace({...planned,trial_ideas:{'AB@2':{...planned.trial_ideas['AB@2'],performance_verified:true}}}),/unsupported/)
 const text = serializeProjectWorkspace(original)
 const restored = parseProjectWorkspace(text)
+const legacyPercentage = fixture()
+legacyPercentage.configurations[0].materials[0].amount = '150'
+assert.equal(parseProjectWorkspace(JSON.stringify(legacyPercentage)).configurations[0].materials[0].amount, '150', 'older project files remain openable for correction')
+assert.equal(JSON.parse(serializeProjectWorkspace(legacyPercentage)).configurations[0].materials[0].amount, '150', 'saving does not erase historical values')
 assert.equal(restored.schema, 'rematter-project-v2')
 assert.equal(restored.case_id, original.case_id)
 assert.deepEqual(restored.project, original.project)

@@ -48,6 +48,40 @@ def one_check_request(values=("0",), minimum=None, maximum="10"):
 
 
 class TrialRecordsTests(unittest.TestCase):
+    def test_current_component_percentage_cannot_exceed_100(self):
+        for unit in ("mass_percent", "volume_percent"):
+            for invalid in ("101", " 101 ", "100.0000000000000000000000001", "1.01e2", "١٠١"):
+                with self.subTest(unit=unit, amount=invalid):
+                    request = one_check_request(["5"], maximum="10")
+                    request["configurations"][0]["materials"][0].update(amount=invalid, unit=unit)
+                    result = assess_trial_records(request)
+                    self.assertEqual(result["status"], "needs_clarification")
+                    self.assertTrue(any(error["code"] == "percentage_above_100" for error in result["errors"]))
+                    config = by_configuration(result, "AB")
+                    self.assertEqual(config["state"], "needs_review")
+                    self.assertFalse(config["materials"][0]["amount_known"])
+            for valid in ("0", "100", "100.000", "1e2", "١٠٠", "unknown"):
+                with self.subTest(unit=unit, amount=valid):
+                    request = one_check_request(["5"], maximum="10")
+                    request["configurations"][0]["materials"][0].update(amount=valid, unit=unit)
+                    result = assess_trial_records(request)
+                    self.assertFalse(any(error["code"] == "percentage_above_100" for error in result["errors"]))
+
+    def test_corrected_current_recipe_is_not_blocked_by_invalid_historical_percentage(self):
+        request = one_check_request(["5"], maximum="10")
+        request["configurations"][0]["materials"][0]["amount"] = "150"
+        corrected = deepcopy(request["configurations"][0])
+        corrected["revision"] = 2
+        corrected["materials"][0]["amount"] = "20"
+        request["configurations"].append(corrected)
+        request["records"][0]["configuration_revision"] = 2
+        result = assess_trial_records(request)
+        self.assertEqual(result["status"], "valid")
+        self.assertEqual(by_configuration(result, "AB")["state"], "all_entered_checks_in_range")
+        historical = next(item for item in result["configuration_versions"] if item["revision"] == 1)
+        self.assertEqual(historical["materials"][0]["amount"], "150")
+        self.assertFalse(historical["materials"][0]["amount_known"])
+
     def test_same_A_percentage_different_full_mixes_join_separately(self):
         result = assess_trial_records(example())
         self.assertEqual(result["status"], "valid")

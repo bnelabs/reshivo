@@ -3,7 +3,7 @@ import type { ProjectWorkspace, SavedMixAdjustmentDraft, TrialConfiguration } fr
 import type { ProjectIntakeDraft } from './projectIntake'
 import { toDisplay, unitLabel } from './unitConversion.ts'
 import type { UnitSystem } from './unitConversion.ts'
-import { recordedRecipeFraction } from './referenceComposition.ts'
+import { recordedRecipeFraction, recordedRecipeTarget } from './referenceComposition.ts'
 
 export type MixAdjustmentDraft = {
   inputMass: string
@@ -25,6 +25,11 @@ export function savedMixAdjustmentRecord(workspace: ProjectWorkspace, setup: Tri
 }
 export function savedMixAdjustment(workspace: ProjectWorkspace, setup: TrialConfiguration | undefined, component: { id: string; name: string } | undefined): MixAdjustmentDraft {
   return savedMixAdjustmentRecord(workspace, setup, component)?.values ?? emptyMixAdjustmentDraft()
+}
+function matchingReferenceRange(a: SavedMixAdjustmentDraft['reference'], b: ReturnType<typeof recordedRecipeTarget>) {
+  if (!a) return false
+  if (!a.range || !b.range) return !a.range && !b.range
+  return (['min', 'max', 'numerator', 'denominator'] as const).every((field) => a.range![field] === b.range![field])
 }
 export function mixDraftNeedsProjectReview(draft: SavedMixAdjustmentDraft | undefined, project: ProjectIntakeDraft): boolean {
   return Boolean(draft && JSON.stringify(draft.project_snapshot) !== JSON.stringify(project))
@@ -64,6 +69,7 @@ export function useRecordedRecipeTarget(workspace: ProjectWorkspace, caseId: str
   if (!destination.materials.some((item) => item.id === component.id && item.name === component.name) || !savedSource.materials.some((item) => item.id === sourceComponent.id && item.name === sourceComponent.name)) return workspace
   const point = recordedRecipeFraction(savedSource, sourceComponent.id)
   if (!point.ok) return workspace
+  const target = recordedRecipeTarget(point)
   const old = workspace.mix_adjustment_drafts ?? []
   const index = old.findIndex((item) => item.configuration_id === setup.id && item.configuration_revision === setup.revision && item.component_id === component.id)
   const existing = index >= 0 ? old[index] : undefined
@@ -72,9 +78,10 @@ export function useRecordedRecipeTarget(workspace: ProjectWorkspace, caseId: str
     case_id: caseId, configuration_id: setup.id, configuration_revision: setup.revision,
     component_id: component.id, component_name: component.name,
     project_snapshot: existing?.project_snapshot ?? structuredClone(project),
-    values: { ...(existing?.values ?? emptyMixAdjustmentDraft()), targetMin: point.value, targetMax: point.value },
+    values: { ...(existing?.values ?? emptyMixAdjustmentDraft()), targetMin: target.min, targetMax: target.max },
     reference: { setup_id: source.id, setup_revision: source.revision, setup_snapshot: JSON.stringify(source), component_id: sourceComponent.id,
-      component_name: sourceComponent.name, basis: 'whole_recipe', fraction: point.value, latest_revision_at_review: latestSource },
+      component_name: sourceComponent.name, basis: 'whole_recipe', fraction: target.fraction, latest_revision_at_review: latestSource,
+      ...('range' in target ? { range: target.range } : {}) },
   }
   return { ...workspace, mix_adjustment_drafts: index < 0 ? [...old, draft] : old.map((item, i) => i === index ? draft : item) }
 }
@@ -85,7 +92,24 @@ export function recordedRecipeNeedsReview(workspace: ProjectWorkspace, draft: Sa
   const versions = workspace.configurations.filter((item) => item.id === ref.setup_id)
   const source = versions.find((item) => item.revision === ref.setup_revision)
   const point = source && recordedRecipeFraction(source, ref.component_id)
-  return !source || JSON.stringify(source) !== ref.setup_snapshot || !point || !point.ok || point.value !== ref.fraction || Math.max(...versions.map((item) => item.revision)) !== ref.latest_revision_at_review
+  const target = point?.ok ? recordedRecipeTarget(point) : null
+  return !source || JSON.stringify(source) !== ref.setup_snapshot || !target || target.fraction !== ref.fraction || target.min !== draft?.values.targetMin || target.max !== draft?.values.targetMax || !matchingReferenceRange(ref, target) || Math.max(...versions.map((item) => item.revision)) !== ref.latest_revision_at_review
+}
+
+/** Carry the user's reviewed source mapping with the calculation, not as a product claim. */
+export function recordedRecipeDiscussion(workspace: ProjectWorkspace, setup: TrialConfiguration, component: { id: string; name: string }, project: ProjectIntakeDraft, sourceName: (setup: TrialConfiguration) => string): string {
+  if (JSON.stringify(workspace.project) !== JSON.stringify(project)) return ''
+  const savedSetup = workspace.configurations.find((item) => item.id === setup.id && item.revision === setup.revision)
+  if (!savedSetup || JSON.stringify(savedSetup) !== JSON.stringify(setup) || Math.max(...workspace.configurations.filter((item) => item.id === setup.id).map((item) => item.revision)) !== setup.revision) return ''
+  const draft = savedMixAdjustmentRecord(workspace, setup, component)
+  if (!draft?.reference || mixDraftNeedsProjectReview(draft, project) || recordedRecipeNeedsReview(workspace, draft)) return ''
+  const ref = draft.reference
+  const source = workspace.configurations.find((item) => item.id === ref.setup_id && item.revision === ref.setup_revision)
+  if (!source) return ''
+  const description = ref.range
+    ? `The exact source fraction is ${ref.range.numerator}/${ref.range.denominator} of the whole recipe; the chosen ${ref.range.min}–${ref.range.max}% target is an enclosing rounded range.`
+    : `The exact source fraction and chosen target are ${ref.fraction}% of the whole recipe.`
+  return `Reference recipe: ${sourceName(source)}, version ${ref.setup_revision}. The user mapped its ${ref.component_name} to ${component.name}. ${description} This identifies the recipe composition.`
 }
 
 /** Confirm that the earlier reference is still the one the user intends after a new version. */
@@ -99,7 +123,8 @@ export function confirmRecordedRecipeReview(workspace: ProjectWorkspace, caseId:
   const versions = workspace.configurations.filter((item) => item.id === ref.setup_id)
   const source = versions.find((item) => item.revision === ref.setup_revision)
   const point = source && recordedRecipeFraction(source, ref.component_id)
-  if (!source || JSON.stringify(source) !== ref.setup_snapshot || !point || !point.ok || point.value !== ref.fraction || draft.values.targetMin !== ref.fraction || draft.values.targetMax !== ref.fraction) return workspace
+  const target = point?.ok ? recordedRecipeTarget(point) : null
+  if (!source || JSON.stringify(source) !== ref.setup_snapshot || !target || target.fraction !== ref.fraction || draft.values.targetMin !== target.min || draft.values.targetMax !== target.max || !matchingReferenceRange(ref, target)) return workspace
   const latest = Math.max(...versions.map((item) => item.revision))
   if (latest !== expectedLatestRevision) return workspace
   return { ...workspace, mix_adjustment_drafts: (workspace.mix_adjustment_drafts ?? []).map((item) => item === draft ? { ...item, reference: { ...ref, latest_revision_at_review: latest } } : item) }

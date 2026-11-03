@@ -78,6 +78,7 @@ class _Assessment:
         return value
 
     def configurations(self):
+        invalid_percentages = []
         for index, item in enumerate(self.array(self.request.get("configurations", []), "configurations", "configurations")):
             field = "configurations." + str(index)
             if not isinstance(item, dict):
@@ -104,17 +105,25 @@ class _Assessment:
                 raw_unit = material.get("unit")
                 unit = self.text(raw_unit, material_field + ".unit", optional=True)
                 amount = None
+                invalid_percentage = False
+                numeric_amount = (raw_amount.strip() if isinstance(raw_amount, str)
+                                  and unit in ("mass_percent", "volume_percent") else raw_amount)
                 if raw_amount is not None and raw_amount != "":
                     if not isinstance(raw_amount, str) or len(raw_amount) > 160:
                         self.error(material_field + ".amount", "amount_text_required", "Capture an exact amount or short unknown-context text.")
-                    elif _NUMBER.fullmatch(raw_amount):
-                        amount = self.number(raw_amount, material_field + ".amount")
+                    elif _NUMBER.fullmatch(numeric_amount):
+                        amount = self.number(numeric_amount, material_field + ".amount")
                         if amount is not None and amount < 0:
                             self.error(material_field + ".amount", "negative_amount", "A captured component amount cannot be negative.")
                             amount = None
+                        elif amount is not None and unit in ("mass_percent", "volume_percent") and amount > 100:
+                            # Keep older configurations accessible after a corrected version is saved.
+                            invalid_percentages.append((identifier, revision, material_field + ".amount"))
+                            invalid_percentage = True
+                            amount = None
                 known = amount is not None and unit is not None
                 amount_complete = amount_complete and known
-                if not known:
+                if not known and not invalid_percentage:
                     self.ask(material_field + ".amount", "What is this stock's amount and quantity basis? Unknown context can remain captured.")
                 materials.append({"id": mid, "name": mname, "amount": raw_amount, "unit": raw_unit, "amount_known": known})
             if not materials:
@@ -136,6 +145,9 @@ class _Assessment:
             self.configs[key] = {"id": identifier, "revision": revision, "name": name, "materials": materials, "process": process, "geometry": geometry, "notes": notes, "component_amounts_complete": amount_complete, "formulation_completeness": "not_assessed", "can_prepare_quantities": False}
             if identifier not in self.current or revision > self.current[identifier]:
                 self.current[identifier] = revision
+        for identifier, revision, field in invalid_percentages:
+            if self.current.get(identifier) == revision:
+                self.error(field, "percentage_above_100", "A material percentage cannot be more than 100%.")
         if not self.configs:
             self.ask("configurations", "Capture at least one named full configuration; incomplete amounts can remain unknown.")
 

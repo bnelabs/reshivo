@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ProjectWorkspace, SavedMixAdjustmentDraft, TrialConfiguration } from '../projectWorkspace'
-import { recordedRecipeFraction } from '../referenceComposition'
+import { recordedRecipeFraction, recordedRecipeTarget } from '../referenceComposition'
 
 export function RecordedRecipeReference({ workspace, destination, component, setupName, targetOccupied, appliedReference, disabled, onUse }: {
   workspace: ProjectWorkspace
@@ -19,7 +19,8 @@ export function RecordedRecipeReference({ workspace, destination, component, set
   const source = workspace.configurations.find((item) => key(item) === sourceKey)
   const sourceComponent = source?.materials.find((item) => item.id === sourceComponentId)
   const point = source && sourceComponent ? recordedRecipeFraction(source, sourceComponent.id) : null
-  const alreadyApplied = Boolean(source && sourceComponent && point?.ok && appliedReference?.setup_id === source.id && appliedReference.setup_revision === source.revision && appliedReference.component_id === sourceComponent.id && appliedReference.fraction === point.value)
+  const target = point?.ok ? recordedRecipeTarget(point) : null
+  const alreadyApplied = Boolean(source && sourceComponent && target && appliedReference?.setup_id === source.id && appliedReference.setup_revision === source.revision && appliedReference.component_id === sourceComponent.id && appliedReference.fraction === target.fraction && appliedReference.range?.min === target.range?.min && appliedReference.range?.max === target.range?.max)
   const latestRevision = source ? Math.max(...workspace.configurations.filter((item) => item.id === source.id).map((item) => item.revision)) : -1
   return <details className="pw-spaced">
     <summary>Use a recorded recipe as a starting point</summary>
@@ -41,14 +42,17 @@ export function RecordedRecipeReference({ workspace, destination, component, set
       <p><strong>Recorded recipe</strong></p>
       <ul>{source.materials.map((item) => <li key={item.id}>{item.name}: {item.amount || 'unknown'} {item.unit === 'mass_percent' ? 'mass %' : item.unit === 'volume_percent' ? 'volume %' : item.unit}</li>)}</ul>
       <p>This selects a recipe composition. Review its product checks in Checks.</p>
-      {point && (point.ok ? <>
-        <p><strong>{point.value}% {sourceComponent?.name}</strong> by mass of the entire recorded recipe.</p>
+      {point && (!point.ok ? <p>{point.reason}</p> : target && <>
+        {target.range ? <>
+          <p>The recorded recipe contains <strong>{target.range.numerator} / {target.range.denominator}</strong> {sourceComponent?.name} by mass of the whole recipe.</p>
+          <p>A rounded range containing that fraction is <strong>{target.min}–{target.max}%</strong>.</p>
+        </> : <p><strong>{target.fraction}% {sourceComponent?.name}</strong> by mass of the entire recorded recipe.</p>}
         <label className="pw-checkbox"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />
-          I want to use this whole-recipe fraction for {component.name}; my portion and added-stock percentages use that same basis.
+          I want to use this {target.range ? 'rounded whole-recipe range' : 'whole-recipe fraction'} for {component.name}; my portion and added-stock percentages use that same basis.
         </label>
         {targetOccupied && !alreadyApplied && <p>To use this point, first clear both trial composition fields below.</p>}
-        {alreadyApplied ? <p>This point is in your trial composition below.</p> : <button type="button" disabled={!confirmed || targetOccupied || disabled} onClick={() => sourceComponent && onUse(source, sourceComponent, latestRevision)}>Use {point.value}% as my trial point</button>}
-      </> : <p>{point.reason}</p>)}
+        {alreadyApplied ? <p>This {target.range ? 'range' : 'point'} is in your trial composition below.</p> : <button type="button" disabled={!confirmed || targetOccupied || disabled} onClick={() => sourceComponent && onUse(source, sourceComponent, latestRevision)}>Use {target.range ? `${target.min}–${target.max}% as my trial range` : `${target.fraction}% as my trial point`}</button>}
+      </>)}
     </>}
     <p>For a feed-only fraction or another basis, enter your own trial range below.</p>
     <small>The target is saved with {setupName(destination)} · version {destination.revision}.</small>

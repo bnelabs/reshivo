@@ -38,18 +38,22 @@ function compare(a: Exact, b: Exact): number {
   return (left === right ? 0 : left < right ? -1 : 1) * sign
 }
 
-export function validateMaterialAmount(value: unknown): string | null {
+export function validateMaterialAmount(value: unknown, unit?: string): string | null {
   if (value === null || value === undefined || value === '') return null
   if (typeof value !== 'string' || [...value].length > 160)
     return 'Use a short amount or leave it unknown.'
+  const percentage = unit === 'mass_percent' || unit === 'volume_percent'
+  const candidate = percentage ? value.trim() : value
   const numeric =
     /^[+-]?(?:\p{Decimal_Number}+(?:\.\p{Decimal_Number}*)?|\.\p{Decimal_Number}+)(?:[eE][+-]?\p{Decimal_Number}+)?$/u.test(
-      value,
+      candidate,
     )
   if (!numeric) return null
-  const parsed = decimal(value)
+  const parsed = decimal(candidate)
   if (!parsed) return 'Use a finite amount within the supported numeric range, or leave it unknown.'
   if (parsed.negative) return 'A material amount cannot be negative.'
+  if (percentage && compare(parsed, decimal('100')!) > 0)
+    return 'A material percentage cannot be more than 100%.'
   return null
 }
 

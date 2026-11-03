@@ -20,7 +20,7 @@ class FakeTransport:
         self.calls.append(deepcopy(payload))
         if len(self.calls) == self.fail_at:
             raise RuntimeError('synthetic failure')
-        return {'id': f'request-{len(self.calls)}', 'usage': {'total_tokens': 23}, 'choices': [
+        return {'id': f'request-{len(self.calls)}', 'model': payload['model'], 'usage': {'total_tokens': 23}, 'choices': [
             {'finish_reason': 'stop', 'message': {'role': 'assistant', 'content': f'answer-{len(self.calls)}'}}]}
 
 
@@ -98,6 +98,85 @@ class BaselineHarnessTest(unittest.TestCase):
                 self.assertEqual(events[-1]['phase'], 'operator_clarification')
                 self.assertEqual(events[-1]['error_type'], exception.__name__)
                 self.assertEqual(events[-1]['later_turns'], 'not attempted; no retry')
+
+    def test_expected_model_mismatch_stops_before_output_or_request(self):
+        expected = 'muse-spark-1.3-contributor'
+        transport = FakeTransport()
+        with tempfile.TemporaryFile(mode='w+', encoding='utf-8') as stream:
+            with self.assertRaisesRegex(ValueError, 'configured model'):
+                baseline.run_baseline(self.fixture, self.profile, transport, stream, expected_model=expected)
+            stream.seek(0)
+            self.assertEqual(stream.read(), '')
+        self.assertEqual(transport.calls, [])
+
+        with tempfile.TemporaryDirectory() as directory:
+            lock = Path(directory) / 'lock.json'
+            state = {'expected_model': expected}
+            lock.write_text(json.dumps(state))
+            arguments = ['runner', '--live', '--lock', str(lock), '--output', 'outputs/result.jsonl']
+            with patch.object(baseline.sys, 'argv', arguments), \
+                 patch.object(baseline, 'private_path', return_value=lock), \
+                 patch.object(baseline, 'source_state', return_value=state), \
+                 patch.object(baseline, 'load_provider_profile', return_value=self.profile), \
+                 patch.object(baseline, 'create_private') as create_output, \
+                 patch.object(baseline, 'ProviderTransport') as create_transport:
+                with self.assertRaisesRegex(ValueError, 'configured model'):
+                    baseline.main()
+                create_output.assert_not_called()
+                create_transport.assert_not_called()
+
+            arguments.extend(['--expected-model', 'muse-spark-1.2-contributor'])
+            with patch.object(baseline.sys, 'argv', arguments), \
+                 patch.object(baseline, 'private_path', return_value=lock), \
+                 patch.object(baseline, 'source_state') as source_state, \
+                 patch.object(baseline, 'create_private') as create_output, \
+                 patch.object(baseline, 'ProviderTransport') as create_transport:
+                with self.assertRaisesRegex(ValueError, 'frozen model setting'):
+                    baseline.main()
+                source_state.assert_not_called()
+                create_output.assert_not_called()
+                create_transport.assert_not_called()
+
+    def test_expected_model_is_part_of_frozen_state(self):
+        with patch.object(baseline, 'clean_commit', return_value='fixture-commit'), \
+             patch.object(baseline, 'digest', return_value='fixture-digest'):
+            state = baseline.source_state('muse-spark-1.3-contributor')
+        self.assertEqual(state['expected_model'], 'muse-spark-1.3-contributor')
+        self.assertEqual(state['git_commit'], 'fixture-commit')
+
+    def test_expected_model_is_recorded_and_checked_on_return(self):
+        contributor = ProviderProfile('meta', 'muse-spark-1.3-contributor', 'https://api.meta.ai/v1',
+                                      'secret-for-test', self.profile.capabilities)
+        transport = FakeTransport()
+        with tempfile.TemporaryFile(mode='w+', encoding='utf-8') as stream, contextlib.redirect_stdout(io.StringIO()):
+            result = baseline.run_baseline(self.fixture, contributor, transport, stream,
+                                           ask=lambda _: '', expected_model=contributor.model)
+            stream.seek(0)
+            events = [json.loads(line) for line in stream]
+        self.assertTrue(result)
+        self.assertEqual(len(transport.calls), 4)
+        self.assertEqual(events[0]['expected_model'], contributor.model)
+        self.assertEqual(events[-1]['event'], 'complete')
+
+        for returned in ('muse-spark-1.3', None):
+            with self.subTest(returned=returned):
+                class WrongModel(FakeTransport):
+                    def request(self, payload, timeout):
+                        response = super().request(payload, timeout)
+                        response['model'] = returned
+                        return response
+                transport = WrongModel()
+                with tempfile.TemporaryFile(mode='w+', encoding='utf-8') as stream, contextlib.redirect_stdout(io.StringIO()):
+                    result = baseline.run_baseline(self.fixture, contributor, transport, stream,
+                                                   ask=lambda _: '', expected_model=contributor.model)
+                    stream.seek(0)
+                    events = [json.loads(line) for line in stream]
+                self.assertFalse(result)
+                self.assertEqual(len(transport.calls), 1)
+                self.assertEqual(events[0]['expected_model'], contributor.model)
+                self.assertEqual(events[-2]['body']['model'], returned)
+                self.assertEqual(events[-1]['event'], 'failed')
+                self.assertIn('returned model', events[-1]['error'])
 
     def test_clarification_must_be_exact_available_fact(self):
         transport = FakeTransport()

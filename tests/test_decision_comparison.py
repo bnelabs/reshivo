@@ -33,6 +33,12 @@ def sample():
 
 
 class DecisionComparisonTests(unittest.TestCase):
+    def test_invalid_current_percentage_is_reported_before_selecting_a_winner(self):
+        request = sample()
+        request["configurations"][0]["materials"][0].update(amount="150", unit="mass_percent")
+        with self.assertRaisesRegex(ProductInputError, r"percentage cannot be more than 100%"):
+            compare_project_decisions(request)
+
     def test_cheaper_outside_target_is_not_recommended(self):
         result = compare_project_decisions(sample())
         self.assertEqual(result["decisions"]["per_usable_unit"]["configuration_ids"], ["A"])

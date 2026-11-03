@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { recordedRecipeFraction } from '../src/referenceComposition.ts'
-import { confirmRecordedRecipeReview, recordedRecipeNeedsReview, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../src/mixAdjustment.ts'
+import { confirmRecordedRecipeReview, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../src/mixAdjustment.ts'
 import { newProjectWorkspace, parseProjectWorkspace, serializeProjectWorkspace } from '../src/projectWorkspace.ts'
 
 const recipe = (id, revision, materials) => ({ id, revision, name: id, materials, process: 'pressed', geometry: 'sheet', notes: '' })
@@ -17,18 +17,27 @@ for (const bad of [
   [item('a', '', 'kg'), item('b', '1', 'kg')],
   [item('a', '-1', 'kg'), item('b', '2', 'kg')],
   [item('a', '0', 'kg'), item('b', '0', 'kg')],
-  [item('a', '1', 'kg'), item('b', '2', 'kg')],
-]) assert.equal(recordedRecipeFraction(recipe('bad', 1, bad), 'a').ok, false, 'unknown, mixed-basis or inexact points cannot become exact targets')
+]) assert.equal(recordedRecipeFraction(recipe('bad', 1, bad), 'a').ok, false, 'unknown or mixed-basis points cannot become targets')
+
+const third = recipe('third', 1, [item('paper', '1', 'kg'), item('rubber', '2', 'kg')])
+assert.deepEqual(recordedRecipeFraction(third, 'paper'), { ok: true, range: { min: '33.3333', max: '33.3334', numerator: '1', denominator: '3' } })
+assert.deepEqual(recordedRecipeFraction(recipe('zero', 1, [item('a', '0', 'kg'), item('b', '1', 'kg')]), 'a'), { ok: true, value: '0' })
+assert.deepEqual(recordedRecipeFraction(recipe('full', 1, [item('a', '1', 'kg'), item('b', '0', 'kg')]), 'a'), { ok: true, value: '100' })
+const tiny = recordedRecipeFraction(recipe('tiny', 1, [item('a', '0.000000000000001', 'kg'), item('b', '3', 'kg')]), 'a')
+assert.equal(tiny.ok, true)
+assert.ok('range' in tiny && Number(tiny.range.min) < (100e-15 / (3 + 1e-15)) && Number(tiny.range.max) > (100e-15 / (3 + 1e-15)), 'small positive ranges enclose the source point')
 
 const w = newProjectWorkspace()
 w.configurations = [source, destination]
 const dest = destination.materials[0], src = source.materials[0]
+assert.equal(recordedRecipeDiscussion(w, destination, dest, w.project, (s) => s.name), '', 'manual target has no invented source')
 let next = useRecordedRecipeTarget(w, w.case_id, destination, dest, w.project, source, src, 1)
 assert.notEqual(next, w)
 let draft = savedMixAdjustmentRecord(next, destination, dest)
 assert.equal(draft.values.targetMin, '25'); assert.equal(draft.values.targetMax, '25')
 assert.equal(draft.reference.setup_id, 'source'); assert.equal(draft.reference.setup_revision, 1)
 assert.equal(draft.reference.component_id, 'paper'); assert.equal(draft.reference.basis, 'whole_recipe')
+assert.match(recordedRecipeDiscussion(next, destination, dest, w.project, (s) => s.name), /source, version 1.*exact source fraction and chosen target are 25%/i)
 const reopened = parseProjectWorkspace(serializeProjectWorkspace(next))
 assert.deepEqual(savedMixAdjustmentRecord(reopened, destination, dest).reference, draft.reference, 'source provenance survives Save/Open')
 
@@ -46,6 +55,7 @@ assert.equal(useRecordedRecipeTarget(changedInput, w.case_id, destination, dest,
 const newerSource = { ...structuredClone(source), revision: 2 }
 const newerWorkspace = { ...next, configurations: [...next.configurations, newerSource] }
 assert.equal(recordedRecipeNeedsReview(newerWorkspace, draft), true, 'new source version requires review')
+assert.equal(recordedRecipeDiscussion(newerWorkspace, destination, dest, w.project, (s) => s.name), '', 'stale source is not passed into discussion')
 assert.equal(useRecordedRecipeTarget({ ...w, configurations: [...w.configurations, newerSource] }, w.case_id, destination, dest, w.project, source, src, 1).mix_adjustment_drafts.length, 0, 'a newer source cannot be captured without review')
 assert.equal(confirmRecordedRecipeReview(newerWorkspace, w.case_id, destination, dest, w.project, 1), newerWorkspace, 'a review cannot silently accept a newer version than the one shown')
 const reviewed = confirmRecordedRecipeReview(newerWorkspace, w.case_id, destination, dest, w.project, 2)
@@ -57,4 +67,24 @@ assert.equal(useRecordedRecipeTarget(staleDest, w.case_id, destination, dest, w.
 const corrupted = JSON.parse(serializeProjectWorkspace(next))
 corrupted.configurations[0].materials[0].amount = '500'
 assert.throws(() => parseProjectWorkspace(JSON.stringify(corrupted)), /recorded recipe reference/i, 'import cannot substitute another source recipe')
+
+const roundedWorkspace = { ...newProjectWorkspace(), configurations: [third, destination] }
+const rounded = useRecordedRecipeTarget(roundedWorkspace, roundedWorkspace.case_id, destination, dest, roundedWorkspace.project, third, third.materials[0], 1)
+const roundedDraft = savedMixAdjustmentRecord(rounded, destination, dest)
+assert.equal(roundedDraft.values.targetMin, '33.3333'); assert.equal(roundedDraft.values.targetMax, '33.3334')
+assert.deepEqual(roundedDraft.reference.range, { min: '33.3333', max: '33.3334', numerator: '1', denominator: '3' })
+const roundedReopened = parseProjectWorkspace(serializeProjectWorkspace(rounded))
+assert.deepEqual(savedMixAdjustmentRecord(roundedReopened, destination, dest).reference, roundedDraft.reference, 'exact source ratio and rounded bounds survive Save/Open')
+assert.match(recordedRecipeDiscussion(rounded, destination, dest, roundedWorkspace.project, (s) => s.name), /1\/3.*33\.3333–33\.3334%.*enclosing rounded range/i)
+assert.equal(useRecordedRecipeTarget(rounded, rounded.case_id, destination, dest, rounded.project, third, third.materials[0], 1), rounded, 'rounded targets are not overwritten')
+const editedRounded = updateSavedMixAdjustment(rounded, rounded.case_id, destination, dest, rounded.project, 'targetMin', '33.3')
+assert.equal(savedMixAdjustmentRecord(editedRounded, destination, dest).reference, undefined, 'editing the range changes it to a manual target')
+const corruptRounded = JSON.parse(serializeProjectWorkspace(rounded))
+corruptRounded.mix_adjustment_drafts[0].reference.range.numerator = '2'
+assert.throws(() => parseProjectWorkspace(JSON.stringify(corruptRounded)), /recorded recipe reference/i)
+const staleRounded = { ...rounded, configurations: [...rounded.configurations, { ...structuredClone(third), revision: 2 }] }
+assert.equal(recordedRecipeNeedsReview(staleRounded, roundedDraft), true)
+assert.equal(recordedRecipeDiscussion(staleRounded, destination, dest, rounded.project, (s) => s.name), '', 'rounded reference becomes unavailable when unreviewed')
+const reviewedRounded = confirmRecordedRecipeReview(staleRounded, rounded.case_id, destination, dest, rounded.project, 2)
+assert.equal(recordedRecipeNeedsReview(reviewedRounded, savedMixAdjustmentRecord(reviewedRounded, destination, dest)), false)
 console.log('Recorded recipes hand off exact whole-recipe points with explicit source, review and no draft overwrite')

@@ -1,6 +1,6 @@
 import type { ProjectIntakeDraft } from './projectIntake'
 import { validateMaterialAmount } from './checkEditing.ts'
-import { recordedRecipeFraction } from './referenceComposition.ts'
+import { recordedRecipeFraction, recordedRecipeTarget } from './referenceComposition.ts'
 import type { MixAdjustmentDraft } from './mixAdjustment'
 
 export type TrialConfiguration = {
@@ -41,7 +41,7 @@ export type TrialIdea = {title:string;change:string;why:string;steps:string[];tr
 export type SavedMixAdjustmentDraft = {
   case_id: string; configuration_id: string; configuration_revision: number
   component_id: string; component_name: string; project_snapshot: ProjectIntakeDraft; values: MixAdjustmentDraft
-  reference?: { setup_id: string; setup_revision: number; setup_snapshot: string; component_id: string; component_name: string; basis: 'whole_recipe'; fraction: string; latest_revision_at_review: number }
+  reference?: { setup_id: string; setup_revision: number; setup_snapshot: string; component_id: string; component_name: string; basis: 'whole_recipe'; fraction: string; latest_revision_at_review: number; range?: { min: string; max: string; numerator: string; denominator: string } }
 }
 export type ProjectWorkspace = {
   schema: 'rematter-project-v2'; case_id: string; project: ProjectIntakeDraft
@@ -170,17 +170,25 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
       text(values.additionName, 'Mix adjustment stock name', 120)
       if (values.inputMassOrigin !== undefined && (!['metric', 'us'].includes(values.inputMassOrigin as string) || !(values.inputMass as string).startsWith('invalid:'))) throw new Error('An invalid mass draft may record only its original metric or US unit.')
       if (draft.reference !== undefined) {
-        const reference = object(draft.reference, ['setup_id', 'setup_revision', 'setup_snapshot', 'component_id', 'component_name', 'basis', 'fraction', 'latest_revision_at_review'], [], 'Recorded recipe reference')
+        const reference = object(draft.reference, ['setup_id', 'setup_revision', 'setup_snapshot', 'component_id', 'component_name', 'basis', 'fraction', 'latest_revision_at_review'], ['range'], 'Recorded recipe reference')
         text(reference.setup_id, 'Reference setup identifier', 160, true); revision(reference.setup_revision)
         text(reference.setup_snapshot, 'Reference setup snapshot', 100000, true)
         text(reference.component_id, 'Reference material identifier', 160, true); text(reference.component_name, 'Reference material name', 160, true)
-        text(reference.fraction, 'Reference fraction', 160, true); revision(reference.latest_revision_at_review)
+        text(reference.fraction, 'Reference fraction', 1100, true); revision(reference.latest_revision_at_review)
         const source = configurations.get(configurationKey(reference.setup_id, reference.setup_revision)) as unknown as TrialConfiguration | undefined
         const sourceMaterial = source?.materials.find((item) => item.id === reference.component_id)
         const latestRevision = Math.max(...(root.configurations as TrialConfiguration[]).filter((item) => item.id === reference.setup_id).map((item) => item.revision))
         if (reference.basis !== 'whole_recipe' || !source || JSON.stringify(source) !== reference.setup_snapshot || !sourceMaterial || sourceMaterial.name !== reference.component_name || (reference.latest_revision_at_review as number) < (reference.setup_revision as number) || (reference.latest_revision_at_review as number) > latestRevision) throw new Error('A recorded recipe reference must retain its exact setup, material and review version.')
         const calculated = recordedRecipeFraction(source, sourceMaterial.id)
-        if (!calculated.ok || calculated.value !== reference.fraction || values.targetMin !== reference.fraction || values.targetMax !== reference.fraction) throw new Error('A recorded recipe reference must match its entered amounts and target.')
+        if (!calculated.ok) throw new Error('A recorded recipe reference must match its entered amounts and target.')
+        const target = recordedRecipeTarget(calculated)
+        let rangeMatches = reference.range === undefined && target.range === undefined
+        if (reference.range !== undefined) {
+          const range = object(reference.range, ['min', 'max', 'numerator', 'denominator'], [], 'Recorded recipe range')
+          for (const field of ['min', 'max', 'numerator', 'denominator']) text(range[field], `Recorded recipe range ${field}`, 500, true)
+          rangeMatches = Boolean(target.range && (['min', 'max', 'numerator', 'denominator'] as const).every((field) => range[field] === target.range![field]))
+        }
+        if (target.fraction !== reference.fraction || values.targetMin !== target.min || values.targetMax !== target.max || !rangeMatches) throw new Error('A recorded recipe reference must match its entered amounts and target.')
       }
     }
   }

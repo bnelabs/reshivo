@@ -1,6 +1,17 @@
 import type { TrialConfiguration } from './projectWorkspace.ts'
 
 type Fraction = { n: bigint; d: bigint }
+export type RecordedRecipePoint =
+  | { ok: true; value: string }
+  | { ok: true; range: { min: string; max: string; numerator: string; denominator: string } }
+  | { ok: false; reason: string }
+
+/** Preserve the entered range and the exact whole-recipe ratio for a rounded point. */
+export function recordedRecipeTarget(point: Extract<RecordedRecipePoint, { ok: true }>) {
+  if ('value' in point) return { fraction: point.value, min: point.value, max: point.value }
+  return { fraction: `${point.range.numerator}/${point.range.denominator}`, min: point.range.min,
+    max: point.range.max, range: point.range }
+}
 
 function gcd(a: bigint, b: bigint): bigint {
   while (b !== 0n) [a, b] = [b, a % b]
@@ -37,11 +48,38 @@ function exactDecimal(value: Fraction): string | null {
   return roundtrip && roundtrip.n === value.n && roundtrip.d === value.d ? result : null
 }
 
+function scaledDecimal(value: bigint, places: number): string {
+  if (places === 0) return value.toString()
+  const digits = value.toString().padStart(places + 1, '0')
+  return `${digits.slice(0, -places)}.${digits.slice(-places)}`.replace(/\.?0+$/, '')
+}
+
+/** An outward-rounded percentage interval, with no floating-point rounding. */
+function enclosingRange(percent: Fraction, proportion: Fraction): Extract<RecordedRecipePoint, { ok: true; range: unknown }> | null {
+  let places = 4
+  let scale = 10n ** BigInt(places)
+  // Keep useful precision even when the recorded fraction is very small.
+  while (percent.n * scale < percent.d && places < 94) { places++; scale *= 10n }
+  if (percent.n * scale < percent.d) return null
+  if (places > 4) { places += 3; scale *= 1000n }
+  const numerator = percent.n * scale
+  const floor = numerator / percent.d
+  const ceil = floor + (numerator % percent.d === 0n ? 0n : 1n)
+  const min = scaledDecimal(floor, places), max = scaledDecimal(ceil, places)
+  // The existing calculator transports JSON numbers. Refuse bounds it would change.
+  for (const value of [min, max]) {
+    const numeric = Number(value)
+    const original = decimal(value), roundtrip = Number.isFinite(numeric) ? decimal(JSON.stringify(numeric)) : null
+    if (!original || !roundtrip || original.n !== roundtrip.n || original.d !== roundtrip.d) return null
+  }
+  return { ok: true, range: { min, max, numerator: proportion.n.toString(), denominator: proportion.d.toString() } }
+}
+
 // Nanogram factors are exact, including the defined pound and ounce conversion.
 const MASS_FACTORS: Record<string, bigint> = { t: 1000000000000000n, kg: 1000000000000n, g: 1000000000n, lb: 453592370000n, oz: 28349523125n }
 
 /** Calculate one exact, whole-recipe mass fraction from the entered recipe only. */
-export function recordedRecipeFraction(setup: TrialConfiguration, componentId: string): { ok: true; value: string } | { ok: false; reason: string } {
+export function recordedRecipeFraction(setup: TrialConfiguration, componentId: string): RecordedRecipePoint {
   const items = setup.materials
   if (!items.length || items.filter((item) => item.id === componentId).length !== 1)
     return { ok: false, reason: 'Choose one material from the recorded setup.' }
@@ -61,8 +99,9 @@ export function recordedRecipeFraction(setup: TrialConfiguration, componentId: s
   if (!chosen || total.n === 0n) return { ok: false, reason: 'The recorded recipe needs a positive total amount.' }
   if (percentages && total.n !== 100n * total.d)
     return { ok: false, reason: 'The recorded mass percentages must total 100% for the whole recipe.' }
-  const ratio = fraction(chosen.n * total.d * 100n, chosen.d * total.n)
+  const proportion = fraction(chosen.n * total.d, chosen.d * total.n)
+  const ratio = fraction(proportion.n * 100n, proportion.d)
   const result = exactDecimal(ratio)
-  if (result === null) return { ok: false, reason: 'The exact fraction cannot be entered without rounding. Enter your own trial range instead.' }
-  return { ok: true, value: result }
+  if (result !== null) return { ok: true, value: result }
+  return enclosingRange(ratio, proportion) ?? { ok: false, reason: 'This fraction is too precise to carry into the calculator. Enter your own trial range instead.' }
 }
