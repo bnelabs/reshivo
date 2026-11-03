@@ -60,16 +60,52 @@ export function formatProjectSummary(workspace: ProjectWorkspace, includeIdeas: 
     const excluded = workspace.record_exclusions?.[record.id]
     lines.push(`- ${shown(name)} v${record.configuration_revision} / ${shown(check?.name)}: ${record.readings.map((reading) => shown(reading.value)).join(', ')} ${record.unit} (${record.data_kind === 'synthetic' ? 'example data' : 'entered readings'}${excluded ? '; excluded from comparisons' : ''}).`)
   }
-  lines.push('', 'This summary includes saved plans and readings. Open the app for cost comparisons.', 'Test your product before production.', '')
+  lines.push('', 'This summary includes saved plans and readings. Open the app for cost comparisons.', '')
   return lines.join('\n')
+}
+
+/** Include only guidance the caller has confirmed is current and visible. */
+export function formatAdviceForReport(value: unknown): string {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return ''
+  const data = value as Record<string, unknown>
+  const text = (input: unknown): string => typeof input === 'string' ? input.trim() : ''
+  const entries = (input: unknown): string[] => Array.isArray(input) ? input.map(text).filter(Boolean) : []
+  const answer = text(data.answer) || text(data.reply)
+  const firstStep = text(data.first_step)
+  const steps = entries(data.next_steps)
+  const questions = entries(data.questions)
+  const routes = [...(Array.isArray(data.material_routes) ? data.material_routes : []),
+    ...(Array.isArray(data.engineering_routes) ? data.engineering_routes : [])]
+  if (!answer && !firstStep && !steps.length && !questions.length && !routes.length) return ''
+  const lines = ['', 'Ideas and next steps']
+  const local = data.origin === 'local' || data.guidance_origin === 'local' || data.result_kind === 'local_planning_guidance'
+  const provider = text(data.provider), model = text(data.model)
+  if (local) lines.push('Source: Local planning guidance')
+  else if (provider && model) lines.push(`Source: ${provider} / ${model}`)
+  if (answer) lines.push(answer)
+  if (firstStep) lines.push(`First step: ${firstStep}`)
+  if (steps.length) { lines.push('Next actions:'); steps.forEach((step) => lines.push(`- ${step}`)) }
+  for (const route of routes) {
+    if (!route || typeof route !== 'object' || Array.isArray(route)) continue
+    const item = route as Record<string, unknown>
+    const title = text(item.title), change = text(item.change), why = text(item.why), check = text(item.check)
+    if (title) lines.push('', `Idea: ${title}`)
+    if (change) lines.push(`What to try: ${change}`)
+    if (why) lines.push(`Why: ${why}`)
+    entries(item.steps).forEach((step) => lines.push(`- ${step}`))
+    entries(item.tradeoffs).forEach((tradeoff) => lines.push(`Trade-off: ${tradeoff}`))
+    if (check) lines.push(`What to check: ${check}`)
+  }
+  if (questions.length) { lines.push('', 'Questions to answer:'); questions.forEach((question) => lines.push(`- ${question}`)) }
+  return lines.join('\n') + '\n'
 }
 
 /** Explain only what follows from the entered composition values. */
 export function explainUnreachableMix(input: BalanceMixRequest): string | null {
   if (Math.max(input.input_max_percent, input.addition_percent) < input.target_min_percent)
-    return `Your starting mix has at most ${input.input_max_percent}% ${input.component}, and the added stock has ${input.addition_percent}%. Both are below your minimum of ${input.target_min_percent}%, so mixing them cannot reach that target. Consider a stock with a higher share of ${input.component}, or change your target.`
+    return `Your starting mix has at most ${input.input_max_percent}% ${input.component}, and the material you add has ${input.addition_percent}%. Both are below your minimum of ${input.target_min_percent}%, so mixing them cannot reach that target. Consider adding material with a higher share of ${input.component}, or change your target.`
   if (Math.min(input.input_min_percent, input.addition_percent) > input.target_max_percent)
-    return `Your starting mix has at least ${input.input_min_percent}% ${input.component}, and the added stock has ${input.addition_percent}%. Both are above your maximum of ${input.target_max_percent}%, so mixing them cannot reach that target. Consider a stock with a lower share of ${input.component}, or change your target.`
+    return `Your starting mix has at least ${input.input_min_percent}% ${input.component}, and the material you add has ${input.addition_percent}%. Both are above your maximum of ${input.target_max_percent}%, so mixing them cannot reach that target. Consider adding material with a lower share of ${input.component}, or change your target.`
   return null
 }
 
@@ -77,7 +113,7 @@ export function formatMixSummary(input: BalanceMixRequest, result: BalanceMixRes
   return [
     'Reshivo — mix calculation', '', `Material tracked: ${input.component}`,
     `Portion: ${system === 'us' ? `about ${toDisplay(String(input.input_mass_kg), 'kg', system)} lb (${input.input_mass_kg} kg)` : `${input.input_mass_kg} kg`}; ${input.input_min_percent}–${input.input_max_percent}% ${input.component}`,
-    `Added stock: ${input.addition_name}; ${input.addition_percent}% ${input.component}`,
+    `Added material: ${input.addition_name}; ${input.addition_percent}% ${input.component}`,
     `Chosen composition: ${input.target_min_percent}–${input.target_max_percent}%`, '',
     result.feasible ? describeMixOutcome(result, system) : explainUnreachableMix(input) ?? describeMixOutcome(result, system),
     '', 'Simulation assumes even mixing and no losses. The finished product still needs its own checks.', '',
@@ -159,7 +195,7 @@ export function printTextReport(text: string, sketch?: string | null): void {
   let section = doc.createElement('section')
   const firstHeading = doc.createElement('h2'); firstHeading.textContent = mixOnly ? 'Your inputs' : 'Your project'
   section.appendChild(firstHeading); main.appendChild(section)
-  const headings = new Set(['Plans', 'Product checks', 'Recorded readings'])
+  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps'])
   const lines = text.split('\n')
   const mixStart = mixOnly ? 0 : lines.indexOf('Reshivo — mix calculation')
   const mixLines = mixStart >= 0 ? lines.slice(mixStart).filter((line) => line.trim()) : []

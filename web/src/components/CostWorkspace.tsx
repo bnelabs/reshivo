@@ -4,7 +4,7 @@ import { newCostDraft } from '../projectWorkspace'
 import type { ProjectWorkspace, CostDraft } from '../projectWorkspace'
 import { costRequest } from '../manufacturingCost'
 import { currentSetups, setupKey } from './TrialWorkspace'
-import { costIssueText, displayCostAmount, roundedWinnerCollision } from '../costDisplay'
+import { costComparisonReason, costIssueText, displayCostAmount, roundedWinnerCollision } from '../costDisplay'
 import { selectedCurrentSetup, setupRevisionNotice } from '../setupSelection'
 import { reuseCostComparisonDetails } from '../costComparisonSetup'
 import { currentPriceUnit, enteredMaterialPrice, exactPriceUnitConversion, resolvePriceUnit } from '../costPriceUnit'
@@ -18,6 +18,7 @@ type Props = {
   onReadingKindChange: (kind: 'user_reported' | 'synthetic') => void
   showHistoricalIdeas: boolean
   onGoToPlans: () => void
+  active: boolean
 }
 const displayMoney = displayCostAmount
 export function CostWorkspace({
@@ -27,6 +28,7 @@ export function CostWorkspace({
   onReadingKindChange,
   showHistoricalIdeas,
   onGoToPlans,
+  active,
 }: Props) {
   const system = useUnitSystem()
   const setups = currentSetups(w.configurations)
@@ -38,6 +40,11 @@ export function CostWorkspace({
   const previousSetup = useRef<{ id: string; revision: number } | null>(null)
   const [result, setResult] = useState<any>(null)
   const [comparison, setComparison] = useState<any>(null)
+  const resultCard = useRef<HTMLElement>(null)
+  const comparisonCard = useRef<HTMLElement>(null)
+  const activePage = useRef(active)
+  activePage.current = active
+  const pendingFocus = useRef<{ kind: 'result' | 'comparison'; key: string } | null>(null)
   const [resultKey, setResultKey] = useState('')
   const [compareKey, setCompareKey] = useState('')
   const [busy, setBusy] = useState(false)
@@ -71,11 +78,27 @@ export function CostWorkspace({
     cost_records: comparisonRequests,
   }
   const comparisonFingerprint = JSON.stringify(decisionRequest)
+  useEffect(() => {
+    const pending = pendingFocus.current
+    if (!pending) return
+    const expected = pending.kind === 'result' ? fingerprint : comparisonFingerprint
+    if (!active || pending.key !== expected) {
+      pendingFocus.current = null
+      return
+    }
+    const target = pending.kind === 'result' ? resultCard.current : comparisonCard.current
+    if (!target) return
+    pendingFocus.current = null
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    target.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' })
+    target.focus({ preventScroll: true })
+  }, [active, comparison, comparisonFingerprint, compareKey, fingerprint, result, resultKey])
   const comparisonMetrics = (['per_usable_unit', 'per_usable_kg', 'per_usable_m2'] as const).filter(
     (metric) =>
       comparison?.configurations?.some((entry: any) => entry.cost?.unit_costs?.[metric] != null),
   )
   async function calculate(compare = false) {
+    pendingFocus.current = null
     if (pendingPriceUnit) {
       setError('Choose how to change the material price before calculating.')
       return
@@ -84,10 +107,14 @@ export function CostWorkspace({
     setError('')
     try {
       if (compare) {
-        setComparison(await api<any>('/api/project/compare-decisions', decisionRequest))
+        const value = await api<any>('/api/project/compare-decisions', decisionRequest)
+        pendingFocus.current = activePage.current ? { kind: 'comparison', key: comparisonFingerprint } : null
+        setComparison(value)
         setCompareKey(comparisonFingerprint)
       } else {
-        setResult(await api<any>('/api/project/manufacturing-cost', currentRequest))
+        const value = await api<any>('/api/project/manufacturing-cost', currentRequest)
+        pendingFocus.current = activePage.current ? { kind: 'result', key: fingerprint } : null
+        setResult(value)
         setResultKey(fingerprint)
       }
     } catch (e) {
@@ -457,7 +484,7 @@ export function CostWorkspace({
             {setups.length < 2 && <small>Add another plan to compare.</small>}
           </div>
           {result && resultKey === fingerprint && (
-            <section className="pw-card pw-spaced" aria-live="polite">
+            <section className="pw-card pw-spaced" aria-live="polite" aria-label="Your cost result" ref={resultCard} tabIndex={-1}>
               <span className="pw-overline">
                 {d.mode === 'planned' ? 'Cost simulation · planning inputs' : 'Cost simulation · entered costs'}
               </span>
@@ -516,12 +543,13 @@ export function CostWorkspace({
             </section>
           )}
           {comparison && compareKey === comparisonFingerprint && (
-            <section className="pw-card pw-spaced">
+            <section className="pw-card pw-spaced" aria-label="Your cost comparison" ref={comparisonCard} tabIndex={-1}>
               <h2>Compare product checks and costs</h2>
               {comparison.reasons?.map((r: string, i: number) => (
-                <p key={i}>{r}</p>
+                <p key={i}>{costComparisonReason(r)}</p>
               ))}
-              <div className="pw-table-scroll">
+              <p className="pw-comparison-scroll-hint">Scroll sideways to see the full comparison.</p>
+              <div className="pw-table-scroll" role="region" aria-label="Cost comparison table" tabIndex={0}>
                 <table>
                   <caption>
                     Cost simulations from each setup’s entered costs and usable output

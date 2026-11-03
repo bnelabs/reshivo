@@ -2,6 +2,15 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.3.0 — 2026-11-03
+
+### Changed
+
+- Bring new AI guidance, cost results and cost comparisons into view when they arrive, without interrupting someone who has changed the inputs or navigated away. Reduced-motion preferences are respected.
+- Explain cost-comparison requirements in plain language and make horizontal scrolling clearer on small screens.
+- Lead with ideas and the next useful action for a single batch. Hide the optional addition calculator until requested, and explain missing calculation inputs when it is opened.
+- Include current, relevant guidance and next steps in the readable text and PDF reports.
+
 ## 0.2.1 — 2026-11-03
 
 ### Fixed

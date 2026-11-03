@@ -43,6 +43,38 @@ export function costIssueText(value: unknown): string {
   return 'Review this cost input.'
 }
 
+const comparisonReasons: Record<string, string> = {
+  'Provide at least two cost-record objects.': 'Add costs for at least two plans to compare them.',
+  'All records need complete, conflict-free costs within their entered scope.': 'Complete the included costs for each plan and resolve any conflicting entries.',
+  'All configuration revisions must be explicitly current.': 'Use the current version of each plan.',
+  'Every compared record needs an explicit configuration identity.': 'Choose a plan for each cost estimate.',
+  'Compared configuration identities must be distinct.': 'Choose a different plan for each cost estimate.',
+  'Records need the same explicit case_id.': 'Compare plans from the same project.',
+  'Records need the same explicit currency.': 'Use the same currency for each plan.',
+  'Records need the same explicit product_basis.': 'Use the same product for each plan.',
+  'Records need the same explicit functional_basis.': 'Describe the same product and use for each plan.',
+  'Records need the same explicit scope_basis.': 'Include the same types of costs for each plan.',
+  'Included/excluded manufacturing categories must match.': 'Include or exclude the same processing costs for each plan.',
+  'Match what each process charge includes across setups.': 'Make sure each processing charge covers the same things in every plan.',
+  'Use the same named other-cost categories in each setup before comparing.': 'Use the same named other costs in each plan.',
+  'Usable-output acceptance definitions must match.': 'Use the same definition of usable output for each plan.',
+  'Do not name a winner between observed output and planned output estimates.': 'Use either recorded output or planned output for every plan.',
+  'No common positive, explicitly entered usable-output denominator is available.': 'Enter a positive usable output in the same units for each plan.',
+  'Add at least one current trial setup.': 'Add a current plan.',
+  'Add one current cost record for every setup before comparing.': 'Add costs for each current plan before comparing.',
+  'Resolve missing targets, readings or record reviews for every required check before selecting a setup.': 'Make sure each plan has required checks with targets and reviewed readings before choosing a plan.',
+  'No setup has entered readings inside every required target.': 'None of the plans has entered readings within every required target.',
+}
+
+/** Keep internal field names out of comparison guidance. */
+export function costComparisonReason(value: unknown): string {
+  if (typeof value !== 'string' || !value.trim()) return 'Review the comparison details for each plan.'
+  const text = value.trim()
+  if (comparisonReasons[text]) return comparisonReasons[text]
+  return (/\b[a-z][a-z0-9]*_[a-z0-9_]+\b/i.test(text) || /^Records need the same explicit .+\.$/i.test(text))
+    ? 'Review the comparison details for each plan.' : text
+}
+
 /** Flag when the displayed rounding hides the difference behind a unique winner. */
 export function roundedWinnerCollision(comparison: any, metric: string): boolean {
   const winner = comparison?.decisions?.[metric]

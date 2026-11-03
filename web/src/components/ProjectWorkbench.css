@@ -483,6 +483,11 @@
   overflow: auto;
   margin: 24px 0;
 }
+.pw-comparison-scroll-hint {
+  display: none;
+  color: var(--pw-muted);
+  font-size: 14px;
+}
 .project-workbench table {
   border-collapse: separate;
   border-spacing: 0;
@@ -726,6 +731,9 @@
   }
 }
 @media (max-width: 760px) {
+  .pw-comparison-scroll-hint {
+    display: block;
+  }
   .pw-next-step {
     align-items: flex-start;
     flex-direction: column;

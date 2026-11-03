@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { displayCostAmount, costIssueText, roundedWinnerCollision } from '../src/costDisplay.ts'
+import { costComparisonReason, displayCostAmount, costIssueText, roundedWinnerCollision } from '../src/costDisplay.ts'
 
 assert.equal(displayCostAmount('0'), '0')
 assert.equal(displayCostAmount('0.0000000000000000000001'), '1e-22')
@@ -16,6 +16,20 @@ assert.equal(costIssueText({field:'materials.0', message:'Enter a price.'}), 'En
 assert.equal(costIssueText({field:'functional_basis', question:'technical wording'}), 'Describe the product and use that these costs cover.')
 assert.equal(costIssueText({field:'materials.0.basis', question:'technical wording'}), 'Say whether your material amounts and prices use the same condition, such as wet or dry.')
 assert.equal(costIssueText({field:'unknown'}), 'Review this cost input.')
+
+for (const [field, expected] of Object.entries({
+  case_id: 'Compare plans from the same project.',
+  currency: 'Use the same currency for each plan.',
+  product_basis: 'Use the same product for each plan.',
+  functional_basis: 'Describe the same product and use for each plan.',
+  scope_basis: 'Include the same types of costs for each plan.',
+})) assert.equal(costComparisonReason(`Records need the same explicit ${field}.`), expected)
+assert.equal(costComparisonReason('Usable-output acceptance definitions must match.'), 'Use the same definition of usable output for each plan.')
+assert.equal(costComparisonReason('Do not name a winner between observed output and planned output estimates.'), 'Use either recorded output or planned output for every plan.')
+assert.equal(costComparisonReason('Unexpected backend_field is missing.'), 'Review the comparison details for each plan.')
+assert.equal(costComparisonReason('Records need the same explicit futurefield.'), 'Review the comparison details for each plan.')
+assert.equal(costComparisonReason('Another clear reason.'), 'Another clear reason.')
+assert.equal(costComparisonReason(null), 'Review the comparison details for each plan.')
 
 const comparison = {
   decisions: { per_usable_unit: {configuration_ids:['a'], tie:false} },

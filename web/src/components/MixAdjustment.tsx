@@ -14,6 +14,16 @@ import { selectedCurrentSetup, setupRevisionNotice } from '../setupSelection'
 import { safeSetupName } from '../savedGuidanceReview'
 import { RecordedRecipeReference } from './RecordedRecipeReference'
 import { downloadTextFile, explainUnreachableMix, formatMixSummary, printTextReport } from '../readableSummary'
+import { mixInputProblems } from '../mixInputHelp'
+
+function SingleBatchHelp({ onAskForHelp }: { onAskForHelp: () => void }) {
+  return <div className="pw-card pw-spaced">
+    <h2>Have one batch? Start here</h2>
+    <p>Explore how to use your material and what to check first. You do not need to know every material’s percentage to ask.</p>
+    <button type="button" className="pw-primary" onClick={onAskForHelp}>Explore my material</button>
+    <p className="pw-muted">The calculator below is optional. Use it when you want to explore adding another material and know the shares needed for that calculation.</p>
+  </div>
+}
 
 /** Arithmetic on user-entered composition, not a material-property model. */
 export type MixPlanningContext = {
@@ -23,7 +33,7 @@ export type MixPlanningContext = {
   project_context: { configurations: { id: string; revision: number; process: string; geometry: string; materials: { name: string }[] }[] }
 }
 
-export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss, onSummary, onGoToPlans, onGoToChecks }: {
+export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss, onSummary, onGoToPlans, onGoToChecks, onAskForHelp, calculatorOpenRequest }: {
   workspace: ProjectWorkspace
   enabled: boolean
   showHistoricalIdeas: boolean
@@ -31,10 +41,14 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   onSummary: (summary: string) => void
   onGoToPlans: () => void
   onGoToChecks: () => void
+  onAskForHelp: () => void
+  calculatorOpenRequest: number
   onDraftChange: (update: (current: ProjectWorkspace) => ProjectWorkspace) => void
   onDiscuss?: (question: string, calculation: PreparedMixCalculation) => void
 }) {
   const system = useUnitSystem()
+  const [calculatorOpen, setCalculatorOpen] = useState(false)
+  useEffect(() => { if (calculatorOpenRequest > 0) setCalculatorOpen(true) }, [calculatorOpenRequest])
   const setups = currentSetups(w.configurations)
   const setupName = (item: (typeof setups)[number]) => showHistoricalIdeas ? item.name : safeSetupName(w, item, 'Plan')
   const [selectedSetup, setSelectedSetup] = useState(() => setups[0]?.id ?? '')
@@ -59,6 +73,8 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const referenceLatest = w.configurations.filter((item) => item.id === savedDraft?.reference?.setup_id).reduce<typeof referenceSource>((latest, item) => !latest || item.revision > latest.revision ? item : latest, undefined)
   const request = material ? mixAdjustmentRequest(material.name, draft) : null
   const precisionProblem = mixAdjustmentPrecisionProblem(draft, draft.inputMassOrigin ?? system)
+  const inputProblems = mixInputProblems(material?.name ?? '', draft, system)
+  const fullPortion = [draft.inputMin, draft.inputMax].every((value) => /^100(?:\.0+)?\s*%?$/.test(value.trim()))
   const referenceVersions = savedDraft?.reference ? w.configurations.filter((item) => item.id === savedDraft.reference?.setup_id) : []
   const signature = mixAdjustmentKey(w.case_id, { setup, project: w.project, reference: savedDraft?.reference, referenceVersions }, material?.id ?? '', draft)
   const stockKey = JSON.stringify({ ...planningContext, history: [...(planningContext.history ?? []), { role: 'user', content: `Added stock: ${draft.additionName}` }] })
@@ -74,7 +90,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   }, [result, signature, needsProjectReview, needsReferenceReview, system, onSummary])
 
   useEffect(() => {
-    if (result && resultCard.current) {
+    if (result && calculatorOpen && resultCard.current) {
       resultCard.current.scrollIntoView({ block: 'start' })
       resultCard.current.focus({ preventScroll: true })
     }
@@ -163,14 +179,18 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
     onDiscuss(`Help me interpret this mix simulation for ${setupName(setup)}, version ${setup.revision}, and suggest the next actions and product checks.\n\nPortion: ${input.input_mass_kg} kg, with ${showRange(input.input_min_percent, input.input_max_percent)} mass percent ${input.component}. Added stock: ${input.addition_name}, with ${input.addition_percent} mass percent ${input.component}. Chosen mix: ${showRange(input.target_min_percent, input.target_max_percent)} mass percent ${input.component}.${source ? `\n\n${source}` : ''}\n\n${outcome} Figures are approximate and assume complete, loss-free mixing.`, binding)
   }
 
-  if (!enabled) return <section className="pw-section"><h1>Adjust a mix</h1><p>Adjustment calculations are unavailable while this case is being checked or needs local planning. See Options for guidance.</p></section>
+  if (!enabled) return <section className="pw-section"><h1>Adjust a mix</h1><SingleBatchHelp onAskForHelp={onAskForHelp} /><p>Adjustment calculations are unavailable while this case is being checked or needs local planning.</p><button type="button" onClick={onAskForHelp}>Ask for help in Options</button></section>
   if (missingSelected && setups.length > 0) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>Choose a setup</h2><p>Your earlier selection is unavailable in this project.</p><label>Plan<select value="" onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}><option value="" disabled>Choose a setup</option>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label></div></section>
   if (missingSelectedMaterial && setup && setup.materials.length > 0) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>Choose a component</h2><p>Your earlier component is unavailable in this version of {setupName(setup)}.</p><label>Component you want to track<select value="" onChange={(event) => setSelectedMaterial(event.target.value)}><option value="" disabled>Choose a component</option>{setup.materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></section>
-  if (!setup || !material) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>{setup ? 'Add a material to this plan' : 'Add a plan first'}</h2>{setup && <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>}{versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}<p>Save a plan with at least one material to explore an adjustment.</p><button type="button" className="pw-primary" onClick={onGoToPlans}>Go to Plans</button></div></section>
+  if (!setup || !material) return <section className="pw-section"><h1>Adjust a mix</h1><SingleBatchHelp onAskForHelp={onAskForHelp} /><div className="pw-empty"><h2>{setup ? 'Add a material to this plan' : 'Add a plan first'}</h2>{setup && <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>}{versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}<p>Save a plan with at least one material to explore an adjustment.</p><button type="button" className="pw-primary" onClick={onGoToPlans}>Go to Plans</button></div></section>
 
   return (
     <section className="pw-section">
-      <div className="pw-section-heading"><div><h1>Adjust a mix</h1><p>When the amount of one component changes, explore how much of a known stock could bring it back to a composition you choose.</p></div></div>
+      <div className="pw-section-heading"><div><h1>Adjust a mix</h1></div></div>
+      <SingleBatchHelp onAskForHelp={onAskForHelp} />
+      <details className="pw-card pw-spaced" open={calculatorOpen} onToggle={(event) => setCalculatorOpen(event.currentTarget.open)}>
+      <summary><strong>Calculate an addition</strong> <span className="pw-muted">(optional)</span></summary>
+      <p>Choose one material or stream and explore how adding a known material changes its share.</p>
       <p className="pw-muted">Enter values you know or want to explore.</p>
       <div className="pw-card">
         <div className="pw-form-grid">
@@ -178,7 +198,9 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           <label>Component you want to track<select value={material.id} onChange={(event) => setSelectedMaterial(event.target.value)}>{setup.materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
         </div>
         {versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}
-        <p className="pw-muted">The material names come from your setup; enter the fraction for this portion below.</p>
+        <p>Choose one material or named stream to track. The percentages below describe its share in your portion, the material you could add, and the mix you want to explore.</p>
+        <p className="pw-muted">If one plan entry names several materials and you want to track one of them, edit it in Plans and add the materials separately. You can also track a whole named stream when your percentages describe that stream in both mixtures.</p>
+        <button type="button" onClick={onAskForHelp}>Ask for help in Options</button>
         {needsProjectReview && savedDraft && <div className="pw-notice">
           <h2>Review these inputs for the changed project</h2>
           <p>Project details have changed since these numbers were entered. Compare the earlier and current details and check the numbers below before using them again.</p>
@@ -195,16 +217,17 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           </div>
           {massEntry.invalid && <p className="pw-notice">{massEntry.origin ? `This unfinished value was entered in ${massEntry.enteredUnit}. ${massEntry.locked ? `Switch back to ${massEntry.enteredUnit} to correct it, or clear it and re-enter it in ${massUnit}.` : 'Correct it before calculating.'}` : `This older unfinished value has no recorded unit. Clear it and re-enter it in ${massUnit} before calculating; its original unit cannot be inferred.`} {massEntry.locked && <button type="button" onClick={() => change('inputMass', '')}>Clear and re-enter in {massUnit}</button>}</p>}
           <p>How much of this portion is {material.name}, by mass? If you know one value, enter it in both boxes.</p>
+          {fullPortion && <p className="pw-notice">100% to 100% treats the whole portion as {material.name}. It does not show how materials inside that stream vary.</p>}
           <div className="pw-form-grid">
             <label>Lowest possible amount (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.inputMin} onChange={(event) => change('inputMin', event.target.value)} /></label>
             <label>Highest possible amount (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.inputMax} onChange={(event) => change('inputMax', event.target.value)} /></label>
           </div>
-          <h2>2. Describe the stock you could add</h2>
+          <h2>2. Describe the material you could add</h2>
           <div className="pw-form-grid">
-            <label>Name of the added stock<input maxLength={120} value={draft.additionName} onChange={(event) => change('additionName', event.target.value)} placeholder="For example, a characterized recycled plastic" /></label>
-            <label>{material.name} in that stock (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.additionPercent} onChange={(event) => change('additionPercent', event.target.value)} /></label>
+            <label>Name of the material you could add<input maxLength={120} value={draft.additionName} onChange={(event) => change('additionName', event.target.value)} placeholder="For example, a characterized recycled plastic" /></label>
+            <label>{material.name} in the material you could add (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.additionPercent} onChange={(event) => change('additionPercent', event.target.value)} /></label>
           </div>
-          <small>Enter zero only when you know the added stock contains none of the tracked component.</small>
+          <small>Enter zero only when you know the material you could add contains none of the tracked component.</small>
           <h2>3. Choose the composition to explore</h2>
           <p>What range of {material.name} would you like to try, by mass?</p>
           {savedDraft?.reference && <div className="pw-notice">
@@ -226,12 +249,21 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
             <label>Minimum to explore (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMin} onChange={(event) => change('targetMin', event.target.value)} /></label>
             <label>Maximum to explore (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMax} onChange={(event) => change('targetMax', event.target.value)} /></label>
           </div>
-          <div className="pw-actions"><button className="pw-primary" type="submit" disabled={!request || !canCalculate || busy}>{busy ? 'Calculating…' : 'Calculate an addition'}</button></div>
-          {!request && <small>Enter a positive portion mass, both ends of each range, and the added stock and its fraction. Percentages must be between zero and one hundred; you can include the % sign.</small>}
+          <div className="pw-actions"><button className="pw-primary" type="submit" aria-describedby={!request && inputProblems.length ? "mix-input-help" : undefined} disabled={!request || !canCalculate || busy}>{busy ? 'Calculating…' : 'Calculate an addition'}</button></div>
+          {!request && inputProblems.length > 0 && <div className="pw-notice" id="mix-input-help">
+            <strong>To calculate, complete or correct:</strong>
+            <ul>{inputProblems.map((problem) => <li key={problem}>{problem}</li>)}</ul>
+            <small>You can include the % sign. If you do not know a value, ask for help in Options.</small>
+          </div>}
+          {request && !canCalculate && <div className="pw-notice">
+            {needsProjectReview && <p>Review the changed project details above.</p>}
+            {needsReferenceReview && <p>Review the recorded recipe above.</p>}
+            {stockMode?.key !== stockKey && <p>Checking the material you could add…</p>}
+            {stockMode?.key === stockKey && stockMode.planningOnly && !stockMode.failed && <p>This material needs planning before this calculation. Ask for help in Options.</p>}
+            {stockMode?.key === stockKey && stockMode.failed && <p>The local check could not be completed. Change an entry or reopen the app to retry.</p>}
+          </div>}
           {precisionProblem && <p className="pw-error" role="alert">The {precisionProblem} has more precision than the calculator can preserve. Enter a shorter number or a range that accurately represents what you know.</p>}
           <small>Your project file saves these entries with this setup version. It does not save the calculation result.</small>
-          {stockMode?.key === stockKey && stockMode.planningOnly && !stockMode.failed && <p className="pw-notice">This added stock needs local planning first. Identify the material and its handling conditions before using the adjustment calculator.</p>}
-          {stockMode?.key === stockKey && stockMode.failed && <p className="pw-error" role="alert">The local check could not be completed. Your entries remain here; reopen the app or change an entry to retry.</p>}
         </form>
         {error && <p className="pw-error" role="alert">{error}</p>}
       </div>
@@ -242,7 +274,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           <MixAdditionResult result={visibleResult.value} system={system} />
         </> : <>
           <h2>No single addition fits the whole range</h2>
-          <p>{explainUnreachableMix(visibleResult.request) ?? 'For the entered stock, no fixed addition reaches your chosen composition across the full input range. If the actual fraction of this portion becomes known, enter that value and recalculate. You can also explore a different characterized stock or composition range.'}</p>
+          <p>{explainUnreachableMix(visibleResult.request) ?? 'For the material you entered, no fixed addition reaches your chosen composition across the full input range. If the actual fraction of this portion becomes known, enter that value and recalculate. You can also explore a different material or composition range.'}</p>
         </>}
         <p>Choose what to measure for this plan.</p>
         <button type="button" onClick={onGoToChecks}>Set up product checks</button>
@@ -250,6 +282,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
         <button type="button" onClick={() => { try { printTextReport(formatMixSummary(visibleResult.request, visibleResult.value, system)) } catch (e) { setError((e as Error).message) } }}>Print / Save as PDF</button>
         {onDiscuss && <button onClick={discuss}>Ask about this result</button>}
       </div>}
+      </details>
     </section>
   )
 }

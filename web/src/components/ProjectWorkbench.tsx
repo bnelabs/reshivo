@@ -26,7 +26,7 @@ import { canReattachMixCalculation, mixQuestionFingerprint, mixQuestionIsCurrent
 import type { PreparedMixCalculation } from '../mixQuestion'
 import { briefFrom } from '../projectBrief'
 import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
-import { downloadTextFile, formatProjectSummary, printTextReport } from '../readableSummary'
+import { downloadTextFile, formatAdviceForReport, formatProjectSummary, printTextReport } from '../readableSummary'
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
@@ -45,6 +45,7 @@ export function ProjectWorkbench() {
   const [page, setPage] = useState<
     'start' | 'manual' | 'options' | 'trials' | 'adjust' | 'checks' | 'costs' | 'legacy'
   >('start')
+  const [calculatorOpenRequest, setCalculatorOpenRequest] = useState(0)
   const [providerOpen, setProviderOpen] = useState(false)
   const [status, setStatus] = useState({
     configured: false,
@@ -58,6 +59,10 @@ export function ProjectWorkbench() {
   const [notice, setNotice] = useState('')
   const [manual, setManual] = useState<ProjectIntakeDraft>(emptyProjectDraft)
   const [advice, setAdvice] = useState<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult | null>(null)
+  const adviceResult = useRef<HTMLElement>(null)
+  const pendingAdviceFocus = useRef<{ result: AdvisorResult | AdvisorFollowupResult | LocalPlanningResult; question: string } | null>(null)
+  const currentPage = useRef(page)
+  currentPage.current = page
   const [startingGuidance, setStartingGuidance] = useState<ProjectIntakeResult | null>(null)
   const [adviceCase, setAdviceCase] = useState('')
   const [adviceProject, setAdviceProject] = useState('')
@@ -77,6 +82,8 @@ export function ProjectWorkbench() {
   const [previousQuestion, setPreviousQuestion] = useState('')
   const [lastAdviceUsedIdea, setLastAdviceUsedIdea] = useState(false)
   const [question, setQuestion] = useState('')
+  const [focusHelpQuestion, setFocusHelpQuestion] = useState(false)
+  const helpQuestion = useRef<HTMLTextAreaElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [inlineError, setInlineError] = useState('')
@@ -117,6 +124,33 @@ export function ProjectWorkbench() {
   const showCurrentGuidance = Boolean(modeReady && !planningMode?.planningOnly)
   const showHistoricalIdeas = Boolean(showCurrentGuidance && savedReviewReady && !savedNeedsReview)
   const visibleSavedNotes = (w.advice_notes ?? []).filter((note) => modeReady && savedReviewReady && !savedNeedsReview && (showHistoricalIdeas || note.kind === 'local_guidance'))
+  useEffect(() => {
+    if (!focusHelpQuestion || page !== 'options' || !helpQuestion.current) return
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    helpQuestion.current.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' })
+    helpQuestion.current.focus({ preventScroll: true })
+    setFocusHelpQuestion(false)
+  }, [focusHelpQuestion, page])
+  useEffect(() => {
+    const pending = pendingAdviceFocus.current
+    if (!pending) return
+    if (page !== 'options' || advice !== pending.result || question !== pending.question ||
+        adviceProject !== currentProject || adviceCase !== currentAdviceContext) {
+      pendingAdviceFocus.current = null
+      return
+    }
+    if (!modeReady) return
+    if (!showCurrentGuidance && advice.result_kind !== 'local_planning_guidance') {
+      pendingAdviceFocus.current = null
+      return
+    }
+    const target = adviceResult.current
+    if (!target) return
+    pendingAdviceFocus.current = null
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    target.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' })
+    target.focus({ preventScroll: true })
+  }, [advice, adviceCase, adviceProject, currentAdviceContext, currentProject, modeReady, page, question, showCurrentGuidance])
   useEffect(() => {
     if (!savedTexts.length) return
     const controller = new AbortController()
@@ -303,6 +337,7 @@ export function ProjectWorkbench() {
     }
   }
   async function explore(forceOptions = false) {
+    pendingAdviceFocus.current = null
     if (!modeReady) {
       setError('The local planning check is unavailable. Please try again when the app is connected.')
       return
@@ -380,6 +415,7 @@ export function ProjectWorkbench() {
         controller.signal,
       )
       if (request.current === controller && !controller.signal.aborted) {
+        pendingAdviceFocus.current = currentPage.current === 'options' ? { result, question } : null
         setAdvice(result)
         setStartingGuidance(null)
         setLastAdviceUsedIdea(Boolean(activeIdea))
@@ -538,13 +574,34 @@ export function ProjectWorkbench() {
     }
   }
   const currentSketch = sketch?.caseId === w.case_id && sketch.product === (w.project.product?.value ?? '') ? sketch.image : null
-  function summaryText() { return formatProjectSummary(w, showHistoricalIdeas) + (mixSummary ? `\n${mixSummary}` : '') }
+  const currentReportAdvice = modeReady && advice && adviceProject === currentProject &&
+    adviceCase === currentAdviceContext && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance')
+    ? advice : null
+  const currentReportStartingGuidance = modeReady && !advice && startingGuidance &&
+    (showCurrentGuidance || startingGuidance.origin === 'local' || startingGuidance.guidance_origin === 'local') &&
+    !PROJECT_INTAKE_FIELDS.some((field) => (startingGuidance.project_draft[field]?.value ?? '') !== (w.project[field]?.value ?? ''))
+    ? startingGuidance : null
+  function summaryText() {
+    return formatProjectSummary(w, showHistoricalIdeas) + formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance) + (mixSummary ? `\n${mixSummary}` : '') + '\nTest your product before production.\n'
+  }
   function downloadSummary() {
     downloadTextFile('reshivo-summary.txt', summaryText())
   }
   function printSummary() {
     try { printTextReport(summaryText(), currentSketch) }
     catch (e) { setError((e as Error).message) }
+  }
+  function exploreMyMaterial() {
+    if (!question.trim()) setQuestion('Help me explore ways to use my available material to make my product. Ask only for the missing details that matter first.')
+    setPage('options')
+    setFocusHelpQuestion(true)
+  }
+  function requestIdeas(forceOptions = false) {
+    if (!status.configured && !planningMode?.planningOnly) {
+      setProviderOpen(true)
+      return
+    }
+    void explore(forceOptions)
   }
   const hasProject = Boolean(w.project.product || w.project.input)
   return (
@@ -759,14 +816,14 @@ export function ProjectWorkbench() {
                     onClick={() => setPage(k)}
                   >
                     {k === 'options'
-                      ? '1. Options'
+                      ? 'Options'
                       : k === 'trials'
-                        ? '2. Plans'
+                        ? 'Plans'
                       : k === 'adjust'
-                          ? '3. Adjust mix'
+                          ? 'Adjust mix'
                           : k === 'checks'
-                            ? '4. Checks'
-                            : '5. Costs'}
+                            ? 'Checks'
+                            : 'Costs'}
                   </button>
                 ))}
               </nav>
@@ -782,14 +839,34 @@ export function ProjectWorkbench() {
                   <div>
                     <h1>Find a way to use what you have</h1>
                     <p>
-                      Explore changes to the materials, preparation, process or product design. Then
-                      save a plan to compare.
+                      Get ideas for using your material. Add details if you have them; unknowns can stay blank.
                     </p>
                   </div>
                 </div>
-                <div className="pw-spaced"><button type="button" onClick={() => setPage('trials')}>Continue to plans →</button></div>
-                {status.provider === 'meta' && status.configured && <ConceptSketch image={currentSketch} onImage={(image) => setSketch(image ? { caseId: w.case_id, product: w.project.product?.value ?? '', image } : null)} />}
+                {modeReady && startingGuidance && !advice && (showCurrentGuidance || startingGuidance.origin === 'local' || startingGuidance.guidance_origin === 'local') && (
+                  <section className="pw-answer" aria-live="polite">
+                    <span className="pw-overline">{startingGuidance.origin === 'local' ? 'Local planning guide · no AI call' : startingGuidance.guidance_origin === 'local' ? `Local next step · project draft by ${startingGuidance.provider} / ${startingGuidance.model}` : `Starting suggestion · ${startingGuidance.provider} / ${startingGuidance.model}`}</span>
+                    {PROJECT_INTAKE_FIELDS.some((field) => (startingGuidance.project_draft[field]?.value ?? '') !== (w.project[field]?.value ?? '')) && (
+                      <p className="pw-notice">You edited the project after this suggestion. Ask again to include your changes.</p>
+                    )}
+                    <p>{startingGuidance.reply}</p>
+                    <h2>A useful first step</h2>
+                    <p>{startingGuidance.first_step}</p>
+                    {startingGuidance.questions.length > 0 && <><h2>Still worth considering</h2><ul>{startingGuidance.questions.map((q) => <li key={q}>{q}</li>)}</ul></>}
+                    <div className="pw-actions pw-spaced">
+                      <button type="button" className="pw-primary" disabled={busy || !modeReady || !savedReviewReady || !statusLoaded} onClick={() => requestIdeas(true)}>
+                        {busy ? 'Working through your options…' : 'Get ideas for my material'}
+                      </button>
+                      {currentReportStartingGuidance && <>
+                        <button type="button" onClick={downloadSummary}>Download summary</button>
+                        <button type="button" onClick={printSummary}>Print / Save as PDF</button>
+                      </>}
+                    </div>
+                  </section>
+                )}
                 <section className="pw-card">
+                  <h2>Start with ideas for your material</h2>
+                  <p>We’ll use the product and materials in your project. Add a question if you want to focus the answer.</p>
                   {showHistoricalIdeas && selectedIdea && (
                     <div className="pw-notice">
                       <strong>Earlier idea selected for this question</strong>
@@ -834,12 +911,13 @@ export function ProjectWorkbench() {
                     </label>
                   )}
                   <label>
-                    What would you like help with?
+                    Your question (optional)
                     <textarea
+                      ref={helpQuestion}
                       value={question}
                       maxLength={3000}
                       onChange={(e) => setQuestion(e.target.value)}
-                      placeholder="For example: How can I make a comfortable mat from these pieces? What could I change if it does not hold together?"
+                      placeholder="For example: What could I make from this batch? What should I check first?"
                     />
                   </label>
                   {preparedMix && (mixQuestionContext || recentMixIsCurrent) && <div className="pw-notice">
@@ -858,15 +936,16 @@ export function ProjectWorkbench() {
                     <small>This text is not sent with the current question.</small>
                   </details>}
                   <div className="pw-actions">
-                    <button className="pw-primary" onClick={() => void explore()} disabled={busy || !modeReady || !savedReviewReady}>
+                    <button className="pw-primary" onClick={() => requestIdeas()} disabled={busy || !modeReady || !savedReviewReady || !statusLoaded}>
                       {busy
                         ? 'Working through your options…'
                         : question.trim()
                           ? 'Ask this question'
-                          : 'Explore my options'}
+                          : 'Get ideas for my material'}
                     </button>
+                    <button type="button" onClick={() => setPage('trials')}>View plans</button>
                     {question.trim() && (
-                      <button disabled={busy || !modeReady || !savedReviewReady} onClick={() => void explore(true)}>
+                      <button disabled={busy || !modeReady || !savedReviewReady || !statusLoaded} onClick={() => requestIdeas(true)}>
                         Explore alternatives
                       </button>
                     )}
@@ -886,8 +965,11 @@ export function ProjectWorkbench() {
                   <small>
                     {status.configured
                       ? `${status.provider_name} · ${status.model}`
-                      : 'Some requests need an AI connection. Local planning and calculations can work without one.'}
+                      : modeReady && planningMode?.planningOnly
+                        ? 'Local guidance is available without an AI connection.'
+                        : 'Connect your own AI provider to get ideas.'}
                   </small>
+                  {statusLoaded && !status.configured && <button type="button" className="pw-text-button" onClick={() => setProviderOpen(true)}>Open AI settings</button>}
                   <details><summary>What is sent to my AI provider?</summary>
                     <small>Your current setups, selected readings, entered costs and any idea shown above. Local calculations stay on this computer.</small>
                   </details>
@@ -897,18 +979,6 @@ export function ProjectWorkbench() {
                   {savedGuidanceReview?.key === savedReviewKey && savedGuidanceReview.failed && <p role="alert">Saved suggestions could not be checked. Reopen the project and try again.</p>}
                 </section>
                 <SoundGuidance project={w.project} question={question} />
-                {modeReady && startingGuidance && !advice && (showCurrentGuidance || startingGuidance.origin === 'local' || startingGuidance.guidance_origin === 'local') && (
-                  <section className="pw-answer" aria-live="polite">
-                    <span className="pw-overline">{startingGuidance.origin === 'local' ? 'Local planning guide · no AI call' : startingGuidance.guidance_origin === 'local' ? `Local next step · project draft by ${startingGuidance.provider} / ${startingGuidance.model}` : `Starting suggestion · ${startingGuidance.provider} / ${startingGuidance.model}`}</span>
-                    {PROJECT_INTAKE_FIELDS.some((field) => (startingGuidance.project_draft[field]?.value ?? '') !== (w.project[field]?.value ?? '')) && (
-                      <p className="pw-notice">You edited the project after this suggestion. Ask again to include your changes.</p>
-                    )}
-                    <p>{startingGuidance.reply}</p>
-                    <h2>A useful first step</h2>
-                    <p>{startingGuidance.first_step}</p>
-                    {startingGuidance.questions.length > 0 && <><h2>Still worth considering</h2><ul>{startingGuidance.questions.map((q) => <li key={q}>{q}</li>)}</ul></>}
-                  </section>
-                )}
                 {modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance') && (
                   <>
                     {adviceCase !== currentAdviceContext && (
@@ -917,7 +987,7 @@ export function ProjectWorkbench() {
                         Ask again to include the new information.
                       </p>
                     )}
-                    <section className="pw-answer" aria-live="polite">
+                    <section className="pw-answer" aria-live="polite" aria-label="Your planning result" ref={adviceResult} tabIndex={-1}>
                       {'mix_calculation' in advice && advice.mix_calculation && adviceCase === currentAdviceContext && (
                         <CheckedMixAdvice feasible={advice.mix_calculation.result.feasible} bounds={advice.mix_calculation.result.exact_addition_kg} stock={advice.mix_calculation.inputs.addition_name} system={system} />
                       )}
@@ -963,6 +1033,10 @@ export function ProjectWorkbench() {
                           </button>
                         </div>
                       )}
+                      {currentReportAdvice && <div className="pw-actions pw-spaced">
+                        <button type="button" onClick={downloadSummary}>Download summary</button>
+                        <button type="button" onClick={printSummary}>Print / Save as PDF</button>
+                      </div>}
                     </section>
                     {'material_routes' in advice &&
                       [
@@ -1022,6 +1096,7 @@ export function ProjectWorkbench() {
                     ))}
                   </details>
                 )}
+                {status.provider === 'meta' && status.configured && <ConceptSketch image={currentSketch} onImage={(image) => setSketch(image ? { caseId: w.case_id, product: w.project.product?.value ?? '', image } : null)} />}
               </section>
             )}
             <div hidden={page !== 'trials' && page !== 'checks'}>
@@ -1033,7 +1108,8 @@ export function ProjectWorkbench() {
                 readingKind={adviceKind}
                 onReadingKindChange={setAdviceKind}
                 onAskIdea={askAboutIdea}
-                onAdjustMix={() => setPage('adjust')}
+                onAdjustMix={() => { setCalculatorOpenRequest((current) => current + 1); setPage('adjust') }}
+                onExploreMaterial={exploreMyMaterial}
                 onGoToPlans={() => setPage('trials')}
                 onDownloadSummary={downloadSummary}
                 onPrintSummary={printSummary}
@@ -1045,8 +1121,10 @@ export function ProjectWorkbench() {
             </div>
             <div hidden={page !== 'adjust'}>
               <MixAdjustment
+                calculatorOpenRequest={calculatorOpenRequest}
                 onGoToPlans={() => setPage('trials')}
                 onGoToChecks={() => setPage('checks')}
+                onAskForHelp={exploreMyMaterial}
                 onSummary={setMixSummary}
                 key={`${w.case_id}:${workspaceOpenEpoch}`}
                 workspace={w}
@@ -1062,6 +1140,7 @@ export function ProjectWorkbench() {
             </div>
             <div hidden={page !== 'costs'}>
               <CostWorkspace
+                active={page === 'costs'}
                 onGoToPlans={() => setPage('trials')}
                 key={w.case_id}
                 workspace={w}

@@ -47,6 +47,7 @@ type Props = {
   onReadingKindChange: (kind: 'synthetic' | 'user_reported') => void
   onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea) => void
   onAdjustMix: () => void
+  onExploreMaterial: () => void
   onGoToPlans: () => void
   onDownloadSummary: () => void
   onPrintSummary: () => void
@@ -63,6 +64,7 @@ export function TrialWorkspace({
   onReadingKindChange,
   onAskIdea,
   onAdjustMix,
+  onExploreMaterial,
   onGoToPlans,
   onDownloadSummary,
   onPrintSummary,
@@ -381,12 +383,13 @@ export function TrialWorkspace({
           {setups.length > 0 && !editing && (
             <div className="pw-next-step">
               <div>
-                <strong>Ready to explore a changing mix?</strong>
-                <p>Choose a setup and enter how your material varies.</p>
+                <strong>What would you like to do next?</strong>
+                <p>Explore ways to use your material, or calculate an addition if you plan to blend in something else.</p>
               </div>
-              <button className="pw-primary" type="button" onClick={onAdjustMix}>
-                Next: Adjust mix →
-              </button>
+              <div className="pw-actions">
+                <button className="pw-primary" type="button" onClick={onExploreMaterial}>Explore my material</button>
+                <button type="button" onClick={onAdjustMix}>Calculate an addition</button>
+              </div>
             </div>
           )}
           {!setups.length && !editing && (

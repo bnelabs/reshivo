@@ -48,6 +48,7 @@ jobs:
       - run: node checks/reference-composition.test.mjs
       - run: node checks/material-unit-change.test.mjs
       - run: node checks/mix-empty-setup.test.mjs
+      - run: node checks/mix-input-help.test.mjs
       - run: node checks/mix-question.test.mjs
       - run: node checks/project-brief.test.mjs
       - run: node checks/setup-selection.test.mjs

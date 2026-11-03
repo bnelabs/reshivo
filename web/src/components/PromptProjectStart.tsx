@@ -45,6 +45,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
   const localGuidance = result?.origin === 'local' || result?.guidance_origin === 'local'
   const activeRequest = useRef<AbortController | null>(null)
   const ideaInput = useRef<HTMLTextAreaElement | null>(null)
+  const summaryHeading = useRef<HTMLHeadingElement | null>(null)
   const hasDraft = result !== null || PROJECT_INTAKE_FIELDS.some((field) => draft[field] !== null)
   const pendingAnswers = answers.some((answer) => answer.trim()) || Boolean(followup.trim())
   const unknowns = PROJECT_INTAKE_FIELDS.filter((field) => draft[field] === null)
@@ -120,7 +121,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
     {!hasDraft ? <>
       <div className="prompt-project-intro">
         <h1 id={`${id}-heading`}>Tell me what you want to make</h1>
-        <p>Tell us what you have and what you want to make. If your material changes, explore what to adjust, compare product checks and estimate manufacturing costs.</p>
+        <p>Start with what you have and what you want to make. You’ll get ideas to explore, useful next checks, and a report you can save. Add measurements and costs if you have them.</p>
       </div>
       <form className="prompt-project-idea" onSubmit={submitIdea}>
         <label htmlFor={`${id}-idea`}>Your idea</label>
@@ -150,20 +151,21 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
               </label>)}</div> : null}
             <label className="prompt-project-more" htmlFor={`${id}-followup`}><span>{result?.questions.length ? 'Anything else to add? (optional)' : 'Add details or ask a question'}</span>
               <textarea id={`${id}-followup`} rows={2} maxLength={500} value={followup} disabled={busy} onChange={(event) => setFollowup(event.target.value)} /></label>
-            <div className="prompt-project-action-row"><button type="submit" className="prompt-project-secondary" disabled={busy || (!pendingAnswers && !summaryEdited)}>{busy ? 'Updating project…' : 'Update project'}</button>
+            <div className="prompt-project-action-row"><button type="submit" className="prompt-project-secondary" disabled={busy || (!pendingAnswers && !summaryEdited)}>{busy ? 'Updating project…' : 'Send details'}</button>
+              {!busy && <button type="button" className="prompt-project-text-button" onClick={() => { summaryHeading.current?.scrollIntoView({ block: 'start' }); summaryHeading.current?.focus({ preventScroll: true }) }}>Review your project</button>}
               {busy ? <button type="button" className="prompt-project-text-button" onClick={stopRequest}>Stop</button> : null}</div>
-            <p className="prompt-project-hint">Review the summary before updating or using the project.</p>
+            <p className="prompt-project-hint">{pendingAnswers ? 'Send your details to include them, or clear them to continue without sending.' : 'The questions are optional. Review your project when you’re ready.'}</p>
           </form>
           {result ? <div className="prompt-project-first-step"><h2>A useful first step</h2><p>{result.first_step}</p></div> : null}
           {history.length ? <details className="prompt-project-history"><summary>Earlier discussion</summary>{localGuidance && <p>Earlier AI replies are hidden for this planning case.</p>}{history.filter((entry) => !localGuidance || entry.role === 'user').map((entry, index) => <div key={index}><strong>{entry.role === 'user' ? 'You' : 'Planning reply'}</strong><p>{entry.content}</p></div>)}</details> : null}
         </div>
         <aside className="prompt-project-summary" aria-labelledby={`${id}-summary`}>
-          <h2 id={`${id}-summary`}>Your project</h2><p>Review and edit before using it.</p>
+          <h2 ref={summaryHeading} tabIndex={-1} id={`${id}-summary`}>Your project</h2><p>Review and edit these details before continuing.</p>
           {SUMMARY_FIELDS.map(draftField)}
           {unknowns.length ? <p className="prompt-project-unknowns">Still unknown: {unknowns.map((field) => FIELD_LABELS[field].toLowerCase()).join(', ')}.</p> : null}
           <details className="prompt-project-other"><summary>Other details</summary>{OTHER_FIELDS.map(draftField)}</details>
-          <button type="button" className="prompt-project-primary" onClick={applyDraft} disabled={busy || pendingAnswers || !hasProjectContext(draft)}>Use this project</button>
-          <p className="prompt-project-hint">{pendingAnswers ? 'Update the project to include your answers before continuing.' : !hasProjectContext(draft) ? 'Add a product and materials, plus a use or goal. Other details can stay unknown.' : 'Using this project confirms the details above match what you mean.'}</p>
+          <button type="button" className="prompt-project-primary" onClick={applyDraft} disabled={busy || pendingAnswers || !hasProjectContext(draft)}>Continue to ideas</button>
+          <p className="prompt-project-hint">{pendingAnswers ? 'Send or clear your entered details before continuing.' : !hasProjectContext(draft) ? 'Add a product and materials, plus a use or goal. Other details can stay unknown.' : 'Continue when these details match what you mean.'}</p>
           <details className="prompt-project-sources"><summary>Where these details came from</summary>{PROJECT_INTAKE_FIELDS.map((field) => draft[field] ? <div key={field}><strong>{FIELD_LABELS[field]} · {draft[field]?.source === 'user_review' ? 'Your review or edit' : 'Your message'}</strong><blockquote>{draft[field]?.quote}</blockquote></div> : null)}</details>
         </aside>
       </div>
@@ -171,7 +173,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
     <div className="prompt-project-feedback" aria-live="polite" aria-atomic="true">
       {error ? <p role="alert" className="prompt-project-error">{error}</p> : null}
       {notice ? <p>{notice}</p> : null}
-      {providerStatus?.configured === false ? <p>Some planning requests need an AI provider. <button type="button" className="prompt-project-text-button" onClick={onConfigureProvider}>Choose a provider</button></p> : null}
+      {providerStatus?.configured === false ? <p>To get AI suggestions, connect an AI provider. You can also enter your project details yourself. <button type="button" className="prompt-project-text-button" onClick={onConfigureProvider}>Choose a provider</button></p> : null}
       {result ? <p className="prompt-project-generation">{result.origin === 'local' ? 'Local planning guide · no AI call' : result.guidance_origin === 'local' ? `Local next step · project draft by ${result.provider} / ${result.model}` : result.live ? `Generated · ${result.provider} · ${result.model}` : `Saved or offline reply · ${result.provider} · ${result.model}`}</p> : null}
     </div>
   </section>

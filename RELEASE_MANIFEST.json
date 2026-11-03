@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T17:46:26.065707+00:00",
+  "prepared_utc": "2026-11-03T18:12:48.069352+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -41,8 +41,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 2353,
-      "sha256": "ae3002e1832b9e0b20bd08757be114b5a575b8c6eb0824acda49f04ddb158342"
+      "bytes": 2402,
+      "sha256": "4f7274cd7e0522a225da2316f2fb1556e7db896d26ff5c6c47628d2c39f1a862"
     },
     {
       "path": ".gitignore",
@@ -51,8 +51,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 2133,
-      "sha256": "aff6340142bf11feb002c485cd90371c5856d55f148f382d6a193ede12e0881f"
+      "bytes": 2757,
+      "sha256": "493f44a97f173c3aeffaa63b2e93c8777df26a037e993f39f7332263cadf645e"
     },
     {
       "path": "LICENSE",
@@ -1172,12 +1172,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 362,
-      "sha256": "ffbb6f53381578ab64edd625410098ed435477adcb848fec4d9fa99a0a0fe285"
+      "sha256": "c59c245849f580bba35a07fa2cbdf45a83d1c0f88c3bcf3304015f720b3c49ae"
     },
     {
       "path": "rematter/__init__.py",
       "bytes": 113,
-      "sha256": "1abd69f90395878916a02560a83877b33f46299f70e777b94f700b28edcfc5ae"
+      "sha256": "6f6b4bb98b746da47d01e1588ccb927bd1d79c27b9ca848da7012c4e2fcd35e7"
     },
     {
       "path": "rematter/__main__.py",
@@ -1711,8 +1711,8 @@
     },
     {
       "path": "web/checks/cost-display.test.mjs",
-      "bytes": 2317,
-      "sha256": "abaf1b572bf810e2e09741bd0ac8b1d9faa8c9e6a64b57eeeaa6d7e5e4f55a80"
+      "bytes": 3528,
+      "sha256": "2344943c26e5bd66342b5f9b8cac463f0bb2c0cb1fa9266d810bb09ea416fb18"
     },
     {
       "path": "web/checks/cost-price-unit.test.mjs",
@@ -1765,6 +1765,11 @@
       "sha256": "30c90e1a1f8ee9d2414db7b6b79212a4932582972e0fd2ae3fc3522dbfabeae2"
     },
     {
+      "path": "web/checks/mix-input-help.test.mjs",
+      "bytes": 2414,
+      "sha256": "005071a3ba5e89c4594e1277128b04f6b65ac3f02412b8f2bffea085750dc33a"
+    },
+    {
       "path": "web/checks/mix-question.test.mjs",
       "bytes": 6796,
       "sha256": "a2299baec957fe190bb20d64dc17f3c027471133b26a7d63eea216e46b3aa8a6"
@@ -1791,8 +1796,8 @@
     },
     {
       "path": "web/checks/readable-summary.test.mjs",
-      "bytes": 4874,
-      "sha256": "d2744ae1273f958b323edec5fea48900e92192e07f8c9fe0f12a07a46fa332ce"
+      "bytes": 5724,
+      "sha256": "83856be84b6bae232bc87c7fe223c6b45bafe1f689ea634360b01a0bf75ee511"
     },
     {
       "path": "web/checks/reference-composition.test.mjs",
@@ -1837,12 +1842,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "d4858d67c064ec40c865814a45164800ab5066407ffaf3206a022c67a54ffc1b"
+      "sha256": "11e00f79a1002062af4ef884265d3fc9c42a6607089a63a9e36cae95a55a4c1d"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "0b505cb83707ba7021afa0c421e19d0d3ed340077e91b14a1a20afacd69e68f5"
+      "sha256": "a44e2dc7aad4e60163b3f79f4d22c61d3d8f59500c98a7817d86f60e7064276b"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -1916,8 +1921,8 @@
     },
     {
       "path": "web/src/components/CostWorkspace.tsx",
-      "bytes": 29099,
-      "sha256": "93d058f97a308d0adfa72013bc809f005fb88bd1f55d0bae7f230d0e588e9405"
+      "bytes": 30757,
+      "sha256": "b4cac6147a7e335950fe1da6d56a38a2a8cd0ea5774b56d6cadb7e4627ab718a"
     },
     {
       "path": "web/src/components/DesignViewport.tsx",
@@ -1981,8 +1986,8 @@
     },
     {
       "path": "web/src/components/MixAdjustment.tsx",
-      "bytes": 23084,
-      "sha256": "4c49a36b6aa0754035de6713d41b573acb9467fe32a4d43b9bb562154330cded"
+      "bytes": 25684,
+      "sha256": "549d0e1ed4a122650d7a1a81d3d2e6bae21dc60eaa0b46fbd7c98f22affaf961"
     },
     {
       "path": "web/src/components/MyMixPlanner.tsx",
@@ -2001,13 +2006,13 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.css",
-      "bytes": 15541,
-      "sha256": "ea51930026cbd0241ba16b96e935eed3a38e3ee0fce270fec7ba761f55172ead"
+      "bytes": 15689,
+      "sha256": "6a5a47c3b6743c00c5e1f082b623a5733986a18c9c7a6a32b7192779613d1b7d"
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 52891,
-      "sha256": "15aa5440983472103da4694bfd50d828b1912a7dce591c503c0554c6d12fe801"
+      "bytes": 57763,
+      "sha256": "7f879ae7055f7f9be3347a6265b980dfe859f9cd0f964a2c8629ee3f660af8e2"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2016,8 +2021,8 @@
     },
     {
       "path": "web/src/components/PromptProjectStart.tsx",
-      "bytes": 12485,
-      "sha256": "c3c851c5b079a1e155bffd67cb75b7fda49c5c35e164e376cfe633aaa7a62dfd"
+      "bytes": 13011,
+      "sha256": "ac39620aaf557210ff0d2c7fdef3468998c09ad52383b2219f4e28b05cccbc5f"
     },
     {
       "path": "web/src/components/ProviderSettings.css",
@@ -2076,8 +2081,8 @@
     },
     {
       "path": "web/src/components/TrialWorkspace.tsx",
-      "bytes": 50414,
-      "sha256": "7cbfaf4f75f3ffec9b7445b88c7328da1f370ca95f114e1b258a7d05c989811e"
+      "bytes": 50645,
+      "sha256": "19d895bb1a94d2314c2dc22b090df9417544a6c43c31410f2ad8f454904e159b"
     },
     {
       "path": "web/src/components/Workshop.tsx",
@@ -2106,8 +2111,8 @@
     },
     {
       "path": "web/src/costDisplay.ts",
-      "bytes": 3151,
-      "sha256": "e25061bff80e513dc1a50ddee4d4bb393a6fe8498a67bec654107f1d31896da2"
+      "bytes": 6069,
+      "sha256": "f27f26c84069f61528f59c1f01ca8cbd802b5f9b37e29a62b2ababfa02f94291"
     },
     {
       "path": "web/src/costPriceUnit.ts",
@@ -2160,6 +2165,11 @@
       "sha256": "7a855284a57e76a1fa6a85e59345e9f189f4d032a74b79bfc076a131058b93fe"
     },
     {
+      "path": "web/src/mixInputHelp.ts",
+      "bytes": 2457,
+      "sha256": "1b5301834ab241ea668c813da5612df5c6be10a7243794222d9b561cd0cf1dd6"
+    },
+    {
       "path": "web/src/mixQuestion.ts",
       "bytes": 2915,
       "sha256": "4c02d273f7ca3c3eb620c5df98eeaa58571c9090260cb9269136839bc85fe36d"
@@ -2191,8 +2201,8 @@
     },
     {
       "path": "web/src/readableSummary.ts",
-      "bytes": 14547,
-      "sha256": "a5fb4a18502998bc76c085ddeee8d263fa00e206707b2b1cf8a0cf923a88afb4"
+      "bytes": 16818,
+      "sha256": "0e4d06a593d1f623b9374e7a1ac9f070fb15880065776c1d90e6f8b2a363791f"
     },
     {
       "path": "web/src/referenceComposition.ts",
