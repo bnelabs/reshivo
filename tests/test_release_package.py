@@ -47,6 +47,14 @@ class ReleasePackageTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     release.check_files({"README.md": value}, secrets)
 
+    def test_only_known_omitted_links_are_annotated(self):
+        name = "docs/BALANCE_SPIKE.md"
+        files = {name: b"[Old demo](demo/rematter-demo.mp4) and [unexpected](missing.md)"}
+        release.annotate_omitted_links(files)
+        self.assertEqual(files[name], b"Old demo (not included in this export) and [unexpected](missing.md)")
+        with self.assertRaisesRegex(ValueError, "omitted-asset link changed"):
+            release.annotate_omitted_links({name: b"[Different](another.mp4)"})
+
     def test_export_refuses_an_existing_destination_before_reading_git(self):
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaisesRegex(ValueError, "never overwrites"):
