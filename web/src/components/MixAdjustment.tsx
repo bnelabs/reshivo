@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
+import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
+import { describeMixOutcome } from '../mixCandidate'
+import { MixAdditionResult } from './MixAdditionResult'
 import type { MixAdjustmentDraft } from '../mixAdjustment'
 import type { ProjectWorkspace } from '../projectWorkspace'
 import type { AdvisorBrief, BalanceMixRequest, BalanceMixResult } from '../types'
@@ -58,7 +60,6 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const visibleResult = canCalculate && result?.key === signature ? result : null
   const massUnit = unitLabel('kg', system)
   const massEntry = mixMassEntryState(draft, system)
-  const showMass = (value: number) => formatMixMass(value, system)
   const showRange = (minimum: number | null, maximum: number | null) => minimum === maximum ? String(minimum) : `${minimum}–${maximum}`
 
   useEffect(() => {
@@ -137,9 +138,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   function discuss() {
     if (!visibleResult || !onDiscuss || !setup) return
     const { request: input, value } = visibleResult
-    const outcome = value.feasible
-      ? `Estimated addition: ${value.addition_min_kg === 0 ? 'none needed' : value.addition_min_kg === value.addition_max_kg ? `approximately ${value.addition_min_kg} kg` : `approximately ${value.addition_min_kg} kg to ${value.addition_max_kg === null ? 'an unbounded maximum' : `${value.addition_max_kg} kg`}`}. Example: approximately ${value.example_addition_kg} kg gives approximately ${showRange(value.resulting_min_percent, value.resulting_max_percent)} mass percent ${input.component}.`
-      : 'No single addition fits the whole entered range.'
+    const outcome = describeMixOutcome(value, system)
     const source = material ? recordedRecipeDiscussion(w, setup, material, w.project, setupName) : ''
     onDiscuss(`Help me interpret this mix simulation for ${setupName(setup)}, version ${setup.revision} (ID ${setup.id}), and suggest the next actions and product checks.\n\nPortion: ${input.input_mass_kg} kg, with ${showRange(input.input_min_percent, input.input_max_percent)} mass percent ${input.component}. Added stock: ${input.addition_name}, with ${input.addition_percent} mass percent ${input.component}. Chosen mix: ${showRange(input.target_min_percent, input.target_max_percent)} mass percent ${input.component}.${source ? `\n\n${source}` : ''}\n\n${outcome} Figures are approximate and assume complete, loss-free mixing.`)
   }
@@ -219,10 +218,8 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
       {visibleResult && <div className="pw-card pw-spaced" aria-live="polite">
         <span className="pw-overline">Composition simulation · entered setup and values</span>
         {visibleResult.value.feasible ? <>
-          <h2>{visibleResult.value.addition_min_kg === 0 ? 'No addition needed for this composition' : 'An estimated addition to explore'}</h2>
-          {visibleResult.value.addition_min_kg === 0 ? <p>Based on the entered values, no addition is needed to reach your chosen composition for the stated input range. {mixAdditionKind(visibleResult.value.addition_min_kg, visibleResult.value.addition_max_kg) === 'zero_only' ? 'The calculation does not allow a positive addition within this target.' : visibleResult.value.addition_max_kg === null ? 'Other additions are optional; this composition check sets no finite upper limit.' : <>Optional positive additions are estimated up to <strong>{showMass(visibleResult.value.addition_max_kg!)}</strong> in this composition check.</>}</p> : mixAdditionKind(visibleResult.value.addition_min_kg!, visibleResult.value.addition_max_kg) === 'one_amount' ? <p>For the entered portion and stock, the estimated addition is <strong>{showMass(visibleResult.value.addition_min_kg!)}</strong>.</p> : <p>For the entered portion and stock, the estimated minimum addition is <strong>{showMass(visibleResult.value.addition_min_kg!)}</strong>{visibleResult.value.addition_max_kg === null ? ' and this composition check gives no finite upper limit.' : <> and the estimated maximum is <strong>{showMass(visibleResult.value.addition_max_kg)}</strong>.</>}</p>}
-          <p>{visibleResult.value.example_addition_kg === 0 ? 'With no addition, the estimated composition is' : <>For example, <strong>{showMass(visibleResult.value.example_addition_kg!)}</strong> of {visibleResult.request.addition_name} gives an estimated</>} {showRange(visibleResult.value.resulting_min_percent, visibleResult.value.resulting_max_percent)} mass % {visibleResult.request.component}, with even mixing and no losses.</p>
-          <small>Displayed amounts are rounded.</small>
+          <h2>Amount to explore</h2>
+          <MixAdditionResult result={visibleResult.value} system={system} />
         </> : <>
           <h2>No single addition fits the whole range</h2>
           <p>For the entered stock, no fixed addition reaches your chosen composition across the full input range. If the actual fraction of this portion becomes known, enter that value and recalculate. You can also explore a different characterized stock or trial range.</p>

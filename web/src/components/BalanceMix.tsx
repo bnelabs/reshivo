@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import { commandGrams } from '../quantity'
 import { CaseSummary } from './CaseDetails'
-import { UnitInput, toDisplay, unitLabel, useUnitSystem } from '../units'
+import { MixAdditionResult } from './MixAdditionResult'
+import { mixDiscussionSummary } from '../mixCandidate'
+import { UnitInput, unitLabel, useUnitSystem } from '../units'
 import type {
   BalanceMixRequest,
   BalanceMixResult,
@@ -44,12 +45,6 @@ export function BalanceMix({
   onSnapshot?: (draft: CompositionDraft) => void
 }) {
   const system = useUnitSystem()
-  const mass = (value: number) =>
-    system === 'metric'
-      ? value < 1
-        ? `${commandGrams(value)} g`
-        : `${quantity(value)} kg`
-      : `approximately ${toDisplay(String(value), 'kg', system)} lb (${quantity(value)} kg)`
   const components = caseData.details.components.filter((row) => row.name.trim())
   const binders = components.filter((row) => row.role === 'binder')
   const [componentId, setComponentId] = useState(() =>
@@ -151,7 +146,7 @@ export function BalanceMix({
               grouping:
                 'Identifiers omitted from this summary; do not infer specimens, runs or batches.',
             },
-            proposed_trial: result,
+            proposed_trial: mixDiscussionSummary(result, system),
             original_case_unchanged: true,
             new_mix_property_tested: false,
           },
@@ -262,57 +257,7 @@ export function BalanceMix({
           The property readings do not support widening this target.
         </p>
       )}
-      {result.feasible && result.addition_min_kg !== null && (
-        <>
-          <p className="composition-action">
-            {result.addition_max_kg === null ? (
-              <>
-                Add at least <strong>{mass(result.addition_min_kg)}</strong> of{' '}
-                {result.addition_name}; this composition calculation has no finite upper addition
-                limit.
-              </>
-            ) : result.addition_min_kg === 0 && result.addition_max_kg === 0 ? (
-              <>No addition is needed for this trial composition.</>
-            ) : result.addition_min_kg === result.addition_max_kg ? (
-              <>
-                <strong className="composition-action-value">
-                  Add {mass(result.addition_min_kg)}
-                </strong>
-                <span className="composition-action-stock">
-                  of {result.addition_name} for this trial.
-                </span>
-              </>
-            ) : (
-              <>
-                Calculated addition:{' '}
-                <strong>
-                  {quantity(result.addition_min_kg)}–{quantity(result.addition_max_kg)} kg
-                </strong>{' '}
-                of {result.addition_name}.
-                {system === 'us' && (
-                  <>
-                    {' '}
-                    US customary endpoints: {mass(result.addition_min_kg)} to{' '}
-                    {mass(result.addition_max_kg)}.
-                  </>
-                )}
-              </>
-            )}
-          </p>
-          {result.example_addition_kg !== null &&
-            result.resulting_min_percent !== null &&
-            result.resulting_max_percent !== null && (
-              <p>
-                Example trial dose: <strong>{mass(result.example_addition_kg)}</strong> of{' '}
-                {result.addition_name}. The calculated {result.component} fraction would be{' '}
-                {result.resulting_min_percent === result.resulting_max_percent
-                  ? quantity(result.resulting_min_percent)
-                  : `${quantity(result.resulting_min_percent)}–${quantity(result.resulting_max_percent)}`}{' '}
-                mass % across the entered input range.
-              </p>
-            )}
-        </>
-      )}
+      {result.feasible && <MixAdditionResult result={result} system={system} />}
       {result.next_options.length > 0 && !linkedTrial && (
         <>
           <p>Useful next options:</p>

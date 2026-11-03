@@ -662,6 +662,12 @@ class AdvisorAPITests(unittest.TestCase):
         self.assertEqual(result["result_kind"], "composition_calculation")
         self.assertEqual(result["example_addition_kg"], 15)
         self.assertFalse(result["physical_performance_verified"])
+        code, singleton = self.call("/api/advisor/balance-mix", balance_request(
+            input_mass_kg=1, input_min_percent=50, input_max_percent=50,
+            addition_percent=0, target_min_percent=30, target_max_percent=30))
+        self.assertEqual(code, 200)
+        self.assertEqual(singleton["exact_addition_kg"]["min"], {"numerator": "2", "denominator": "3"})
+        self.assertEqual(singleton["exact_addition_kg"]["min"], singleton["exact_addition_kg"]["max"])
         self.assertEqual(self.call("/api/advisor/balance-mix", balance_request(addition_percent=True))[0], 400)
         self.assertEqual(self.call("/api/advisor/balance-mix", balance_request(), {"Origin": "https://example.com"})[0], 403)
 

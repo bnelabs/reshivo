@@ -344,7 +344,7 @@ export function TestedLevels({ active, onAsk, disabled = false }: {
                   {ingredientError && <p role="alert">{ingredientError}</p>}
                   {ingredients?.feasible && ingredients.addition_min_kg !== null && <div className="source-ingredient-result" role="status">
                     <strong>Simulation · ingredient masses only</strong>
-                    <p>{massQuantity(Number(recycledMass))} kg raw PCRPE + {massQuantity(ingredients.addition_min_kg)} kg raw virgin {result.series.virgin_host} = {massQuantity(Number(recycledMass) + ingredients.addition_min_kg)} kg at {quantity(highestMatching.pcrpe_wt_percent)} mass % recycled content.</p>
+                    <p>{massQuantity(Number(recycledMass))} kg raw PCRPE plus approximately {massQuantity(ingredients.addition_min_kg)} kg raw virgin {result.series.virgin_host} gives approximately {massQuantity(Number(recycledMass) + ingredients.addition_min_kg)} kg at the selected {quantity(highestMatching.pcrpe_wt_percent)} mass % recycled content.</p>
                   </div>}
                 </details>}
                 {onAsk && <button type="button" className="outline-button" disabled={disabled} onClick={askAboutMaterial}>Ask Meta how to develop my mix</button>}

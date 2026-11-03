@@ -3,7 +3,7 @@ import json
 import math
 import re
 from copy import deepcopy
-from decimal import Decimal, localcontext
+from fractions import Fraction
 
 from .materials import ROOT
 from .manufacturing_cost import calculate_manufacturing_cost, compare_manufacturing_costs
@@ -995,10 +995,17 @@ def _percent(request, key):
 
 
 def _finite_result(value):
-    converted = float(value)
+    try:
+        converted = float(value)
+    except OverflowError:
+        raise ProductInputError("This trial target produces amounts outside the supported numerical range. Use practical composition ranges.") from None
     if not math.isfinite(converted) or (value != 0 and converted == 0):
         raise ProductInputError("This trial target produces amounts outside the supported numerical range. Use practical composition ranges.")
     return converted
+
+
+def _fraction_result(value):
+    return {"numerator": str(value.numerator), "denominator": str(value.denominator)}
 
 
 def balance_mix(request):
@@ -1018,6 +1025,7 @@ def balance_mix(request):
         "result_kind": "composition_calculation", "component": component, "input_mass_kg": mass,
         "addition_name": addition, **numbers, "feasible": False,
         "addition_min_kg": None, "addition_max_kg": None, "example_addition_kg": None,
+        "exact_addition_kg": None,
         "resulting_min_percent": None, "resulting_max_percent": None,
         "action": "One fixed addition does not cover this composition range.",
         "next_options": [
@@ -1034,48 +1042,52 @@ def balance_mix(request):
         ],
         "physical_performance_verified": False,
     }
-    with localcontext() as context:
-        context.prec = 60
-        M = Decimal(str(mass))
-        a, b = (Decimal(str(numbers[key])) for key in ("input_min_percent", "input_max_percent"))
-        c = Decimal(str(numbers["addition_percent"]))
-        L, H = (Decimal(str(numbers[key])) for key in ("target_min_percent", "target_max_percent"))
-        minimum = Decimal(0)
-        maximum = None
-        feasible = True
-        for coefficient, right, greater in ((c - L, M * (L - a), True),
-                                            (c - H, M * (H - b), False)):
-            if coefficient == 0:
-                if (greater and right > 0) or (not greater and right < 0):
-                    feasible = False
-                    break
-                continue
-            bound = right / coefficient
-            is_lower = (greater and coefficient > 0) or (not greater and coefficient < 0)
-            if is_lower:
-                minimum = max(minimum, bound)
-            else:
-                maximum = bound if maximum is None else min(maximum, bound)
-        if not feasible or (maximum is not None and minimum > maximum):
-            return result
-        example = minimum if minimum == 0 or maximum is None else (minimum + maximum) / 2
-        resulting_min = (M * a + example * c) / (M + example)
-        resulting_max = (M * b + example * c) / (M + example)
-        if minimum == 0:
-            action = "The entered composition range is already inside the trial target. No addition is needed; the interval shows optional additions that also fit."
+    # The JSON transport has already decoded numbers.  These exact fractions
+    # represent the canonical decimal spelling of those validated values, not
+    # arbitrary original JSON lexemes or physical measurement precision.
+    M = Fraction(str(mass))
+    a, b = (Fraction(str(numbers[key])) for key in ("input_min_percent", "input_max_percent"))
+    c = Fraction(str(numbers["addition_percent"]))
+    L, H = (Fraction(str(numbers[key])) for key in ("target_min_percent", "target_max_percent"))
+    minimum = Fraction(0)
+    maximum = None
+    feasible = True
+    for coefficient, right, greater in ((c - L, M * (L - a), True),
+                                        (c - H, M * (H - b), False)):
+        if coefficient == 0:
+            if (greater and right > 0) or (not greater and right < 0):
+                feasible = False
+                break
+            continue
+        bound = right / coefficient
+        is_lower = (greater and coefficient > 0) or (not greater and coefficient < 0)
+        if is_lower:
+            minimum = max(minimum, bound)
         else:
-            action = f"The calculated addition interval for {addition} covers the entered composition range within your chosen trial target."
-        if maximum is None:
-            action += " This composition check gives no upper addition bound."
-        result.update({
-            "feasible": True, "addition_min_kg": _finite_result(minimum),
-            "addition_max_kg": None if maximum is None else _finite_result(maximum),
-            "example_addition_kg": _finite_result(example),
-            "resulting_min_percent": _finite_result(resulting_min),
-            "resulting_max_percent": _finite_result(resulting_max), "action": action,
-            "next_options": [
-                "Use the example only as a composition trial; record the actual weighed addition.",
-                "Check mixing and the properties that matter for the product before choosing a working formulation.",
-            ],
-        })
+            maximum = bound if maximum is None else min(maximum, bound)
+    if not feasible or (maximum is not None and minimum > maximum):
         return result
+    example = minimum if minimum == 0 or maximum is None else (minimum + maximum) / 2
+    resulting_min = (M * a + example * c) / (M + example)
+    resulting_max = (M * b + example * c) / (M + example)
+    if minimum == 0:
+        action = "The entered composition range is already inside the trial target. No addition is needed; the interval shows optional additions that also fit."
+    else:
+        action = f"The estimated addition range for {addition} uses your entered composition and chosen trial target."
+    if maximum is None:
+        action += " This composition check gives no upper addition bound."
+    result.update({
+        "feasible": True, "addition_min_kg": _finite_result(minimum),
+        "addition_max_kg": None if maximum is None else _finite_result(maximum),
+        "example_addition_kg": _finite_result(example),
+        "exact_addition_kg": {"min": _fraction_result(minimum),
+                              "max": None if maximum is None else _fraction_result(maximum),
+                              "example": _fraction_result(example)},
+        "resulting_min_percent": _finite_result(resulting_min),
+        "resulting_max_percent": _finite_result(resulting_max), "action": action,
+        "next_options": [
+            "Use the example only as a composition trial; record the actual weighed addition.",
+            "Check mixing and the properties that matter for the product before choosing a working formulation.",
+        ],
+    })
+    return result

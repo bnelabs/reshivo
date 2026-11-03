@@ -462,4 +462,5 @@ export type BalanceMixResult = BalanceMixRequest & {
   next_options: string[]
   assumptions: string[]
   physical_performance_verified: false
+  exact_addition_kg?: import('./mixCandidate.ts').ExactAddition | null
 }
