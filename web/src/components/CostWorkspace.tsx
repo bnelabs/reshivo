@@ -17,6 +17,7 @@ type Props = {
   readingKind: 'user_reported' | 'synthetic'
   onReadingKindChange: (kind: 'user_reported' | 'synthetic') => void
   showHistoricalIdeas: boolean
+  onGoToPlans: () => void
 }
 const displayMoney = displayCostAmount
 export function CostWorkspace({
@@ -25,6 +26,7 @@ export function CostWorkspace({
   readingKind: kind,
   onReadingKindChange,
   showHistoricalIdeas,
+  onGoToPlans,
 }: Props) {
   const system = useUnitSystem()
   const setups = currentSetups(w.configurations)
@@ -120,6 +122,7 @@ export function CostWorkspace({
         <div className="pw-empty">
           <h2>Save a plan first</h2>
           <p>Its materials and amounts will be available here automatically.</p>
+          <button type="button" className="pw-primary" onClick={onGoToPlans}>Go to Plans</button>
         </div>
       ) : (
         <>

@@ -771,6 +771,7 @@ export function ProjectWorkbench() {
                 <button onClick={save}>Save backup</button>
               </div>
             </div>
+            <p className="pw-section-hint">Choose any section; you can return whenever you need.</p>
             {page === 'options' && (
               <section className="pw-section">
                 <div className="pw-section-heading">
@@ -1023,6 +1024,7 @@ export function ProjectWorkbench() {
                 onReadingKindChange={setAdviceKind}
                 onAskIdea={askAboutIdea}
                 onAdjustMix={() => setPage('adjust')}
+                onGoToPlans={() => setPage('trials')}
                 onDownloadSummary={downloadSummary}
                 onPrintSummary={printSummary}
                 showHistoricalIdeas={showHistoricalIdeas}
@@ -1033,6 +1035,8 @@ export function ProjectWorkbench() {
             </div>
             <div hidden={page !== 'adjust'}>
               <MixAdjustment
+                onGoToPlans={() => setPage('trials')}
+                onGoToChecks={() => setPage('checks')}
                 onSummary={setMixSummary}
                 key={`${w.case_id}:${workspaceOpenEpoch}`}
                 workspace={w}
@@ -1048,6 +1052,7 @@ export function ProjectWorkbench() {
             </div>
             <div hidden={page !== 'costs'}>
               <CostWorkspace
+                onGoToPlans={() => setPage('trials')}
                 key={w.case_id}
                 workspace={w}
                 onChange={update}

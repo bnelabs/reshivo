@@ -23,12 +23,14 @@ export type MixPlanningContext = {
   project_context: { configurations: { id: string; revision: number; process: string; geometry: string; materials: { name: string }[] }[] }
 }
 
-export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss, onSummary }: {
+export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, planningContext, onDraftChange, onDiscuss, onSummary, onGoToPlans, onGoToChecks }: {
   workspace: ProjectWorkspace
   enabled: boolean
   showHistoricalIdeas: boolean
   planningContext: MixPlanningContext
   onSummary: (summary: string) => void
+  onGoToPlans: () => void
+  onGoToChecks: () => void
   onDraftChange: (update: (current: ProjectWorkspace) => ProjectWorkspace) => void
   onDiscuss?: (question: string, calculation: PreparedMixCalculation) => void
 }) {
@@ -164,7 +166,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   if (!enabled) return <section className="pw-section"><h1>Adjust a mix</h1><p>Adjustment calculations are unavailable while this case is being checked or needs local planning. See Options for guidance.</p></section>
   if (missingSelected && setups.length > 0) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>Choose a setup</h2><p>Your earlier selection is unavailable in this project.</p><label>Plan<select value="" onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}><option value="" disabled>Choose a setup</option>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label></div></section>
   if (missingSelectedMaterial && setup && setup.materials.length > 0) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>Choose a component</h2><p>Your earlier component is unavailable in this version of {setupName(setup)}.</p><label>Component you want to track<select value="" onChange={(event) => setSelectedMaterial(event.target.value)}><option value="" disabled>Choose a component</option>{setup.materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></section>
-  if (!setup || !material) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>{setup ? 'Add a material to this setup' : 'Add a setup first'}</h2>{setup && <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>}{versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}<p>Your saved materials will be available here. Enter a material in Plans, then return to calculate an adjustment.</p></div></section>
+  if (!setup || !material) return <section className="pw-section"><h1>Adjust a mix</h1><div className="pw-empty"><h2>{setup ? 'Add a material to this plan' : 'Add a plan first'}</h2>{setup && <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>}{versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}<p>Save a plan with at least one material to explore an adjustment.</p><button type="button" className="pw-primary" onClick={onGoToPlans}>Go to Plans</button></div></section>
 
   return (
     <section className="pw-section">
@@ -242,6 +244,8 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           <h2>No single addition fits the whole range</h2>
           <p>{explainUnreachableMix(visibleResult.request) ?? 'For the entered stock, no fixed addition reaches your chosen composition across the full input range. If the actual fraction of this portion becomes known, enter that value and recalculate. You can also explore a different characterized stock or composition range.'}</p>
         </>}
+        <p>Choose what to measure for this plan.</p>
+        <button type="button" onClick={onGoToChecks}>Set up product checks</button>
         <button type="button" onClick={() => downloadTextFile('reshivo-mix-result.txt', formatMixSummary(visibleResult.request, visibleResult.value, system))}>Download result as text</button>
         <button type="button" onClick={() => { try { printTextReport(formatMixSummary(visibleResult.request, visibleResult.value, system)) } catch (e) { setError((e as Error).message) } }}>Print / Save as PDF</button>
         {onDiscuss && <button onClick={discuss}>Ask about this result</button>}

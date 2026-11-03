@@ -826,3 +826,5 @@
     margin-top: 12px;
   }
 }
+
+.pw-section-hint { margin: 12px 0 0; color: var(--pw-muted); font-size: 14px; }

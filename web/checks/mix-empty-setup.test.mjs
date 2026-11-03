@@ -17,9 +17,10 @@ try {
   const markup = renderToStaticMarkup(React.createElement(MixAdjustment, {
     workspace, enabled: true, showHistoricalIdeas: true,
     planningContext: { brief: {}, question: '', project_context: { configurations: [] } },
-    onDraftChange() {},
+    onDraftChange() {}, onGoToPlans() {}, onGoToChecks() {}, onSummary() {},
   }))
-  assert.match(markup, /Add a material to this setup/)
+  assert.match(markup, /Add a material to this plan/)
+  assert.match(markup, /Go to Plans/)
   assert.match(markup, /<select[^>]*>.*<option value="selected" selected="">Empty setup · version 2<\/option>.*<option value="alternative">Available setup · version 1<\/option>/)
   console.log('An empty selected setup retains a selector for another setup')
 } finally {

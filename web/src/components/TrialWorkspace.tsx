@@ -47,6 +47,7 @@ type Props = {
   onReadingKindChange: (kind: 'synthetic' | 'user_reported') => void
   onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea) => void
   onAdjustMix: () => void
+  onGoToPlans: () => void
   onDownloadSummary: () => void
   onPrintSummary: () => void
   showHistoricalIdeas: boolean
@@ -62,6 +63,7 @@ export function TrialWorkspace({
   onReadingKindChange,
   onAskIdea,
   onAdjustMix,
+  onGoToPlans,
   onDownloadSummary,
   onPrintSummary,
   showHistoricalIdeas,
@@ -483,7 +485,7 @@ export function TrialWorkspace({
                 </p>
               )}
               <label>
-                Setup name
+                Plan name
                 <input
                   value={hideCopiedName(editing) ? '' : editing.name}
                   placeholder={
@@ -495,8 +497,11 @@ export function TrialWorkspace({
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 />
               </label>
-              <h3>Materials in this setup</h3>
+              <h3>Materials in this plan</h3>
               <p>Add each material separately to track changes in the mix.</p>
+              {!w.configurations.some((c) => c.id === editing.id) && editing.materials[0]?.name === w.project.input?.value && (
+                <p className="pw-notice">The first row comes from your project description. If it names more than one material, replace it with one material and add the others below.</p>
+              )}
               <p className="pw-muted">
                 Include the binder and any named contaminant. Leave an amount blank if unknown.
               </p>
@@ -650,7 +655,7 @@ export function TrialWorkspace({
               </label>
               <div className="pw-actions">
                 <button className="pw-primary" onClick={saveSetup} disabled={Boolean(pendingUnit)}>
-                  Save this setup
+                  Save this plan
                 </button>
                 <button onClick={() => { setPendingUnit(null); setEditing(null) }}>Cancel edit</button>
               </div>
@@ -770,9 +775,10 @@ export function TrialWorkspace({
             </table>
           </div>
           {(!setups.length || !w.checks.length) && (
-            <p>
-              {!setups.length ? 'Add a plan first, then add the checks that matter to it.' : 'Add a product check below. Limits can stay blank.'}
-            </p>
+            <div className="pw-spaced">
+              <p>{!setups.length ? 'Add a product check below. Save a plan when you are ready to record readings.' : 'Add a product check below. Limits can stay blank.'}</p>
+              {!setups.length && <button type="button" onClick={onGoToPlans}>Go to plans</button>}
+            </div>
           )}
           <button
             className="pw-primary"

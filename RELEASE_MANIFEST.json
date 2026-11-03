@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T17:27:21.783621+00:00",
+  "prepared_utc": "2026-11-03T17:31:44.263763+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -1741,8 +1741,8 @@
     },
     {
       "path": "web/checks/mix-empty-setup.test.mjs",
-      "bytes": 1527,
-      "sha256": "e081e1ab72de48daf030d8577beacd389e95bc5849be09f5315ab98737f44619"
+      "bytes": 1617,
+      "sha256": "30c90e1a1f8ee9d2414db7b6b79212a4932582972e0fd2ae3fc3522dbfabeae2"
     },
     {
       "path": "web/checks/mix-question.test.mjs",
@@ -1891,8 +1891,8 @@
     },
     {
       "path": "web/src/components/CostWorkspace.tsx",
-      "bytes": 28960,
-      "sha256": "8497c41d12e2662c37550d363cd3c53c6b192431fcf5a210fdba8c503dd7afb7"
+      "bytes": 29099,
+      "sha256": "93d058f97a308d0adfa72013bc809f005fb88bd1f55d0bae7f230d0e588e9405"
     },
     {
       "path": "web/src/components/DesignViewport.tsx",
@@ -1956,8 +1956,8 @@
     },
     {
       "path": "web/src/components/MixAdjustment.tsx",
-      "bytes": 22829,
-      "sha256": "3937bb85c3ff2e6706d5e3372cd864e45646683ed0c4317e37abd9028db2fe43"
+      "bytes": 23084,
+      "sha256": "4c49a36b6aa0754035de6713d41b573acb9467fe32a4d43b9bb562154330cded"
     },
     {
       "path": "web/src/components/MyMixPlanner.tsx",
@@ -1976,13 +1976,13 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.css",
-      "bytes": 15393,
-      "sha256": "e4a1c67e8aefca625d138c7145932959807ada70bc6705d8e137fcd3980e86f9"
+      "bytes": 15474,
+      "sha256": "b1edaaf7327bb3ce9dafb396019dfbbf2ab6d6b2edf08719a84346a5f6de5b3b"
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 51585,
-      "sha256": "c76f3a1f3f42da8314acc8329b7f9a8b4ffb291c9a3750f50eb48ddba0725be8"
+      "bytes": 51903,
+      "sha256": "a2ff31f4273e46f75ed9827929aaaaf1d1515128ae7de0aae2edba1ae78cea7e"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2051,8 +2051,8 @@
     },
     {
       "path": "web/src/components/TrialWorkspace.tsx",
-      "bytes": 49891,
-      "sha256": "c928f08a4cca5f7220f079192ad6e6f1353204da6ad09c08301c98ef63e7a44a"
+      "bytes": 50414,
+      "sha256": "7cbfaf4f75f3ffec9b7445b88c7328da1f370ca95f114e1b258a7d05c989811e"
     },
     {
       "path": "web/src/components/Workshop.tsx",
