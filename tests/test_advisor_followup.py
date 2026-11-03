@@ -64,6 +64,15 @@ class FixtureClient:
 
 
 class FollowupTests(unittest.TestCase):
+    def test_unrelated_followup_needs_no_fake_next_step(self):
+        request = request_data()
+        request['question'] = 'What is the best tennis racket?'
+        data = {'answer': 'I can help with your recycled-material project. What would you like to explore?',
+                'next_steps': [], 'questions': [], 'source_ids': []}
+        result = follow_up_with_case(request, client=FixtureClient(data))
+        self.assertEqual(result['answer'], data['answer'])
+        self.assertEqual(result['next_steps'], [])
+
     def test_compact_result_keeps_shared_unknowns_and_does_not_regenerate_routes(self):
         request = request_data()
         before = deepcopy(request)
@@ -114,7 +123,7 @@ class FollowupTests(unittest.TestCase):
             {**response_data(), "performance_verified": True},
             {**response_data(), "answer": " "},
             {**response_data(), "answer": "x" * 3001},
-            {**response_data(), "next_steps": []},
+            {**response_data(), "next_steps": None},
             {**response_data(), "next_steps": ["Step"] * 4},
             {**response_data(), "questions": ["Question"] * 4},
             {**response_data(), "source_ids": ["unknown-source"]},

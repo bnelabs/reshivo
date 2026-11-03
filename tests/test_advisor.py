@@ -346,6 +346,19 @@ class TrialTests(unittest.TestCase):
 
 
 class AdvisorTests(unittest.TestCase):
+    def test_unrelated_question_can_return_a_redirect_without_invented_routes(self):
+        request = brief_request()
+        request['question'] = 'Who won the tennis match?'
+        data = {'answer': 'I can help you develop your recycled-material product. What would you like to explore?',
+                'material_routes': [], 'engineering_routes': [], 'next_steps': [], 'questions': [], 'source_ids': []}
+        client = FixtureClient(data)
+        result = help_with_case(request, client)
+        self.assertEqual(result['answer'], data['answer'])
+        self.assertEqual(result['material_routes'], [])
+        self.assertEqual(result['engineering_routes'], [])
+        self.assertEqual(result['next_steps'], [])
+        self.assertIn('Unusual materials or products and plausible project-related questions remain in scope', client.calls[0][3]['system_prompt'])
+
     def test_one_material_and_one_engineering_route_are_usable(self):
         data = response_data()
         data['material_routes'] = data['material_routes'][:1]
@@ -413,7 +426,7 @@ class AdvisorTests(unittest.TestCase):
         self.assertEqual(result["sources"], [SOURCE_REGISTRY["nist-weighing-tare"]])
         sent, schema, count, options = client.calls[0]
         self.assertEqual(sent["brief"], validate_request(request)["brief"])
-        self.assertEqual(schema["properties"]["material_routes"]["minItems"], 1)
+        self.assertEqual(schema["properties"]["material_routes"]["minItems"], 0)
         self.assertEqual(schema["properties"]["material_routes"]["maxItems"], 2)
         self.assertEqual(options["schema_name"], "material_and_engineering_routes")
         self.assertEqual(options["system_prompt"], SYSTEM_PROMPT)
@@ -470,7 +483,7 @@ class AdvisorTests(unittest.TestCase):
         cases = [None, {**response_data(), "performance_verified": True}, {**response_data(), "source_ids": ["invented-paper"]},
                  {**response_data(), "source_ids": ["cecon2021", "cecon2021"]}]
         request = response_data()
-        request["material_routes"] = []
+        request["material_routes"] = None
         cases.append(request)
         request = response_data()
         request["engineering_routes"][1]["id"] = request["engineering_routes"][0]["id"]

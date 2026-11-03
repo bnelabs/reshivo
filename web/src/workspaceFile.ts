@@ -228,14 +228,14 @@ function plan(value: unknown, caseDetails: unknown): void {
   if (row.quarantined_answer !== undefined) strings(row.quarantined_answer, `${label} removed paragraphs`, 0, 100, 3000)
   const ids = new Set<string>()
   for (const kind of ['material_routes', 'engineering_routes']) {
-    for (const item of array(row[kind], `${label} ${kind}`, 1, 3)) {
+    for (const item of array(row[kind], `${label} ${kind}`, 0, 3)) {
       route(item, `${label} route`)
       const id = (item as ObjectValue).id as string
       if (ids.has(id)) fail(label, 'route identifiers must be different')
       ids.add(id)
     }
   }
-  strings(row.next_steps, `${label} next steps`, 2, 5)
+  strings(row.next_steps, `${label} next steps`, 0, 5)
   strings(row.questions, `${label} questions`, 0, 3)
   sources(row.sources, `${label} references`)
 }
@@ -247,7 +247,7 @@ function followup(value: unknown, caseDetails: unknown): void {
   metadata(row, label, caseDetails)
   string(row.answer, `${label} explanation`, 3000, true)
   if (row.quarantined_answer !== undefined) strings(row.quarantined_answer, `${label} removed paragraphs`, 0, 100, 3000)
-  strings(row.next_steps, `${label} next steps`, 1, 3)
+  strings(row.next_steps, `${label} next steps`, 0, 3)
   strings(row.questions, `${label} questions`, 0, 3)
   sources(row.sources, `${label} references`)
 }

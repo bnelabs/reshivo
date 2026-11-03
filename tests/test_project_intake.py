@@ -53,6 +53,25 @@ class FixtureClient:
 
 
 class ProjectIntakeTests(unittest.TestCase):
+    def test_full_length_message_remains_valid_in_followup_history(self):
+        initial = 'x' * 4000
+        normalized = validate_intake_request({'message': 'More details', 'history': [{'role': 'user', 'content': initial}]})
+        self.assertEqual(normalized['history'][0]['content'], initial)
+        with self.assertRaises(ProductInputError):
+            validate_intake_request({'message': 'More details', 'history': [{'role': 'user', 'content': initial + 'x'}]})
+
+    def test_unrelated_input_can_ask_about_a_project_without_fabricating_one(self):
+        request = {'message': 'Tell me a joke about penguins.'}
+        response = {'reply': 'I can help you explore a product made from reused materials.',
+                    'project_draft': empty_draft(),
+                    'questions': ['What material or product would you like to explore?'],
+                    'first_step': 'Tell me what material you have or what you want to make.'}
+        client = FixtureClient(response)
+        result = read_project_intake(request, client=client)
+        self.assertEqual(result['readiness'], 'needs_context')
+        self.assertEqual(result['project_draft'], empty_draft())
+        self.assertIn('leave unsupported project fields unknown', client.calls[0][3]['system_prompt'])
+
     def test_simple_message_can_explore_without_engineering_brief_or_numbers(self):
         request = simple_request()
         before = deepcopy(request)
@@ -233,7 +252,7 @@ class ProjectIntakeTests(unittest.TestCase):
                    {"message": "Help", "history": [{"role": "user", "content": "a"}] * 7},
                    {"message": "Help", "history": [{"role": "system", "content": "a"}]},
                    {"message": "Help", "history": [{"role": "user", "content": "a", "hidden": True}]},
-                   {"message": "Help", "history": [{"role": "user", "content": "x" * 3001}]},
+                   {"message": "Help", "history": [{"role": "user", "content": "x" * 4001}]},
                    {"message": "x" * 4000, "history": [{"role": "user", "content": "x" * 3000}] * 5},
                    {"message": "Help", "reviewed_draft": {}},
                    {"message": "Help", "reviewed_draft": {**empty_draft(), "product": record("mat", "a tray", "user_review")}}]

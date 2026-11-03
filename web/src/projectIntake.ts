@@ -1,4 +1,4 @@
-import { api } from './api'
+import { api } from './api.ts'
 
 export const PROJECT_INTAKE_FIELDS = ['product', 'input', 'variation', 'use', 'priorities', 'process', 'constraints'] as const
 export type ProjectIntakeField = typeof PROJECT_INTAKE_FIELDS[number]
@@ -55,8 +55,8 @@ export function hasProjectContext(draft: ProjectIntakeDraft): boolean {
 
 export function recentIntakeHistory(history: ProjectIntakeMessage[], message: string): ProjectIntakeMessage[] {
   const recent = history.slice(-6)
-  if (recent.some((entry) => !entry.content.trim() || entry.content.length > 3000)) {
-    throw new Error('Keep each discussion message within 3,000 characters. Your project details are still here.')
+  if (recent.some((entry) => !entry.content.trim() || entry.content.length > 4000)) {
+    throw new Error('Keep each discussion message within 4,000 characters. Your project details are still here.')
   }
   while (recent.length && recent.reduce((total, entry) => total + entry.content.length, message.length) > 18000) recent.shift()
   return recent

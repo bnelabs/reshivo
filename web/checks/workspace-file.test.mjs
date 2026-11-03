@@ -51,7 +51,9 @@ oneIdea.trial = null
 assert.equal(parseWorkspaceFile(serializeWorkspaceFile(oneIdea)).plan.material_routes.length, 1, 'a single idea in each category survives save and open')
 const noIdea = structuredClone(oneIdea)
 noIdea.plan.material_routes = []
-assert.throws(() => serializeWorkspaceFile(noIdea), /between 1 and 3/, 'an empty category is rejected')
+noIdea.plan.engineering_routes = []
+noIdea.plan.next_steps = []
+assert.equal(parseWorkspaceFile(serializeWorkspaceFile(noIdea)).plan.material_routes.length, 0, 'an answer without project ideas survives save and open')
 const threeIdeas = structuredClone(oneIdea)
 for (const section of ['material_routes', 'engineering_routes']) {
   const first = threeIdeas.plan[section][0]
@@ -59,7 +61,7 @@ for (const section of ['material_routes', 'engineering_routes']) {
 }
 assert.equal(parseWorkspaceFile(serializeWorkspaceFile(threeIdeas)).plan.material_routes.length, 3, 'older three-idea categories remain loadable')
 threeIdeas.plan.material_routes.push({ ...threeIdeas.plan.material_routes[0], id: 'material:fourth' })
-assert.throws(() => serializeWorkspaceFile(threeIdeas), /between 1 and 3/, 'more than three saved routes are rejected')
+assert.throws(() => serializeWorkspaceFile(threeIdeas), /between 0 and 3/, 'more than three saved routes are rejected')
 assert.equal(decoded.format, WORKSPACE_FORMAT)
 assert.equal(decoded.version, 1)
 assert.equal(new Date(decoded.saved_at).toISOString(), decoded.saved_at)
@@ -227,8 +229,10 @@ rejectFollowup((reply) => { reply.physical_product_tested = true }, /physical-te
 rejectFollowup((reply) => { reply.performance_verified = true }, /verification/, 'compact advice cannot claim verified material performance')
 rejectFollowup((reply) => { reply.result_kind = 'engineering_proposals' }, /Saved follow-up/, 'compact advice retains its distinct result kind')
 rejectFollowup((reply) => { reply.answer = ' ' }, /nonempty/, 'a compact reply must contain usable advice')
-rejectFollowup((reply) => { reply.next_steps = [] }, /between 1 and 3/, 'compact advice needs a next action')
-rejectFollowup((reply) => { reply.next_steps = ['One', 'Two', 'Three', 'Four'] }, /between 1 and 3/, 'compact advice cannot become a regenerated plan')
+const noStepFollowup = structuredClone(withFollowup)
+noStepFollowup.followup.next_steps = []
+assert.deepEqual(parseWorkspaceFile(serializeWorkspaceFile(noStepFollowup)).followup.next_steps, [], 'a redirect without an action survives save and open')
+rejectFollowup((reply) => { reply.next_steps = ['One', 'Two', 'Three', 'Four'] }, /between 0 and 3/, 'compact advice cannot become a regenerated plan')
 rejectFollowup((reply) => { reply.questions = ['One', 'Two', 'Three', 'Four'] }, /between 0 and 3/, 'compact questions retain their bound')
 rejectFollowup((reply) => { reply.requested_reasoning_effort = 'maximum' }, /reasoning setting/, 'saved compact metadata is validated')
 rejectFollowup((reply) => { reply.sources = [{ id: 'unsafe', title: 'Reference', url: 'javascript:alert(1)', scope: 'Context' }] }, /HTTP or HTTPS/, 'compact source links follow the same safe URL contract')

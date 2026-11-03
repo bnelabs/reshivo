@@ -1,3 +1,3 @@
 """ReMatter computational prototype. Numerical predictions, not product certification."""
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"

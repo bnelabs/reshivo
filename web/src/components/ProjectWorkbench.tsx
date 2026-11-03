@@ -51,7 +51,7 @@ function usableAdvice(value: unknown): value is AdvisorResult | AdvisorFollowupR
   })
   if (!['engineering_proposals', 'engineering_followup', 'local_planning_guidance'].includes(String(item.result_kind))
     || typeof item.answer !== 'string' || !item.answer.trim() || typeof item.provider !== 'string' || typeof item.model !== 'string'
-    || !strings(item.next_steps) || !(item.next_steps as string[]).length || !strings(item.questions)) return false
+    || !strings(item.next_steps) || !strings(item.questions)) return false
   if (item.result_kind === 'engineering_proposals' && (!routeList(item.material_routes) || !routeList(item.engineering_routes))) return false
   if (item.mix_calculation !== undefined && item.mix_calculation !== null) {
     const mix = item.mix_calculation as Record<string, unknown>
@@ -965,8 +965,8 @@ export function ProjectWorkbench() {
                         .map((p, i) => (
                           <p key={i}>{p}</p>
                         ))}
-                      <h2>Start here</h2>
-                      <p>{advice.next_steps[0]}</p>
+                      {advice.next_steps.length > 0 && <><h2>Start here</h2>
+                      <p>{advice.next_steps[0]}</p></>}
                       {advice.next_steps.length > 1 && !answerFocused && <details>
                         <summary>See the other suggested steps</summary>
                         <ol start={2}>
@@ -974,22 +974,23 @@ export function ProjectWorkbench() {
                         </ol>
                       </details>}
                       <div className="pw-actions pw-spaced">
-                        <button className="pw-primary" type="button" onClick={() => {
+                        {('material_routes' in advice ? advice.material_routes.length + advice.engineering_routes.length > 0 : advice.next_steps.length > 0) && <button className="pw-primary" type="button" onClick={() => {
                           if ('material_routes' in advice) {
                             setShowAnswerRoutes(true)
                             requestAnimationFrame(() => routeDetails.current?.scrollIntoView({ block: 'start' }))
                           } else setPage('trials')
                         }}>
                           {'material_routes' in advice ? 'Compare ideas' : 'Open plans'}
-                        </button>
+                        </button>}
                         <button type="button" onClick={() => {
+                          if (!advice.next_steps.length && !('material_routes' in advice && advice.material_routes.length + advice.engineering_routes.length > 0)) setQuestion('')
                           setShowAnswerFollowup(true)
                           requestAnimationFrame(() => {
                             if (questionDetails.current) questionDetails.current.open = true
                             helpQuestion.current?.scrollIntoView({ block: 'center' })
                             helpQuestion.current?.focus({ preventScroll: true })
                           })
-                        }}>Ask a follow-up</button>
+                        }}>{!advice.next_steps.length && !('material_routes' in advice && advice.material_routes.length + advice.engineering_routes.length > 0) ? 'Ask about my project' : 'Ask a follow-up'}</button>
                       </div>
                       {advice.questions.length > 0 && (!answerFocused || showAnswerFollowup) && (
                         <details className="pw-question-box">
@@ -1020,14 +1021,14 @@ export function ProjectWorkbench() {
                         <button type="button" onClick={printSummary}>Print / Save as PDF</button>
                       </div>}
                     </section>
-                    {'material_routes' in advice && (!answerFocused || showAnswerRoutes) && <details open={showAnswerRoutes} ref={routeDetails} className="pw-card pw-spaced">
+                    {'material_routes' in advice && advice.material_routes.length + advice.engineering_routes.length > 0 && (!answerFocused || showAnswerRoutes) && <details open={showAnswerRoutes} ref={routeDetails} className="pw-card pw-spaced">
                       <summary>See the material and design ideas</summary>
                       <p>Compare the ideas, then save one as a plan if you want to explore it.</p>
                       {
                       [
                         { title: 'Materials and preparation', routes: advice.material_routes },
                         { title: 'Shape and assembly', routes: advice.engineering_routes },
-                      ].map((group) => (
+                      ].filter((group) => group.routes.length).map((group) => (
                         <section key={group.title}>
                           <h2>{group.title}</h2>
                           <div className="pw-card-grid">

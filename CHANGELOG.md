@@ -2,6 +2,14 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.4.1 — 2026-11-03
+
+### Fixed
+
+- Let the project helper respond to unrelated questions without forcing it to invent product plans or next steps.
+- Keep long accepted answers usable in later project discussion.
+- Show clearer connection and unreadable-response errors while retaining the user’s work.
+
 ## 0.4.0 — 2026-11-03
 
 ### Fixed
