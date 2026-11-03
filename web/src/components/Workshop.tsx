@@ -26,6 +26,7 @@ import type {
   AssemblyObservationFields,
   CalculationDetails,
   MeasuredCompositionTrial,
+  LocalPlanningResult,
   WorkshopCase,
 } from '../types'
 import type { BalancePreset } from './BalancePlanner'
@@ -278,6 +279,14 @@ export function Workshop() {
   const [statusError, setStatusError] = useState('')
   const [plan, setPlan] = useState<AdvisorResult | null>(null)
   const [followupResult, setFollowupResult] = useState<AdvisorFollowupResult | null>(null)
+  const [localGuidance, setLocalGuidance] = useState<LocalPlanningResult | null>(null)
+  const [localTriggerHistory, setLocalTriggerHistory] = useState<string[]>([])
+  const [planningState, setPlanningState] = useState<{
+    signature: string
+    planningOnly: boolean | null
+    error: string
+  } | null>(null)
+  const [planningAttempt, setPlanningAttempt] = useState(0)
   const [history, setHistory] = useState<AdvisorMessage[]>([])
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
@@ -300,6 +309,62 @@ export function Workshop() {
   const caseArea = useRef<HTMLElement | null>(null)
   const followup = useRef<HTMLInputElement | null>(null)
   const comparisonArea = useRef<HTMLDivElement | null>(null)
+  const planningRequest = {
+    brief,
+    question,
+    history: (localTriggerHistory.length
+      ? localTriggerHistory
+      : [
+          ...history.filter((entry) => entry.role === 'user').map((entry) => entry.content),
+          ...(lastQuestion.trim() ? [lastQuestion] : []),
+        ]
+    )
+      .slice(-6)
+      .map((content) => ({ role: 'user', content: content.slice(0, 6000) })),
+    project_context: {
+      configurations: [
+        {
+          id: 'legacy-case',
+          revision: 1,
+          process: '',
+          geometry: '',
+          materials: calculationDetails.components.map(({ name }) => ({ name })),
+        },
+      ],
+    },
+  }
+  const planningSignature = JSON.stringify(planningRequest)
+  const planningCurrent = planningState?.signature === planningSignature
+  const planningOnly = planningCurrent ? planningState.planningOnly : null
+  const canRequestAdvice = planningOnly !== null && (planningOnly || Boolean(status?.configured))
+
+  useEffect(() => {
+    const controller = new AbortController()
+    api<{ planning_only: boolean }>(
+      '/api/project/planning-mode',
+      JSON.parse(planningSignature),
+      controller.signal,
+    )
+      .then((result) => {
+        if (typeof result.planning_only !== 'boolean')
+          throw new Error('The local case check returned an unexpected response.')
+        if (!controller.signal.aborted)
+          setPlanningState({
+            signature: planningSignature,
+            planningOnly: result.planning_only,
+            error: '',
+          })
+      })
+      .catch((failure) => {
+        if (!controller.signal.aborted)
+          setPlanningState({
+            signature: planningSignature,
+            planningOnly: null,
+            error: failure instanceof Error ? failure.message : 'Could not check the current case.',
+          })
+      })
+    return () => controller.abort()
+  }, [planningSignature, planningAttempt])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -313,7 +378,9 @@ export function Workshop() {
     return () => controller.abort()
   }, [statusAttempt])
   useEffect(() => () => request.current?.abort(), [])
-  useEffect(() => { if (!editingCase && caseArea.current) caseArea.current.scrollTop = 0 }, [editingCase])
+  useEffect(() => {
+    if (!editingCase && caseArea.current) caseArea.current.scrollTop = 0
+  }, [editingCase])
   useEffect(() => {
     if (!busy) return
     const start = Date.now()
@@ -325,13 +392,15 @@ export function Workshop() {
     return () => window.clearInterval(timer)
   }, [busy])
   useEffect(() => {
-    if (plan || trial || followupResult) {
+    if (plan || trial || followupResult || localGuidance) {
       answer.current?.focus({ preventScroll: true })
       answer.current?.scrollIntoView({ block: 'start' })
     }
-  }, [plan, trial, followupResult])
+  }, [plan, trial, followupResult, localGuidance])
 
   function invalidate() {
+    setLocalGuidance(null)
+    setLocalTriggerHistory([])
     setMixMode(false)
     setEditingCase(true)
     setRestoredDrafts({ measurement: null, mix: null })
@@ -540,7 +609,7 @@ export function Workshop() {
     displayQuestion = nextQuestion.trim(),
     fromComparison = false,
   ) {
-    if (!briefReady || !status?.configured || busy) return
+    if (!briefReady || !canRequestAdvice || busy) return
     const controller = new AbortController()
     request.current?.abort()
     request.current = controller
@@ -610,7 +679,7 @@ export function Workshop() {
     setError('')
     setNotice('')
     try {
-      const response = await api<AdvisorResult | AdvisorFollowupResult>(
+      const response = await api<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult>(
         isFollowup ? '/api/advisor/follow-up' : '/api/advisor/help',
         {
           brief,
@@ -621,6 +690,38 @@ export function Workshop() {
         controller.signal,
       )
       if (!controller.signal.aborted) {
+        if (response.result_kind === 'local_planning_guidance') {
+          setLocalGuidance(response)
+          setLocalTriggerHistory((existing) =>
+            existing.length
+              ? existing
+              : [
+                  ...recentHistory
+                    .filter((entry) => entry.role === 'user')
+                    .map((entry) => entry.content),
+                  submittedQuestion,
+                ].slice(-6),
+          )
+          setPlan(null)
+          setFollowupResult(null)
+          setTrial(null)
+          setSelectedRoute(null)
+          setHistory([])
+          setRestoredPlan(false)
+          setRestoredFollowup(false)
+          setRestoredTrial(false)
+          setHasTrialFollowup(false)
+          setMixMode(false)
+          setSection('material')
+          setLastQuestion(submittedQuestion)
+          setQuestion('')
+          setEditingCase(false)
+          setNotice(
+            'Local planning guide. No AI request was sent; earlier generated suggestions are not shown.',
+          )
+          return
+        }
+        setLocalGuidance(null)
         setEditingCase(false)
         comparisonAdviceShown.current = usesComparisonContext
         setComparisonAdviceStale(
@@ -718,7 +819,7 @@ export function Workshop() {
     setNotice('')
   }
   async function planTrial(route: AdvisorRoute) {
-    if (!briefReady || !status?.configured || busy) return
+    if (!briefReady || !canRequestAdvice || busy) return
     selectRoute(route)
     setMixMode(false)
     setSection('next')
@@ -732,12 +833,39 @@ export function Workshop() {
     setError('')
     setNotice('')
     try {
-      const response = await api<AdvisorTrialResult>(
+      const response = await api<AdvisorTrialResult | LocalPlanningResult>(
         '/api/advisor/trial',
         { brief, route, calculation_context: calculationDetails },
         controller.signal,
       )
       if (!controller.signal.aborted) {
+        if (response.result_kind === 'local_planning_guidance') {
+          setLocalGuidance(response)
+          setLocalTriggerHistory((existing) =>
+            existing.length
+              ? existing
+              : history
+                  .filter((entry) => entry.role === 'user')
+                  .map((entry) => entry.content)
+                  .slice(-6),
+          )
+          setPlan(null)
+          setFollowupResult(null)
+          setTrial(null)
+          setSelectedRoute(null)
+          setHistory([])
+          setRestoredPlan(false)
+          setRestoredFollowup(false)
+          setRestoredTrial(false)
+          setHasTrialFollowup(false)
+          setMixMode(false)
+          setSection('material')
+          setNotice(
+            'Local planning guide. No AI request was sent; earlier generated suggestions are not shown.',
+          )
+          return
+        }
+        setLocalGuidance(null)
         if (response.route_id !== route.id)
           throw new Error('The trial did not match the selected route. Your route is still here.')
         setTrial(response)
@@ -800,6 +928,8 @@ export function Workshop() {
     )
       return false
     request.current?.abort()
+    setLocalGuidance(null)
+    setLocalTriggerHistory([])
     comparisonRequest.current = null
     comparisonAdviceShown.current = saved.history.length > 0
     setActivity(null)
@@ -822,7 +952,11 @@ export function Workshop() {
     setQuestion('')
     setLastQuestion('')
     setError('')
-    setNotice(saved.plan || saved.trial || saved.followup ? 'Opened saved Meta records. Reconfirm readings and recalculate for the current trial.' : '')
+    setNotice(
+      saved.plan || saved.trial || saved.followup
+        ? 'Opened saved Meta records. Reconfirm readings and recalculate for the current trial.'
+        : '',
+    )
     setRestoredDrafts({ measurement: saved.measurement_draft, mix: saved.mix_draft })
     measurementSnapshot.current = saved.measurement_draft
     mixSnapshot.current = saved.mix_draft
@@ -886,22 +1020,24 @@ export function Workshop() {
         </div>
         <div className="workshop-connection" role="status">
           <span
-            className={`workshop-connection-dot${status?.configured ? ' is-configured' : ''}`}
+            className={`workshop-connection-dot${status?.configured || planningOnly === true ? ' is-configured' : ''}`}
             aria-hidden="true"
           />
           <div>
             <strong>
-              {statusError
-                ? 'Connection unavailable'
-                : status
-                  ? status.configured
-                    ? 'Meta configured'
-                    : 'Meta needs a key'
-                  : 'Checking Meta…'}
+              {planningOnly === true
+                ? 'Local planning available · no AI needed'
+                : statusError
+                  ? 'Connection unavailable'
+                  : status
+                    ? status.configured
+                      ? 'Meta configured'
+                      : 'Meta needs a key'
+                    : 'Checking Meta…'}
             </strong>
-            {status && <small>{status.model}</small>}
+            {status && planningOnly !== true && <small>{status.model}</small>}
           </div>
-          {(statusError || (status && !status.configured)) && (
+          {planningOnly !== true && (statusError || (status && !status.configured)) && (
             <button type="button" onClick={() => setStatusAttempt((attempt) => attempt + 1)}>
               Retry
             </button>
@@ -939,151 +1075,163 @@ export function Workshop() {
         className={`workshop-grid${focusWorkspace ? ' is-focused' : ''}${plan ? ' has-plan' : ''}`}
       >
         <aside ref={caseArea} className="workshop-brief" hidden={focusWorkspace}>
-          {briefReady && !editingCase && <MaterialCaseSummary caseData={caseData} onEdit={() => setEditingCase(true)} onExplore={() => void ask()} busy={busy} canExplore={Boolean(status?.configured)} />}
+          {briefReady && !editingCase && (
+            <MaterialCaseSummary
+              caseData={caseData}
+              onEdit={() => setEditingCase(true)}
+              onExplore={() => void ask()}
+              busy={busy}
+              canExplore={canRequestAdvice}
+            />
+          )}
           <div className="workshop-case-editor" hidden={briefReady && !editingCase}>
-          <div className="workshop-brief-heading">
-            <div>
-            <h2>{brief.product.trim() || 'Tell us about your case'}</h2>
-            <p>{briefReady ? 'Review your input and target, then explore options.' : 'Start with the four marked fields. Add the rest whenever you are ready.'}</p>
+            <div className="workshop-brief-heading">
+              <div>
+                <h2>{brief.product.trim() || 'Tell us about your case'}</h2>
+                <p>
+                  {briefReady
+                    ? 'Review your input and target, then explore options.'
+                    : 'Start with the four marked fields. Add the rest whenever you are ready.'}
+                </p>
+              </div>
             </div>
-          </div>
-          <details className="workshop-examples">
-            <summary>Try an example</summary>
-            <button
-              className="workshop-example"
-              type="button"
-              onClick={() => replaceWithExample(loadExample)}
+            <details className="workshop-examples">
+              <summary>Try an example</summary>
+              <button
+                className="workshop-example"
+                type="button"
+                onClick={() => replaceWithExample(loadExample)}
+              >
+                Explore a counterweight <span aria-hidden="true">↗</span>
+              </button>
+              <button
+                className="workshop-example"
+                type="button"
+                onClick={() => replaceWithExample(loadPlanterExample)}
+              >
+                Explore a recycled-PE product <span aria-hidden="true">↗</span>
+              </button>
+            </details>
+            {exampleLoaded && (
+              <p className="workshop-example-note" role="status">
+                Hypothetical example loaded. Edit it to fit your batch; these are not material
+                measurements.
+              </p>
+            )}
+            {mayClearCaseData && (
+              <p className="workshop-edit-warning" role="status">
+                Editing this case can clear linked work. Save first.
+              </p>
+            )}
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                void ask()
+              }}
             >
-              Explore a counterweight <span aria-hidden="true">↗</span>
-            </button>
-            <button
-              className="workshop-example"
-              type="button"
-              onClick={() => replaceWithExample(loadPlanterExample)}
-            >
-              Explore a recycled-PE product <span aria-hidden="true">↗</span>
-            </button>
-          </details>
-          {exampleLoaded && (
-            <p className="workshop-example-note" role="status">
-              Hypothetical example loaded. Edit it to fit your batch; these are not material
-              measurements.
-            </p>
-          )}
-          {mayClearCaseData && (
-            <p className="workshop-edit-warning" role="status">
-              Editing this case can clear linked work. Save first.
-            </p>
-          )}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              void ask()
-            }}
-          >
-            {fieldGroups.map((group, groupIndex) => (
-              <fieldset className="workshop-case-group" key={group.title}>
-                <legend>
-                  <span>{groupIndex + 1}</span>
-                  {group.title}
-                </legend>
-                <p>{group.detail}</p>
-                {groupIndex === 0 && (
-                  <ImageIntake
-                    brief={brief}
-                    mayClearCaseData={mayClearCaseData}
-                    onApply={(note) =>
-                      editBrief('input', [brief.input.trim(), note].filter(Boolean).join('\n'))
-                    }
-                  />
-                )}
-                <div className="workshop-case-fields">
-                  {group.fields.map((field) => (
-                    <label key={field.key}>
-                      <span>
-                        {field.label}
-                        {field.required && (
-                          <span className="workshop-required" aria-hidden="true">
-                            {' '}
-                            *
-                          </span>
+              {fieldGroups.map((group, groupIndex) => (
+                <fieldset className="workshop-case-group" key={group.title}>
+                  <legend>
+                    <span>{groupIndex + 1}</span>
+                    {group.title}
+                  </legend>
+                  <p>{group.detail}</p>
+                  {groupIndex === 0 && (
+                    <ImageIntake
+                      brief={brief}
+                      mayClearCaseData={mayClearCaseData}
+                      onApply={(note) =>
+                        editBrief('input', [brief.input.trim(), note].filter(Boolean).join('\n'))
+                      }
+                    />
+                  )}
+                  <div className="workshop-case-fields">
+                    {group.fields.map((field) => (
+                      <label key={field.key}>
+                        <span>
+                          {field.label}
+                          {field.required && (
+                            <span className="workshop-required" aria-hidden="true">
+                              {' '}
+                              *
+                            </span>
+                          )}
+                        </span>
+                        {field.rows ? (
+                          <textarea
+                            rows={field.rows}
+                            maxLength={3000}
+                            required={field.required}
+                            value={brief[field.key]}
+                            placeholder={field.placeholder}
+                            onChange={(event) => editBrief(field.key, event.target.value)}
+                          />
+                        ) : (
+                          <input
+                            maxLength={3000}
+                            required={field.required}
+                            value={brief[field.key]}
+                            placeholder={field.placeholder}
+                            onChange={(event) => editBrief(field.key, event.target.value)}
+                          />
                         )}
-                      </span>
-                      {field.rows ? (
-                        <textarea
-                          rows={field.rows}
-                          maxLength={3000}
-                          required={field.required}
-                          value={brief[field.key]}
-                          placeholder={field.placeholder}
-                          onChange={(event) => editBrief(field.key, event.target.value)}
-                        />
-                      ) : (
-                        <input
-                          maxLength={3000}
-                          required={field.required}
-                          value={brief[field.key]}
-                          placeholder={field.placeholder}
-                          onChange={(event) => editBrief(field.key, event.target.value)}
-                        />
-                      )}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            ))}
-            <details className="workshop-constraints" id="case-process-details">
-              <summary>
-                Equipment, contamination and other constraints <small>Optional</small>
-              </summary>
-              {mayClearCaseData && (
-                <p className="workshop-edit-warning">
-                  Changing contamination or process can clear recorded measurements and plans.
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
+              <details className="workshop-constraints" id="case-process-details">
+                <summary>
+                  Equipment, contamination and other constraints <small>Optional</small>
+                </summary>
+                {mayClearCaseData && (
+                  <p className="workshop-edit-warning">
+                    Changing contamination or process can clear recorded measurements and plans.
+                  </p>
+                )}
+                {optionalFields.map((field) => (
+                  <label key={field.key}>
+                    {field.label}
+                    <textarea
+                      rows={2}
+                      maxLength={3000}
+                      value={brief[field.key]}
+                      placeholder={field.placeholder}
+                      onChange={(event) => editBrief(field.key, event.target.value)}
+                    />
+                  </label>
+                ))}
+              </details>
+              <CaseDetails details={calculationDetails} onChange={editCalculationDetails} />
+              {status && !status.configured && planningOnly !== true && (
+                <p className="workshop-help">
+                  Add a Meta Model API key to the local server configuration, then retry the
+                  connection. Your brief stays available.
                 </p>
               )}
-              {optionalFields.map((field) => (
-                <label key={field.key}>
-                  {field.label}
-                  <textarea
-                    rows={2}
-                    maxLength={3000}
-                    value={brief[field.key]}
-                    placeholder={field.placeholder}
-                    onChange={(event) => editBrief(field.key, event.target.value)}
-                  />
-                </label>
-              ))}
-            </details>
-            <CaseDetails details={calculationDetails} onChange={editCalculationDetails} />
-            {status && !status.configured && (
-              <p className="workshop-help">
-                Add a Meta Model API key to the local server configuration, then retry the
-                connection. Your brief stays available.
+              {statusError && <p className="workshop-error">{statusError}</p>}
+              <button
+                className="workshop-submit"
+                type="submit"
+                disabled={!briefReady || !canRequestAdvice || busy}
+              >
+                {busy ? 'Working through your case…' : 'Explore options'}
+                <span aria-hidden="true">→</span>
+              </button>
+              {!briefReady && (
+                <p className="workshop-required-note" role="status">
+                  To continue, add:{' '}
+                  {missingFields
+                    .map((field) => field.label.toLowerCase().replace(/\?$/, ''))
+                    .join(', ')}
+                  .
+                </p>
+              )}
+              <p className="workshop-submit-note">
+                Your case is sent to Meta when you select Explore options. Describe unknowns in
+                plain language.
               </p>
-            )}
-            {statusError && <p className="workshop-error">{statusError}</p>}
-            <button
-              className="workshop-submit"
-              type="submit"
-              disabled={!briefReady || !status?.configured || busy}
-            >
-              {busy ? 'Working through your case…' : 'Explore options'}
-              <span aria-hidden="true">→</span>
-            </button>
-            {!briefReady && (
-              <p className="workshop-required-note" role="status">
-                To continue, add:{' '}
-                {missingFields
-                  .map((field) => field.label.toLowerCase().replace(/\?$/, ''))
-                  .join(', ')}
-                .
-              </p>
-            )}
-            <p className="workshop-submit-note">
-              Your case is sent to Meta when you select Explore options. Describe unknowns in plain
-              language.
-            </p>
-          </form>
+            </form>
           </div>
         </aside>
         <section
@@ -1196,36 +1344,85 @@ export function Workshop() {
               </button>
             </nav>
           )}
-          {followupResult && (section !== 'next' || mixMode) && (
-            <FollowupAdvice
-              result={followupResult}
-              question={lastQuestion}
-              restored={restoredFollowup}
-            />
-          )}
+          {planningOnly === false &&
+            !localGuidance &&
+            followupResult &&
+            (section !== 'next' || mixMode) && (
+              <FollowupAdvice
+                result={followupResult}
+                question={lastQuestion}
+                restored={restoredFollowup}
+              />
+            )}
           <div
             ref={compositionArea}
             className="workshop-mix-workspace"
             hidden={section !== 'next' || !mixMode}
           >
-            <BalanceMix
-              key={`${workspaceEpoch}:${JSON.stringify(caseData)}`}
-              caseData={caseData}
-              onEditCase={openCaseDetails}
-              preparedTrial={compositionTrial}
-              onClearPrepared={() => setCompositionTrial(null)}
-              canAsk={Boolean(status?.configured && briefReady && !busy)}
-              onAsk={(trialQuestion) => {
-                void ask(trialQuestion, true, 'What should I check before trying this mix?', true)
-              }}
-              onDraftChange={invalidateComparisonAdvice}
-              initialDraft={restoredDrafts.mix}
-              onSnapshot={recordMixSnapshot}
-            />
+            <div hidden={planningOnly !== false}>
+              <BalanceMix
+                key={`${workspaceEpoch}:${JSON.stringify(caseData)}`}
+                caseData={caseData}
+                onEditCase={openCaseDetails}
+                preparedTrial={compositionTrial}
+                onClearPrepared={() => setCompositionTrial(null)}
+                canAsk={Boolean(canRequestAdvice && briefReady && !busy)}
+                onAsk={(trialQuestion) => {
+                  void ask(trialQuestion, true, 'What should I check before trying this mix?', true)
+                }}
+                onDraftChange={invalidateComparisonAdvice}
+                initialDraft={restoredDrafts.mix}
+                onSnapshot={recordMixSnapshot}
+              />
+            </div>
+            {planningOnly !== false && (
+              <p>
+                For this case, continue with the local planning guide before using
+                material-adjustment calculations.
+              </p>
+            )}
           </div>
-          <div className="workshop-plan-zone" hidden={section === 'next' && mixMode}>
+          {localGuidance && (
+            <section className="workshop-proposal-note" aria-live="polite">
+              <h2>Local planning guide · no AI call</h2>
+              <p style={{ whiteSpace: 'pre-line' }}>{localGuidance.answer}</p>
+              <h3>What you can plan now</h3>
+              <ul>
+                {localGuidance.next_steps.map((step, index) => (
+                  <li key={index}>{step}</li>
+                ))}
+              </ul>
+              <h3>Details to resolve</h3>
+              <ul>
+                {localGuidance.questions.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {planningCurrent && planningState?.error && (
+            <p className="workshop-error" role="alert">
+              {planningState.error}{' '}
+              <button type="button" onClick={() => setPlanningAttempt((value) => value + 1)}>
+                Retry case check
+              </button>
+            </p>
+          )}
+          {planningOnly === true && !localGuidance && (
+            <p className="workshop-proposal-note">
+              This case uses the local planning guide. Explore options to see what you can plan
+              without handling the material; previous generated suggestions and adjustment tools are
+              hidden.
+            </p>
+          )}
+          <div
+            className="workshop-plan-zone"
+            hidden={
+              planningOnly !== false || Boolean(localGuidance) || (section === 'next' && mixMode)
+            }
+          >
             {!plan ? (
-            <div className="workshop-start" hidden={Boolean(followupResult) || busy}>
+              <div className="workshop-start" hidden={Boolean(followupResult) || busy}>
                 <h2>What happens next?</h2>
                 <p>From your case, ReMatter helps you work through three decisions.</p>
                 <div className="workshop-start-options">
@@ -1273,46 +1470,50 @@ export function Workshop() {
                   These are suggested next steps, not measured product performance. Review the
                   options and test the one you choose.
                 </p>
-              {chosen && section !== 'next' && !routes.some((route) => sameRoute(route, chosen)) && (
-                  <section
-                    className="workshop-current-decision"
-                    aria-label="Your selected approach"
-                  >
-                    <p className="workshop-eyebrow">Your selected approach</p>
-                    <h3>{chosen.title}</h3>
-                    <dl>
-                      <div>
-                        <dt>Change</dt>
-                        <dd>{chosen.change}</dd>
-                      </div>
-                      <div>
-                        <dt>Check next</dt>
-                        <dd>{chosen.check}</dd>
-                      </div>
-                    </dl>
-                    <p className="workshop-decision-target">
-                      <strong>Your goal</strong> {brief.targets}
-                    </p>
-                    <button
-                      type="button"
-                      disabled={busy || !status?.configured}
-                      onClick={() => {
-                        if (trial) {
-                          setMixMode(false)
-                          setSection('next')
-                        } else {
-                          void planTrial(chosen)
-                        }
-                      }}
+                {chosen &&
+                  section !== 'next' &&
+                  !routes.some((route) => sameRoute(route, chosen)) && (
+                    <section
+                      className="workshop-current-decision"
+                      aria-label="Your selected approach"
                     >
-                      {trial ? 'View this trial plan' : 'Plan this trial'}{' '}
-                      <span aria-hidden="true">→</span>
-                    </button>
-                    {!trial && (
-                      <small>Meta will turn your chosen change into one proposed comparison.</small>
-                    )}
-                  </section>
-                )}
+                      <p className="workshop-eyebrow">Your selected approach</p>
+                      <h3>{chosen.title}</h3>
+                      <dl>
+                        <div>
+                          <dt>Change</dt>
+                          <dd>{chosen.change}</dd>
+                        </div>
+                        <div>
+                          <dt>Check next</dt>
+                          <dd>{chosen.check}</dd>
+                        </div>
+                      </dl>
+                      <p className="workshop-decision-target">
+                        <strong>Your goal</strong> {brief.targets}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={busy || !canRequestAdvice}
+                        onClick={() => {
+                          if (trial) {
+                            setMixMode(false)
+                            setSection('next')
+                          } else {
+                            void planTrial(chosen)
+                          }
+                        }}
+                      >
+                        {trial ? 'View this trial plan' : 'Plan this trial'}{' '}
+                        <span aria-hidden="true">→</span>
+                      </button>
+                      {!trial && (
+                        <small>
+                          Meta will turn your chosen change into one proposed comparison.
+                        </small>
+                      )}
+                    </section>
+                  )}
                 {section !== 'next' ? (
                   <>
                     {lastQuestion && !followupResult && (
@@ -1450,7 +1651,7 @@ export function Workshop() {
                             <button
                               type="button"
                               className="outline-button"
-                              disabled={busy || !status?.configured}
+                              disabled={busy || !canRequestAdvice}
                               onClick={() => void planTrial(chosen)}
                             >
                               {activity === 'trial' ? 'Planning trial…' : 'Plan a trial'}
@@ -1518,7 +1719,7 @@ export function Workshop() {
               key={workspaceEpoch}
               caseData={caseData}
               trial={trial ?? undefined}
-              canAsk={Boolean(status?.configured && briefReady && !busy)}
+              canAsk={Boolean(canRequestAdvice && briefReady && !busy)}
               onAsk={(comparisonQuestion) => {
                 void ask(
                   comparisonQuestion,
@@ -1570,19 +1771,27 @@ export function Workshop() {
                 copied into your case or used to qualify your product.
               </p>
               {sourceOpen && (
-                <Suspense fallback={<p>Loading the published blend example…</p>}>
-                  <PublishedBlend
-                    active={section === 'material'}
-                    onAsk={(sourceQuestion) => {
-                      void ask(
-                        sourceQuestion,
-                        undefined,
-                        'How can I develop my mix using this study as context?',
-                      )
-                    }}
-                    disabled={busy || !briefReady || !status?.configured}
-                  />
-                </Suspense>
+                <div hidden={planningOnly !== false}>
+                  <Suspense fallback={<p>Loading the published blend example…</p>}>
+                    <PublishedBlend
+                      active={section === 'material' && planningOnly === false}
+                      onAsk={(sourceQuestion) => {
+                        void ask(
+                          sourceQuestion,
+                          undefined,
+                          'How can I develop my mix using this study as context?',
+                        )
+                      }}
+                      disabled={busy || !briefReady || !canRequestAdvice}
+                    />
+                  </Suspense>
+                </div>
+              )}
+              {sourceOpen && planningOnly !== false && (
+                <p>
+                  Published blend calculations are separate from this case. Continue with the local
+                  planning guide before considering material adjustments.
+                </p>
               )}
             </details>
           </div>
@@ -1601,15 +1810,23 @@ export function Workshop() {
                 active={section === 'engineering'}
                 onApply={applyEngineeringNote}
               />
-              <WeightAdjustment
-                key={JSON.stringify([materialKey, brief.product, brief.use_case])}
-                caseData={caseData}
-                onEditCase={openCaseDetails}
-                assemblyObservation={assemblyObservation}
-                onAssemblyObservationChange={setAssemblyObservation}
-                balancePreset={balancePreset}
-                active={section === 'engineering'}
-              />
+              <div hidden={planningOnly !== false}>
+                <WeightAdjustment
+                  key={JSON.stringify([materialKey, brief.product, brief.use_case])}
+                  caseData={caseData}
+                  onEditCase={openCaseDetails}
+                  assemblyObservation={assemblyObservation}
+                  onAssemblyObservationChange={setAssemblyObservation}
+                  balancePreset={balancePreset}
+                  active={section === 'engineering' && planningOnly === false}
+                />
+              </div>
+              {planningOnly !== false && (
+                <p>
+                  Material adjustment is unavailable while this case needs the local planning guide.
+                  You can plan a contained design without handling the material.
+                </p>
+              )}
             </details>
           </div>
           <form
@@ -1635,7 +1852,7 @@ export function Workshop() {
               />
               <button
                 type="submit"
-                disabled={!question.trim() || !briefReady || !status?.configured || busy}
+                disabled={!question.trim() || !briefReady || !canRequestAdvice || busy}
               >
                 Send <span aria-hidden="true">↑</span>
               </button>
@@ -1659,14 +1876,22 @@ export function Workshop() {
           <small>Measured mix mass and published study comparisons</small>
         </summary>
         {toolsOpen && (
-          <Suspense fallback={<p>Loading calculation tools…</p>}>
-            <CalculationTools
-              caseData={caseData}
-              onEditCase={openCaseDetails}
-              assemblyObservation={assemblyObservation}
-              onAssemblyObservationChange={setAssemblyObservation}
-            />
-          </Suspense>
+          <div hidden={planningOnly !== false}>
+            <Suspense fallback={<p>Loading calculation tools…</p>}>
+              <CalculationTools
+                caseData={caseData}
+                onEditCase={openCaseDetails}
+                assemblyObservation={assemblyObservation}
+                onAssemblyObservationChange={setAssemblyObservation}
+              />
+            </Suspense>
+          </div>
+        )}
+        {toolsOpen && planningOnly !== false && (
+          <p>
+            Calculation tools stay unavailable until this case can be checked. Use the local
+            planning guide for next steps.
+          </p>
         )}
       </details>
     </div>

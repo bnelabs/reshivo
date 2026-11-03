@@ -7,6 +7,7 @@ import re
 from .materials import ROOT
 from .meta import MetaClient, MetaValidationError
 from .products import ProductInputError
+from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_guidance, literal_particle_excerpt
 
 
 DRAFT_FIELDS = ("product", "input", "variation", "use", "priorities", "process", "constraints")
@@ -199,6 +200,36 @@ def normalize_intake_response(case, data):
 def read_project_intake(request, *, client=None, root=ROOT):
     """Make one explicit generation call and return a source-linked draft, never apply it."""
     case = validate_intake_request(request)
+    if needs_local_metal_planning(case):
+        local = local_metal_planning_guidance(case)
+        draft = deepcopy(case.get("reviewed_draft") or {field: None for field in DRAFT_FIELDS})
+        short_excerpt = False
+        if draft["input"] is None:
+            user_sources = [("message", case["message"])] + [
+                (f"history.{index}", entry["content"]) for index, entry in reversed(list(enumerate(case["history"]))) if entry["role"] == "user"]
+            for source, text in user_sources:
+                excerpt = literal_particle_excerpt(text)
+                if excerpt:
+                    literal = text if len(text) <= 1000 else excerpt
+                    short_excerpt = len(text) > 1000
+                    draft["input"] = {"value": literal, "source": source, "quote": literal}
+                    break
+        if draft["input"] is None:
+            note = "Your material details remain unknown; please add them to the summary. "
+        elif short_excerpt:
+            note = "The materials box contains only a short quoted phrase from your longer message. Review the original idea and add the missing details yourself. "
+        else:
+            note = "The materials box preserves your words for review. "
+        task = ("Review your product and use in the summary before continuing."
+                if draft["product"] and (draft["use"] or draft["priorities"])
+                else "Please name your product and its use in the summary before continuing.")
+        result = normalize_intake_response(case, {
+            "reply": note + "This is local planning guidance; no AI request was sent. " + task,
+            "project_draft": draft,
+            "questions": local["questions"],
+            "first_step": local["answer"],
+        })
+        return {**result, "origin": "local", "provider": "local", "model": "Local planning guide", "live": False}
     generated = (client if client is not None else MetaClient(root=root)).generate(
         json.dumps({**case, "task": "Help clarify this project and draft only the user's stated facts for review."},
                    ensure_ascii=False, allow_nan=False),

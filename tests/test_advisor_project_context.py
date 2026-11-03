@@ -253,7 +253,9 @@ class AdvisorProjectContextTests(unittest.TestCase):
                 self.assertEqual(result["manufacturing_costs"], data["manufacturing_costs"])
                 self.assertNotIn("manufacturing_costs", prompt, "the model uses deterministic summaries, not unvalidated price arithmetic")
                 self.assertTrue(summary["comparable"])
-                self.assertEqual(summary["winners"]["per_usable_unit"]["configuration_ids"], ["ABC"])
+                self.assertNotIn("winners", summary, "cost-only winners cannot be mistaken for target-qualified decisions")
+                self.assertEqual(result["manufacturing_cost_assessment"]["winners"]["per_usable_unit"]["configuration_ids"], ["ABC"])
+                self.assertIsNone(prompt["decision_assessment"]["decisions"]["per_usable_unit"])
                 self.assertEqual(summary["results"][0]["costs"]["entered_scope_total"], "1.8")
                 self.assertEqual(summary["results"][1]["costs"]["entered_scope_total"], "2.3")
                 self.assertEqual(summary["results"][1]["unit_costs"]["per_usable_unit"], "1.15")
@@ -261,7 +263,7 @@ class AdvisorProjectContextTests(unittest.TestCase):
                 self.assertEqual(summary["physical_target_status"], "not_assessed")
                 self.assertTrue(all(row["physical_target_status"] == "not_assessed" for row in summary["results"]))
                 self.assertEqual(config(prompt["project_assessment"], "ABC")["state"], "out_of_range", "cheapest entered-scope output does not pass the missing physical check")
-                self.assertTrue(client.calls[0][3]["system_prompt"].endswith(MANUFACTURING_COST_PROMPT))
+                self.assertIn(MANUFACTURING_COST_PROMPT, client.calls[0][3]["system_prompt"])
 
     def test_missing_prices_and_invalid_numeric_drafts_stay_explicit_without_a_winner(self):
         for price, expected in (("", "partial"), ("not known yet", "needs_clarification")):
@@ -274,7 +276,8 @@ class AdvisorProjectContextTests(unittest.TestCase):
             with self.subTest(price=price):
                 self.assertEqual(abc["status"], expected)
                 self.assertFalse(summary["comparable"])
-                self.assertIsNone(summary["winners"]["per_usable_unit"])
+                self.assertNotIn("winners", summary)
+                self.assertIsNone(client.calls[0][0]["decision_assessment"]["decisions"]["per_usable_unit"])
                 self.assertIsNone(abc["costs"]["entered_scope_total"])
                 self.assertTrue(abc["questions"] or abc["errors"])
                 if price == "":

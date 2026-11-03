@@ -275,6 +275,9 @@ def normalize_engineering_fields(request, model_data):
 
 def read_engineering_note(request, *, client=None, root=ROOT):
     case = validate_engineering_request(request)
+    from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_message
+    if needs_local_metal_planning(case):
+        raise ProductInputError(local_metal_planning_message(case))
     generated = (client or MetaClient(root=root)).generate(
         json.dumps({**case, "task": "Draft the stated engineering quantities for review; do not calculate or apply changes."}, ensure_ascii=False, allow_nan=False),
         engineering_schema(), 1, system_prompt=SYSTEM_PROMPT, schema_name="engineering_note_draft", max_completion_tokens=4096,

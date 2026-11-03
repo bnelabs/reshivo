@@ -2,16 +2,31 @@ import { useState } from 'react'
 import { api } from '../api'
 import { newCostDraft } from '../projectWorkspace'
 import type { ProjectWorkspace, CostDraft } from '../projectWorkspace'
-import { costRequest, costWinnerSummaries } from '../manufacturingCost'
+import { costRequest } from '../manufacturingCost'
 import { currentSetups, setupKey } from './TrialWorkspace'
 
-type Props = { workspace: ProjectWorkspace; onChange: (next: ProjectWorkspace) => void }
+type Props = {
+  workspace: ProjectWorkspace
+  onChange: (next: ProjectWorkspace) => void
+  readingKind: 'user_reported' | 'synthetic'
+  onReadingKindChange: (kind: 'user_reported' | 'synthetic') => void
+  showHistoricalIdeas: boolean
+}
 const displayMoney = (value: unknown) =>
   typeof value === 'string'
     ? Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 })
     : 'Unknown'
-export function CostWorkspace({ workspace: w, onChange }: Props) {
+export function CostWorkspace({
+  workspace: w,
+  onChange,
+  readingKind: kind,
+  onReadingKindChange,
+  showHistoricalIdeas,
+}: Props) {
   const setups = currentSetups(w.configurations)
+  const setupName = (s: (typeof setups)[number]) =>
+    !showHistoricalIdeas && (w.trial_ideas?.[setupKey(s)]?.title === s.name || s.notes.startsWith(`Unverified trial idea: ${s.name}.`))
+      ? `Trial setup ${setups.findIndex((item) => item.id === s.id) + 1}` : s.name
   const [selected, setSelected] = useState('')
   const [result, setResult] = useState<any>(null)
   const [comparison, setComparison] = useState<any>(null)
@@ -29,16 +44,25 @@ export function CostWorkspace({ workspace: w, onChange }: Props) {
   const comparisonRequests = setups.map((s) =>
     costRequest(w, s, w.costs[setupKey(s)] ?? newCostDraft()),
   )
-  const comparisonFingerprint = JSON.stringify(comparisonRequests)
+  const decisionRequest = {
+    case_id: w.case_id,
+    configurations: w.configurations,
+    checks: w.checks,
+    records: w.records.filter((r) => !w.record_exclusions?.[r.id]),
+    assessment_kind: kind,
+    cost_records: comparisonRequests,
+  }
+  const comparisonFingerprint = JSON.stringify(decisionRequest)
   const comparisonMetrics = (['per_usable_unit', 'per_usable_kg', 'per_usable_m2'] as const).filter(
-    (metric) => comparison?.results?.some((entry: any) => entry.unit_costs?.[metric] != null),
+    (metric) =>
+      comparison?.configurations?.some((entry: any) => entry.cost?.unit_costs?.[metric] != null),
   )
   async function calculate(compare = false) {
     setBusy(true)
     setError('')
     try {
       if (compare) {
-        setComparison(await api<any>('/api/project/compare-costs', { records: comparisonRequests }))
+        setComparison(await api<any>('/api/project/compare-decisions', decisionRequest))
         setCompareKey(comparisonFingerprint)
       } else {
         setResult(await api<any>('/api/project/manufacturing-cost', currentRequest))
@@ -73,7 +97,7 @@ export function CostWorkspace({ workspace: w, onChange }: Props) {
             <select value={setupKey(c)} onChange={(e) => setSelected(e.target.value)}>
               {setups.map((s) => (
                 <option key={setupKey(s)} value={setupKey(s)}>
-                  {s.name} · version {s.revision}
+                  {setupName(s)} · version {s.revision}
                 </option>
               ))}
             </select>
@@ -327,9 +351,20 @@ export function CostWorkspace({ workspace: w, onChange }: Props) {
             <button className="pw-primary" disabled={busy} onClick={() => calculate()}>
               {busy ? 'Calculating…' : 'Calculate this setup'}
             </button>
+            <label className="pw-inline-label">
+              Readings for the comparison
+              <select
+                value={kind}
+                onChange={(e) => onReadingKindChange(e.target.value as typeof kind)}
+              >
+                <option value="user_reported">My entered measurements</option>
+                <option value="synthetic">Software simulation only</option>
+              </select>
+            </label>
             <button disabled={busy || setups.length < 2} onClick={() => calculate(true)}>
-              Compare current setups
+              Compare checks and costs
             </button>
+            {setups.length < 2 && <small>Add another trial setup to compare.</small>}
           </div>
           {result && resultKey === fingerprint && (
             <section className="pw-card pw-spaced" aria-live="polite">
@@ -388,11 +423,7 @@ export function CostWorkspace({ workspace: w, onChange }: Props) {
           )}
           {comparison && compareKey === comparisonFingerprint && (
             <section className="pw-card pw-spaced">
-              <h2>
-                {comparison.comparable
-                  ? 'Compare the costs you included'
-                  : 'These estimates are not comparable yet'}
-              </h2>
+              <h2>Compare product checks and costs</h2>
               {comparison.reasons?.map((r: string, i: number) => (
                 <p key={i}>{r}</p>
               ))}
@@ -405,6 +436,7 @@ export function CostWorkspace({ workspace: w, onChange }: Props) {
                     <tr>
                       <th>Setup</th>
                       <th>Batch cost</th>
+                      <th>Required checks</th>
                       {comparisonMetrics.map((metric) => (
                         <th key={metric}>
                           {metric === 'per_usable_unit'
@@ -418,30 +450,52 @@ export function CostWorkspace({ workspace: w, onChange }: Props) {
                     </tr>
                   </thead>
                   <tbody>
-                    {comparison.results?.map((entry: any) => (
-                      <tr key={entry.configuration_id}>
+                    {comparison.configurations?.map((entry: any) => (
+                      <tr key={entry.id}>
                         <th>
-                          {setups.find((s) => s.id === entry.configuration_id)?.name ??
-                            entry.configuration_id}
+                          {setups.find((s) => s.id === entry.id && s.revision === entry.revision) ? setupName(setups.find((s) => s.id === entry.id && s.revision === entry.revision)!) : 'Trial setup'} <small>Version {entry.revision}</small>
                         </th>
                         <td>
                           {displayMoney(
-                            entry.costs?.entered_scope_total ?? entry.costs?.known_subtotal,
+                            entry.cost?.costs?.entered_scope_total ??
+                              entry.cost?.costs?.known_subtotal,
                           )}{' '}
-                          {entry.currency}
+                          {entry.cost?.currency}
+                        </td>
+                        <td>
+                          <strong>
+                            {entry.state === 'all_entered_checks_in_range'
+                              ? 'Entered required checks in range'
+                              : entry.state === 'out_of_range'
+                                ? 'Outside a required target'
+                                : entry.state === 'missing_records'
+                                  ? 'Readings missing'
+                                  : entry.state === 'target_not_set'
+                                    ? 'Target not set'
+                                    : entry.state === 'no_required_checks'
+                                      ? 'No required checks'
+                                      : 'Review needed'}
+                          </strong>
+                          {entry.checks
+                            ?.filter((check: any) => check.required)
+                            .map((check: any) => (
+                              <small key={check.check_id}>
+                                {check.name}: {check.state.replaceAll('_', ' ')}
+                              </small>
+                            ))}
                         </td>
                         {comparisonMetrics.map((metric) => (
                           <td key={metric}>
-                            {displayMoney(entry.unit_costs?.[metric])} {entry.currency}
-                            {entry.unit_costs_scope === 'known_subtotal' && (
+                            {displayMoney(entry.cost?.unit_costs?.[metric])} {entry.cost?.currency}
+                            {entry.cost?.unit_costs_scope === 'known_subtotal' && (
                               <small>Known subtotal only</small>
                             )}
                           </td>
                         ))}
                         <td>
-                          {entry.status === 'complete'
+                          {entry.cost?.status === 'complete'
                             ? 'Included costs complete'
-                            : entry.status === 'partial'
+                            : entry.cost?.status === 'partial'
                               ? 'Costs missing'
                               : 'Review inputs'}
                         </td>
@@ -450,15 +504,31 @@ export function CostWorkspace({ workspace: w, onChange }: Props) {
                   </tbody>
                 </table>
               </div>
-              {costWinnerSummaries(comparison, setups).map((winner) => (
-                <p key={winner.metric}>
-                  <strong>Lowest {winner.metric.replaceAll('_', ' ')}:</strong>{' '}
-                  {winner.names.join(', ')}
-                </p>
-              ))}
+              {Object.entries(comparison.decisions ?? {})
+                .filter(([, winner]: any) => winner && Array.isArray(winner.configuration_ids))
+                .map(([metric, winner]: any) => (
+                  <p key={metric}>
+                    <strong>
+                      Lowest{' '}
+                      {metric === 'per_usable_unit'
+                        ? 'cost per usable item'
+                        : metric === 'per_usable_kg'
+                          ? 'cost per usable kg'
+                          : 'cost per usable m²'}{' '}
+                      among setups with entered required checks in range:
+                    </strong>{' '}
+                    {winner.configuration_ids
+                      .map((id: string) => { const s = setups.find((item) => item.id === id); return s ? setupName(s) : id })
+                      .join(', ')}
+                  </p>
+                ))}
               <p>
-                A cheaper setup still needs its product checks. Different ingredients and processes
-                may change together; this comparison does not identify the cause.
+                {kind === 'synthetic'
+                  ? 'Simulation using the fictional readings selected above.'
+                  : 'Based on the measurements you entered.'}{' '}
+                This compares recorded setups only; it does not prove a finished product or predict
+                future batches. Displayed costs are rounded; the comparison uses the full entered
+                values.
               </p>
             </section>
           )}

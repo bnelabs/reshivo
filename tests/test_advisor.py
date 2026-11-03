@@ -19,13 +19,13 @@ from rematter.service import WorkbenchService
 def brief_request():
     return {
         "brief": {
-            "input": "Uncharacterized metal dust and cable-plastic residue",
+            "input": "Identified copper metal dust and known cable-plastic residue",
             "variation": "Plastic fraction changes between received lots",
             "contamination": "Binder identity and moisture unknown",
             "product": "Counterweight",
             "use_case": "A stationary enclosed base, with retained fill",
             "targets": "10 kg within 0.1 kg; fill must remain retained",
-            "process": "No heated process available",
+            "process": "I have access to a suitable industrial facility.",
             "available_changes": "Can change enclosure and use replaceable fill pockets",
         },
         "question": "How can I use this batch without guessing its density?",

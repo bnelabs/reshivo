@@ -28,10 +28,11 @@ export type ProjectIntakeResult = {
   provider: string
   model: string
   live: boolean
-  usage: Record<string, number>
-  request_id: string | null
-  elapsed_ms: number
-  requested_reasoning_effort: string
+  origin?: 'local'
+  usage?: Record<string, number>
+  request_id?: string | null
+  elapsed_ms?: number
+  requested_reasoning_effort?: string
 }
 
 export function emptyProjectDraft(): ProjectIntakeDraft {

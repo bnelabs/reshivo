@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { PromptProjectStart } from './PromptProjectStart'
 import { ProviderSettings } from './ProviderSettings'
+import { SoundGuidance } from './SoundGuidance'
 import { TrialWorkspace, currentSetups } from './TrialWorkspace'
 import { CostWorkspace } from './CostWorkspace'
 import { emptyProjectDraft, PROJECT_INTAKE_FIELDS, reviewProjectDraft } from '../projectIntake'
@@ -12,8 +13,8 @@ import {
   downloadProjectWorkspace,
   PROJECT_WORKSPACE_MAX_BYTES,
 } from '../projectWorkspace'
-import type { ProjectWorkspace } from '../projectWorkspace'
-import type { AdvisorBrief, AdvisorResult, AdvisorFollowupResult, AdvisorRoute } from '../types'
+import type { ProjectWorkspace, TrialConfiguration, TrialIdea } from '../projectWorkspace'
+import type { AdvisorBrief, AdvisorResult, AdvisorFollowupResult, AdvisorRoute, LocalPlanningResult } from '../types'
 import { useUnitSettings } from '../units'
 import { costRequest } from '../manufacturingCost'
 import './ProjectWorkbench.css'
@@ -55,13 +56,22 @@ export function ProjectWorkbench() {
   const [statusLoaded, setStatusLoaded] = useState(false)
   const [notice, setNotice] = useState('')
   const [manual, setManual] = useState<ProjectIntakeDraft>(emptyProjectDraft)
-  const [advice, setAdvice] = useState<AdvisorResult | AdvisorFollowupResult | null>(null)
+  const [advice, setAdvice] = useState<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult | null>(null)
   const [adviceCase, setAdviceCase] = useState('')
+  const [adviceProject, setAdviceProject] = useState('')
   const [adviceQuestion, setAdviceQuestion] = useState('')
+  const [adviceNoteId, setAdviceNoteId] = useState<string | null>(null)
   const [adviceKind, setAdviceKind] = useState<'user_reported' | 'synthetic'>('user_reported')
+  const [selectedIdea, setSelectedIdea] = useState<{
+    caseId: string
+    key: string
+    idea: TrialIdea
+  } | null>(null)
+  const [lastAdviceUsedIdea, setLastAdviceUsedIdea] = useState(false)
   const [question, setQuestion] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [planningMode, setPlanningMode] = useState<{ key: string; planningOnly: boolean; failed: boolean } | null>(null)
   const file = useRef<HTMLInputElement>(null)
   const request = useRef<AbortController | null>(null)
   const currentProject = JSON.stringify(w.project)
@@ -72,8 +82,33 @@ export function ProjectWorkbench() {
     records: w.records,
     record_exclusions: w.record_exclusions,
     costs: w.costs,
+    trial_ideas: w.trial_ideas,
     adviceKind,
   })
+  const planningPayload = {
+    brief: briefFrom(w.project),
+    question,
+    ...(advice && adviceCase === currentAdviceContext && adviceQuestion ? { history: [{ role: 'user', content: adviceQuestion }] } : {}),
+    project_context: { configurations: currentSetups(w.configurations).map((c) => ({
+      id: c.id, revision: c.revision, process: c.process, geometry: c.geometry,
+      materials: c.materials.map((m) => ({ name: m.name })),
+    })) },
+  }
+  const planningKey = JSON.stringify(planningPayload)
+  const modeReady = planningMode?.key === planningKey && !planningMode.failed
+  const showHistoricalIdeas = Boolean(modeReady && !planningMode?.planningOnly)
+  useEffect(() => {
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => {
+      void api<{ planning_only: boolean }>('/api/project/planning-mode', JSON.parse(planningKey), controller.signal)
+        .then((r) => {
+          if (typeof r.planning_only !== 'boolean') throw new Error('Invalid local planning check')
+          setPlanningMode({ key: planningKey, planningOnly: r.planning_only, failed: false })
+        })
+        .catch(() => { if (!controller.signal.aborted) setPlanningMode({ key: planningKey, planningOnly: true, failed: true }) })
+    }, 200)
+    return () => { window.clearTimeout(timer); controller.abort() }
+  }, [planningKey])
   async function refreshProvider() {
     try {
       const result = await api<any>('/api/inference/providers')
@@ -108,6 +143,9 @@ export function ProjectWorkbench() {
       try {
         downloadProjectWorkspace(w)
         setW(newProjectWorkspace(reviewProjectDraft(d)))
+        setAdviceKind('user_reported')
+        setSelectedIdea(null)
+        setLastAdviceUsedIdea(false)
         setAdvice(null)
         setQuestion('')
         setPage('options')
@@ -134,6 +172,8 @@ export function ProjectWorkbench() {
         : w.costs,
     })
     setAdvice(null)
+    setSelectedIdea(null)
+    setLastAdviceUsedIdea(false)
     setQuestion('')
     setPage('options')
     setNotice(
@@ -158,6 +198,9 @@ export function ProjectWorkbench() {
       setBusy(false)
       setW(next)
       setAdvice(null)
+      setAdviceKind('user_reported')
+      setSelectedIdea(null)
+      setLastAdviceUsedIdea(false)
       setPage('trials')
       setNotice(
         'Project opened. Review imported reading conditions before recalculating; saved files contain inputs, not verified results.',
@@ -170,8 +213,21 @@ export function ProjectWorkbench() {
     }
   }
   async function explore(forceOptions = false) {
-    if (!status.configured) {
-      setProviderOpen(true)
+    if (!modeReady) {
+      setError('The local planning check is unavailable. Please try again when the app is connected.')
+      return
+    }
+    const activeIdea = showHistoricalIdeas ? selectedIdea : null
+    if (
+      activeIdea &&
+      (activeIdea.caseId !== w.case_id ||
+        !currentSetups(w.configurations).some(
+          (c) => `${c.id}@${c.revision}` === activeIdea.key,
+        ) ||
+        JSON.stringify(w.trial_ideas?.[activeIdea.key]) !== JSON.stringify(activeIdea.idea))
+    ) {
+      setSelectedIdea(null)
+      setError('This setup or idea has changed. Choose the idea again before asking about it.')
       return
     }
     setBusy(true)
@@ -182,19 +238,16 @@ export function ProjectWorkbench() {
       question.trim() ||
       'Help me choose a practical first approach for this product. Explain the material, preparation, process or design changes I could try and the trade-offs. If I do not know the right performance measurements, help me choose them in plain language. Ask only the essential missing questions.'
     try {
-      const result = await api<AdvisorResult | AdvisorFollowupResult>(
+      const result = await api<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult>(
         forceOptions || !question.trim() ? '/api/advisor/help' : '/api/advisor/follow-up',
         {
           brief: briefFrom(w.project),
           question: prompt,
           history:
-            advice && adviceCase === currentAdviceContext
+            advice && adviceCase === currentAdviceContext && adviceQuestion && !lastAdviceUsedIdea && !activeIdea
               ? [
                   { role: 'user', content: adviceQuestion },
-                  {
-                    role: 'assistant',
-                    content: [advice.answer, ...advice.questions].join('\n').slice(0, 3000),
-                  },
+                  ...(showHistoricalIdeas ? [{ role: 'assistant', content: [advice.answer, ...advice.questions].join('\n').slice(0, 3000) }] : []),
                 ]
               : [],
           ...(w.configurations.length
@@ -215,13 +268,19 @@ export function ProjectWorkbench() {
                   .map((c) => costRequest(w, c, w.costs[`${c.id}@${c.revision}`])),
               }
             : {}),
+          ...(activeIdea ? { trial_ideas: { [activeIdea.key]: activeIdea.idea } } : {}),
         },
         controller.signal,
       )
       if (request.current === controller && !controller.signal.aborted) {
         setAdvice(result)
+        setLastAdviceUsedIdea(Boolean(activeIdea))
+        setSelectedIdea(null)
         setAdviceCase(currentAdviceContext)
+        setAdviceProject(currentProject)
         setAdviceQuestion(prompt)
+        const noteId = crypto.randomUUID()
+        setAdviceNoteId((w.advice_notes?.length ?? 0) < 30 ? noteId : null)
         const text = [
           `Question: ${prompt}`,
           result.answer,
@@ -257,7 +316,7 @@ export function ProjectWorkbench() {
                 advice_notes: [
                   ...(current.advice_notes ?? []),
                   {
-                    id: crypto.randomUUID(),
+                    id: noteId,
                     created_at: new Date().toISOString(),
                     provider: result.provider,
                     model: result.model,
@@ -268,7 +327,7 @@ export function ProjectWorkbench() {
                     })),
                     assessment_kind: adviceKind,
                     text,
-                    kind: 'model_proposal',
+                    kind: result.result_kind==='local_planning_guidance'?'local_guidance':'model_proposal',
                   },
                 ],
               }
@@ -277,7 +336,7 @@ export function ProjectWorkbench() {
         setNotice(
           (w.advice_notes?.length ?? 0) >= 30
             ? 'This reply remains onscreen. The project already contains thirty saved planning notes.'
-            : 'Planning reply retained as a proposal. Save the project file to keep it.',
+            : result.result_kind==='local_planning_guidance'?'Local planning guidance retained. Save the project file to keep it.':'Planning reply retained as a proposal. Save the project file to keep it.',
         )
       }
     } catch (e) {
@@ -290,6 +349,13 @@ export function ProjectWorkbench() {
     }
   }
   function useRoute(r: AdvisorRoute) {
+    if (w.configurations.length >= 100) {
+      setError(
+        'This project already has 100 setup versions. Save it and start a separate project to add more.',
+      )
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     const text = w.project.input?.value ?? ''
     const next = {
       id: crypto.randomUUID(),
@@ -298,17 +364,52 @@ export function ProjectWorkbench() {
       materials: [
         {
           id: crypto.randomUUID(),
-          name: text.length <= 160 ? text : '',
+          name:
+            text.trim() && text.length <= 160
+              ? text
+              : text.trim()
+                ? 'Project materials (see project description)'
+                : 'Material not yet specified',
           amount: '',
           unit: system === 'us' ? 'lb' : 'kg',
         },
       ],
       process: w.project.process?.value ?? '',
       geometry: '',
-      notes: `Unverified trial idea: ${r.title}. Full proposed steps and trade-offs remain in Options. Record the actual materials, process and shape before treating this as a planned setup.`,
+      notes:
+        text.trim() && text.length <= 160
+          ? ''
+          : 'This material line stands for the project input, not a verified recipe. Record the actual ingredients and amounts before treating it as one.',
     }
-    update({ ...w, configurations: [...w.configurations, next] })
+    if (!advice) return
+    const noteId =
+      adviceNoteId && w.advice_notes?.some((note) => note.id === adviceNoteId) ? adviceNoteId : null
+    const idea = {
+      title: r.title,
+      change: r.change,
+      why: r.why,
+      steps: [...r.steps],
+      tradeoffs: [...r.tradeoffs],
+      check: r.check,
+      provider: advice.provider,
+      model: advice.model,
+      ...(noteId ? { note_id: noteId } : {}),
+    }
+    update({
+      ...w,
+      configurations: [...w.configurations, next],
+      trial_ideas: { ...w.trial_ideas, [`${next.id}@${next.revision}`]: idea },
+    })
     setPage('trials')
+  }
+  function askAboutIdea(configuration: TrialConfiguration, idea: TrialIdea) {
+    setSelectedIdea({
+      caseId: w.case_id,
+      key: `${configuration.id}@${configuration.revision}`,
+      idea: structuredClone(idea),
+    })
+    setQuestion('How could I use this idea for my current setup, and what needs checking?')
+    setPage('options')
   }
   function save() {
     try {
@@ -356,6 +457,9 @@ export function ProjectWorkbench() {
                     setBusy(false)
                     setW(newProjectWorkspace())
                     setAdvice(null)
+                    setAdviceKind('user_reported')
+                    setSelectedIdea(null)
+                    setLastAdviceUsedIdea(false)
                     setQuestion('')
                     setPage('start')
                     setNotice('Previous project downloaded. Start a separate project here.')
@@ -542,6 +646,36 @@ export function ProjectWorkbench() {
                   </div>
                 </div>
                 <section className="pw-card">
+                  {showHistoricalIdeas && selectedIdea && (
+                    <div className="pw-notice">
+                      <strong>Earlier idea selected for this question</strong>
+                      <p>
+                        This is an unverified proposal. Its numbers or assumptions may belong to an
+                        earlier situation; your recorded inputs and readings still control the
+                        checks.
+                      </p>
+                      <p>
+                        <strong>{selectedIdea.idea.title}</strong> · {selectedIdea.idea.provider} /{' '}
+                        {selectedIdea.idea.model}
+                      </p>
+                      <p>{selectedIdea.idea.change}</p>
+                      <p>{selectedIdea.idea.why}</p>
+                      <ol>
+                        {selectedIdea.idea.steps.map((step, i) => (
+                          <li key={i}>{step}</li>
+                        ))}
+                      </ol>
+                      <p>
+                        <strong>Trade-offs:</strong> {selectedIdea.idea.tradeoffs.join(' ')}
+                      </p>
+                      <p>
+                        <strong>Next check:</strong> {selectedIdea.idea.check}
+                      </p>
+                      <button onClick={() => setSelectedIdea(null)}>
+                        Remove idea from this question
+                      </button>
+                    </div>
+                  )}
                   {w.records.length > 0 && (
                     <label>
                       Use these readings when helping me
@@ -568,7 +702,7 @@ export function ProjectWorkbench() {
                     />
                   </label>
                   <div className="pw-actions">
-                    <button className="pw-primary" onClick={() => void explore()} disabled={busy}>
+                    <button className="pw-primary" onClick={() => void explore()} disabled={busy || !modeReady}>
                       {busy
                         ? 'Working through your options…'
                         : question.trim()
@@ -576,7 +710,7 @@ export function ProjectWorkbench() {
                           : 'Explore my options'}
                     </button>
                     {question.trim() && (
-                      <button disabled={busy} onClick={() => void explore(true)}>
+                      <button disabled={busy || !modeReady} onClick={() => void explore(true)}>
                         Explore alternatives
                       </button>
                     )}
@@ -596,18 +730,26 @@ export function ProjectWorkbench() {
                   <small>
                     {status.configured
                       ? `${status.provider_name} · ${status.model}`
-                      : 'Choose an AI connection to get planning help. You can record trials and calculations without it.'}
+                      : 'Some requests need an AI connection. Local planning and calculations can work without one.'}
                   </small>
                   <small>
-                    Asking sends this project’s current setups, selected readings and entered cost
-                    records to the chosen provider. Calculations alone stay local.
+                    AI requests send this project’s current setups, selected readings, entered costs and any idea shown above to the chosen provider. Local guidance and calculations stay on this computer.
                   </small>
+                  {planningMode?.key === planningKey && planningMode.failed && <p role="alert">The local planning check is unavailable. Reopen the app and try again.</p>}
+                  {modeReady && planningMode?.planningOnly && <p className="pw-notice">Earlier AI ideas are kept but hidden while this material needs local planning.</p>}
                 </section>
-                {advice && adviceCase === currentAdviceContext && (
+                <SoundGuidance project={w.project} question={question} />
+                {modeReady && advice && adviceProject === currentProject && (showHistoricalIdeas || advice.result_kind === 'local_planning_guidance') && (
                   <>
+                    {adviceCase !== currentAdviceContext && (
+                      <p className="pw-notice">
+                        These suggestions were made before your latest setup, check or cost changes.
+                        Ask again to include the new information.
+                      </p>
+                    )}
                     <section className="pw-answer" aria-live="polite">
                       <span className="pw-overline">
-                        Proposed next steps · {advice.provider} / {advice.model}
+                        {advice.result_kind==='local_planning_guidance'?'Local planning guide · no AI call':`Proposed next steps · ${advice.provider} / ${advice.model}`}
                       </span>
                       {advice.answer
                         .split('\n')
@@ -684,12 +826,6 @@ export function ProjectWorkbench() {
                     </p>
                   </>
                 )}
-                {advice && adviceCase !== currentAdviceContext && (
-                  <p className="pw-notice">
-                    Your setups, checks or costs have changed. Ask above to include them in the next
-                    reply. Earlier suggestions remain in Saved planning notes.
-                  </p>
-                )}
                 {(w.advice_notes?.length ?? 0) > 0 && (
                   <details className="pw-card pw-spaced">
                     <summary>Saved planning notes ({w.advice_notes!.length})</summary>
@@ -697,11 +833,10 @@ export function ProjectWorkbench() {
                       Historical model proposals, not measurements. Review them against the current
                       project before acting.
                     </p>
-                    {w.advice_notes!.map((note) => (
+                    {w.advice_notes!.filter((note) => modeReady && (showHistoricalIdeas || note.kind === 'local_guidance')).map((note) => (
                       <details key={note.id}>
                         <summary>
-                          {note.project_snapshot.product?.value ?? 'Project'} · {note.provider} /{' '}
-                          {note.model} · {note.created_at.slice(0, 16).replace('T', ' ')} UTC
+                          {note.project_snapshot.product?.value ?? 'Project'} · {note.kind==='local_guidance'?'Local planning guide':`${note.provider} / ${note.model}`} · {note.created_at.slice(0, 16).replace('T', ' ')} UTC
                         </summary>
                         <p className="pw-saved-note">{note.text}</p>
                       </details>
@@ -716,10 +851,21 @@ export function ProjectWorkbench() {
                 workspace={w}
                 onChange={update}
                 section={page === 'trials' ? 'trials' : 'checks'}
+                readingKind={adviceKind}
+                onReadingKindChange={setAdviceKind}
+                onAskIdea={askAboutIdea}
+                showHistoricalIdeas={showHistoricalIdeas}
               />
             </div>
             <div hidden={page !== 'costs'}>
-              <CostWorkspace key={w.case_id} workspace={w} onChange={update} />
+              <CostWorkspace
+                key={w.case_id}
+                workspace={w}
+                onChange={update}
+                readingKind={adviceKind}
+                onReadingKindChange={setAdviceKind}
+                showHistoricalIdeas={showHistoricalIdeas}
+              />
             </div>
           </main>
         </div>

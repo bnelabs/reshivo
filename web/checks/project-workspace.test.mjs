@@ -38,6 +38,14 @@ const fixture = () => {
 
 const original = fixture()
 const before = JSON.stringify(original)
+const planned = fixture()
+planned.trial_ideas = {'AB@2': {title:'Keep a removable outer layer',change:'Try a separate removable outer layer.',why:'It can be changed independently.',steps:['Plan the joint.'],tradeoffs:['Thickness may increase.'],check:'Compare the assembled size.',provider:'meta',model:'muse-spark-1.3'}}
+const plannedRestored = parseProjectWorkspace(serializeProjectWorkspace(planned))
+assert.deepEqual(plannedRestored.trial_ideas, planned.trial_ideas, 'selected proposal survives with exact version and all actionable steps')
+assert.equal(Object.hasOwn(buildTrialComparisonRequest(plannedRestored,'synthetic'),'trial_ideas'),false,'unverified ideas cannot become measurement inputs')
+assert.throws(()=>serializeProjectWorkspace({...planned,trial_ideas:{'AB@99':planned.trial_ideas['AB@2']}}),/version/)
+assert.throws(()=>serializeProjectWorkspace({...planned,trial_ideas:{'AB@2':{...planned.trial_ideas['AB@2'],note_id:'missing'}}}),/saved planning note/)
+assert.throws(()=>serializeProjectWorkspace({...planned,trial_ideas:{'AB@2':{...planned.trial_ideas['AB@2'],performance_verified:true}}}),/unsupported/)
 const text = serializeProjectWorkspace(original)
 const restored = parseProjectWorkspace(text)
 assert.equal(restored.schema, 'rematter-project-v2')
@@ -78,6 +86,9 @@ for (const [description, mutate, reason] of [
   ['nested hidden result', (w) => { w.configurations[0].passed = true }, /unsupported/],
   ['duplicate version', (w) => { w.configurations.push(structuredClone(w.configurations[0])) }, /versions/],
   ['duplicate material', (w) => { w.configurations[0].materials.push(structuredClone(w.configurations[0].materials[0])) }, /unique/],
+  ['empty material name', (w) => { w.configurations[0].materials[0].name = '' }, /unnamed material/],
+  ['negative material amount', (w) => { w.configurations[0].materials[0].amount = '-1' }, /invalid material amount/],
+  ['out-of-range amount', (w) => { w.configurations[0].materials[0].amount = '1e1001' }, /invalid material amount/],
   ['invalid revision', (w) => { w.configurations[0].revision = true }, /revision/],
   ['foreign case', (w) => { w.records[0].case_id = 'other-case' }, /case/],
   ['missing version', (w) => { w.records[0].configuration_revision = 99 }, /version/],
@@ -173,7 +184,7 @@ for (const [description, mutate, reason] of [
   ['hidden snapshot secret', (note) => { note.project_snapshot.api_key = 'fixture-not-a-real-key' }, /unsupported/],
   ['unknown source kind', (note) => { note.assessment_kind = 'mixed' }, /assessment kind/],
   ['invalid timestamp', (note) => { note.created_at = 'not-a-timestamp' }, /timestamp/],
-  ['overlong model identifier', (note) => { note.model = 'm'.repeat(161) }, /160/],
+  ['overlong model identifier', (note) => { note.model = 'm'.repeat(201) }, /200/],
   ['overlong narrative', (note) => { note.text = 't'.repeat(100001) }, /100000/],
 ]) {
   const bad = fixture()

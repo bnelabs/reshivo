@@ -128,6 +128,9 @@ def validate_image_request(request):
 
 def inspect_image(request, client=None, root=ROOT):
     case = validate_image_request(request)
+    from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_message
+    if needs_local_metal_planning(case):
+        raise ProductInputError(local_metal_planning_message(case))
     schema = {"type": "object", "additionalProperties": False,
               "required": ["observations", "questions"],
               "properties": {"observations": {"type": "array", "minItems": 1, "maxItems": 5, "items": {"type": "string"}},

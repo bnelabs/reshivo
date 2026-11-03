@@ -12,6 +12,7 @@ from .service import ServiceError, WorkbenchService
 MAX_BODY_BYTES = 64 * 1024
 MAX_IMAGE_BODY_BYTES = 3 * 1024 * 1024
 MAX_PROJECT_BODY_BYTES = 512 * 1024
+MAX_PLANNING_BODY_BYTES = 4 * 1024 * 1024
 
 
 class WorkbenchHTTPServer(ThreadingHTTPServer):
@@ -179,7 +180,9 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             path = unquote(urlsplit(self.path).path)
             routes = {
                 "/api/project/intake": self.server.application.project_intake,
+                "/api/project/planning-mode": self.server.application.project_planning_mode,
                 "/api/project/trial-records": self.server.application.trial_records,
+                "/api/project/compare-decisions": self.server.application.compare_project_decisions,
                 "/api/project/manufacturing-cost": self.server.application.manufacturing_cost,
                 "/api/project/compare-costs": self.server.application.compare_manufacturing_costs,
                 "/api/inference/providers/save": self.server.application.save_inference_settings,
@@ -209,13 +212,13 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
             }
             if path not in routes:
                 raise ServiceError("not_found", "API route not found", 404)
-            if path == "/api/advisor/inspect-image":
+            if path in {"/api/advisor/inspect-image", "/api/project/planning-mode"}:
                 acquired = self.server.work_slots.acquire(blocking=False)
                 if not acquired:
                     self.close_connection = True
                     raise ServiceError("service_busy", "The workbench is busy; try again", 429)
-            max_bytes = MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else (
-                MAX_PROJECT_BODY_BYTES if path in {"/api/project/trial-records", "/api/project/compare-costs", "/api/advisor/help", "/api/advisor/follow-up"} else MAX_BODY_BYTES)
+            max_bytes = MAX_PLANNING_BODY_BYTES if path == "/api/project/planning-mode" else MAX_IMAGE_BODY_BYTES if path == "/api/advisor/inspect-image" else (
+                MAX_PROJECT_BODY_BYTES if path in {"/api/project/trial-records", "/api/project/compare-costs", "/api/project/compare-decisions", "/api/advisor/help", "/api/advisor/follow-up"} else MAX_BODY_BYTES)
             body = self._body(max_bytes)
             if not acquired:
                 acquired = self.server.work_slots.acquire(blocking=False)

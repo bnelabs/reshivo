@@ -64,11 +64,6 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
 
   async function send(message: string) {
     if (activeRequest.current || !message.trim()) return
-    if (providerStatus?.configured === false) {
-      setNotice('Choose an AI provider to get planning help. Your idea will stay here.')
-      onConfigureProvider()
-      return
-    }
     const controller = new AbortController()
     activeRequest.current = controller
     setBusy(true)
@@ -159,7 +154,7 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
             <p className="prompt-project-hint">Review the summary before updating or using the project.</p>
           </form>
           {result ? <div className="prompt-project-first-step"><h2>A useful first step</h2><p>{result.first_step}</p></div> : null}
-          {history.length ? <details className="prompt-project-history"><summary>Earlier discussion</summary>{history.map((entry, index) => <div key={index}><strong>{entry.role === 'user' ? 'You' : 'Planning reply'}</strong><p>{entry.content}</p></div>)}</details> : null}
+          {history.length ? <details className="prompt-project-history"><summary>Earlier discussion</summary>{result?.origin === 'local' && <p>Earlier AI replies are hidden for this planning case.</p>}{history.filter((entry) => result?.origin !== 'local' || entry.role === 'user').map((entry, index) => <div key={index}><strong>{entry.role === 'user' ? 'You' : 'Planning reply'}</strong><p>{entry.content}</p></div>)}</details> : null}
         </div>
         <aside className="prompt-project-summary" aria-labelledby={`${id}-summary`}>
           <h2 id={`${id}-summary`}>Your project</h2><p>Review and edit before using it.</p>
@@ -176,8 +171,8 @@ export function PromptProjectStart({ initialDraft, onApply, onManualEntry, provi
     <div className="prompt-project-feedback" aria-live="polite" aria-atomic="true">
       {error ? <p role="alert" className="prompt-project-error">{error}</p> : null}
       {notice ? <p>{notice}</p> : null}
-      {providerStatus?.configured === false ? <p>Planning help needs an AI provider. <button type="button" className="prompt-project-text-button" onClick={onConfigureProvider}>Choose a provider</button></p> : null}
-      {result ? <p className="prompt-project-generation">{result.live ? 'Generated' : 'Saved or offline reply'} · {result.provider} · {result.model}</p> : null}
+      {providerStatus?.configured === false ? <p>Some planning requests need an AI provider. <button type="button" className="prompt-project-text-button" onClick={onConfigureProvider}>Choose a provider</button></p> : null}
+      {result ? <p className="prompt-project-generation">{result.provider==='local'?'Local planning guide · no AI call':result.live?`Generated · ${result.provider} · ${result.model}`:`Saved or offline reply · ${result.provider} · ${result.model}`}</p> : null}
     </div>
   </section>
 }

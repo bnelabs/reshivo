@@ -1,11 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { useUnitSystem } from '../units'
+import {
+  checkHasPendingDraft,
+  checkHasReadings,
+  validateCheckDraft,
+  validateReadingDraft,
+  validateMaterialAmount,
+} from '../checkEditing'
 import type {
   ProjectWorkspace,
   TrialConfiguration,
   ProductCheck,
   TrialRecord,
+  TrialIdea,
 } from '../projectWorkspace'
 
 const uid = () => crypto.randomUUID()
@@ -32,8 +40,20 @@ type Props = {
   workspace: ProjectWorkspace
   onChange: (next: ProjectWorkspace) => void
   section: 'trials' | 'checks'
+  readingKind: 'synthetic' | 'user_reported'
+  onReadingKindChange: (kind: 'synthetic' | 'user_reported') => void
+  onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea) => void
+  showHistoricalIdeas: boolean
 }
-export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
+export function TrialWorkspace({
+  workspace: w,
+  onChange,
+  section,
+  readingKind: kind,
+  onReadingKindChange,
+  onAskIdea,
+  showHistoricalIdeas,
+}: Props) {
   const system = useUnitSystem()
   const [editing, setEditing] = useState<TrialConfiguration | null>(null)
   const [check, setCheck] = useState<ProductCheck>({
@@ -47,11 +67,18 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
   })
   const [selected, setSelected] = useState('')
   const [selectedCheck, setSelectedCheck] = useState('')
-  const [kind, setKind] = useState<'synthetic' | 'user_reported'>('user_reported')
   const [readingDrafts, setReadingDrafts] = useState<
     Record<string, { readings: TrialRecord['readings']; confirmed: boolean }>
   >({})
-  const readingContext = JSON.stringify([selected, selectedCheck, kind])
+  const checkForDraft = w.checks.find((item) => item.id === selectedCheck)
+  const readingContext = JSON.stringify([
+    selected,
+    selectedCheck,
+    kind,
+    checkForDraft?.name,
+    checkForDraft?.unit,
+    checkForDraft?.method,
+  ])
   const { readings, confirmed } = readingDrafts[readingContext] ?? {
     readings: [{ value: '' }],
     confirmed: false,
@@ -68,9 +95,35 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
   const [assessment, setAssessment] = useState<any>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [errorScope, setErrorScope] = useState<
+    'setup' | 'new-check' | 'edit-check' | 'readings' | 'assess'
+  >('assess')
+  function reportError(scope: typeof errorScope, message: string) {
+    setErrorScope(scope)
+    setError(message)
+  }
   const [exclusionReasons, setExclusionReasons] = useState<Record<string, string>>({})
+  const [checkDrafts, setCheckDrafts] = useState<Record<string, ProductCheck>>({})
+  const [editingCheckId, setEditingCheckId] = useState('')
+  const checkEditorRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    if (editingCheckId) checkEditorRef.current?.focus()
+  }, [editingCheckId])
   const [assessedInput, setAssessedInput] = useState('')
   const setups = currentSetups(w.configurations)
+  const hasLinkedIdea = (configuration: TrialConfiguration) =>
+    Boolean(
+      w.trial_ideas?.[setupKey(configuration)] ||
+      configuration.notes.startsWith('Unverified trial idea:'),
+    )
+  const hideCopiedName = (configuration: TrialConfiguration) =>
+    !showHistoricalIdeas &&
+    (w.trial_ideas?.[setupKey(configuration)]?.title === configuration.name ||
+      configuration.notes.startsWith(`Unverified trial idea: ${configuration.name}.`))
+  const displaySetupName = (configuration: TrialConfiguration) =>
+    hideCopiedName(configuration)
+      ? `Trial setup ${setups.findIndex((s) => s.id === configuration.id) + 1}`
+      : configuration.name
   const inputKey = JSON.stringify({
     configurations: w.configurations,
     checks: w.checks,
@@ -81,6 +134,11 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
   const fresh = assessedInput === inputKey
   const selectedSetup = setups.find((c) => setupKey(c) === selected)
   const property = w.checks.find((c) => c.id === selectedCheck)
+  const originalEditCheck = w.checks.find((c) => c.id === editingCheckId)
+  const editCheck = originalEditCheck
+    ? (checkDrafts[editingCheckId] ?? originalEditCheck)
+    : undefined
+  const editHasReadings = editCheck ? checkHasReadings(editCheck.id, w.records) : false
   function start(source?: TrialConfiguration) {
     setError('')
     setEditing(
@@ -106,29 +164,53 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
     )
   }
   function saveSetup() {
+    if (w.configurations.length >= 100) {
+      reportError(
+        'setup',
+        'This project already has 100 setup versions. Save it, then start a new project to record more.',
+      )
+      return
+    }
     if (!editing?.name.trim() || !editing.materials.some((m) => m.name.trim())) {
-      setError('Name the setup and at least one material. Amounts may stay unknown.')
+      reportError('setup', 'Name the setup and at least one material. Amounts may stay unknown.')
       return
     }
     if (editing.materials.some((m) => !m.name.trim())) {
-      setError('Name each material, or remove the unused row.')
+      reportError('setup', 'Name each material, or remove the unused row.')
       return
+    }
+    for (const material of editing.materials) {
+      const problem = validateMaterialAmount(material.amount)
+      if (problem) {
+        reportError('setup', `${material.name}: ${problem}`)
+        return
+      }
     }
     const previous = w.configurations.filter((c) => c.id === editing.id)
     const next = {
       ...editing,
       revision: previous.length ? Math.max(...previous.map((c) => c.revision)) + 1 : 1,
     }
-    onChange({ ...w, configurations: [...w.configurations, next] })
+    const inheritedIdea = w.trial_ideas?.[setupKey(editing)]
+    onChange({
+      ...w,
+      configurations: [...w.configurations, next],
+      ...(inheritedIdea
+        ? { trial_ideas: { ...w.trial_ideas, [setupKey(next)]: structuredClone(inheritedIdea) } }
+        : {}),
+    })
     setEditing(null)
     setSelected(setupKey(next))
     setError('')
   }
   function addCheck() {
-    if (!check.name.trim() || !check.unit.trim() || !check.method.trim()) {
-      setError(
-        'Name the check, its unit and the method. Leave limits blank if they are not set yet.',
-      )
+    const problem = validateCheckDraft(check)
+    if (problem) {
+      reportError('new-check', problem)
+      return
+    }
+    if (w.checks.length >= 50) {
+      reportError('new-check', 'This project can contain at most 50 checks.')
       return
     }
     onChange({ ...w, checks: [...w.checks, check] })
@@ -144,9 +226,68 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
     })
     setError('')
   }
+  function saveEditedCheck() {
+    if (!editCheck || !originalEditCheck) return
+    const problem = validateCheckDraft(editCheck, originalEditCheck, w.records)
+    if (problem) {
+      reportError('edit-check', problem)
+      return
+    }
+    onChange({
+      ...w,
+      checks: w.checks.map((item) => (item.id === editCheck.id ? editCheck : item)),
+    })
+    setCheckDrafts((all) => {
+      const next = { ...all }
+      delete next[editCheck.id]
+      return next
+    })
+    setEditingCheckId('')
+    setError('')
+  }
+  function removeEmptyCheck() {
+    if (!editCheck || checkHasReadings(editCheck.id, w.records)) {
+      reportError(
+        'edit-check',
+        'This check has saved readings. Make it optional to keep the readings in history.',
+      )
+      return
+    }
+    if (checkHasPendingDraft(editCheck.id, readingDrafts)) {
+      reportError(
+        'edit-check',
+        'This check has an unfinished reading. Clear the draft or save it before removing the check.',
+      )
+      return
+    }
+    onChange({ ...w, checks: w.checks.filter((item) => item.id !== editCheck.id) })
+    if (selectedCheck === editCheck.id) setSelectedCheck('')
+    setCheckDrafts((all) => {
+      const next = { ...all }
+      delete next[editCheck.id]
+      return next
+    })
+    setEditingCheckId('')
+    setError('')
+  }
   function saveReadings() {
-    if (!selectedSetup || !property || !readings.length || readings.some((r) => !r.value.trim())) {
-      setError('Choose a setup and check, then enter every reading.')
+    if (!selectedSetup || !property) {
+      reportError('readings', 'Choose a setup and check before saving readings.')
+      return
+    }
+    const problem = validateReadingDraft(readings)
+    if (problem) {
+      reportError('readings', problem)
+      return
+    }
+    if (
+      w.records.length >= 1000 ||
+      w.records.reduce((sum, record) => sum + record.readings.length, 0) + readings.length > 10000
+    ) {
+      reportError(
+        'readings',
+        'This project has reached its record or reading limit. Save it before starting another project.',
+      )
       return
     }
     const record: TrialRecord = {
@@ -180,7 +321,7 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
       setAssessment(result)
       setAssessedInput(inputKey)
     } catch (e) {
-      setError((e as Error).message)
+      reportError('assess', (e as Error).message)
     } finally {
       setBusy(false)
     }
@@ -206,11 +347,6 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
           </button>
         )}
       </div>
-      {error && (
-        <p className="pw-error" role="alert">
-          {error}
-        </p>
-      )}
       {section === 'trials' && (
         <>
           {!setups.length && !editing && (
@@ -227,7 +363,7 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
             {setups.map((c) => (
               <article className="pw-card" key={setupKey(c)}>
                 <span className="pw-overline">Version {c.revision} · proposal / entered setup</span>
-                <h2>{c.name}</h2>
+                <h2>{displaySetupName(c)}</h2>
                 <ul>
                   {c.materials.map((m) => (
                     <li key={m.id}>
@@ -245,7 +381,50 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                   <br />
                   {c.geometry || 'Not recorded'}
                 </p>
-                {c.notes && <p>{c.notes}</p>}
+                {c.notes && (showHistoricalIdeas || !hasLinkedIdea(c)) && <p>{c.notes}</p>}
+                {!showHistoricalIdeas && hasLinkedIdea(c) && (
+                  <p>
+                    Earlier AI ideas are kept in this project but unavailable in the current
+                    planning mode.
+                  </p>
+                )}
+                {showHistoricalIdeas &&
+                  w.trial_ideas?.[setupKey(c)] &&
+                  (() => {
+                    const idea = w.trial_ideas![setupKey(c)]
+                    return (
+                      <details>
+                        <summary>Earlier unverified idea: {idea.title}</summary>
+                        <p>
+                          This is a model proposal from {idea.provider} / {idea.model}; it may
+                          differ from the materials and process entered above.
+                        </p>
+                        <p>
+                          <strong>Proposed change:</strong> {idea.change}
+                        </p>
+                        <p>{idea.why}</p>
+                        <ol>
+                          {idea.steps.map((step, i) => (
+                            <li key={i}>{step}</li>
+                          ))}
+                        </ol>
+                        <p>
+                          <strong>Trade-offs:</strong> {idea.tradeoffs.join(' ')}
+                        </p>
+                        <p>
+                          <strong>Next check:</strong> {idea.check}
+                        </p>
+                        <button
+                          onClick={() => onAskIdea(structuredClone(c), structuredClone(idea))}
+                        >
+                          Ask about this idea
+                        </button>
+                        <small>
+                          You can review the idea before sending it to the selected AI provider.
+                        </small>
+                      </details>
+                    )
+                  })()}
                 <button onClick={() => start(c)}>Change this setup</button>
                 <small>Previous readings stay with version {c.revision}.</small>
               </article>
@@ -258,10 +437,20 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                   ? 'Create the next version'
                   : 'New trial setup'}
               </h2>
+              {error && errorScope === 'setup' && (
+                <p className="pw-error" role="alert">
+                  {error}
+                </p>
+              )}
               <label>
                 Setup name
                 <input
-                  value={editing.name}
+                  value={hideCopiedName(editing) ? '' : editing.name}
+                  placeholder={
+                    hideCopiedName(editing)
+                      ? 'Saved name unavailable in this planning mode'
+                      : undefined
+                  }
                   maxLength={120}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 />
@@ -380,7 +569,13 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
               <label>
                 Notes and unknowns
                 <textarea
-                  value={editing.notes}
+                  value={!showHistoricalIdeas && hasLinkedIdea(editing) ? '' : editing.notes}
+                  disabled={!showHistoricalIdeas && hasLinkedIdea(editing)}
+                  placeholder={
+                    !showHistoricalIdeas && hasLinkedIdea(editing)
+                      ? 'Saved notes unavailable in this planning mode'
+                      : undefined
+                  }
                   maxLength={1500}
                   onChange={(e) => setEditing({ ...editing, notes: e.target.value })}
                 />
@@ -400,7 +595,7 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                 .filter((c) => !setups.includes(c))
                 .map((c) => (
                   <p key={setupKey(c)}>
-                    {c.name} · version {c.revision} ·{' '}
+                    {displaySetupName(c)} · version {c.revision} ·{' '}
                     {c.materials.map((m) => `${m.name} ${m.amount} ${m.unit}`).join('; ')} ·{' '}
                     {c.process} · {c.geometry}
                   </p>
@@ -420,7 +615,10 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
           </div>
           <label className="pw-inline-label">
             Show readings from
-            <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
+            <select
+              value={kind}
+              onChange={(e) => onReadingKindChange(e.target.value as typeof kind)}
+            >
               <option value="user_reported">My entered measurements</option>
               <option value="synthetic">A software simulation</option>
             </select>
@@ -445,6 +643,14 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                         {c.unit}
                         {c.required ? ' · required' : ' · optional'}
                       </small>
+                      <button
+                        onClick={() => {
+                          setEditingCheckId(c.id)
+                          setError('')
+                        }}
+                      >
+                        Edit {c.name}
+                      </button>
                     </th>
                   ))}
                 </tr>
@@ -453,7 +659,7 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                 {setups.map((c) => (
                   <tr key={setupKey(c)}>
                     <th>
-                      {c.name}
+                      {displaySetupName(c)}
                       <small>Version {c.revision}</small>
                     </th>
                     {w.checks.map((check) => {
@@ -512,11 +718,21 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
           >
             {busy ? 'Checking…' : 'Check entered readings'}
           </button>
+          {error && errorScope === 'assess' && (
+            <p className="pw-error" role="alert">
+              {error}
+            </p>
+          )}
           {assessment && fresh && (
             <div className="pw-card pw-results" aria-live="polite">
               {assessment.configurations?.map((c: any) => (
                 <p key={c.id}>
-                  <strong>{setups.find((s) => s.id === c.id)?.name}: </strong>
+                  <strong>
+                    {setups.find((s) => s.id === c.id)
+                      ? displaySetupName(setups.find((s) => s.id === c.id)!)
+                      : 'Trial setup'}
+                    :{' '}
+                  </strong>
                   {textState(c.state)}
                 </p>
               ))}
@@ -536,9 +752,137 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
               )}
             </div>
           )}
+          {editCheck && (
+            <section
+              ref={checkEditorRef}
+              tabIndex={-1}
+              className="pw-card pw-spaced"
+              aria-label="Edit product check"
+            >
+              <h2>Edit {originalEditCheck?.name}</h2>
+              {error && errorScope === 'edit-check' && (
+                <p className="pw-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <p>
+                {editHasReadings
+                  ? 'Saved readings keep their original property, unit and method. To change those, add a new check. You can update the target or make this check optional.'
+                  : 'No readings are linked yet. You can change the property, method and target, or remove this check.'}
+              </p>
+              {(['name', 'unit', 'method'] as const).map((field) => (
+                <label key={field}>
+                  {field === 'name'
+                    ? 'What are you checking?'
+                    : field === 'unit'
+                      ? 'Unit'
+                      : 'Method and conditions'}
+                  {field === 'method' ? (
+                    <textarea
+                      disabled={editHasReadings}
+                      maxLength={2000}
+                      value={editCheck[field]}
+                      onChange={(e) =>
+                        setCheckDrafts({
+                          ...checkDrafts,
+                          [editCheck.id]: { ...editCheck, [field]: e.target.value },
+                        })
+                      }
+                    />
+                  ) : (
+                    <input
+                      disabled={editHasReadings}
+                      maxLength={160}
+                      value={editCheck[field]}
+                      onChange={(e) =>
+                        setCheckDrafts({
+                          ...checkDrafts,
+                          [editCheck.id]: { ...editCheck, [field]: e.target.value },
+                        })
+                      }
+                    />
+                  )}
+                </label>
+              ))}
+              <div className="pw-form-grid">
+                <label>
+                  Minimum, if set
+                  <input
+                    inputMode="decimal"
+                    maxLength={160}
+                    value={editCheck.minimum ?? ''}
+                    onChange={(e) =>
+                      setCheckDrafts({
+                        ...checkDrafts,
+                        [editCheck.id]: { ...editCheck, minimum: e.target.value || null },
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  Maximum, if set
+                  <input
+                    inputMode="decimal"
+                    maxLength={160}
+                    value={editCheck.maximum ?? ''}
+                    onChange={(e) =>
+                      setCheckDrafts({
+                        ...checkDrafts,
+                        [editCheck.id]: { ...editCheck, maximum: e.target.value || null },
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <label className="pw-checkbox">
+                <input
+                  type="checkbox"
+                  checked={editCheck.required}
+                  onChange={(e) =>
+                    setCheckDrafts({
+                      ...checkDrafts,
+                      [editCheck.id]: { ...editCheck, required: e.target.checked },
+                    })
+                  }
+                />
+                Required for this product
+              </label>
+              {editHasReadings && (
+                <p>
+                  To retire this check, first correct or clear invalid limits, then make it
+                  optional. Its readings remain visible.
+                </p>
+              )}
+              <div className="pw-actions">
+                <button className="pw-primary" onClick={saveEditedCheck}>
+                  Save check changes
+                </button>
+                {!editHasReadings && (
+                  <button onClick={removeEmptyCheck}>Remove check without readings</button>
+                )}
+                <button
+                  onClick={() => {
+                    setEditingCheckId('')
+                    setError('')
+                  }}
+                >
+                  Close editor
+                </button>
+              </div>
+              <small>
+                Closing keeps your unsaved edit in this tab. Your separate new-check draft stays
+                intact.
+              </small>
+            </section>
+          )}
           <div className="pw-card-grid pw-spaced">
             <section className="pw-card">
               <h2>Add a product check</h2>
+              {error && errorScope === 'new-check' && (
+                <p className="pw-error" role="alert">
+                  {error}
+                </p>
+              )}
               <p>
                 If you do not know the right measurement, return to Options and ask. A qualitative
                 aim stays an aim until a suitable check is agreed.
@@ -575,6 +919,7 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                   Minimum, if set
                   <input
                     inputMode="decimal"
+                    maxLength={160}
                     value={check.minimum ?? ''}
                     onChange={(e) => setCheck({ ...check, minimum: e.target.value || null })}
                   />
@@ -583,6 +928,7 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                   Maximum, if set
                   <input
                     inputMode="decimal"
+                    maxLength={160}
                     value={check.maximum ?? ''}
                     onChange={(e) => setCheck({ ...check, maximum: e.target.value || null })}
                   />
@@ -600,6 +946,11 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
             </section>
             <section className="pw-card">
               <h2>Add readings</h2>
+              {error && errorScope === 'readings' && (
+                <p className="pw-error" role="alert">
+                  {error}
+                </p>
+              )}
               <label>
                 Trial setup
                 <select
@@ -612,7 +963,7 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                   <option value="">Choose a saved setup</option>
                   {setups.map((c) => (
                     <option key={setupKey(c)} value={setupKey(c)}>
-                      {c.name} · version {c.revision}
+                      {displaySetupName(c)} · version {c.revision}
                     </option>
                   ))}
                 </select>
@@ -713,12 +1064,13 @@ export function TrialWorkspace({ workspace: w, onChange, section }: Props) {
                 <article className="pw-record" key={r.id}>
                   <p>
                     <strong>
-                      {
+                      {((configuration) =>
+                        configuration ? displaySetupName(configuration) : 'Trial setup')(
                         w.configurations.find(
                           (c) =>
                             c.id === r.configuration_id && c.revision === r.configuration_revision,
-                        )?.name
-                      }
+                        ),
+                      )}
                     </strong>{' '}
                     · version {r.configuration_revision} ·{' '}
                     {w.checks.find((c) => c.id === r.check_id)?.name} ·{' '}

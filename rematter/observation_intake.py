@@ -168,6 +168,9 @@ def _quantity(value, note, field):
 def read_observation_note(request, *, client=None, root=ROOT):
     """Make one bounded extraction call; ground its literals, then require user review."""
     case = validate_note_request(request)
+    from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_message
+    if needs_local_metal_planning(case):
+        raise ProductInputError(local_metal_planning_message(case))
     prompt = json.dumps({**case, "task": "Draft only the stated complete-assembly mass observation for review. Keep unknown fields null."},
                         ensure_ascii=False, allow_nan=False)
     generated = (client or MetaClient(root=root)).generate(

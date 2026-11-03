@@ -351,6 +351,18 @@ export type AdvisorRoute = {
   check: string
 }
 export type AdvisorMessage = { role: 'user' | 'assistant'; content: string }
+export type LocalPlanningResult = {
+  result_kind: 'local_planning_guidance'
+  origin: 'local'
+  provider: 'local'
+  model: string
+  live: false
+  answer: string
+  next_steps: string[]
+  questions: string[]
+  physical_product_tested: false
+  performance_verified: false
+}
 export type InferenceProviderId =
   'meta' | 'openrouter' | 'openai' | 'google' | 'anthropic' | 'nvidia' | 'deepseek' | 'custom'
 export type AdvisorStatus = {

@@ -106,6 +106,52 @@ class WorkbenchService:
         except MetaAPIError as error:
             raise ServiceError("provider_request_failed", str(error), 502) from None
 
+    def project_planning_mode(self, request):
+        """Classify only bounded, user-entered fields without contacting a provider."""
+        from .unknown_metal_planning import needs_local_metal_planning
+        brief_fields = {"input", "variation", "contamination", "product", "use_case", "targets", "process", "available_changes"}
+        _allowed(request, {"brief", "question", "project_context", "history"}, "planning-mode request")
+        if not {"brief", "question", "project_context"} <= set(request):
+            raise ServiceError("invalid_request", "Include the project brief, question and configurations.")
+        brief = request["brief"]
+        _allowed(brief, brief_fields, "project brief")
+        if set(brief) != brief_fields or any(not isinstance(value, str) or len(value) > 3000 for value in brief.values()):
+            raise ServiceError("invalid_request", "Include each project detail as text of at most 3000 characters.")
+        if not isinstance(request["question"], str) or len(request["question"]) > 3000:
+            raise ServiceError("invalid_request", "Keep the question within 3000 characters.")
+        history = request.get("history", [])
+        if not isinstance(history, list) or len(history) > 6:
+            raise ServiceError("invalid_request", "Include at most six recent user messages.")
+        for entry in history:
+            _allowed(entry, {"role", "content"}, "history message")
+            if (set(entry) != {"role", "content"} or entry["role"] != "user" or not isinstance(entry["content"], str)
+                    or len(entry["content"]) > 6000):
+                raise ServiceError("invalid_request", "History may contain only bounded user messages.")
+        context = request["project_context"]
+        _allowed(context, {"configurations"}, "planning context")
+        if set(context) != {"configurations"} or not isinstance(context["configurations"], list) or len(context["configurations"]) > 100:
+            raise ServiceError("invalid_request", "Include up to 100 captured setup versions.")
+        identities = set()
+        for configuration in context["configurations"]:
+            _allowed(configuration, {"id", "revision", "materials", "process", "geometry"}, "setup")
+            if set(configuration) != {"id", "revision", "materials", "process", "geometry"}:
+                raise ServiceError("invalid_request", "Include each setup's identifier, version, materials, process and shape.")
+            identity, revision = configuration["id"], configuration["revision"]
+            if (not isinstance(identity, str) or not identity.strip() or len(identity) > 160 or isinstance(revision, bool)
+                    or not isinstance(revision, int) or not 0 <= revision <= 1_000_000_000 or (identity, revision) in identities):
+                raise ServiceError("invalid_request", "Use unique setup identifiers and valid version numbers.")
+            identities.add((identity, revision))
+            if any(not isinstance(configuration[field], str) or len(configuration[field]) > 2000 for field in ("process", "geometry")):
+                raise ServiceError("invalid_request", "Keep each setup's process and shape within 2000 characters.")
+            materials = configuration["materials"]
+            if not isinstance(materials, list) or len(materials) > 50:
+                raise ServiceError("invalid_request", "Include up to 50 materials in each setup.")
+            for material in materials:
+                _allowed(material, {"name"}, "material")
+                if set(material) != {"name"} or not isinstance(material["name"], str) or len(material["name"]) > 160:
+                    raise ServiceError("invalid_request", "Keep each material name within 160 characters.")
+        return {"planning_only": bool(needs_local_metal_planning(request))}
+
     def manufacturing_cost(self, request):
         from .manufacturing_cost import calculate_manufacturing_cost
         return calculate_manufacturing_cost(request)
@@ -118,6 +164,14 @@ class WorkbenchService:
     def trial_records(self, request):
         from .trial_records import assess_trial_records
         return assess_trial_records(request)
+
+    def compare_project_decisions(self, request):
+        from .decision_comparison import compare_project_decisions
+        from .products import ProductInputError
+        try:
+            return compare_project_decisions(request)
+        except ProductInputError as error:
+            raise ServiceError("invalid_request", str(error)) from None
 
     def meta_status(self):
         if self.meta_status_fn is not None:

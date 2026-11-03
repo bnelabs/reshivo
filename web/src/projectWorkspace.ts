@@ -1,4 +1,5 @@
 import type { ProjectIntakeDraft } from './projectIntake'
+import { validateMaterialAmount } from './checkEditing.ts'
 
 export type TrialConfiguration = {
   id: string; revision: number; name: string
@@ -32,14 +33,16 @@ export type ProjectAdviceNote = {
   id: string; created_at: string; provider: string; model: string
   project_snapshot: ProjectIntakeDraft
   configuration_versions: { id: string; revision: number }[]
-  assessment_kind: 'synthetic' | 'user_reported'; text: string; kind: 'model_proposal'
+  assessment_kind: 'synthetic' | 'user_reported'; text: string; kind: 'model_proposal' | 'local_guidance'
 }
+export type TrialIdea = {title:string;change:string;why:string;steps:string[];tradeoffs:string[];check:string;provider:string;model:string;note_id?:string}
 export type ProjectWorkspace = {
   schema: 'rematter-project-v2'; case_id: string; project: ProjectIntakeDraft
   configurations: TrialConfiguration[]; checks: ProductCheck[]; records: TrialRecord[]
   costs: Record<string, CostDraft>
   record_exclusions?: Record<string, string>
   advice_notes?: ProjectAdviceNote[]
+  trial_ideas?: Record<string,TrialIdea>
 }
 export type TrialComparisonRequest = Pick<ProjectWorkspace, 'case_id' | 'configurations' | 'checks' | 'records'> & {
   assessment_kind: 'synthetic' | 'user_reported'
@@ -87,7 +90,7 @@ function validateProjectDraft(value: unknown, label: string): void {
 export function newProjectWorkspace(project?: ProjectIntakeDraft): ProjectWorkspace {
   return { schema: PROJECT_WORKSPACE_SCHEMA, case_id: crypto.randomUUID(),
     project: project ? clone(project) : { product: null, input: null, variation: null, use: null, priorities: null, process: null, constraints: null },
-    configurations: [], checks: [], records: [], costs: {}, record_exclusions: {}, advice_notes: [] }
+    configurations: [], checks: [], records: [], costs: {}, record_exclusions: {}, advice_notes: [], trial_ideas:{} }
 }
 export function newCostDraft(): CostDraft {
   return { currency: '', mass_basis: '', functional_basis: '', acceptance_basis: '', prices: {},
@@ -110,7 +113,7 @@ export function currentConfigurations(workspace: ProjectWorkspace): TrialConfigu
 }
 
 export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
-  const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes'], 'Workspace')
+  const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes', 'trial_ideas'], 'Workspace')
   if (root.schema !== PROJECT_WORKSPACE_SCHEMA) throw new Error('This is not a supported ReMatter project workspace.')
   text(root.case_id, 'Case identifier', 160, true)
   validateProjectDraft(root.project, 'Project details')
@@ -126,6 +129,9 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
       const stock = object(material, ['id', 'name', 'amount', 'unit'], [], 'Material')
       text(stock.id, 'Material identifier', 160, true); materialIds.push(stock.id)
       for (const field of ['name', 'amount', 'unit']) text(stock[field], `Material ${field}`)
+      if (!(stock.name as string).trim()) throw new Error('A saved setup has an unnamed material. Correct the project JSON before opening; your current project is unchanged.')
+      const amountError = validateMaterialAmount(stock.amount)
+      if (amountError) throw new Error(`A saved setup has an invalid material amount: ${amountError} Correct the project JSON before opening; your current project is unchanged.`)
     }
     unique(materialIds, 'Material')
     const key = configurationKey(item.id, item.revision)
@@ -140,9 +146,11 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
       text(note.id, 'Planning note identifier', 160, true); noteIds.push(note.id)
       text(note.created_at, 'Planning note creation time', 64, true)
       if (!Number.isFinite(Date.parse(note.created_at))) throw new Error('Planning note creation time must be a valid timestamp.')
-      text(note.provider, 'Planning note provider', 160, true); text(note.model, 'Planning note model', 160, true)
+      text(note.provider, 'Planning note provider', 160, true); text(note.model, 'Planning note model', 200, true)
       text(note.text, 'Planning note text', 100000, true)
-      if (note.kind !== 'model_proposal') throw new Error('Saved planning notes must remain historical model proposals.')
+      if (!['model_proposal','local_guidance'].includes(note.kind as string)) throw new Error('Saved planning notes must remain historical model proposals or local guidance.')
+      if (note.kind==='local_guidance' && note.provider!=='local') throw new Error('Local planning guidance must retain its local origin.')
+      if (note.kind==='model_proposal' && note.provider==='local') throw new Error('Local guidance cannot be saved as a model proposal.')
       if (!['synthetic', 'user_reported'].includes(note.assessment_kind as string)) throw new Error('A planning note needs its explicit assessment kind.')
       validateProjectDraft(note.project_snapshot, 'Planning note project snapshot')
       list(note.configuration_versions, 100, 'Planning note configuration versions')
@@ -157,6 +165,24 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
       unique(references, 'Planning note configuration reference')
     }
     unique(noteIds, 'Planning note')
+  }
+  if (root.trial_ideas !== undefined) {
+    if (!root.trial_ideas || typeof root.trial_ideas !== 'object' || Array.isArray(root.trial_ideas)) throw new Error('Trial ideas must be keyed by setup version.')
+    if (Object.keys(root.trial_ideas).length > 100) throw new Error('Keep trial ideas within 100 versions.')
+    const noteIds = new Set(((root.advice_notes ?? []) as {id:string}[]).map(note=>note.id))
+    for (const [key, entry] of Object.entries(root.trial_ideas)) {
+      if (!configurations.has(key)) throw new Error('A trial idea must belong to an exact captured setup version.')
+      const idea=object(entry,['title','change','why','steps','tradeoffs','check','provider','model'],['note_id'],'Trial idea')
+      text(idea.title,'Trial idea title',120,true)
+      for(const field of ['change','why','check']) text(idea[field],`Trial idea ${field}`,1500,true)
+      text(idea.provider,'Trial idea provider',160,true);text(idea.model,'Trial idea model',200,true)
+      for(const field of ['steps','tradeoffs']) {
+        const rows=idea[field];list(rows,field==='steps'?5:3,`Trial idea ${field}`)
+        if(!rows.length)throw new Error('A trial idea needs its original steps and trade-offs.')
+        for(const row of rows)text(row,`Trial idea ${field}`,900,true)
+      }
+      if(idea.note_id!==undefined){text(idea.note_id,'Planning note identifier',160,true);if(!noteIds.has(idea.note_id))throw new Error('A trial idea note must be a saved planning note.')}
+    }
   }
   const checks = new Map<string, Record<string, unknown>>()
   for (const entry of root.checks) {

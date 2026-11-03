@@ -305,6 +305,9 @@ def _checked_summary(action, basis):
 
 def assist_with_adaptation(request, *, client=None, root=ROOT):
     request = validate_assist_request(request)
+    from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_message
+    if needs_local_metal_planning(request):
+        raise ProductInputError(local_metal_planning_message(request))
     client = client if client is not None else MetaClient(root=root)
     started = time.monotonic()
     messages = [{"role": "system", "content": SYSTEM_PROMPT},
