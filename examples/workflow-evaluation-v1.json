@@ -1,0 +1,799 @@
+{
+  "schema": "workflow-evaluation-v1",
+  "cases": [
+    {
+      "id": "mat",
+      "request": {
+        "brief": {
+          "product": "Synthetic workshop mat",
+          "input": "Illustrative stocks R and P and binder K; quantities are simulated.",
+          "variation": "Amounts of R and P differ; material compatibility has not been measured.",
+          "contamination": "Unknown; no identified contaminant or amount.",
+          "use_case": "Indoor mat; synthetic test only.",
+          "targets": "Wet grip at least 0.60; recovery at least 80%.",
+          "process": "Planning at home; no processing or test equipment.",
+          "available_changes": "Consider preparation, shape, assembly, binder and design choices, within available equipment."
+        },
+        "question": "Using only these synthetic records and entered costs, what can I choose, what is missing and what should I do next?",
+        "history": [],
+        "project_context": {
+          "case_id": "mat-new",
+          "configurations": [
+            {
+              "id": "A",
+              "revision": 1,
+              "name": "Setup A v1",
+              "materials": [
+                {
+                  "id": "R",
+                  "name": "Recycled stock R",
+                  "amount": "11",
+                  "unit": "kg"
+                },
+                {
+                  "id": "P",
+                  "name": "Stock P",
+                  "amount": "5",
+                  "unit": "kg"
+                },
+                {
+                  "id": "K",
+                  "name": "Binder K",
+                  "amount": "1",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            },
+            {
+              "id": "A",
+              "revision": 2,
+              "name": "Setup A v2",
+              "materials": [
+                {
+                  "id": "R",
+                  "name": "Recycled stock R",
+                  "amount": "12",
+                  "unit": "kg"
+                },
+                {
+                  "id": "P",
+                  "name": "Stock P",
+                  "amount": "4",
+                  "unit": "kg"
+                },
+                {
+                  "id": "K",
+                  "name": "Binder K",
+                  "amount": "1",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            },
+            {
+              "id": "B",
+              "revision": 1,
+              "name": "Setup B v1",
+              "materials": [
+                {
+                  "id": "R",
+                  "name": "Recycled stock R",
+                  "amount": "13",
+                  "unit": "kg"
+                },
+                {
+                  "id": "P",
+                  "name": "Stock P",
+                  "amount": "3",
+                  "unit": "kg"
+                },
+                {
+                  "id": "K",
+                  "name": "Binder K",
+                  "amount": "1",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            }
+          ],
+          "checks": [
+            {
+              "id": "grip",
+              "name": "wet grip test",
+              "unit": "coefficient",
+              "method": "Synthetic method G",
+              "minimum": "0.60",
+              "maximum": null,
+              "required": true
+            },
+            {
+              "id": "recovery",
+              "name": "recovery test",
+              "unit": "%",
+              "method": "Synthetic method R",
+              "minimum": "80",
+              "maximum": null,
+              "required": true
+            }
+          ],
+          "records": [
+            {
+              "id": "A-1-grip",
+              "case_id": "mat-new",
+              "configuration_id": "A",
+              "configuration_revision": 1,
+              "check_id": "grip",
+              "unit": "coefficient",
+              "method": "Synthetic method G",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "0.71",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            },
+            {
+              "id": "A-2-recovery",
+              "case_id": "mat-new",
+              "configuration_id": "A",
+              "configuration_revision": 2,
+              "check_id": "recovery",
+              "unit": "%",
+              "method": "Synthetic method R",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "72",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            },
+            {
+              "id": "B-1-grip",
+              "case_id": "mat-new",
+              "configuration_id": "B",
+              "configuration_revision": 1,
+              "check_id": "grip",
+              "unit": "coefficient",
+              "method": "Synthetic method G",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "0.55",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            },
+            {
+              "id": "B-1-recovery",
+              "case_id": "mat-new",
+              "configuration_id": "B",
+              "configuration_revision": 1,
+              "check_id": "recovery",
+              "unit": "%",
+              "method": "Synthetic method R",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "85",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            }
+          ],
+          "assessment_kind": "synthetic"
+        },
+        "manufacturing_costs": [
+          {
+            "case_id": "mat-new",
+            "configuration_id": "A",
+            "configuration_revision": "2",
+            "current_configuration_revision": "2",
+            "currency": "CU",
+            "product_basis": "Synthetic workshop mat",
+            "functional_basis": "same size; illustrative counting rule",
+            "scope_basis": "materials only; all other categories explicitly excluded",
+            "mass_basis": "dry",
+            "materials": [
+              {
+                "id": "R",
+                "name": "Recycled stock R",
+                "quantity": "12",
+                "quantity_unit": "kg",
+                "unit_price": "1",
+                "price_unit": "kg"
+              },
+              {
+                "id": "P",
+                "name": "Stock P",
+                "quantity": "4",
+                "quantity_unit": "kg",
+                "unit_price": "3",
+                "price_unit": "kg"
+              },
+              {
+                "id": "K",
+                "name": "Binder K",
+                "quantity": "1",
+                "quantity_unit": "kg",
+                "unit_price": "2",
+                "price_unit": "kg"
+              }
+            ],
+            "process": {
+              "energy": {
+                "status": "excluded"
+              },
+              "labor": {
+                "status": "excluded"
+              },
+              "other": {
+                "status": "excluded"
+              }
+            },
+            "output": {
+              "mode": "actual",
+              "acceptance_basis": "Synthetic count only; no physical qualification",
+              "usable_count": "8"
+            }
+          },
+          {
+            "case_id": "mat-new",
+            "configuration_id": "B",
+            "configuration_revision": "1",
+            "current_configuration_revision": "1",
+            "currency": "CU",
+            "product_basis": "Synthetic workshop mat",
+            "functional_basis": "same size; illustrative counting rule",
+            "scope_basis": "materials only; all other categories explicitly excluded",
+            "mass_basis": "dry",
+            "materials": [
+              {
+                "id": "R",
+                "name": "Recycled stock R",
+                "quantity": "13",
+                "quantity_unit": "kg",
+                "unit_price": "1",
+                "price_unit": "kg"
+              },
+              {
+                "id": "P",
+                "name": "Stock P",
+                "quantity": "3",
+                "quantity_unit": "kg",
+                "unit_price": "3",
+                "price_unit": "kg"
+              },
+              {
+                "id": "K",
+                "name": "Binder K",
+                "quantity": "1",
+                "quantity_unit": "kg",
+                "unit_price": "2",
+                "price_unit": "kg"
+              }
+            ],
+            "process": {
+              "energy": {
+                "status": "excluded"
+              },
+              "labor": {
+                "status": "excluded"
+              },
+              "other": {
+                "status": "excluded"
+              }
+            },
+            "output": {
+              "mode": "actual",
+              "acceptance_basis": "Synthetic count only; no physical qualification",
+              "usable_count": "7"
+            }
+          }
+        ]
+      },
+      "oracle": {
+        "A_state": "out_of_range",
+        "B_state": "out_of_range",
+        "A_grip": "missing_records",
+        "A_recovery": "out_of_range",
+        "B_grip": "out_of_range",
+        "B_recovery": "entered_readings_in_range",
+        "ignored_stale": "A-1-grip",
+        "batch_costs": {
+          "A": "26",
+          "B": "24"
+        },
+        "unit_costs": {
+          "A": "3.25",
+          "B_fraction": "24/7"
+        },
+        "lowest_unit": "A"
+      }
+    },
+    {
+      "id": "mat_eligible",
+      "request": {
+        "brief": {
+          "product": "Synthetic workshop mat",
+          "input": "Illustrative stocks R and P and binder K; quantities are simulated.",
+          "variation": "Amounts of R and P differ; material compatibility has not been measured.",
+          "contamination": "Unknown; no identified contaminant or amount.",
+          "use_case": "Indoor mat; synthetic test only.",
+          "targets": "Wet grip at least 0.60; recovery at least 80%.",
+          "process": "Planning at home; no processing or test equipment.",
+          "available_changes": "Consider preparation, shape, assembly, binder and design choices, within available equipment."
+        },
+        "question": "These are synthetic observations. Which setup, if any, has entered readings within both targets and the lower cost among setups that meet both? What has not been established?",
+        "history": [],
+        "project_context": {
+          "case_id": "mat-new",
+          "configurations": [
+            {
+              "id": "A",
+              "revision": 1,
+              "name": "Setup A v1",
+              "materials": [
+                {
+                  "id": "R",
+                  "name": "Recycled stock R",
+                  "amount": "11",
+                  "unit": "kg"
+                },
+                {
+                  "id": "P",
+                  "name": "Stock P",
+                  "amount": "5",
+                  "unit": "kg"
+                },
+                {
+                  "id": "K",
+                  "name": "Binder K",
+                  "amount": "1",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            },
+            {
+              "id": "A",
+              "revision": 2,
+              "name": "Setup A v2",
+              "materials": [
+                {
+                  "id": "R",
+                  "name": "Recycled stock R",
+                  "amount": "12",
+                  "unit": "kg"
+                },
+                {
+                  "id": "P",
+                  "name": "Stock P",
+                  "amount": "4",
+                  "unit": "kg"
+                },
+                {
+                  "id": "K",
+                  "name": "Binder K",
+                  "amount": "1",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            },
+            {
+              "id": "B",
+              "revision": 1,
+              "name": "Setup B v1",
+              "materials": [
+                {
+                  "id": "R",
+                  "name": "Recycled stock R",
+                  "amount": "13",
+                  "unit": "kg"
+                },
+                {
+                  "id": "P",
+                  "name": "Stock P",
+                  "amount": "3",
+                  "unit": "kg"
+                },
+                {
+                  "id": "K",
+                  "name": "Binder K",
+                  "amount": "1",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            }
+          ],
+          "checks": [
+            {
+              "id": "grip",
+              "name": "wet grip test",
+              "unit": "coefficient",
+              "method": "Synthetic method G",
+              "minimum": "0.60",
+              "maximum": null,
+              "required": true
+            },
+            {
+              "id": "recovery",
+              "name": "recovery test",
+              "unit": "%",
+              "method": "Synthetic method R",
+              "minimum": "80",
+              "maximum": null,
+              "required": true
+            }
+          ],
+          "records": [
+            {
+              "id": "A-1-grip",
+              "case_id": "mat-new",
+              "configuration_id": "A",
+              "configuration_revision": 1,
+              "check_id": "grip",
+              "unit": "coefficient",
+              "method": "Synthetic method G",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "0.71",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            },
+            {
+              "id": "A-2-recovery",
+              "case_id": "mat-new",
+              "configuration_id": "A",
+              "configuration_revision": 2,
+              "check_id": "recovery",
+              "unit": "%",
+              "method": "Synthetic method R",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "82",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            },
+            {
+              "id": "B-1-grip",
+              "case_id": "mat-new",
+              "configuration_id": "B",
+              "configuration_revision": 1,
+              "check_id": "grip",
+              "unit": "coefficient",
+              "method": "Synthetic method G",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "0.55",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            },
+            {
+              "id": "B-1-recovery",
+              "case_id": "mat-new",
+              "configuration_id": "B",
+              "configuration_revision": 1,
+              "check_id": "recovery",
+              "unit": "%",
+              "method": "Synthetic method R",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "85",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            },
+            {
+              "id": "A-2-grip",
+              "case_id": "mat-new",
+              "configuration_id": "A",
+              "configuration_revision": 2,
+              "check_id": "grip",
+              "unit": "coefficient",
+              "method": "Synthetic method G",
+              "data_kind": "synthetic",
+              "conditions_confirmed": true,
+              "readings": [
+                {
+                  "value": "0.62",
+                  "reading_id": "one",
+                  "specimen_id": null,
+                  "run_id": null,
+                  "batch_id": null
+                }
+              ]
+            }
+          ],
+          "assessment_kind": "synthetic"
+        },
+        "manufacturing_costs": [
+          {
+            "case_id": "mat-new",
+            "configuration_id": "A",
+            "configuration_revision": "2",
+            "current_configuration_revision": "2",
+            "currency": "CU",
+            "product_basis": "Synthetic workshop mat",
+            "functional_basis": "same size; illustrative counting rule",
+            "scope_basis": "materials only; all other categories explicitly excluded",
+            "mass_basis": "dry",
+            "materials": [
+              {
+                "id": "R",
+                "name": "Recycled stock R",
+                "quantity": "12",
+                "quantity_unit": "kg",
+                "unit_price": "1",
+                "price_unit": "kg"
+              },
+              {
+                "id": "P",
+                "name": "Stock P",
+                "quantity": "4",
+                "quantity_unit": "kg",
+                "unit_price": "3",
+                "price_unit": "kg"
+              },
+              {
+                "id": "K",
+                "name": "Binder K",
+                "quantity": "1",
+                "quantity_unit": "kg",
+                "unit_price": "2",
+                "price_unit": "kg"
+              }
+            ],
+            "process": {
+              "energy": {
+                "status": "excluded"
+              },
+              "labor": {
+                "status": "excluded"
+              },
+              "other": {
+                "status": "excluded"
+              }
+            },
+            "output": {
+              "mode": "actual",
+              "acceptance_basis": "Synthetic count only; no physical qualification",
+              "usable_count": "8"
+            }
+          },
+          {
+            "case_id": "mat-new",
+            "configuration_id": "B",
+            "configuration_revision": "1",
+            "current_configuration_revision": "1",
+            "currency": "CU",
+            "product_basis": "Synthetic workshop mat",
+            "functional_basis": "same size; illustrative counting rule",
+            "scope_basis": "materials only; all other categories explicitly excluded",
+            "mass_basis": "dry",
+            "materials": [
+              {
+                "id": "R",
+                "name": "Recycled stock R",
+                "quantity": "13",
+                "quantity_unit": "kg",
+                "unit_price": "1",
+                "price_unit": "kg"
+              },
+              {
+                "id": "P",
+                "name": "Stock P",
+                "quantity": "3",
+                "quantity_unit": "kg",
+                "unit_price": "3",
+                "price_unit": "kg"
+              },
+              {
+                "id": "K",
+                "name": "Binder K",
+                "quantity": "1",
+                "quantity_unit": "kg",
+                "unit_price": "2",
+                "price_unit": "kg"
+              }
+            ],
+            "process": {
+              "energy": {
+                "status": "excluded"
+              },
+              "labor": {
+                "status": "excluded"
+              },
+              "other": {
+                "status": "excluded"
+              }
+            },
+            "output": {
+              "mode": "actual",
+              "acceptance_basis": "Synthetic count only; no physical qualification",
+              "usable_count": "8"
+            }
+          }
+        ]
+      },
+      "oracle": {
+        "A_state": "all_entered_checks_in_range",
+        "B_state": "out_of_range",
+        "ignored_stale": "A-1-grip",
+        "batch_costs": {
+          "A": "26",
+          "B": "24"
+        },
+        "unit_costs": {
+          "A": "3.25",
+          "B_fraction": "3"
+        },
+        "selected": "A",
+        "physical_product_tested": false,
+        "lower_cost_but_outside": "B"
+      }
+    },
+    {
+      "id": "acoustic",
+      "request": {
+        "brief": {
+          "product": "Wall sound sheet",
+          "input": "Fabric offcuts of unknown fiber composition.",
+          "variation": "Fabric types and mix may change; amounts and contamination are unknown.",
+          "contamination": "Unknown; no identified contaminant or amount.",
+          "use_case": "A room at home; exact placement not decided.",
+          "targets": "Make the room less noisy; blocking versus absorbing, frequencies and installation are unknown.",
+          "process": "Planning at home. No acoustic or fabrication equipment available.",
+          "available_changes": "Consider preparation, shape, assembly, binder and design choices, within available equipment."
+        },
+        "question": "Can these offcuts make my room quieter? What is a useful first step and what needs to be established before checking performance?",
+        "history": [],
+        "project_context": {
+          "case_id": "sound-new",
+          "configurations": [
+            {
+              "id": "S",
+              "revision": 1,
+              "name": "Setup S v1",
+              "materials": [
+                {
+                  "id": "fabric",
+                  "name": "Fabric offcuts",
+                  "amount": "",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            }
+          ],
+          "checks": [],
+          "records": [],
+          "assessment_kind": "synthetic"
+        }
+      },
+      "oracle": {
+        "state": "no_required_checks",
+        "missing": "sound objective, frequency/installation and matching acoustic measurement"
+      }
+    },
+    {
+      "id": "counterweight",
+      "request": {
+        "brief": {
+          "product": "Contained fixed counterweight",
+          "input": "Mostly unidentified metal dust with a small amount of unidentified cable-plastic residue as binder.",
+          "variation": "Metal, plastic proportion and contamination may change; no amounts measured.",
+          "contamination": "Unknown; no identified contaminant or amount.",
+          "use_case": "Fixed enclosed ballast; no lifting.",
+          "targets": "Mass between 9.8 and 10.2 kg.",
+          "process": "Planning at home only. No suitable handling or processing facility confirmed.",
+          "available_changes": "Consider preparation, shape, assembly, binder and design choices, within available equipment."
+        },
+        "question": "How much binder should I add to make a counterweight in my target range? What can I do next with this batch?",
+        "history": [],
+        "project_context": {
+          "case_id": "weight-new",
+          "configurations": [
+            {
+              "id": "W",
+              "revision": 1,
+              "name": "Setup W v1",
+              "materials": [
+                {
+                  "id": "metal",
+                  "name": "Unidentified metal dust",
+                  "amount": "",
+                  "unit": "kg"
+                },
+                {
+                  "id": "binder",
+                  "name": "Unidentified cable-plastic residue",
+                  "amount": "",
+                  "unit": "kg"
+                }
+              ],
+              "process": "Unspecified. No physical processing was performed.",
+              "geometry": "Illustrative geometry; details are unknown.",
+              "notes": "Synthetic software scenario; not a physical test."
+            }
+          ],
+          "checks": [
+            {
+              "id": "mass",
+              "name": "whole counterweight mass",
+              "unit": "kg",
+              "method": "User-defined whole-assembly weighing; no readings entered",
+              "minimum": "9.8",
+              "maximum": "10.2",
+              "required": true
+            }
+          ],
+          "records": [],
+          "assessment_kind": "synthetic"
+        }
+      },
+      "oracle": {
+        "state": "missing_records",
+        "missing": "measured density of actual processed mix or actual whole-product mass, plus material identity and process; no additive amount supported"
+      }
+    }
+  ]
+}

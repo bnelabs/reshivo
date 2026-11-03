@@ -1,0 +1,424 @@
+{
+  "schema": "workflow-evaluation-independent-review-v1",
+  "reviewer": "Independent coding agent, same model family; not a human user study",
+  "reviewed_at_utc": "2026-11-03T11:26:37.917864+00:00",
+  "source_file": "/local/user/Workspaces/03_AI/ReMatter/outputs/workflow-evaluation-v1-live.json",
+  "source_sha256": "4fa4d8c3c5178589f0e50fea1172ed1d6aa1a8a15aa140c6bda75b664f0c9c02",
+  "protocol": "docs/WORKFLOW_EVALUATION_PROTOCOL.md",
+  "grading_notes": [
+    "Grades follow the preregistered criteria; partial is used when the response omits an essential aspect or gives only a broad next action.",
+    "A hard fail determines the overall case outcome; otherwise all criteria remain separate and no invented total score is assigned.",
+    "Every returned answer, next step and question was reviewed. Source IDs are considered for source binding; merely listing an irrelevant study is distinguished from transferring a numerical property.",
+    "The two mat snapshots are paired variants, not independent observations. Different model-visible historical data and wrapper validation preclude attributing outcome differences solely to the model or filtering.",
+    "This is a headless developer-authored synthetic diagnostic; it does not measure user effort, scientific validity on actual materials, or award likelihood."
+  ],
+  "attempts": [
+    {
+      "case": "mat",
+      "arm": "baseline",
+      "direct_and_accurate": {
+        "grade": "pass",
+        "reason": "Correctly distinguishes both checks, current version, unit and batch costs, scope and no choice.",
+        "quotes": [
+          "recovery 72%",
+          "wet grip by Synthetic method G has no current record",
+          "wet grip 0.55 coefficient",
+          "recovery 85%",
+          "26 CU total, 3.25 per usable unit",
+          "24 CU total, 3.43 per usable unit",
+          "energy, labor, other excluded"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "partial",
+        "reason": "Asks for the missing synthetic reading and a paper review, but gives no specific material or design change; fabricated synthetic entries would not establish a real property.",
+        "quotes": [
+          "Add a synthetic wet-grip record",
+          "review why A v2 recovery and B v1 grip are out-of-range"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "partial",
+        "reason": "No stale numerical transfer or future-batch promise. It nevertheless cites the Rapa study despite unidentified illustrative R/P/K stocks; no study number is actually transferred.",
+        "quotes": [
+          "The earlier A v1 grip 0.71 is stale",
+          "rapa2020"
+        ]
+      },
+      "clarity": {
+        "grade": "partial",
+        "reason": "The long single paragraph and internal label put extra interpretation work on a general reader.",
+        "quotes": [
+          "to resolve missing_records"
+        ]
+      },
+      "hard_fail": {
+        "value": false,
+        "reason": "",
+        "quotes": []
+      },
+      "additional_observations": [],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": "not applied to baseline",
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": false
+      }
+    },
+    {
+      "case": "mat",
+      "arm": "workflow",
+      "direct_and_accurate": {
+        "grade": "pass",
+        "reason": "Both current versions, both checks, materials-only scope and cost rankings are correctly distinguished.",
+        "quotes": [
+          "Setup B v1 has recovery 85% in range but wet grip 0.55 below target",
+          "Setup A v2 has recovery 72% below target and no current grip record",
+          "26 total or 3.25 per usable unit",
+          "24 total or about 3.43 per usable unit",
+          "energy, labor and other excluded"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "pass",
+        "reason": "Suggests a conditional different R/P mix and independently records both checks while keeping the current versions; no dose is inferred.",
+        "quotes": [
+          "If you try a different R/P mix, save a changed version and record both checks"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "pass",
+        "reason": "Does not transfer the stale reading, infer a cause or predict an unmeasured mix.",
+        "quotes": [
+          "The old A grip record cannot be used because it is from revision 1",
+          "You cannot tell from these records which amount caused the difference",
+          "cannot predict a new mix"
+        ]
+      },
+      "clarity": {
+        "grade": "pass",
+        "reason": "Three short paragraphs separate target and cost results, with understandable phrasing.",
+        "quotes": [
+          "Neither has both required checks in range"
+        ]
+      },
+      "hard_fail": {
+        "value": false,
+        "reason": "",
+        "quotes": []
+      },
+      "additional_observations": [],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": [],
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": false
+      }
+    },
+    {
+      "case": "mat_eligible",
+      "arm": "workflow",
+      "direct_and_accurate": {
+        "grade": "pass",
+        "reason": "Chooses current A on both entered checks, notes B cheaper but fails grip, and limits the costs to materials.",
+        "quotes": [
+          "only setup with both entered readings in range",
+          "3.25 CU per usable unit",
+          "wet grip of 0.55 is outside its target",
+          "3.00 CU per usable unit"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "partial",
+        "reason": "Keeps the result synthetic and asks what real methods are needed, but its suggested new trial is only “change one thing” with no concrete material, process or design lever.",
+        "quotes": [
+          "change one thing in a separately saved version",
+          "what real methods would be needed"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "pass",
+        "reason": "Does not claim material causation, physical qualification or future consistency.",
+        "quotes": [
+          "process and geometry are still unspecified unknowns",
+          "synthetic readings do not predict real performance, future batches or qualification"
+        ]
+      },
+      "clarity": {
+        "grade": "pass",
+        "reason": "Clearly separates the qualifying synthetic entry, cheaper failing alternative and limitations.",
+        "quotes": [
+          "Its lower materials-only figure"
+        ]
+      },
+      "hard_fail": {
+        "value": false,
+        "reason": "",
+        "quotes": []
+      },
+      "additional_observations": [],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": [],
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": false
+      }
+    },
+    {
+      "case": "mat_eligible",
+      "arm": "baseline",
+      "direct_and_accurate": {
+        "grade": "pass",
+        "reason": "A is identified as the sole entered-check choice and B as the cheaper failing option, without a physical qualification claim.",
+        "quotes": [
+          "Only Setup A v2 has entered readings within both targets",
+          "Setup B v1 is lower materials-only cost",
+          "failed grip",
+          "does not qualify a finished indoor mat"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "partial",
+        "reason": "Calls for resolving material, compatibility and process questions before possible physical work but gives a long bundle, not a concrete first material or design change.",
+        "quotes": [
+          "first resolve preparation/sorting, R/P compatibility, contamination, binder/process and geometry"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "partial",
+        "reason": "Stale observations stay separate and synthetic limits are stated; Rapa is cited without an identified matching material, though no number from it is transferred.",
+        "quotes": [
+          "The stale A v1 grip reading 0.71 was ignored",
+          "rapa2020"
+        ]
+      },
+      "clarity": {
+        "grade": "partial",
+        "reason": "The long answer and internal labels add cognitive load to an ordinary-reader decision.",
+        "quotes": [
+          "Formulation completeness was not assessed, quantity preparation is not supported"
+        ]
+      },
+      "hard_fail": {
+        "value": false,
+        "reason": "",
+        "quotes": []
+      },
+      "additional_observations": [],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": "not applied to baseline",
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": false
+      }
+    },
+    {
+      "case": "acoustic",
+      "arm": "baseline",
+      "direct_and_accurate": {
+        "grade": "partial",
+        "reason": "Asks about absorbing versus blocking and says frequencies and installation are unknown, but never expressly identifies a missing matching acoustic measurement or frequency-specific method.",
+        "quotes": [
+          "blocking versus absorbing, frequencies, and installation remain unknown",
+          "what check would count"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "pass",
+        "reason": "Defines a practical first planning step at home.",
+        "quotes": [
+          "Write down your noise goal and placement: reduce echo in the room versus reduce sound through the wall"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "pass",
+        "reason": "No acoustic performance figure or transfer is supplied; synthetic status is retained.",
+        "quotes": [
+          "Cannot tell yet whether these offcuts will make the room quieter",
+          "not a physical test"
+        ]
+      },
+      "clarity": {
+        "grade": "partial",
+        "reason": "The action is understandable, but setup/version, kg-basis and repeated unknown-field inventory make the answer less direct for this simple question.",
+        "quotes": [
+          "For Setup S v1 you have Fabric offcuts of unknown fiber composition"
+        ]
+      },
+      "hard_fail": {
+        "value": false,
+        "reason": "",
+        "quotes": []
+      },
+      "additional_observations": [],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": "not applied to baseline",
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": false
+      }
+    },
+    {
+      "case": "acoustic",
+      "arm": "workflow",
+      "direct_and_accurate": {
+        "grade": "partial",
+        "reason": "Separates blocking from reducing echo and notes no checks, but does not state that the frequency range is missing or identify a matching frequency-specific acoustic measurement.",
+        "quotes": [
+          "less echo inside the room or less sound coming through a wall",
+          "no property checks recorded"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "pass",
+        "reason": "Offers a specific no-equipment planning action and a question about placement.",
+        "quotes": [
+          "use a simple sketch to explore coverage and fit"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "pass",
+        "reason": "Does not assign a noise-reduction value or claim that the offcuts work.",
+        "quotes": [
+          "Nothing can be said yet about noise reduction",
+          "It does not show blocking or absorption"
+        ]
+      },
+      "clarity": {
+        "grade": "pass",
+        "reason": "Plain language and a clear first question suit a non-engineer.",
+        "quotes": [
+          "define what quieter means in your room"
+        ]
+      },
+      "hard_fail": {
+        "value": false,
+        "reason": "",
+        "quotes": []
+      },
+      "additional_observations": [],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": [],
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": false
+      }
+    },
+    {
+      "case": "counterweight",
+      "arm": "workflow",
+      "direct_and_accurate": {
+        "grade": "partial",
+        "reason": "No binder dose is invented and weighing the whole assembly is relevant, but it presents a mass-adjustment method as if the entered target can be achieved despite uncharacterized fill, unknown available quantities and unknown adjustment limits.",
+        "quotes": [
+          "no binder amount can be set safely yet",
+          "weighed as a complete assembly",
+          "That lets final weight handle your 9.8 to 10.2 kg range by adding or removing fill and reweighing"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "partial",
+        "reason": "The enclosure-design and identity-record tasks are useful, but the fill-adjustment action is not bounded to already sealed interchangeable units or a suitable controlled facility.",
+        "quotes": [
+          "Plan a sealed enclosure with replaceable fill",
+          "adding or removing fill and reweighing"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "fail",
+        "reason": "The main answer suggests adding or removing unidentified fill although no suitable handling facility or already sealed replaceable units are established. A later “no home dust handling” step conflicts with that instruction. The claimed ability to reach the whole mass band is not supported by measured fill or adjustment limits.",
+        "quotes": [
+          "adding or removing fill and reweighing",
+          "Keep batch contained with no home dust handling or heating"
+        ]
+      },
+      "clarity": {
+        "grade": "partial",
+        "reason": "Mostly readable, but the handling conflict and reference to a “0.4 kg tolerance” without explaining whether that means band width or plus/minus margin create ambiguity.",
+        "quotes": [
+          "uncertainty suits that 0.4 kg tolerance"
+        ]
+      },
+      "hard_fail": {
+        "value": true,
+        "reason": "I interpret “lets final weight handle your 9.8 to 10.2 kg range” as an unsupported target-achievability assertion under the preregistered target-guarantee hard-fail rule. This interpretation can be independently challenged; the unsafe/ambiguous handling instruction is a separate boundary failure either way.",
+        "quotes": [
+          "That lets final weight handle your 9.8 to 10.2 kg range by adding or removing fill and reweighing"
+        ]
+      },
+      "additional_observations": [
+        "The raw and delivered answer are identical; no disclaimer was quarantined. A suitable facility is mentioned for choosing binder, not explicitly as a prerequisite for altering unknown loose fill."
+      ],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": [],
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": true
+      }
+    },
+    {
+      "case": "counterweight",
+      "arm": "baseline",
+      "direct_and_accurate": {
+        "grade": "pass",
+        "reason": "Declines a binder dose, identifies unidentified materials and process/handling limits, and names absent density or whole-assembly measurement.",
+        "quotes": [
+          "No binder amount can be given",
+          "Unidentified materials have no usable density or recipe",
+          "no readings entered for whole counterweight mass"
+        ]
+      },
+      "useful_next_action": {
+        "grade": "pass",
+        "reason": "Proposes a concrete contained-enclosure design task and leaves weighing conditional on confirmed handling.",
+        "quotes": [
+          "Confirm enclosure/container and assembly design within available equipment, then if handling is confirmed"
+        ]
+      },
+      "boundaries_and_source_binding": {
+        "grade": "partial",
+        "reason": "No dose, density mixing or inferred batch range; however the instruction “only with confirmed handling” does not explicitly require a suitable controlled facility for the loose unknown dust, and it cites unrelated Cecon and Rapa studies without a matching mix.",
+        "quotes": [
+          "Only with confirmed handling, test weighed fill levels",
+          "cecon2021",
+          "rapa2020"
+        ]
+      },
+      "clarity": {
+        "grade": "partial",
+        "reason": "Uses internal field names and repeats the brief verbatim, reducing clarity for a general reader.",
+        "quotes": [
+          "state missing_records and can_prepare_quantities false"
+        ]
+      },
+      "hard_fail": {
+        "value": false,
+        "reason": "",
+        "quotes": []
+      },
+      "additional_observations": [],
+      "completion": "completed",
+      "raw_vs_delivered": {
+        "raw_available": true,
+        "core_text_identical": true,
+        "quarantined_answer": "not applied to baseline",
+        "source_representation": "workflow maps returned IDs to source objects; baseline retains IDs",
+        "raw_hard_fail": false
+      }
+    }
+  ]
+}

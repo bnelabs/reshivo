@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "purpose": "Files reviewed for the source-linked mass simulation; no acoustic prediction inputs",
+  "files": [
+    {
+      "path": "data/research/density/measurements.json",
+      "sha256": "537ee874a2e8b892eb5f6b3e4929448d6f6d2ae0225cdf14a1083f691a57e5e1"
+    },
+    {
+      "path": "data/research/density/originals/cecon2021_article_fresh.xml",
+      "sha256": "396dcaf76887b971d96570dca67fdfc3f895b6c422c5a1b26cf98b67cebda5c6"
+    },
+    {
+      "path": "data/research/density/originals/cecon2021_mmc1.xlsx",
+      "sha256": "e1d0ba4c3f572e8c0300720fb1ba4e93a5d46cc143151abd43562cec43d4f932"
+    },
+    {
+      "path": "data/research/density/sources.json",
+      "sha256": "db6d0c3538a1c84e18d6a4a11eb4a3baa1131afcea391ac1cfbe1c9cc3bfdd66"
+    },
+    {
+      "path": "data/research/source_groups.json",
+      "sha256": "65a4aacda21689c367c947af4e96355f01b799aa456ed280e8285e11d49e9a77"
+    }
+  ]
+}

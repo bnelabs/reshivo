@@ -1,0 +1,18 @@
+{
+  "protocol": "material-task-v1",
+  "frozen_utc": "2026-11-03T07:26:12.980521+00:00",
+  "source_commit": "98568f09a87ffd3bda737a79300d55d4fe972720",
+  "hashes": {
+    "docs/MATERIAL_TASK_PROTOCOL.md": "dcd85445e92826fada40dac057dcb4fa7244754d7a1d7a6c93b382baca14594c",
+    "examples/material-task-v1.json": "a11eb7cf6ea70771987ad77bfab773cd959eabed28a35f1bd6ad24ac9e70d522",
+    "scripts/benchmark_material_task.py": "e6b556fa4b18a95ced3f63e59e704f0065c92441f1db88fc078d61e1bda126a9",
+    "rematter/advisor.py": "40401f8adb016420252526ee2b3051de113ccc539ec9d81f2ee815d3b5d98be3",
+    "rematter/meta.py": "78b6e7ddbfffa1423e4a752ca2ac4b78e6a8389eb96daf85aba91d1edd6edc76",
+    "rematter/reading_comparison.py": "84c1d4b41f3c6b62a6b7eda0cdfe3490c04bba8c99b7c57e94e3e71ef9041456",
+    "rematter/products.py": "68c877348f3c03f73faeed9aaaa611b8bbbbb8a749a3802cccecdcc494729590",
+    "rematter/materials.py": "c8fdbe443112fbe6627b5069e9afed6b8ef41e6674376e42ffa831ba790860db",
+    "web/src/measurementTrial.ts": "7c8b8663e649d8ac1bd868dd6cebbf20acbd5d4bd0671acbe36a72f6ac6e0f9c",
+    "web/src/measurementDecimal.ts": "3c8ee6b5ed630f6d2d899dccf1cefea61fd68502dddb7b98c41acc138fe01855",
+    "scripts/benchmark_note_intake.py": "88621cc42b7e7d4bb390a8817c1b53c4326a1d7255efe1ee5a9b8ef84e03d90f"
+  }
+}

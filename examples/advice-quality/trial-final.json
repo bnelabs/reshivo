@@ -1,0 +1,350 @@
+{
+  "brief": {
+    "input": "Synthetic case: recycled HDPE and nylon offcuts; their proportions are unknown.",
+    "variation": "The proportions and visible grit change between received portions.",
+    "contamination": "Grit identity and amount are not measured.",
+    "product": "Doorway drainage insert",
+    "use_case": "A proposed walking surface in a wet doorway; no prototype has been made.",
+    "targets": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+    "process": "A press is available; its type and tooling have not been confirmed.",
+    "available_changes": "No new materials, equipment or geometry changes are authorized yet."
+  },
+  "calculation_details": {
+    "label": "",
+    "components": [
+      {
+        "id": 1,
+        "name": "",
+        "role": "main",
+        "amount": ""
+      }
+    ],
+    "amount_unit": "mass_percent",
+    "amount_basis": "",
+    "mass_target_min_kg": "",
+    "mass_target_max_kg": ""
+  },
+  "plan": {
+    "result_kind": "engineering_proposals",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 4798,
+      "prompt_tokens": 4817,
+      "total_tokens": 9615
+    },
+    "elapsed_ms": 16878,
+    "request_id": "chatcmpl-01a1990c-7093-7038-827a-758100ac0d5d",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "answer": "You can use this variable HDPE/nylon plus grit mix within your current limits by keeping portions separate, preparing by inspection only, and comparing the same shape and process side-by-side. Your press type, tooling, heating or cold method, drying, extraction, and suitability for this mix are unconfirmed, so do not start pressing until those are confirmed. No new binder, tooling, or shape change is authorized yet, so routes below add nothing and change no geometry. Drainage clearing, fit, and visible surface condition can guide decisions now. Wet-slip needs a separate instrumented pendulum assessment by a trained operator, not walking on the wet prototype, hand feel, or subjective slip feel. Check results against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.'",
+    "material_routes": [
+      {
+        "id": "material:M1",
+        "title": "Keep portions separate, test the range",
+        "change": "Sorting and labelling only; no blending across portions and no new materials",
+        "why": "Proportions and visible grit change between portions. Mixing hides the cause. Separate trials use variation as test information without needing composition measurement.",
+        "steps": [
+          "Label each received portion and keep it separate through trial and observation",
+          "Note visible differences in offcuts and grit per portion by eye only, without assigning composition",
+          "Do not blend across portions; one trial links to one portion only",
+          "Subject to confirmed suitable press capability only, make trials the same way for comparison"
+        ],
+        "tradeoffs": [
+          "Needs separate storage and more small trials",
+          "Does not remove variation, only reveals it",
+          "Range keeps widening if incoming portions keep changing"
+        ],
+        "check": "Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing portion-linked trials for water clearing and visible surface condition."
+      },
+      {
+        "id": "material:M2",
+        "title": "Remove loose surface grit only",
+        "change": "Manual inspection and removal of loose surface grit only; no new materials, grinding, sieving, or heating",
+        "why": "Loose grit can block the drainage path and change the walking surface. Removing only that fraction lowers one unknown without adding a binder.",
+        "steps": [
+          "Handle only where safe manual handling and suitable facilities allow",
+          "Shake or brush off loose surface grit per portion and keep any removed grit with its portion ID",
+          "Leave bonded or embedded grit as-is; do not grind, sieve, or heat",
+          "Record before and after appearance per portion for same-process comparison"
+        ],
+        "tradeoffs": [
+          "Adds manual time per portion",
+          "Embedded grit and polymer ratio remain unknown",
+          "Cleaning effect varies if grit amount varies"
+        ],
+        "check": "Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by noting drainage blocking and surface condition before and after for the same portion."
+      }
+    ],
+    "engineering_routes": [
+      {
+        "id": "engineering:E1",
+        "title": "Same-shape, same-process comparison",
+        "change": "No geometry or tooling change; use only the already-intended insert shape and hold process and placement constant",
+        "why": "When polymer ratio and grit vary, holding shape, process, and placement constant reduces reliance on unknown material properties and shows whether drainage follows the portion.",
+        "steps": [
+          "Use only the already-intended insert shape; press type, tooling, heated or cold method, drying and extraction remain unconfirmed",
+          "Only if press suitability for this HDPE/nylon plus grit mix is confirmed, form one trial per portion with the same recorded settings",
+          "Place each portion-linked trial in the same doorway position in turn",
+          "Use the same water-pour volume, pour point, and photo notes for each trial"
+        ],
+        "tradeoffs": [
+          "Cannot start pressing until press capability and suitability are confirmed",
+          "Holding shape fixed means drainage cannot be fixed by reshaping in this route",
+          "Needs disciplined logging or the comparison is void"
+        ],
+        "check": "Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing water-clearing observation across portions made and placed the same way."
+      },
+      {
+        "id": "engineering:E2",
+        "title": "Fit, drainage-path and cleaning observation",
+        "change": "No geometry change; change only placement planning, observation method, and cleaning access using existing features",
+        "why": "Drainage, fit, and visible condition can guide design before any slip claim, and separate installation effects from material variation.",
+        "steps": [
+          "Check fit and gaps of the intended shape in the doorway without modifying the shape",
+          "Run the same water pour and note where water leaves the surface, pools, or is blocked",
+          "Note where grit collects and whether the insert can be lifted and cleaned using existing access",
+          "Record fit, pooling, and cleanability per portion ID"
+        ],
+        "tradeoffs": [
+          "Observation only; does not prove slip resistance or weather durability",
+          "Cannot create a new drainage channel or containment in this route",
+          "Results depend on consistent placement"
+        ],
+        "check": "Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by observing drainage blocking, fit, and cleanability without stepping on a wet unknown prototype."
+      }
+    ],
+    "next_steps": [
+      "Confirm what is now permitted: manual sorting, use of the existing press, and whether any binder, tooling, or geometry change can be considered",
+      "Confirm press type, tooling, drying and extraction, and safe processing information for HDPE/nylon with grit before any heated trial",
+      "Make portion-linked trials the same way and compare water-clearing and fit observations side-by-side",
+      "Arrange a suitable instrumented slip assessment by a trained operator for the wet doorway installation; do not walk on the wet prototype as a check",
+      "Decide a simple pass observation for drainage now, since numerical acceptance limits are not set"
+    ],
+    "questions": [
+      "What sorting, press use, and observation work is permitted now, since no new materials, equipment or geometry changes are authorized yet?",
+      "What is the press type, tooling, and suitability for this HDPE/nylon plus grit mix, and what must be confirmed before any pressing?",
+      "What doorway installation and wet conditions should the future slip assessment cover?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "hse-ppis13",
+        "title": "HSE — controlling fume during plastics processing",
+        "url": "https://www.hse.gov.uk/pubns/ppis13.pdf",
+        "scope": "General guidance to identify polymer formulation/additives and processing information before heated processing. Temperature and dwell affect fumes; this is not a heat recipe for unidentified cable residue."
+      },
+      {
+        "id": "hse-slip-assessment",
+        "title": "HSE — assessing floor slip resistance",
+        "url": "https://www.hse.gov.uk/pubns/geis2.htm",
+        "scope": "General floor-slip testing guidance, including instrumented pendulum assessment by a suitably trained operator under relevant surface conditions. It supplies no measured slip value, acceptance target or qualification for the user's recycled material, and no home walking test substitutes for it. Check the current applicable method for the product and installation."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "history": [
+    {
+      "role": "assistant",
+      "content": "You can work with this variable HDPE/nylon + grit mix without new materials or geometry yet by keeping portions separate, preparing by inspection only, and testing the same shape in a controlled way. Any binder, drainage-hole change, or new tooling needs explicit permission because your case currently authorizes no new materials, equipment or geometry changes, and press type/tooling is unconfirmed.\nMaterial route: Keep portions separate, test range. Preparation only, no new binder or equipment: keep each received portion separate and do not blend across portions. Proportions and visible grit change between portions, so mixing hides the cause. Separate trials use the variation as information without needing composition measurement. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing trials from different portions made the same way.\nMaterial route: Inspect and separate loose grit. Preparation only, no new materials: visual sort plus removal of loose surface grit, conditional on safe manual handling and suitable facilities. Grit identity and amount are not measured, and grit can affect drainage and slip. Removing only the loose fraction lowers one unknown without adding a binder. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by observing drainage blocking and wet-surface feel before and after preparation for the same portion.\nEngineering route: Same-shape controlled trial log. No geometry change: use only the already-intended insert shape and log press conditions the same way each run. This route does not assume heated, cold, mould, drying or extraction capability - press type and tooling remain unconfirmed. When proportions and grit vary, a consistent process and placement reduces reliance on unknown material properties and shows whether results follow the portion. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by placing each portion-linked trial the same way and observing water clearing and wet-foot grip side-by-side.\nEngineering route: Conditional lift-out contained insert - needs permission. CONFLICT: this would change geometry/containment and needs new capability, which your case says is not authorized yet. Use as a conditional option only if geometry and containment work are permitted. Containment and a cleanable path separate walking safety from unknown grit and blend variation, but it cannot start without geometry and tooling permission. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by observing whether water leaves the walking surface and whether grit can be cleaned out without dismantling the doorway.\nConfirm what is permitted: manual sorting, use of the existing press, and any geometry or tooling change.\nConfirm press type, tooling, and safe processing information for HDPE/nylon with grit before any heated trial.\nMake portion-linked trials the same way and compare water clearing and wet-slip observation.\nDecide a simple pass observation for drainage and wet grip since numerical acceptance limits are not set."
+    },
+    {
+      "role": "user",
+      "content": "How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments."
+    },
+    {
+      "role": "assistant",
+      "content": "You can use this variable HDPE/nylon + grit input without new materials or shape changes by keeping portions separate, preparing by inspection only, and comparing the same process side-by-side. Do not start heated pressing until press type, tooling, and safe processing information for this mix are confirmed. Drainage clearing and visible fit can guide design now; wet-slip needs a proper instrumented assessment by a trained operator, not walking on the prototype or hand feel.\nMaterial route: Keep portions separate, test the range. Preparation and sorting only. No new binder, modifier, or blending across portions. Mixing hides whether HDPE/nylon ratio or grit caused a drainage or surface difference. Separate trials use variation as test information. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing portion-linked trials for water clearing and surface condition.\nMaterial route: Inspect and remove loose grit only. Inspection and removal of loose surface grit only, if safe manual handling and suitable facilities allow. No new materials, grinding, or heating assumed. Loose grit can block drainage and affect the walking surface. Removing only that fraction lowers one unknown without adding a binder. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by noting drainage blocking and surface condition before and after for the same portion.\nEngineering route: Same-shape, same-process comparison. No geometry or tooling change. Use only the already-intended insert shape and keep press settings and placement the same for each portion-linked trial. When proportions and grit vary, holding process and placement constant reduces reliance on unknown material properties and turns variation into comparable information. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing water-clearing observation across portions made the same way.\nEngineering route: Fit, drainage-path and cleaning observation. No geometry change. Change only installation planning, observation method, and cleaning access using existing features. Drainage and fit can be observed safely before any slip claim is made, and separates installation effects from material variation. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by observing drainage blocking, fit, and cleanability without stepping on a wet unknown prototype.\nConfirm what is now permitted: manual sorting, use of the existing press, and whether any geometry, binder, or tooling change can be considered - currently none are authorized.\nConfirm press type, tooling, drying/extraction, and safe processing information for HDPE/nylon with grit before any heated trial.\nMake portion-linked trials the same way and compare water-clearing and fit observations side-by-side.\nArrange a suitable instrumented slip assessment by a trained operator for the product and wet installation; do not walk on the wet prototype as a check.\nDecide a simple pass observation for drainage now, since numerical acceptance limits are not set."
+    },
+    {
+      "role": "assistant",
+      "content": "Chosen route: Same-shape, same-process comparison. No geometry or tooling change. Use only the already-intended insert shape and keep press settings and placement the same for each portion-linked trial.\nProposed trial: Same-shape comparison across two portions. Use same-shape, same-process trials to see if drainage clearing and visible surface condition follow the received portion, without changing geometry, tooling, or process.\nTargets: Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.\nCompare: Trial 1 from Portion A vs Trial 2 from Portion B, both made to the already-intended insert shape with identical press conditions and identical doorway placement. Aim to change one variable per comparison: source portion only.. Change: Compare two received portions (Portion A vs Portion B) with no change to insert shape, tooling, or placement; portion identity is the only variable.\nKeep fixed: Already-intended insert shape and dimensions - no geometry change; Press settings, placement in press, and placement in doorway position; Water-pour volume, pour point, and observation method; No mixing of portions; each trial linked to one portion only\nHave ready: Received Portion A of recycled HDPE/nylon offcuts with grit, as-received, kept separate; Received Portion B of recycled HDPE/nylon offcuts with grit, as-received, kept separate; Existing doorway test position and water for observation only - no new materials\nAction: Confirm press capability, tooling, and material suitability for this specific HDPE/nylon/grit mix before any pressing; do not start pressing until confirmed. If unconfirmed, do portion sorting, labelling, and doorway fit/drainage-path planning only. Record: Press type, tooling present/absent, suitability decision, and what remains unconfirmed.\nAction: Label Portion A and Portion B and keep them separate; inspect and note proportions unknown and visible grit differences without measuring composition. Record: Portion IDs, photos/notes of offcut appearance and visible grit per portion.\nAction: Subject to confirmed suitable press capability only, form one insert from Portion A and one from Portion B using the same already-intended shape and same press conditions. Record: Portion-to-trial link, press conditions used, and any deviation that would void the comparison.\nAction: Place each trial in the same doorway position in turn and run the same repeatable water pour, observing water leaving the walking surface. Record: Placement notes, pour volume/point, drainage path, pooling locations, and photos per trial.\nCheck Drainage observation: Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.. Place trial in same doorway position, pour same volume of water from same height/point, observe whether water leaves the walking surface and where it pools. Record with photos/notes. This is observation only, not a durability or qualification test. If outside: If water pools or clears differently by portion, keep process fixed and start a new comparison linked to portion sorting/inspection notes; do not adjust press or shape in this route.\nCheck Wet-slip resistance: Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.. Do not use walking, hand feel, or subjective slip feel. Instrumented pendulum assessment by a suitably trained operator under relevant wet conditions is still needed for the product and installation; result and acceptance threshold are not known. Until then record only visible surface condition and drainage fit. If outside: If surface finish or grit exposure differs visibly by portion, log it against portion ID and start a new same-process comparison; do not hand-feel, walk on, or tread the wet prototype as a slip check.\nWhat is the press type, tooling, and suitability for this HDPE/nylon/grit mix, and what must be confirmed before any pressing starts?\nCan received portions stay separately labelled and traceable through trial and observation?\nWhat installation and frequency range/conditions should the future slip assessment cover for this wet doorway?"
+    },
+    {
+      "role": "user",
+      "content": "How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments."
+    },
+    {
+      "role": "assistant",
+      "content": "You can use this variable HDPE/nylon plus grit mix within your current limits by keeping portions separate, preparing by inspection only, and comparing the same shape and process side-by-side. Your press type, tooling, heating or cold method, drying, extraction, and suitability for this mix are unconfirmed, so do not start pressing until those are confirmed. No new binder, tooling, or shape change is authorized yet, so routes below add nothing and change no geometry. Drainage clearing, fit, and visible surface condition can guide decisions now. Wet-slip needs a separate instrumented pendulum assessment by a trained operator, not walking on the wet prototype, hand feel, or subjective slip feel. Check results against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.'\nMaterial route: Keep portions separate, test the range. Sorting and labelling only; no blending across portions and no new materials Proportions and visible grit change between portions. Mixing hides the cause. Separate trials use variation as test information without needing composition measurement. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing portion-linked trials for water clearing and visible surface condition.\nMaterial route: Remove loose surface grit only. Manual inspection and removal of loose surface grit only; no new materials, grinding, sieving, or heating Loose grit can block the drainage path and change the walking surface. Removing only that fraction lowers one unknown without adding a binder. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by noting drainage blocking and surface condition before and after for the same portion.\nEngineering route: Same-shape, same-process comparison. No geometry or tooling change; use only the already-intended insert shape and hold process and placement constant When polymer ratio and grit vary, holding shape, process, and placement constant reduces reliance on unknown material properties and shows whether drainage follows the portion. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing water-clearing observation across portions made and placed the same way.\nEngineering route: Fit, drainage-path and cleaning observation. No geometry change; change only placement planning, observation method, and cleaning access using existing features Drainage, fit, and visible condition can guide design before any slip claim, and separate installation effects from material variation. Next check: Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by observing drainage blocking, fit, and cleanability without stepping on a wet unknown prototype.\nConfirm what is now permitted: manual sorting, use of the existing press, and whether any binder, tooling, or geometry change can be considered\nConfirm press type, tooling, drying and extraction, and safe processing information for HDPE/nylon with grit before any heated trial\nMake portion-linked trials the same way and compare water-clearing and fit observations side-by-side\nArrange a suitable instrumented slip assessment by a trained operator for the wet doorway installation; do not walk on the wet prototype as a check\nDecide a simple pass observation for drainage now, since numerical acceptance limits are not set"
+    }
+  ],
+  "selected_route": {
+    "id": "engineering:E1",
+    "title": "Same-shape, same-process comparison",
+    "change": "No geometry or tooling change; use only the already-intended insert shape and hold process and placement constant",
+    "why": "When polymer ratio and grit vary, holding shape, process, and placement constant reduces reliance on unknown material properties and shows whether drainage follows the portion.",
+    "check": "Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing water-clearing observation across portions made and placed the same way.",
+    "steps": [
+      "Use only the already-intended insert shape; press type, tooling, heated or cold method, drying and extraction remain unconfirmed",
+      "Only if press suitability for this HDPE/nylon plus grit mix is confirmed, form one trial per portion with the same recorded settings",
+      "Place each portion-linked trial in the same doorway position in turn",
+      "Use the same water-pour volume, pour point, and photo notes for each trial"
+    ],
+    "tradeoffs": [
+      "Cannot start pressing until press capability and suitability are confirmed",
+      "Holding shape fixed means drainage cannot be fixed by reshaping in this route",
+      "Needs disciplined logging or the comparison is void"
+    ]
+  },
+  "trial": {
+    "result_kind": "trial_proposal",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 4574,
+      "prompt_tokens": 3653,
+      "total_tokens": 8227
+    },
+    "elapsed_ms": 18392,
+    "request_id": "chatcmpl-01a1990e-0980-710a-a89b-6f486a1b1340",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "route_id": "engineering:E1",
+    "targets": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+    "brief": {
+      "available_changes": "No new materials, equipment or geometry changes are authorized yet.",
+      "contamination": "Grit identity and amount are not measured.",
+      "input": "Synthetic case: recycled HDPE and nylon offcuts; their proportions are unknown.",
+      "process": "A press is available; its type and tooling have not been confirmed.",
+      "product": "Doorway drainage insert",
+      "targets": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+      "use_case": "A proposed walking surface in a wet doorway; no prototype has been made.",
+      "variation": "The proportions and visible grit change between received portions."
+    },
+    "selected_route": {
+      "id": "engineering:E1",
+      "title": "Same-shape, same-process comparison",
+      "change": "No geometry or tooling change; use only the already-intended insert shape and hold process and placement constant",
+      "why": "When polymer ratio and grit vary, holding shape, process, and placement constant reduces reliance on unknown material properties and shows whether drainage follows the portion.",
+      "check": "Check against 'Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.' by comparing water-clearing observation across portions made and placed the same way.",
+      "steps": [
+        "Use only the already-intended insert shape; press type, tooling, heated or cold method, drying and extraction remain unconfirmed",
+        "Only if press suitability for this HDPE/nylon plus grit mix is confirmed, form one trial per portion with the same recorded settings",
+        "Place each portion-linked trial in the same doorway position in turn",
+        "Use the same water-pour volume, pour point, and photo notes for each trial"
+      ],
+      "tradeoffs": [
+        "Cannot start pressing until press capability and suitability are confirmed",
+        "Holding shape fixed means drainage cannot be fixed by reshaping in this route",
+        "Needs disciplined logging or the comparison is void"
+      ]
+    },
+    "title": "Same-shape portion comparison for drainage insert",
+    "objective": "Show whether drainage observation follows the received portion when shape, process and placement are held constant, using only existing portions and the already-intended shape. Forming can only proceed after press suitability is confirmed.",
+    "comparison": "Compare portion A trial versus portion B trial with one variable changed: the source portion. Keep the already-intended insert shape, the same forming settings, the same doorway position and support, and the same water-pour volume, pour point and photo timing fixed for both trials.",
+    "change": "Change only which received portion is used for each trial (for example earlier versus later portion with different visible grit). Make no geometry, tooling, material-addition, or process change; use only the already-intended insert shape.",
+    "keep_fixed": [
+      "Already-intended insert shape and footprint with no reshaping",
+      "Same forming settings and same recorded process once suitability is confirmed",
+      "Same doorway position, support and placement order",
+      "Same water-pour volume, pour point, timing and photo notes"
+    ],
+    "materials": [
+      "Received portion A of HDPE/nylon offcuts with visible grit, kept portion-linked as received",
+      "Received portion B of HDPE/nylon offcuts with visible grit, kept portion-linked as received",
+      "Already-intended insert shape only; no added binder, modifier or new material"
+    ],
+    "steps": [
+      {
+        "action": "Label and log the variable input without processing it: keep portion A and portion B separate and note visible grit differences. Press type, tooling, heated or cold method, drying and extraction remain unconfirmed.",
+        "record": "Portion labels, dated photos, and grit-appearance notes linked to each portion."
+      },
+      {
+        "action": "Confirm the forming prerequisite before any pressing: press capability, tooling fit, and suitability for HDPE/nylon with grit. Do not form until suitability is confirmed; meanwhile prepare the same-position placement plan and water-pour photo sheet.",
+        "record": "Confirmed or not-confirmed press decision, what remains unconfirmed, doorway position sketch, and planned pour volume and point."
+      },
+      {
+        "action": "Only if suitability was confirmed above, form one trial per portion in the already-intended shape using identical recorded settings. If not confirmed, defer forming and keep the comparison as a prepared plan.",
+        "record": "Trial-to-portion link, settings used for each trial, or reason forming was deferred."
+      },
+      {
+        "action": "Place each completed trial in turn in the same doorway position and apply the same water-pour volume from the same pour point with the same timing and photos. Do not walk on or handle the wet surface to judge slip.",
+        "record": "Placement notes, pour volume and point, timed photos, and water-clearing observations per portion-linked trial."
+      }
+    ],
+    "checks": [
+      {
+        "property": "Surface-water drainage observation",
+        "target": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+        "method": "With each portion-linked trial placed in turn in the same doorway position, apply the same water-pour volume from the same pour point and record timed photos and water-clearing notes. This observation can guide design and show whether drainage follows the portion; it does not establish weather durability or slip resistance.",
+        "if_outside": "If one portion-linked trial clears water more slowly, keep shape, process and placement fixed, log the portion link, and run a new same-shape comparison with fresh portions to see if the pattern repeats before asking whether a shape change is permitted. Do not reshape in this comparison."
+      },
+      {
+        "property": "Wet-slip resistance",
+        "target": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+        "method": "Wet-slip resistance still needs instrumented pendulum assessment by a suitably trained operator under relevant wet doorway conditions. Do not walk on, tread on, or handle the wet prototype to judge slip, and do not use water-clearing or fit observations as a slip result. Drainage planning and visual checks can continue while that assessment is unavailable.",
+        "if_outside": "If later independent assessment finds the wet surface does not meet the installation need, keep the portion, shape and process records unchanged and start a new comparison only after the permitted lever is clarified. Do not select the other portion as better without supporting observations."
+      }
+    ],
+    "questions": [
+      "Can the press type, tooling, heated or cold method, and suitability for this HDPE/nylon plus grit mix, including drying and extraction, be confirmed before any forming?",
+      "What is the already-intended insert shape and the exact doorway position to reuse for each trial?",
+      "Who could carry out instrumented pendulum assessment of the wet insert in its doorway installation when that step is possible?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "hse-ppis13",
+        "title": "HSE — controlling fume during plastics processing",
+        "url": "https://www.hse.gov.uk/pubns/ppis13.pdf",
+        "scope": "General guidance to identify polymer formulation/additives and processing information before heated processing. Temperature and dwell affect fumes; this is not a heat recipe for unidentified cable residue."
+      },
+      {
+        "id": "hse-slip-assessment",
+        "title": "HSE — assessing floor slip resistance",
+        "url": "https://www.hse.gov.uk/pubns/geis2.htm",
+        "scope": "General floor-slip testing guidance, including instrumented pendulum assessment by a suitably trained operator under relevant surface conditions. It supplies no measured slip value, acceptance target or qualification for the user's recycled material, and no home walking test substitutes for it. Check the current applicable method for the product and installation."
+      },
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "workshop_case": {
+    "brief": {
+      "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+      "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption.",
+      "contamination": "",
+      "product": "A desk ballast module",
+      "use_case": "Noncritical desk ballast; software demonstration only.",
+      "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+      "process": "",
+      "available_changes": ""
+    },
+    "details": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02"
+    }
+  },
+  "note": "Simulated observation ref trial-1: complete assembly mass 950 g, weighing uncertainty 5 g. I can add at most 100 g and remove at most 100 g. Adjustment uncertainty is 5 g.",
+  "response": {
+    "result_kind": "observation_draft",
+    "review_required": true,
+    "fields": {
+      "id": {
+        "quote": "Simulated observation ref trial-1:",
+        "text": "trial-1"
+      },
+      "kind": {
+        "kind": "simulated",
+        "quote": "Simulated observation ref trial-1:"
+      },
+      "mass": {
+        "number_text": "950",
+        "quote": "complete assembly mass 950 g",
+        "unit": "g",
+        "normalized_kg": 0.95
+      },
+      "uncertainty": {
+        "number_text": "5",
+        "quote": "weighing uncertainty 5 g",
+        "unit": "g",
+        "normalized_kg": 0.005
+      },
+      "max_add_mass": {
+        "number_text": "100",
+        "quote": "I can add at most 100 g",
+        "unit": "g",
+        "normalized_kg": 0.1
+      },
+      "max_remove_mass": {
+        "number_text": "100",
+        "quote": "and remove at most 100 g",
+        "unit": "g",
+        "normalized_kg": 0.1
+      },
+      "adjustment_uncertainty": {
+        "number_text": "5",
+        "quote": "Adjustment uncertainty is 5 g",
+        "unit": "g",
+        "normalized_kg": 0.005
+      }
+    },
+    "assembly_observation": {
+      "id": "trial-1",
+      "kind": "simulated",
+      "mass": "0.95",
+      "error": "0.005",
+      "maxAdd": "0.1",
+      "maxRemove": "0.1",
+      "adjustmentError": "0.005",
+      "idealFeedback": false
+    },
+    "missing_fields": [],
+    "questions": [],
+    "brief": {
+      "available_changes": "",
+      "contamination": "",
+      "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+      "process": "",
+      "product": "A desk ballast module",
+      "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+      "use_case": "Noncritical desk ballast; software demonstration only.",
+      "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption."
+    },
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02"
+    },
+    "note": "Simulated observation ref trial-1: complete assembly mass 950 g, weighing uncertainty 5 g. I can add at most 100 g and remove at most 100 g. Adjustment uncertainty is 5 g.",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "live": true,
+    "usage": {
+      "completion_tokens": 914,
+      "prompt_tokens": 1169,
+      "total_tokens": 2083
+    },
+    "request_id": "chatcmpl-01a193ed-aad1-70e1-8899-77e300b8c2e3",
+    "elapsed_ms": 4224,
+    "interpretation_verified": false,
+    "physical_product_tested": false
+  },
+  "review_status": "applied",
+  "applied_observation": {
+    "id": "trial-1",
+    "kind": "simulated",
+    "mass": "0.95",
+    "error": "0.005",
+    "maxAdd": "0.1",
+    "maxRemove": "0.1",
+    "adjustmentError": "0.005",
+    "idealFeedback": false
+  }
+}

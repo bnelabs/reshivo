@@ -1,0 +1,207 @@
+{
+  "created": "2026-04-22T06:23:34.177924+00:00",
+  "modified": "2026-07-15T00:02:02.043551+00:00",
+  "id": 19370161,
+  "conceptrecid": "18457708",
+  "doi": "10.5281/zenodo.19370161",
+  "conceptdoi": "10.5281/zenodo.18457708",
+  "doi_url": "https://doi.org/10.5281/zenodo.19370161",
+  "metadata": {
+    "title": "Evaluating the Recyclability and Restabilization of Laboratory Plastics Consumables: Impact of Autoclaving and Mechanical Recycling on Polypropylene",
+    "doi": "10.5281/zenodo.19370161",
+    "publication_date": "2026-04-01",
+    "description": "<p>This repository contains the experimental data supporting the study <em>&ldquo;Evaluating the Recyclability and Restabilization of Laboratory Plastic Consumables: Impact of Autoclaving and Mechanical Recycling on Polypropylene.&rdquo;</em></p>\n<p><br>The dataset includes differential scanning calorimetry (DSC), oxidation induction time (OIT), melt volume rate (MVR), tensile testing, gel permeation chromatography (GPC), rheological, and colorimetric data. These data were generated to evaluate the effects of autoclave decontamination, multiple extrusion cycles, and restabilization on polypropylene laboratory plastics.</p>",
+    "access_right": "open",
+    "embargo_date": "2026-07-15",
+    "creators": [
+      {
+        "name": "Ng, Kim Hao",
+        "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability",
+        "orcid": "0000-0003-3373-6666"
+      },
+      {
+        "name": "S\u00fcss, Leonard D.",
+        "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability"
+      },
+      {
+        "name": "Hirschel, Franziska",
+        "affiliation": "Darmstadt University of Applied Sciences"
+      },
+      {
+        "name": "M\u00fcller, Michael",
+        "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability"
+      },
+      {
+        "name": "Schell, Bianca Ricarda",
+        "affiliation": "University of Konstanz",
+        "orcid": "0000-0003-0314-5259"
+      },
+      {
+        "name": "Metzsch-Zilligen, Elke",
+        "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability"
+      },
+      {
+        "name": "Pfaendner, Rudolf",
+        "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability",
+        "orcid": "0000-0001-6743-1495"
+      },
+      {
+        "name": "Bruns, Nico",
+        "affiliation": "University of Strathclyde",
+        "orcid": "0000-0001-6199-9995"
+      }
+    ],
+    "language": "eng",
+    "resource_type": {
+      "title": "Publication",
+      "type": "publication"
+    },
+    "journal": {
+      "title": "RSC Sustainability"
+    },
+    "license": {
+      "id": "cc-by-4.0"
+    },
+    "grants": [
+      {
+        "code": "033KI201",
+        "internal_id": "04pz7b180::033KI201",
+        "funder": {
+          "name": "Federal Ministry of Education and Research"
+        }
+      }
+    ],
+    "relations": {
+      "version": [
+        {
+          "index": 1,
+          "is_last": true,
+          "parent": {
+            "pid_type": "recid",
+            "pid_value": "18457708"
+          }
+        }
+      ]
+    }
+  },
+  "title": "Evaluating the Recyclability and Restabilization of Laboratory Plastics Consumables: Impact of Autoclaving and Mechanical Recycling on Polypropylene",
+  "links": {
+    "self": "https://zenodo.org/api/records/19370161",
+    "self_html": "https://zenodo.org/records/19370161",
+    "preview_html": "https://zenodo.org/records/19370161?preview=1",
+    "doi": "https://doi.org/10.5281/zenodo.19370161",
+    "self_doi": "https://doi.org/10.5281/zenodo.19370161",
+    "self_doi_html": "https://zenodo.org/doi/10.5281/zenodo.19370161",
+    "reserve_doi": "https://zenodo.org/api/records/19370161/draft/pids/doi",
+    "parent": "https://zenodo.org/api/records/18457708",
+    "parent_html": "https://zenodo.org/records/18457708",
+    "parent_doi": "https://doi.org/10.5281/zenodo.18457708",
+    "parent_doi_html": "https://zenodo.org/doi/10.5281/zenodo.18457708",
+    "self_iiif_manifest": "https://zenodo.org/api/iiif/record:19370161/manifest",
+    "self_iiif_sequence": "https://zenodo.org/api/iiif/record:19370161/sequence/default",
+    "files": "https://zenodo.org/api/records/19370161/files",
+    "media_files": "https://zenodo.org/api/records/19370161/media-files",
+    "latest": "https://zenodo.org/api/records/19370161/versions/latest",
+    "latest_html": "https://zenodo.org/records/19370161/latest",
+    "versions": "https://zenodo.org/api/records/19370161/versions",
+    "draft": "https://zenodo.org/api/records/19370161/draft",
+    "access_links": "https://zenodo.org/api/records/19370161/access/links",
+    "access_grants": "https://zenodo.org/api/records/19370161/access/grants",
+    "access_users": "https://zenodo.org/api/records/19370161/access/users",
+    "access_request": "https://zenodo.org/api/records/19370161/access/request",
+    "access": "https://zenodo.org/api/records/19370161/access",
+    "communities": "https://zenodo.org/api/records/19370161/communities",
+    "communities-suggestions": "https://zenodo.org/api/records/19370161/communities-suggestions",
+    "request_deletion": "https://zenodo.org/api/records/19370161/request-deletion",
+    "file_modification": "https://zenodo.org/api/records/19370161/file-modification",
+    "quota_increase": "https://zenodo.org/api/records/19370161/quota-increase",
+    "requests": "https://zenodo.org/api/records/19370161/requests"
+  },
+  "updated": "2026-07-15T00:02:02.043551+00:00",
+  "recid": "19370161",
+  "revision": 6,
+  "files": [
+    {
+      "id": "7efa4a5a-6803-473b-b1a9-f29b2235f820",
+      "key": "OIT.zip",
+      "size": 14487759,
+      "checksum": "md5:93e763e62e6bea560c43dd0d2c6835c4",
+      "links": {
+        "self": "https://zenodo.org/api/records/19370161/files/OIT.zip/content"
+      }
+    },
+    {
+      "id": "824395ff-b241-4779-b8aa-b14bbfc09c2e",
+      "key": "DSC.zip",
+      "size": 733167,
+      "checksum": "md5:50ed51b07fa926b91d247b4d65914278",
+      "links": {
+        "self": "https://zenodo.org/api/records/19370161/files/DSC.zip/content"
+      }
+    },
+    {
+      "id": "fd78698a-4ebc-4e2a-af5b-2f0f378c87a9",
+      "key": "Rheology.zip",
+      "size": 3772622,
+      "checksum": "md5:ff7cbc8a60382ea075af92f0a921dd90",
+      "links": {
+        "self": "https://zenodo.org/api/records/19370161/files/Rheology.zip/content"
+      }
+    },
+    {
+      "id": "bf9c9fd1-e564-4aa0-af8d-712cf0737f94",
+      "key": "GPC.zip",
+      "size": 388602,
+      "checksum": "md5:c51f1375f09371c4bf85f769f085907b",
+      "links": {
+        "self": "https://zenodo.org/api/records/19370161/files/GPC.zip/content"
+      }
+    },
+    {
+      "id": "d2a191b6-09ab-41f9-8f51-4e8961c35edc",
+      "key": "Colorimetry.zip",
+      "size": 17807,
+      "checksum": "md5:ee8a9a23686e64a7b4019aa4f8572e65",
+      "links": {
+        "self": "https://zenodo.org/api/records/19370161/files/Colorimetry.zip/content"
+      }
+    },
+    {
+      "id": "ba182391-6971-4115-acff-a37351818edb",
+      "key": "MVR.zip",
+      "size": 194241,
+      "checksum": "md5:bb4854050d1d1d420509702aa221bd4b",
+      "links": {
+        "self": "https://zenodo.org/api/records/19370161/files/MVR.zip/content"
+      }
+    },
+    {
+      "id": "d8a7bc87-0f26-4082-8639-ed8954e0b617",
+      "key": "Tensile_tests.zip",
+      "size": 3074775,
+      "checksum": "md5:4bb39363f3b95acd5ade7b43882eab0e",
+      "links": {
+        "self": "https://zenodo.org/api/records/19370161/files/Tensile_tests.zip/content"
+      }
+    }
+  ],
+  "swh": {},
+  "owners": [
+    {
+      "id": "1533672"
+    }
+  ],
+  "status": "published",
+  "stats": {
+    "downloads": 189,
+    "unique_downloads": 152,
+    "views": 180,
+    "unique_views": 170,
+    "version_downloads": 134,
+    "version_unique_downloads": 111,
+    "version_unique_views": 86,
+    "version_views": 92
+  },
+  "state": "done",
+  "submitted": true
+}

@@ -1,0 +1,58 @@
+name: Reshivo checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -v
+      - run: python scripts/verify_research.py
+      - run: python -m rematter demo --material all --out outputs/ci-core
+  workbench:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: node checks/quantity.test.mjs
+      - run: node checks/engineering-note.test.mjs
+      - run: node checks/unit-conversion.test.mjs
+      - run: node checks/measurement-decimal.test.mjs
+      - run: node checks/measurement-trial.test.mjs
+      - run: node checks/workspace-file.test.mjs
+      - run: node checks/project-workspace.test.mjs
+      - run: node checks/manufacturing-cost.test.mjs
+      - run: node checks/cost-price-unit.test.mjs
+      - run: node checks/cost-display.test.mjs
+      - run: node checks/cost-comparison-setup.test.mjs
+      - run: node checks/mix-adjustment.test.mjs
+      - run: node checks/mix-candidate.test.mjs
+      - run: node checks/reference-composition.test.mjs
+      - run: node checks/material-unit-change.test.mjs
+      - run: node checks/mix-empty-setup.test.mjs
+      - run: node checks/mix-question.test.mjs
+      - run: node checks/project-brief.test.mjs
+      - run: node checks/setup-selection.test.mjs
+      - run: node checks/saved-guidance-review.test.mjs
+      - run: node checks/legacy-guidance-review.test.mjs
+      - run: node checks/check-editing.test.mjs
+      - run: node checks/trial-assessment-notices.test.mjs
+      - run: node checks/sound-guidance.test.mjs
+      - run: npm run build

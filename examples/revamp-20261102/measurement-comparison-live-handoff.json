@@ -1,0 +1,192 @@
+{
+  "brief": {
+    "input": "Mostly metal dust, with a small portion of cable-plastic residue that might act as a binder. Metal composition and binder identity have not been confirmed.",
+    "variation": "The metal/plastic proportions and particle sizes vary between the material we receive. The range has not been measured yet.",
+    "contamination": "Cable-plastic identity and other contamination are unknown; amounts are not yet measured.",
+    "product": "A contained counterweight",
+    "use_case": "A fixed ballast unit with dust contained and a robust outer case. Not for lifting or another safety-critical use.",
+    "targets": "Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check.",
+    "process": "Assembly and weighing at home. No heating of unknown cable plastics. No laboratory or specialist moulding equipment available.",
+    "available_changes": "A rigid enclosure, mechanical containment, adjustable fill compartments, or an appropriate known binder may be considered. Keep dust contained; no open dust sorting at home."
+  },
+  "calculation_details": {
+    "label": "Hypothetical counterweight case",
+    "components": [
+      {
+        "id": 1,
+        "name": "Metal dust (identity unconfirmed)",
+        "role": "main",
+        "amount": ""
+      },
+      {
+        "id": 2,
+        "name": "Cable-plastic residue (polymer unconfirmed)",
+        "role": "binder",
+        "amount": ""
+      }
+    ],
+    "amount_unit": "mass_percent",
+    "amount_basis": "",
+    "mass_target_min_kg": "9.9",
+    "mass_target_max_kg": "10.1"
+  },
+  "plan": {
+    "result_kind": "engineering_proposals",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 7021,
+      "prompt_tokens": 3088,
+      "total_tokens": 10109
+    },
+    "elapsed_ms": 40763,
+    "request_id": "chatcmpl-01a19ac3-4d98-727c-8b72-0b5dc8020229",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "Hypothetical counterweight case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Metal dust (identity unconfirmed)",
+          "role": "main",
+          "amount": ""
+        },
+        {
+          "id": 2,
+          "name": "Cable-plastic residue (polymer unconfirmed)",
+          "role": "binder",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "9.9",
+      "mass_target_max_kg": "10.1"
+    },
+    "answer": "Those two readings are synthetic software only with one reading each and no real material tested, so they do not show what your variable batch will do. In the simulation 200 g sealed trim read 10 kg and inside 9.9-10.1 kg while 100 g read 9.75 kg and outside, but with unmeasured metal/plastic proportions you cannot assume 200 g will always give 10 kg. Treat this as a planning prompt only: keep the dust cold and sealed with no home sorting, grinding, sieving or heating, use a rigid case that carries the load, and set final mass by weighing the complete closed assembly and adjusting sealed trim. Mass alone does not prove retention or durability, and scale uncertainty must suit Assembled mass 10 kg ±0.1 kg. After you weigh the real closed unit, the final weight adjustment calculation can help plan how much sealed trim to add or remove.",
+    "quarantined_answer": [],
+    "material_routes": [
+      {
+        "id": "material:M1",
+        "title": "Keep mix contained cold, ask identity",
+        "change": "Use the as-received mix only as cold contained fill with no home sorting, grinding, sieving or heating, and request metal and polymer identity.",
+        "why": "This might help keep the batch usable while avoiding heating unknown plastics and open handling of fine dust.",
+        "steps": [
+          "Keep dust and cable-plastic residue sealed as received; do not open-sort at home.",
+          "Ask the supplier for metal identity, cable-plastic polymer identity including possible PVC, and safe-handling information.",
+          "Allow any opening, transfer or preparation only in a suitable facility with dust controls once identity is known.",
+          "Let the outer rigid case provide strength, not the loose mix."
+        ],
+        "tradeoffs": [
+          "No preparation beyond sealed containment until identity and suitable controls are confirmed.",
+          "Loose fill can shift unless compartments limit movement."
+        ],
+        "check": "Check sealed containment holds dust and check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check."
+      },
+      {
+        "id": "material:M2",
+        "title": "Conditional known-binder path only",
+        "change": "Hold any added binder until identity is known; then consider a known cold-setting binder family conditionally through a suitable facility.",
+        "why": "This might help immobilise fill to limit internal movement if sealed containment alone proves insufficient, without heating unknown residue.",
+        "steps": [
+          "Do no home mixing of loose dust with any binder.",
+          "If dust migration is seen, ask a suitable facility whether a known binder family, for example a known epoxy or polyurethane family, could be compatible with the identified metal and identified polymer and how it would be selected.",
+          "Describe the first trial only qualitatively as a small contained coupon in that facility, with measured retention setting any amount."
+        ],
+        "tradeoffs": [
+          "Needs identified materials and a suitable facility; not a home step.",
+          "Adds mass and complexity; compatibility must be checked first because unknown residue may be incompatible."
+        ],
+        "check": "Check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check. Mass alone does not prove retention."
+      }
+    ],
+    "engineering_routes": [
+      {
+        "id": "engineering:E1",
+        "title": "Trim-adjustable sealed weight",
+        "change": "Add a main sealed chamber plus a smaller sealed trim chamber as an adjustable design choice, and set final mass by weighing the complete closed assembly.",
+        "why": "This might help handle batch variation without guessing mixture density, because final closed-assembly weighing corrects for unknown proportions.",
+        "steps": [
+          "Assemble the complete unit including enclosure and inner sealed containment, then weigh the complete closed assembly with tare for the enclosure.",
+          "Change one variable per comparison: add or remove only sealed trim in the small chamber.",
+          "Use a scale with capability and measurement uncertainty suited to +/0.1 kg; do not rely on display resolution alone.",
+          "Use the final weight adjustment calculation after real weighing to plan the trim change, then re-weigh closed."
+        ],
+        "tradeoffs": [
+          "Needs scale uncertainty suited to +/0.1 kg; small errors matter.",
+          "Extra chamber adds joints that must stay dust-tight."
+        ],
+        "check": "Check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check. Mass alone does not prove strength, retention or durability."
+      },
+      {
+        "id": "engineering:E2",
+        "title": "Robust fixed-ballast outer case",
+        "change": "Use double containment in a rigid outer case for fixed ballast, so the unknown loose mix does not carry structural load.",
+        "why": "This might help reduce reliance on unknown dust and plastic properties, because strength and containment come from the case and mounting rather than the fill.",
+        "steps": [
+          "Place sealed inner cartridge(s) inside a rigid outer case you can assemble at home - case type, seals and mounting are proposed needs and unconfirmed.",
+          "Keep the design reversible so cartridges can be removed if the batch changes.",
+          "Use a paper footprint template to explore clearance and mounting position only; it does not test drainage, strength or stability.",
+          "Plan a suitable durability check for the real case and installation while design continues."
+        ],
+        "tradeoffs": [
+          "Case type, seals and mounting are unconfirmed; design can continue but manufacturing cannot be assumed ready.",
+          "Heavier case uses part of the 10 kg budget, leaving less for fill and trim."
+        ],
+        "check": "Check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check. Visual fit does not prove durability."
+      }
+    ],
+    "next_steps": [
+      "Treat the simulation as planning only; weigh the real complete closed assembly on a scale with uncertainty suited to +/0.1 kg and repeat weighings while changing one variable at a time.",
+      "Keep each delivery separate and adjust by sealed trim rather than assuming the 200 g simulation level will repeat.",
+      "Request metal identity, cable-plastic polymer identity, and suitable handling controls before any preparation beyond sealed containment.",
+      "Inspect closed containment for dust escape and plan a suitable durability check for the real case and fixed installation."
+    ],
+    "questions": [
+      "What rigid enclosure, inner cartridges and sealing method can you actually assemble at home, and can shape or mounting change for fixed ballast?",
+      "What scale will you use for the 10 kg check, and what is its capability and measurement uncertainty for +/0.1 kg?",
+      "Can your supplier state the metal identity and the cable-plastic polymer identity, including possible PVC and safe-handling information?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "hse-ppis13",
+        "title": "HSE — controlling fume during plastics processing",
+        "url": "https://www.hse.gov.uk/pubns/ppis13.pdf",
+        "scope": "General guidance to identify polymer formulation/additives and processing information before heated processing. Temperature and dwell affect fumes; this is not a heat recipe for unidentified cable residue."
+      },
+      {
+        "id": "osha-combustible-dust",
+        "title": "OSHA — combustible dust overview",
+        "url": "https://www.osha.gov/combustible-dust",
+        "scope": "Some metals in fine form can present combustible-dust issues. Ask for metal identity, particle form and suitable existing handling controls; do not assume all metal dust is combustible or reject every batch."
+      },
+      {
+        "id": "nist-weighing-tare",
+        "title": "NIST — weighing and scales FAQs",
+        "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+        "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "history": [
+    {
+      "role": "user",
+      "content": "These are my reported or synthetic observations, not a prediction. Suggest practical next checks or changes, without assuming future consistency or unmeasured properties. Comparison summary:\n{\n  \"reading_type\": \"synthetic simulation\",\n  \"input\": \"Sealed trim mass\",\n  \"input_unit\": \"g\",\n  \"property\": \"Assembled mass\",\n  \"property_unit\": \"kg\",\n  \"target\": [\n    9.9,\n    10.1\n  ],\n  \"method\": \"Synthetic software readings only; no material or product was tested. Same complete-assembly weighing scenario.\",\n  \"settings\": [\n    {\n      \"id\": \"Setting 1\",\n      \"level\": 100,\n      \"observed_min\": 9.75,\n      \"observed_max\": 9.75,\n      \"reading_count\": 1,\n      \"in_target_count\": 0\n    },\n    {\n      \"id\": \"Setting 2\",\n      \"level\": 200,\n      \"observed_min\": 10,\n      \"observed_max\": 10,\n      \"reading_count\": 1,\n      \"in_target_count\": 1\n    }\n  ]\n}"
+    },
+    {
+      "role": "assistant",
+      "content": "Those two readings are synthetic software only with one reading each and no real material tested, so they do not show what your variable batch will do. In the simulation 200 g sealed trim read 10 kg and inside 9.9-10.1 kg while 100 g read 9.75 kg and outside, but with unmeasured metal/plastic proportions you cannot assume 200 g will always give 10 kg. Treat this as a planning prompt only: keep the dust cold and sealed with no home sorting, grinding, sieving or heating, use a rigid case that carries the load, and set final mass by weighing the complete closed assembly and adjusting sealed trim. Mass alone does not prove retention or durability, and scale uncertainty must suit Assembled mass 10 kg ±0.1 kg. After you weigh the real closed unit, the final weight adjustment calculation can help plan how much sealed trim to add or remove.\nMaterial route: Keep mix contained cold, ask identity. Use the as-received mix only as cold contained fill with no home sorting, grinding, sieving or heating, and request metal and polymer identity. This might help keep the batch usable while avoiding heating unknown plastics and open handling of fine dust. Next check: Check sealed containment holds dust and check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check.\nMaterial route: Conditional known-binder path only. Hold any added binder until identity is known; then consider a known cold-setting binder family conditionally through a suitable facility. This might help immobilise fill to limit internal movement if sealed containment alone proves insufficient, without heating unknown residue. Next check: Check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check. Mass alone does not prove retention.\nEngineering route: Trim-adjustable sealed weight. Add a main sealed chamber plus a smaller sealed trim chamber as an adjustable design choice, and set final mass by weighing the complete closed assembly. This might help handle batch variation without guessing mixture density, because final closed-assembly weighing corrects for unknown proportions. Next check: Check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check. Mass alone does not prove strength, retention or durability.\nEngineering route: Robust fixed-ballast outer case. Use double containment in a rigid outer case for fixed ballast, so the unknown loose mix does not carry structural load. This might help reduce reliance on unknown dust and plastic properties, because strength and containment come from the case and mounting rather than the fill. Next check: Check Assembled mass 10 kg ±0.1 kg; contained dust and a durable outer case. Mechanical durability still needs an appropriate check. Visual fit does not prove durability.\nTreat the simulation as planning only; weigh the real complete closed assembly on a scale with uncertainty suited to +/0.1 kg and repeat weighings while changing one variable at a time.\nKeep each delivery separate and adjust by sealed trim rather than assuming the 200 g simulation level will repeat.\nRequest metal identity, cable-plastic polymer identity, and suitable handling controls before any preparation beyond sealed containment.\nInspect closed containment for dust escape and plan a suitable durability check for the real case and fixed installation."
+    }
+  ],
+  "selected_route": null,
+  "trial": null
+}

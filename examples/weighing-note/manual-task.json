@@ -1,0 +1,20 @@
+{
+  "protocol": "intake-v1",
+  "method": "manual",
+  "task": "complete_note",
+  "actions": [
+    "open manual details",
+    "edit Observation reference",
+    "edit Complete-assembly mass (kg)",
+    "edit Weighing uncertainty (± kg)",
+    "edit Maximum mass available to add (kg)",
+    "edit Maximum adjustable mass to remove (kg)",
+    "edit Adjustment uncertainty (± kg)",
+    "select simulated provenance",
+    "run bounded check"
+  ],
+  "completionActions": 9,
+  "automationElapsedMs": 5534,
+  "humanTimeMeasured": false,
+  "resultText": "Simulation · complete-assembly mass onlyAdd 50 gObservation trial-1: 945–955 g, including the entered weighing uncertainty.Modeled mass after this adjustment: 0.99–1.01 kg, including the entered adjustment uncertainty.Modeled addition range: 40–60 g.Apply only a suitable available adjustment, reweigh the closed complete assembly and check volume separately.Reweigh the complete unit after an actual adjustment. This checks mass only; retention, durability, usable space and future-batch consistency remain unverified.Calculation assumptionsThe mass observation and adjustment-error bounds are supplied, not independently verified.A signed positive correction adds mass and a negative correction removes mass; no density estimate is used.Available addition/removal limits apply to actual adjusted mass; the command reserves room for adjustment uncertainty.No-operation results do not incur adjustment error. Any actual adjustment needs a fresh complete-assembly measurement.This mass-only result does not establish volume fit, retention, durability or future-batch performance."
+}

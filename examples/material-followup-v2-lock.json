@@ -1,0 +1,13 @@
+{
+  "protocol": "material-followup-v2",
+  "frozen_utc": "2026-11-03T07:43:19.536000+00:00",
+  "hashes": {
+    "docs/MATERIAL_FOLLOWUP_REGRESSION.md": "4ab7f02cb698c5bf7d3a7ebbe5e74adea5c19fe11b0bc8af950f2611e30a275a",
+    "scripts/check_material_followup.py": "6069cf408d75107fedc4b9cc2e0d8bb33ee7f20c62811aa0deef2e4f9f7c4b4e",
+    "examples/material-task-v1-live.json": "c9584090fef01017f397ff66e4bfe56c51ea032c557d83dcf7aa80402a9201f5",
+    "rematter/advisor.py": "b81f88302eec7bac501f4ae6e7c8236cc40288627c4e2fb8485e2797535efdcc",
+    "rematter/meta.py": "78b6e7ddbfffa1423e4a752ca2ac4b78e6a8389eb96daf85aba91d1edd6edc76",
+    "rematter/service.py": "50d0b364f3ddcdfdf64511589c31a421f35ce795657a2c0d99d63cdd941bbbcf",
+    "rematter/server.py": "38b2ebf503f3f9bf8c57fc107942b53c04b71b5f7c8274e30ca127b262cd7dcd"
+  }
+}

@@ -1,0 +1,324 @@
+{
+  "brief": {
+    "input": "Hypothetical case: clean preformed recycled PET fibre felt offcuts. Polymer and manufacturing records would need to be confirmed; no acoustic measurements are available.",
+    "variation": "Offcut thickness and areal mass can differ. No observed ranges or contamination effects have been measured.",
+    "contamination": "",
+    "product": "Removable indoor sound-absorbing sheet",
+    "use_case": "Nonstructural wall-mounted sheet for reducing room reverberation. Absorption, not sound blocking. Flat wall with a 20 mm air gap.",
+    "targets": "Target absorption coefficient at least 0.5 over 500–2000 Hz in the stated installation; maximum sheet thickness 30 mm and areal mass 3 kg/m². These are desired targets, not measurements.",
+    "process": "At-home dry assembly of intact offcuts only, a ruler, scale and hand tools. No heating, loose-fibre processing or acoustic test rig.",
+    "available_changes": "Can change arrangement, layer count within thickness limit, mechanical frame and air gap. Material compatibility, fire response and acoustic performance remain untested."
+  },
+  "calculation_details": {
+    "label": "",
+    "components": [
+      {
+        "id": 1,
+        "name": "",
+        "role": "main",
+        "amount": ""
+      }
+    ],
+    "amount_unit": "mass_percent",
+    "amount_basis": "",
+    "mass_target_min_kg": "",
+    "mass_target_max_kg": ""
+  },
+  "plan": {
+    "result_kind": "engineering_proposals",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 6286,
+      "prompt_tokens": 2796,
+      "total_tokens": 9082
+    },
+    "elapsed_ms": 33718,
+    "request_id": "chatcmpl-01a19ac4-3c2e-7664-af53-f5b7cc496437",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "answer": "This is absorption to reduce reverberation, not sound blocking. Blocking keeps sound from passing through; absorption soaks up sound in the room. Your felt, frame and 20 mm gap need to be judged as that absorption system.\n\nYou have ruler, scale and hand tools for dry assembly of intact offcuts, with no heating, loose-fibre work or acoustic rig. An acoustic laboratory test in the flat-wall 20 mm-gap setup is the unconfirmed capability you would still need. Listening in the room or feeling the felt can guide fit and neatness but cannot replace that test.\n\nYour targets are: \"Target absorption coefficient at least 0.5 over 500–2000 Hz in the stated installation; maximum sheet thickness 30 mm and areal mass 3 kg/m². These are desired targets, not measurements.\" Thickness and mass per area can be checked at home with ruler and scale. The 0.5 coefficient over 500-2000 Hz cannot be inferred from thickness, weight or feel, and fire response and compatibility remain untested.\n\nA practical way forward is to sort offcuts into matched piles, build flat uncompressed stacks that stay within thickness and mass limits, hold them in an open-face frame that keeps the 20 mm gap, and make small removable panels so one layer change can be compared at a time after lab feedback. If you use the final-weight adjustment calculation, weigh the complete panel including its frame.",
+    "quarantined_answer": [],
+    "material_routes": [
+      {
+        "id": "material:m1",
+        "title": "Sort offcuts into matched stacks",
+        "change": "Group intact offcuts by measured thickness and mass per area, then build each sheet from one matched group.",
+        "why": "Thickness and areal-mass variation is the main known variable. Using like-with-like pieces in one sheet might reduce uneven thickness and weight without needing to know acoustic behaviour, which is still untested.",
+        "steps": [
+          "Measure length, width and thickness of each intact offcut with ruler and weigh with scale.",
+          "Work out mass per area for each piece and sort into piles of similar thickness and mass per area.",
+          "Dry-stack pieces from one pile to stay within 30 mm total and weigh the stack.",
+          "Keep different piles for separate panels; do not cut or tease fibres apart."
+        ],
+        "tradeoffs": [
+          "More measuring and sorting time.",
+          "Some offcuts may not fit the first panel and wait for a later matched panel.",
+          "Matching size and weight does not show absorption."
+        ],
+        "check": "Check total stack thickness with ruler and total panel mass with scale against your thickness and areal-mass limits; acoustic coefficient still needs a laboratory test in the 20 mm-gap installation."
+      },
+      {
+        "id": "material:m2",
+        "title": "Low-compression dry layer trials",
+        "change": "Keep felt loft intact and try one layer-order change at a time within the 30 mm limit.",
+        "why": "Compressing felt or adding heat or binder would change the material and is outside your dry intact-only method. Keeping loft and changing only order might make later acoustic comparisons clearer.",
+        "steps": [
+          "Lay up a flat stack that stays under 30 mm without pressing.",
+          "Try one order change while keeping count and total thickness the same.",
+          "Hold layers lightly without glue or stitching that compresses the face.",
+          "Record which piece went where for each trial panel."
+        ],
+        "tradeoffs": [
+          "Unfixed layers can shift during handling.",
+          "Avoiding compression limits how flat you can make the face.",
+          "Layer-order effect on absorption is unknown until measured."
+        ],
+        "check": "Check flatness and thickness by ruler without pressing, and keep a record for the later acoustic test; do not infer absorption from feel or weight."
+      }
+    ],
+    "engineering_routes": [
+      {
+        "id": "engineering:e1",
+        "title": "Open frame holding the 20 mm gap",
+        "change": "Use a simple mechanical frame and wall battens to hold the felt sheet flat with a 20 mm air space behind it.",
+        "why": "The gap is part of your stated installation. Holding it accurately with hand tools might help later absorption testing without changing the felt itself.",
+        "steps": [
+          "Make a light perimeter frame that supports edges without covering the front face.",
+          "Fix removable battens or spacers to give a 20 mm space between felt back and wall.",
+          "Mount the sheet so it can be lifted off for inspection or re-stacking.",
+          "Check gap depth at several points with ruler."
+        ],
+        "tradeoffs": [
+          "Frame adds weight and depth to manage.",
+          "Frame must not compress the felt face or close off airflow.",
+          "Fixing strength and fire response remain untested."
+        ],
+        "check": "Check gap depth, overall fit on flat wall, and easy removal; acoustic effect in this exact gap setup still needs laboratory measurement."
+      },
+      {
+        "id": "engineering:e2",
+        "title": "Small swappable panels",
+        "change": "Build the area as two or three small removable panels of the same construction instead of one large sheet.",
+        "why": "With variable offcuts, smaller panels might keep each unit within thickness and mass limits and allow swapping or re-stacking after test feedback, rather than relying on one unknown uniform property.",
+        "steps": [
+          "Choose a panel size you can frame with hand tools - for example two panels as an adjustable choice.",
+          "Build each panel to the same thickness limit using matched offcuts.",
+          "Weigh each finished panel including its frame.",
+          "Keep build records so only one variable changes between comparisons."
+        ],
+        "tradeoffs": [
+          "More frames and joints, with small gaps between panels.",
+          "More weighing and record-keeping.",
+          "Modular layout does not prove absorption."
+        ],
+        "check": "Check each panel size and finished weight with ruler and scale, and fit on wall; acoustic comparison still needs lab data for 500-2000 Hz."
+      }
+    ],
+    "next_steps": [
+      "Measure and log all offcuts for size, thickness and mass, then dry-assemble one panel that stays within 30 mm and 3 kg/m2. If you use the final-weight adjustment calculation, weigh the complete panel including frame on a scale whose capability and uncertainty suit your tolerance; display increments alone do not prove accuracy.",
+      "Build the 20 mm-gap frame mount and check fit, flatness and removability at home; room listening is observation only and does not replace absorption measurement.",
+      "Arrange acoustic absorption testing for 500-2000 Hz in the flat-wall 20 mm-gap installation - external capability unconfirmed - testing one variable change at a time.",
+      "Confirm polymer and manufacturing records for the felt and check what indoor wall-cover fixing and fire questions apply to your room before longer-term use."
+    ],
+    "questions": [
+      "Can you confirm from the supplier whether the felt is PET only and whether any indoor-use or fire information exists for the felt plus your frame?",
+      "What fixing method and total wall area are practical for you, and can the panel stay rectangular with an open front face?",
+      "What scale capacity and smallest increment do you have, and what tolerance on 3 kg/m2 do you need to hold?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "nist-weighing-tare",
+        "title": "NIST — weighing and scales FAQs",
+        "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+        "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "history": [
+    {
+      "role": "user",
+      "content": "How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments."
+    },
+    {
+      "role": "assistant",
+      "content": "This is absorption to reduce reverberation, not sound blocking. Blocking keeps sound from passing through; absorption soaks up sound in the room. Your felt, frame and 20 mm gap need to be judged as that absorption system.\n\nYou have ruler, scale and hand tools for dry assembly of intact offcuts, with no heating, loose-fibre work or acoustic rig. An acoustic laboratory test in the flat-wall 20 mm-gap setup is the unconfirmed capability you would still need. Listening in the room or feeling the felt can guide fit and neatness but cannot replace that test.\n\nYour targets are: \"Target absorption coefficient at least 0.5 over 500–2000 Hz in the stated installation; maximum sheet thickness 30 mm and areal mass 3 kg/m². These are desired targets, not measurements.\" Thickness and mass per area can be checked at home with ruler and scale. The 0.5 coefficient over 500-2000 Hz cannot be inferred from thickness, weight or feel, and fire response and compatibility remain untested.\n\nA practical way forward is to sort offcuts into matched piles, build flat uncompressed stacks that stay within thickness and mass limits, hold them in an open-face frame that keeps the 20 mm gap, and make small removable panels so one layer change can be compared at a time after lab feedback. If you use the final-weight adjustment calculation, weigh the complete panel including its frame.\nMaterial route: Sort offcuts into matched stacks. Group intact offcuts by measured thickness and mass per area, then build each sheet from one matched group. Thickness and areal-mass variation is the main known variable. Using like-with-like pieces in one sheet might reduce uneven thickness and weight without needing to know acoustic behaviour, which is still untested. Next check: Check total stack thickness with ruler and total panel mass with scale against your thickness and areal-mass limits; acoustic coefficient still needs a laboratory test in the 20 mm-gap installation.\nMaterial route: Low-compression dry layer trials. Keep felt loft intact and try one layer-order change at a time within the 30 mm limit. Compressing felt or adding heat or binder would change the material and is outside your dry intact-only method. Keeping loft and changing only order might make later acoustic comparisons clearer. Next check: Check flatness and thickness by ruler without pressing, and keep a record for the later acoustic test; do not infer absorption from feel or weight.\nEngineering route: Open frame holding the 20 mm gap. Use a simple mechanical frame and wall battens to hold the felt sheet flat with a 20 mm air space behind it. The gap is part of your stated installation. Holding it accurately with hand tools might help later absorption testing without changing the felt itself. Next check: Check gap depth, overall fit on flat wall, and easy removal; acoustic effect in this exact gap setup still needs laboratory measurement.\nEngineering route: Small swappable panels. Build the area as two or three small removable panels of the same construction instead of one large sheet. With variable offcuts, smaller panels might keep each unit within thickness and mass limits and allow swapping or re-stacking after test feedback, rather than relying on one unknown uniform property. Next check: Check each panel size and finished weight with ruler and scale, and fit on wall; acoustic comparison still needs lab data for 500-2000 Hz.\nMeasure and log all offcuts for size, thickness and mass, then dry-assemble one panel that stays within 30 mm and 3 kg/m2. If you use the final-weight adjustment calculation, weigh the complete panel including frame on a scale whose capability and uncertainty suit your tolerance; display increments alone do not prove accuracy.\nBuild the 20 mm-gap frame mount and check fit, flatness and removability at home; room listening is observation only and does not replace absorption measurement.\nArrange acoustic absorption testing for 500-2000 Hz in the flat-wall 20 mm-gap installation - external capability unconfirmed - testing one variable change at a time.\nConfirm polymer and manufacturing records for the felt and check what indoor wall-cover fixing and fire questions apply to your room before longer-term use."
+    }
+  ],
+  "selected_route": {
+    "id": "material:m1",
+    "title": "Sort offcuts into matched stacks",
+    "change": "Group intact offcuts by measured thickness and mass per area, then build each sheet from one matched group.",
+    "why": "Thickness and areal-mass variation is the main known variable. Using like-with-like pieces in one sheet might reduce uneven thickness and weight without needing to know acoustic behaviour, which is still untested.",
+    "check": "Check total stack thickness with ruler and total panel mass with scale against your thickness and areal-mass limits; acoustic coefficient still needs a laboratory test in the 20 mm-gap installation.",
+    "steps": [
+      "Measure length, width and thickness of each intact offcut with ruler and weigh with scale.",
+      "Work out mass per area for each piece and sort into piles of similar thickness and mass per area.",
+      "Dry-stack pieces from one pile to stay within 30 mm total and weigh the stack.",
+      "Keep different piles for separate panels; do not cut or tease fibres apart."
+    ],
+    "tradeoffs": [
+      "More measuring and sorting time.",
+      "Some offcuts may not fit the first panel and wait for a later matched panel.",
+      "Matching size and weight does not show absorption."
+    ]
+  },
+  "trial": {
+    "result_kind": "trial_proposal",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 5085,
+      "prompt_tokens": 3774,
+      "total_tokens": 8859
+    },
+    "elapsed_ms": 33045,
+    "request_id": "chatcmpl-01a19ac5-5302-7305-97f7-822d719cd8b9",
+    "requested_reasoning_effort": "medium",
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "route_id": "material:m1",
+    "targets": "Target absorption coefficient at least 0.5 over 500–2000 Hz in the stated installation; maximum sheet thickness 30 mm and areal mass 3 kg/m². These are desired targets, not measurements.",
+    "brief": {
+      "available_changes": "Can change arrangement, layer count within thickness limit, mechanical frame and air gap. Material compatibility, fire response and acoustic performance remain untested.",
+      "contamination": "",
+      "input": "Hypothetical case: clean preformed recycled PET fibre felt offcuts. Polymer and manufacturing records would need to be confirmed; no acoustic measurements are available.",
+      "process": "At-home dry assembly of intact offcuts only, a ruler, scale and hand tools. No heating, loose-fibre processing or acoustic test rig.",
+      "product": "Removable indoor sound-absorbing sheet",
+      "targets": "Target absorption coefficient at least 0.5 over 500–2000 Hz in the stated installation; maximum sheet thickness 30 mm and areal mass 3 kg/m². These are desired targets, not measurements.",
+      "use_case": "Nonstructural wall-mounted sheet for reducing room reverberation. Absorption, not sound blocking. Flat wall with a 20 mm air gap.",
+      "variation": "Offcut thickness and areal mass can differ. No observed ranges or contamination effects have been measured."
+    },
+    "selected_route": {
+      "id": "material:m1",
+      "title": "Sort offcuts into matched stacks",
+      "change": "Group intact offcuts by measured thickness and mass per area, then build each sheet from one matched group.",
+      "why": "Thickness and areal-mass variation is the main known variable. Using like-with-like pieces in one sheet might reduce uneven thickness and weight without needing to know acoustic behaviour, which is still untested.",
+      "check": "Check total stack thickness with ruler and total panel mass with scale against your thickness and areal-mass limits; acoustic coefficient still needs a laboratory test in the 20 mm-gap installation.",
+      "steps": [
+        "Measure length, width and thickness of each intact offcut with ruler and weigh with scale.",
+        "Work out mass per area for each piece and sort into piles of similar thickness and mass per area.",
+        "Dry-stack pieces from one pile to stay within 30 mm total and weigh the stack.",
+        "Keep different piles for separate panels; do not cut or tease fibres apart."
+      ],
+      "tradeoffs": [
+        "More measuring and sorting time.",
+        "Some offcuts may not fit the first panel and wait for a later matched panel.",
+        "Matching size and weight does not show absorption."
+      ]
+    },
+    "title": "Matched vs mixed offcut stacks",
+    "objective": "Test whether matched grouping reduces thickness and weight scatter in a removable indoor sheet for reducing reverberation, with absorption still to be laboratory-tested in the 20 mm-gap wall installation.",
+    "comparison": "Make two sheets with the same footprint, same layer count, same dry assembly of intact offcuts, and same 20 mm air-gap mounting idea: Sheet A uses offcuts from one matched thickness and mass-per-area group; Sheet B uses offcuts mixed across groups. Grouping is the only change.",
+    "change": "Build two sheets that differ only in grouping: one sheet from intact offcuts matched by measured thickness and mass per area, one sheet from mixed offcuts, both dry-stacked within limits.",
+    "keep_fixed": [
+      "Same input: intact preformed felt offcuts only, no heating, no cutting, no fibre teasing"
+    ],
+    "materials": [
+      "Intact recycled PET fibre felt offcuts - polymer and manufacturing records to be confirmed",
+      "Removable mechanical frame parts - proposed need, confirm what you have before assembly",
+      "Ruler for length, width and thickness",
+      "Scale with capability suited to areal-mass tolerance for weighing sheets"
+    ],
+    "steps": [
+      {
+        "action": "Using only your stated ruler and scale with dry intact offcuts, measure length, width, thickness and mass of each offcut. No heating or fibre processing.",
+        "record": "List per offcut: dimensions, thickness readings, mass, calculated mass per area."
+      },
+      {
+        "action": "Sort offcuts into piles of similar thickness and similar mass per area, keeping pieces intact.",
+        "record": "Pile IDs, ranges in each pile, and which offcuts went where."
+      },
+      {
+        "action": "Confirm frame parts on hand before assembly; if frame parts are unavailable, do footprint and clearance planning on paper only. Dry-stack Sheet A from one matched pile to stay within limits.",
+        "record": "Sheet A layer IDs, layer count, stack thickness readings, total mass."
+      },
+      {
+        "action": "Dry-stack Sheet B to the same footprint and layer count using mixed-pile offcuts, still intact and within limits.",
+        "record": "Sheet B layer IDs, layer count, stack thickness readings, total mass."
+      },
+      {
+        "action": "Check both dry sheets for flat fit, edge uniformity and clearance for a 20 mm air gap on a flat wall without walking-surface or wet testing.",
+        "record": "Fit notes, gap-spacer idea, photos or sketches, and which sheet had more even edges."
+      }
+    ],
+    "checks": [
+      {
+        "property": "Absorption coefficient 500-2000 Hz",
+        "target": "Target absorption coefficient at least 0.5 over 500–2000 Hz in the stated installation",
+        "method": "This needs a laboratory absorption test in the flat-wall installation with 20 mm air gap over 500-2000 Hz. Local listening, weight, thickness or fit checks cannot measure the coefficient. This is about absorption for reverberation, not sound blocking. Record sheet ID, layer list and gap setup for the lab.",
+        "if_outside": "Make one small change in the next comparison, such as arrangement or layer count within the thickness limit, then send the revised sheet for a new laboratory test. Do not rank either sheet as better without laboratory observations."
+      },
+      {
+        "property": "Sheet thickness",
+        "target": "maximum sheet thickness 30 mm and areal mass 3 kg/m²",
+        "method": "With ruler on a flat surface, measure stack thickness at several points without compressing the felt. Record each reading and the highest reading. Compare against the thickness part of your limits.",
+        "if_outside": "Try one adjustment in a new comparison, such as fewer layers or swapping one offcut for a thinner matched piece, then re-measure. Keep acoustic testing separate."
+      },
+      {
+        "property": "Sheet areal mass",
+        "target": "maximum sheet thickness 30 mm and areal mass 3 kg/m²",
+        "method": "Weigh the sheet on a scale with capability and uncertainty suited to the tolerance; display increments alone do not prove accuracy. Measure length and width with ruler, calculate area, then mass per area. Weigh and record any frame separately from the felt.",
+        "if_outside": "Try one adjustment in a new comparison, such as a lighter matched pile or fewer layers, then re-weigh and recalculate. Do not use mass result as proof of absorption, retention or strength."
+      },
+      {
+        "property": "Fire response and material identity",
+        "target": "Not set",
+        "method": "Visual condition and fit cannot establish fire response or compatibility. Polymer identity, manufacturing records, fire response and acoustic performance remain untested. Record offcut markings and keep material dry and intact.",
+        "if_outside": "Pause wall use if any concern appears and seek a suitable fire and material evaluation for the indoor installation before further trials."
+      }
+    ],
+    "questions": [
+      "What written polymer or manufacturing information can you obtain for these offcuts?",
+      "What frame materials and fixings do you already have for a removable 20 mm-gap mount?",
+      "What laboratory access do you have for absorption testing in the stated installation and for fire evaluation?"
+    ],
+    "sources": [
+      {
+        "id": "nist-weighing-tare",
+        "title": "NIST — weighing and scales FAQs",
+        "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+        "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  }
+}

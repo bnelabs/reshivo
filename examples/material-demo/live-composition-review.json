@@ -1,0 +1,186 @@
+{
+  "request": {
+    "brief": {
+      "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+      "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized.",
+      "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+      "product": "A non-load-bearing planter sleeve — material development case",
+      "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+      "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+      "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+      "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin."
+    },
+    "question": "Review this proposed composition trial and suggest the next practical preparation, process and property checks. These are synthetic or user-reported reference readings, not a validated recipe. The composition calculation is not a property prediction. Keep the current product targets; do not infer batch independence, invent a dose-response link, or promise finished properties. Trial summary:\n{\"reading_type\":\"synthetic\",\"reference\":{\"property\":\"Tensile yield stress\",\"unit\":\"MPa\",\"target_min\":\"25\",\"target_max\":null,\"method\":\"Synthetic software diagnostic only. Same nominal resin grades and injection process across settings; no physical processing or tensile testing.\",\"setting_id\":\"Setting 1\",\"input\":\"Recycled PE fraction\",\"input_unit\":\"mass %\",\"recorded_level\":\"20\",\"observed_min\":\"26\",\"observed_max\":\"26\",\"reading_count\":1,\"in_target_count\":1,\"grouping\":\"Identifiers omitted from this summary; do not infer specimens, runs or batches.\"},\"proposed_trial\":{\"result_kind\":\"composition_calculation\",\"component\":\"Identified PCRPE resin (grade to record)\",\"input_mass_kg\":1,\"addition_name\":\"Virgin MDPE stock (zero PCRPE)\",\"addition_percent\":0,\"input_min_percent\":26,\"target_max_percent\":20,\"input_max_percent\":26,\"target_min_percent\":20,\"feasible\":true,\"addition_min_kg\":0.3,\"addition_max_kg\":0.3,\"example_addition_kg\":0.3,\"resulting_min_percent\":20,\"resulting_max_percent\":20,\"action\":\"The calculated addition interval for Virgin MDPE stock (zero PCRPE) covers the entered composition range within your chosen trial target.\",\"next_options\":[\"Use the example only as a composition trial; record the actual weighed addition.\",\"Check mixing and the properties that matter for the product before choosing a working formulation.\"],\"assumptions\":[\"This is a user-chosen trial composition calculated from entered mass fractions, not a recipe proven to meet physical properties.\",\"The input range is supplied by the user; it is not inferred from repeated tests, standard deviations or batch statistics.\",\"One fixed added mass is checked against both endpoints of the specified input range for the entered portion mass.\",\"Input and added stock use the same mass basis. Their stated fractions are assumed representative, with no losses, reactions, moisture change or incomplete mixing.\",\"No density is used. Strength, sound performance, binder compatibility and finished-product consistency are not established.\"],\"physical_performance_verified\":false},\"original_case_unchanged\":true,\"new_mix_property_tested\":false}",
+    "history": [],
+    "calculation_context": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": "250"
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": "750"
+        }
+      ],
+      "amount_unit": "g",
+      "amount_basis": "Synthetic starting stock: one unprocessed portion, 250 g PCRPE and 750 g virgin MDPE. No physical mix or test.",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    }
+  },
+  "response": {
+    "result_kind": "engineering_proposals",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 4337,
+      "prompt_tokens": 3536,
+      "total_tokens": 7873
+    },
+    "elapsed_ms": 42039,
+    "request_id": "chatcmpl-01a1a03c-32b9-7743-a2d7-215c7b027eef",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": "250"
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": "750"
+        }
+      ],
+      "amount_unit": "g",
+      "amount_basis": "Synthetic starting stock: one unprocessed portion, 250 g PCRPE and 750 g virgin MDPE. No physical mix or test.",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "answer": "Record your exact grades, lot IDs and preparation first, then plan separate facility runs — because the single synthetic 26 MPa reading at 20% recycled content and the composition calculation do not predict strength or prove any dose-response. You state no moulding or tensile-testing equipment at home, so no heating or testing can start there.\n\nKeep your current screen — tensile yield stress at least 25 MPa using a stated specimen and method — unchanged for material checks, and keep those tensile checks separate from sleeve fit checks. Test each recycled-to-virgin proportion as its own prepared lot with a recorded process.\n\nUse the composition numbers only to set mass fractions for a trial portion. The example addition still needs real weighing, mixing records, and physical specimens before any property can be discussed.",
+    "quarantined_answer": [],
+    "material_routes": [
+      {
+        "id": "material:M1",
+        "title": "Separate proportion screens",
+        "change": "Record grades and preparation, then mould and test one recycled proportion at a time.",
+        "why": "Separate prepared lots may help see how proportion interacts with your resins once real specimens are measured.",
+        "steps": [
+          "Record exact PCRPE and virgin MDPE grades and lot IDs.",
+          "Sort, clean and dry per the facility procedure and record what was done.",
+          "Prepare tensile specimens at one chosen recycled fraction per run.",
+          "Vary only the recycled-to-virgin proportion between runs."
+        ],
+        "tradeoffs": [
+          "Needs facility moulding and testing time.",
+          "More lots to track and label.",
+          "No choice promises the screening threshold."
+        ],
+        "check": "Tensile yield stress per your stated specimen and method for each proportion, linked to lot and process records."
+      },
+      {
+        "id": "material:M2",
+        "title": "Lot and preparation control",
+        "change": "Control lot variability through preparation records before choosing a working mix.",
+        "why": "Moisture and contamination differences can confound tensile results, so lot control may make comparisons clearer.",
+        "steps": [
+          "Keep supply lots separate; do not pool uncharacterized lots.",
+          "Inspect and record moisture, odour, non-PE pieces and fines.",
+          "Record actual weighed masses for the 250 g PCRPE and 750 g virgin MDPE starting portion if used.",
+          "Record the actual weighed addition rather than relying on the example addition."
+        ],
+        "tradeoffs": [
+          "Adds sorting and record-keeping.",
+          "May reduce usable material per lot.",
+          "Does not by itself set strength."
+        ],
+        "check": "Lot IDs, preparation notes, and any moisture or contamination observations kept with each specimen set."
+      }
+    ],
+    "engineering_routes": [
+      {
+        "id": "engineering:E1",
+        "title": "Loose-fit decorative sleeve",
+        "change": "Adjust sleeve geometry to tolerate resin variation; liner continues to carry soil and water.",
+        "why": "Clearance and drainage reduce reliance on unknown stiffness, shrinkage and creep while fit is explored.",
+        "steps": [
+          "Measure liner outer size and choose a loose-fit sleeve clearance as an adjustable choice.",
+          "Add draft and a vent/drainage gap so shrinkage differences do not lock the sleeve.",
+          "Keep sleeve non-load-bearing and continuous around the liner.",
+          "Check fit using the liner only; do not load soil or water on the sleeve."
+        ],
+        "tradeoffs": [
+          "Looser fit tolerates variation but may look less precise.",
+          "Draft and clearance may use more resin.",
+          "Fit and drainage checks do not prove weathering or creep."
+        ],
+        "check": "Liner fit and clearance, free standing, drainage and visible condition with the liner in place — separate from tensile screens."
+      },
+      {
+        "id": "engineering:E2",
+        "title": "Facility-gated trial plan",
+        "change": "Move all heating, moulding and testing to a suitable facility with a recorded process.",
+        "why": "A recorded facility process makes each proportion interpretable and avoids home heating of uncharacterized resin.",
+        "steps": [
+          "Confirm a facility with suitable moulding and tensile-testing capability — currently unconfirmed.",
+          "Supply grade IDs, lot IDs and preparation records to the facility.",
+          "Ask the facility to record its process for each run.",
+          "Keep material specimens separate from sleeve prototypes."
+        ],
+        "tradeoffs": [
+          "Requires outside time and cost.",
+          "Home work stays limited to dimensions and records.",
+          "Still yields no property without physical runs."
+        ],
+        "check": "Recorded process, specimen IDs linked to resin lots, and stated specimen and method for each tensile check."
+      }
+    ],
+    "next_steps": [
+      "Record exact resin grades, lot IDs and current proportions.",
+      "Record cleaning, drying and sorting for each lot.",
+      "Confirm a suitable moulding and tensile-testing facility and its recording practice.",
+      "Plan one tensile screen per recycled proportion, separate from sleeve fit checks."
+    ],
+    "questions": [
+      "What are the exact PCRPE and virgin MDPE grades and lot IDs?",
+      "Which specimen shape and test method will be used for the tensile screen?",
+      "What are the liner dimensions, desired clearance, and outdoor exposure for the sleeve?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      },
+      {
+        "id": "hse-ppis13",
+        "title": "HSE — controlling fume during plastics processing",
+        "url": "https://www.hse.gov.uk/pubns/ppis13.pdf",
+        "scope": "General guidance to identify polymer formulation/additives and processing information before heated processing. Temperature and dwell affect fumes; this is not a heat recipe for unidentified cable residue."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "http_status": 200,
+  "elapsed_seconds": 42.07707300000038,
+  "label": "Real Meta review of an explicitly synthetic composition proposal; no physical property validation"
+}

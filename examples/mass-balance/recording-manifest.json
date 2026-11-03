@@ -1,0 +1,67 @@
+{
+  "label": "Synthetic app demonstration; no material processed or physically tested",
+  "recording_date": "2026-11-01",
+  "raw_take": "examples/mass-balance/recorded-take.mp4",
+  "raw_sha256": "91e658dbb26c471ea8b223755fdd78466f1140f0cbfd15821ba03c83f8857cea",
+  "final_video": "examples/mass-balance/recorded-demo-v1.mp4",
+  "final_sha256": "778d33ac0b39e9ee4bb61480707677219265712e97b96f923fa086985df48c11",
+  "duration_seconds": 147.554149,
+  "source_clips_seconds": [
+    [
+      [
+        0.4,
+        1.9
+      ]
+    ],
+    [
+      [
+        24.1,
+        42
+      ]
+    ],
+    [
+      [
+        42,
+        50
+      ]
+    ],
+    [
+      [
+        50.2,
+        70.5
+      ]
+    ],
+    [
+      [
+        71.1,
+        88.7
+      ],
+      [
+        111,
+        117.2
+      ]
+    ],
+    []
+  ],
+  "editing": "Six scenes, original-order excerpts, pauses removed or held; synthetic labels and approximate captions overlaid. Last scene is an editorial results card. Fresh API responses retained, never substituted from earlier runs.",
+  "narration": "macOS Samantha, 180wpm; archived text in examples/mass-balance/recorded-narration-v1.json",
+  "caption_timing": "Approximate phrase timing, not forced word alignment",
+  "live_runs": [
+    {
+      "file": "examples/mass-balance/recorded-first-meta-run.json",
+      "model": "muse-spark-1.3",
+      "turns": 2,
+      "elapsed_ms": 4701,
+      "status": "completed",
+      "tool_count": 1
+    },
+    {
+      "file": "examples/mass-balance/recorded-revised-meta-run.json",
+      "model": "muse-spark-1.3",
+      "turns": 2,
+      "elapsed_ms": 4346,
+      "status": "completed",
+      "tool_count": 1
+    }
+  ]
+}

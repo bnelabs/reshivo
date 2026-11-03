@@ -1,0 +1,464 @@
+{
+  "protocol": "sequential-joint-v1",
+  "cases": [
+    {
+      "id": "hold_then_missing",
+      "stages": [
+        {
+          "expected": "keep",
+          "request": {
+            "brief": {
+              "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+              "contamination": "Unknown and not modeled.",
+              "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+              "process": "Software only; no material handling or heating.",
+              "product": "Contained ballast module",
+              "targets": "Mass 980\u20131020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+              "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+              "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+            },
+            "calculation_context": {
+              "label": "Intake task, synthetic",
+              "components": [
+                {
+                  "id": 1,
+                  "name": "",
+                  "role": "main",
+                  "amount": ""
+                }
+              ],
+              "amount_unit": "g",
+              "amount_basis": "",
+              "mass_target_min_kg": "0.98",
+              "mass_target_max_kg": "1.02",
+              "balance": {
+                "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+                "target_min_mm": "-2",
+                "target_max_mm": "2"
+              }
+            },
+            "plan": null,
+            "question": "For this synthetic observation, what adjustment should I make for mass and one-axis balance?",
+            "feedback": {
+              "observation": {
+                "id": "a-1",
+                "kind": "simulated",
+                "mass_kg": 1.0,
+                "uncertainty_kg": 0.005
+              },
+              "max_add_mass_kg": 0.15,
+              "max_remove_mass_kg": 0.08,
+              "adjustment_uncertainty_kg": 0.001
+            },
+            "balance": {
+              "cg_x_mm": 0.0,
+              "cg_uncertainty_mm": 0.5,
+              "command_resolution_kg": 0.001,
+              "baseline": {
+                "position_id": "L",
+                "command_kg": 0.0
+              },
+              "independent_adjustments": true,
+              "positions": [
+                {
+                  "id": "L",
+                  "x_mm": -60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.0
+                },
+                {
+                  "id": "R",
+                  "x_mm": 60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.08
+                }
+              ]
+            }
+          }
+        },
+        {
+          "expected": "missing",
+          "request": {
+            "brief": {
+              "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+              "contamination": "Unknown and not modeled.",
+              "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+              "process": "Software only; no material handling or heating.",
+              "product": "Contained ballast module",
+              "targets": "Mass 980\u20131020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+              "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+              "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+            },
+            "calculation_context": {
+              "label": "Intake task, synthetic",
+              "components": [
+                {
+                  "id": 1,
+                  "name": "",
+                  "role": "main",
+                  "amount": ""
+                }
+              ],
+              "amount_unit": "g",
+              "amount_basis": "",
+              "mass_target_min_kg": "0.98",
+              "mass_target_max_kg": "1.02",
+              "balance": {
+                "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+                "target_min_mm": "-2",
+                "target_max_mm": "2"
+              }
+            },
+            "plan": null,
+            "question": "For this synthetic observation, what adjustment should I make for mass and one-axis balance?",
+            "feedback": {
+              "observation": {
+                "id": "a-2",
+                "kind": "simulated",
+                "mass_kg": 0.98,
+                "uncertainty_kg": 0.005
+              },
+              "max_add_mass_kg": 0.15,
+              "max_remove_mass_kg": 0.08,
+              "adjustment_uncertainty_kg": 0.001
+            },
+            "balance": {
+              "cg_x_mm": 3.0,
+              "cg_uncertainty_mm": null,
+              "command_resolution_kg": 0.001,
+              "baseline": {
+                "position_id": "L",
+                "command_kg": 0.0
+              },
+              "independent_adjustments": true,
+              "positions": [
+                {
+                  "id": "L",
+                  "x_mm": -60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.0
+                },
+                {
+                  "id": "R",
+                  "x_mm": 60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.08
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "trim_then_update",
+      "stages": [
+        {
+          "expected": "adjust",
+          "request": {
+            "brief": {
+              "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+              "contamination": "Unknown and not modeled.",
+              "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+              "process": "Software only; no material handling or heating.",
+              "product": "Contained ballast module",
+              "targets": "Mass 980\u20131020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+              "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+              "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+            },
+            "calculation_context": {
+              "label": "Intake task, synthetic",
+              "components": [
+                {
+                  "id": 1,
+                  "name": "",
+                  "role": "main",
+                  "amount": ""
+                }
+              ],
+              "amount_unit": "g",
+              "amount_basis": "",
+              "mass_target_min_kg": "0.98",
+              "mass_target_max_kg": "1.02",
+              "balance": {
+                "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+                "target_min_mm": "-2",
+                "target_max_mm": "2"
+              }
+            },
+            "plan": null,
+            "question": "For this synthetic observation, what adjustment should I make for mass and one-axis balance?",
+            "feedback": {
+              "observation": {
+                "id": "b-1",
+                "kind": "simulated",
+                "mass_kg": 0.95,
+                "uncertainty_kg": 0.005
+              },
+              "max_add_mass_kg": 0.15,
+              "max_remove_mass_kg": 0.08,
+              "adjustment_uncertainty_kg": 0.001
+            },
+            "balance": {
+              "cg_x_mm": 10.0,
+              "cg_uncertainty_mm": 0.5,
+              "command_resolution_kg": 0.001,
+              "baseline": {
+                "position_id": "L",
+                "command_kg": 0.0
+              },
+              "independent_adjustments": true,
+              "positions": [
+                {
+                  "id": "L",
+                  "x_mm": -60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.0
+                },
+                {
+                  "id": "R",
+                  "x_mm": 60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.08
+                }
+              ]
+            }
+          }
+        },
+        {
+          "expected": "adjust",
+          "request": {
+            "brief": {
+              "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+              "contamination": "Unknown and not modeled.",
+              "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+              "process": "Software only; no material handling or heating.",
+              "product": "Contained ballast module",
+              "targets": "Mass 980\u20131020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+              "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+              "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+            },
+            "calculation_context": {
+              "label": "Intake task, synthetic",
+              "components": [
+                {
+                  "id": 1,
+                  "name": "",
+                  "role": "main",
+                  "amount": ""
+                }
+              ],
+              "amount_unit": "g",
+              "amount_basis": "",
+              "mass_target_min_kg": "0.98",
+              "mass_target_max_kg": "1.02",
+              "balance": {
+                "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+                "target_min_mm": "-2",
+                "target_max_mm": "2"
+              }
+            },
+            "plan": null,
+            "question": "For this synthetic observation, what adjustment should I make for mass and one-axis balance?",
+            "feedback": {
+              "observation": {
+                "id": "b-2",
+                "kind": "simulated",
+                "mass_kg": 1.0,
+                "uncertainty_kg": 0.005
+              },
+              "max_add_mass_kg": 0.15,
+              "max_remove_mass_kg": 0.08,
+              "adjustment_uncertainty_kg": 0.001
+            },
+            "balance": {
+              "cg_x_mm": 5.0,
+              "cg_uncertainty_mm": 0.5,
+              "command_resolution_kg": 0.001,
+              "baseline": {
+                "position_id": "L",
+                "command_kg": 0.0
+              },
+              "independent_adjustments": true,
+              "positions": [
+                {
+                  "id": "L",
+                  "x_mm": -60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.0
+                },
+                {
+                  "id": "R",
+                  "x_mm": 60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0.08
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "reverse_then_overweight",
+      "stages": [
+        {
+          "expected": "adjust",
+          "request": {
+            "brief": {
+              "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+              "contamination": "Unknown and not modeled.",
+              "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+              "process": "Software only; no material handling or heating.",
+              "product": "Contained ballast module",
+              "targets": "Mass 980\u20131020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+              "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+              "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+            },
+            "calculation_context": {
+              "label": "Intake task, synthetic",
+              "components": [
+                {
+                  "id": 1,
+                  "name": "",
+                  "role": "main",
+                  "amount": ""
+                }
+              ],
+              "amount_unit": "g",
+              "amount_basis": "",
+              "mass_target_min_kg": "0.98",
+              "mass_target_max_kg": "1.02",
+              "balance": {
+                "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+                "target_min_mm": "-2",
+                "target_max_mm": "2"
+              }
+            },
+            "plan": null,
+            "question": "For this synthetic observation, what adjustment should I make for mass and one-axis balance?",
+            "feedback": {
+              "observation": {
+                "id": "c-1",
+                "kind": "simulated",
+                "mass_kg": 0.95,
+                "uncertainty_kg": 0.005
+              },
+              "max_add_mass_kg": 0.15,
+              "max_remove_mass_kg": 0.08,
+              "adjustment_uncertainty_kg": 0.001
+            },
+            "balance": {
+              "cg_x_mm": -10.0,
+              "cg_uncertainty_mm": 0.5,
+              "command_resolution_kg": 0.001,
+              "baseline": {
+                "position_id": "L",
+                "command_kg": 0.0
+              },
+              "independent_adjustments": true,
+              "positions": [
+                {
+                  "id": "L",
+                  "x_mm": -60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0,
+                  "max_remove_kg": 0.08
+                },
+                {
+                  "id": "R",
+                  "x_mm": 60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "expected": "infeasible_mass",
+          "request": {
+            "brief": {
+              "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+              "contamination": "Unknown and not modeled.",
+              "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+              "process": "Software only; no material handling or heating.",
+              "product": "Contained ballast module",
+              "targets": "Mass 980\u20131020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+              "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+              "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+            },
+            "calculation_context": {
+              "label": "Intake task, synthetic",
+              "components": [
+                {
+                  "id": 1,
+                  "name": "",
+                  "role": "main",
+                  "amount": ""
+                }
+              ],
+              "amount_unit": "g",
+              "amount_basis": "",
+              "mass_target_min_kg": "0.98",
+              "mass_target_max_kg": "1.02",
+              "balance": {
+                "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+                "target_min_mm": "-2",
+                "target_max_mm": "2"
+              }
+            },
+            "plan": null,
+            "question": "For this synthetic observation, what adjustment should I make for mass and one-axis balance?",
+            "feedback": {
+              "observation": {
+                "id": "c-2",
+                "kind": "simulated",
+                "mass_kg": 1.2,
+                "uncertainty_kg": 0.005
+              },
+              "max_add_mass_kg": 0.15,
+              "max_remove_mass_kg": 0.08,
+              "adjustment_uncertainty_kg": 0.001
+            },
+            "balance": {
+              "cg_x_mm": 0.0,
+              "cg_uncertainty_mm": 0.5,
+              "command_resolution_kg": 0.001,
+              "baseline": {
+                "position_id": "L",
+                "command_kg": 0.0
+              },
+              "independent_adjustments": true,
+              "positions": [
+                {
+                  "id": "L",
+                  "x_mm": -60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0,
+                  "max_remove_kg": 0.08
+                },
+                {
+                  "id": "R",
+                  "x_mm": 60.0,
+                  "position_uncertainty_mm": 0.0,
+                  "max_add_kg": 0.15,
+                  "max_remove_kg": 0
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

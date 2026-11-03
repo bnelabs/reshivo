@@ -1,0 +1,55 @@
+{
+  "purpose": "Retained synthetic advice-quality diagnostics, including flawed and rejected attempts. Not an advantage benchmark, physical test or unseen evaluation.",
+  "prepared_utc": "2026-11-01T21:43:11.586606+00:00",
+  "physical_product_tested": false,
+  "files": [
+    {
+      "path": "trial-guidance-v1.json",
+      "bytes": 19048,
+      "sha256": "b3f486c9514d4b7357e93491e81ff6d0ba0233657ef48c2b25e857a86c2ecc52",
+      "copied_byte_for_byte": true
+    },
+    {
+      "path": "trial-guidance-v2.json",
+      "bytes": 20391,
+      "sha256": "8cd953a5fc099fec67c448c6e1bf756b130ddfe87b9a2c7396617f5fe339f223",
+      "copied_byte_for_byte": true
+    },
+    {
+      "path": "trial-guidance-v3.json",
+      "bytes": 12232,
+      "sha256": "ce5699631505d0525715c706b3bdc4010fd762c90d375cb37f7cd3236abdf13d",
+      "copied_byte_for_byte": true
+    },
+    {
+      "path": "routes-before.json",
+      "bytes": 13350,
+      "sha256": "9d088c4993fc16eb635283551402eb31fbad4534e2d3e9d920638dbddf3b701d",
+      "copied_byte_for_byte": true
+    },
+    {
+      "path": "trial-v2.json",
+      "bytes": 26807,
+      "sha256": "84909d3a2f6843d7f294606b124cdebb9c56b4a869522ae78d17a0a0de53c0a9",
+      "copied_byte_for_byte": true
+    },
+    {
+      "path": "trial-final.json",
+      "bytes": 36751,
+      "sha256": "73fcc57e5d361a1e84c2b6411bbc1ebc347a530a95cf1652e46624c63a0baa9a",
+      "copied_byte_for_byte": true
+    }
+  ],
+  "final_code_sha256": {
+    "rematter/advisor.py": "70529992a3413ba814e090949ade9bfe6c6126c357a59677a9770277eaec5403",
+    "rematter/meta.py": "7d40985f67b9827646dfd8d85ab10e0d860b1973a252e0779094de8886880292"
+  },
+  "review_notes": {
+    "v1": "Initial narrow prompt repair; formal approval phrasing and unobserved-design ranking remained.",
+    "routes_before": "Actual route discovery still suggested wet-surface feel as a check.",
+    "v2": "Unknown-process headless trial FAILS surrogate fidelity: water on a flat drawn-groove template cannot compare drainage geometry. UI trial also asked an unrelated frequency-range question.",
+    "v3": "High-reasoning unknown headless case rejected with MetaValidationError; reason/raw not retained, so cause and semantic content unknown. Confirmed-cold case completed in18378ms within stated equipment.",
+    "final_ui": "Fresh high-reasoning discovery and selected-route trial completed. Forming is conditional on suitable capabilities; drainage observation uses later real specimens; wet-slip requires its separate instrumented evaluation. Numeric detail fields were blank, unlike the failed headless fixture with an entered mass-range conflict. This success does not show that failed fixture repaired.",
+    "limits": "Prompts and source context are guidance, not deterministic semantic validation. No model/property superiority, physical qualification or general reliability is established."
+  }
+}

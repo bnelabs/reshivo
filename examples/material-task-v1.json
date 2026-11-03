@@ -1,0 +1,158 @@
+{
+  "protocol": "material-task-v1",
+  "label": "Synthetic developer-authored full material task; no physical processing or property test",
+  "case": {
+    "brief": {
+      "input": "Synthetic software case K1 only: fictional identified resins PCRPE-A (recycled PE) and MDPE-B (virgin host PE). The raw starting recipe is nominally 644 g PCRPE-A plus 756 g MDPE-B. PE stock A is the same MDPE-B and is characterized in this fixture as zero mass percent PCRPE-A. No actual material exists or has been processed.",
+      "variation": "PCRPE-A mass fraction differs between hypothetical portions. Starting fractions are user-entered synthetic inputs, not inferred from tensile readings or batch statistics. The nominal recipe remains a reference when a new portion is entered.",
+      "contamination": "No named contaminant is varied in this fictional controlled comparison. No contamination-response measurement or real-stream cleanliness is established.",
+      "product": "Non-load-bearing decorative plant-pot sleeve \u2014 synthetic material-development task",
+      "use_case": "A decorative outer sleeve around a separate watertight pot liner. The liner carries soil and water; this is intended architecture, not a tested sleeve. Sleeve geometry and outdoor exposure are not yet specified.",
+      "process": "Synthetic reference process P1 uses the same preparation and injection process across proportion settings; no numerical processing settings are supplied. Property method M1 is the same across settings. At home there is only a computer and weighing capability, no moulding or tensile-testing equipment. A suitable facility is not confirmed.",
+      "available_changes": "Consider PCRPE-A proportion using identified PE stock A, preparation control or non-load-bearing sleeve geometry. For the first selected comparison, change only PCRPE-A mass fraction and keep resin identities, preparation, P1 and M1 fixed. No home heating, unknown additives or physical-performance promise.",
+      "targets": "Material screen: tensile yield stress at least 25 MPa using stated method M1. Sleeve fit, creep and weathering targets are not set."
+    },
+    "calculation_context": {
+      "label": "Synthetic K1 PE sleeve material case",
+      "components": [
+        {
+          "id": 1,
+          "name": "PCRPE-A",
+          "role": "main",
+          "amount": "644"
+        },
+        {
+          "id": 2,
+          "name": "MDPE-B",
+          "role": "other",
+          "amount": "756"
+        }
+      ],
+      "amount_unit": "g",
+      "amount_basis": "Synthetic nominal starting portion: 644 g PCRPE-A plus 756 g MDPE-B, 1.4 kg total, all mass basis. No material has been processed or physically tested.",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    }
+  },
+  "initial_question": "Help me choose practical options, then plan a controlled comparison changing only PCRPE-A mass fraction at my proposed trial levels 20, 35 and 50 mass percent. They are proposed levels, not measurements. Keep resin identities, preparation, process P1 and property method M1 fixed. Preserve the original material-screen target and distinguish it from sleeve properties. I am at home with no processing/testing equipment and no confirmed facility. Give a useful preparation/planning action now and identify what needs a suitable facility. Do not issue an addition quantity at this stage.",
+  "comparison": {
+    "property_name": "Tensile yield stress",
+    "property_unit": "MPa",
+    "input_name": "PCRPE-A mass fraction",
+    "input_unit": "mass %",
+    "target_min": "25",
+    "target_max": null,
+    "method": "Synthetic method M1 only, same fictional PCRPE-A/MDPE-B resins, preparation and process P1 at every setting. These values are software fixtures, not physical measurements. Grouping and independence are unknown.",
+    "conditions_confirmed": true,
+    "data_kind": "synthetic",
+    "settings": [
+      {
+        "id": "K1-P1-M1-20",
+        "level": "20",
+        "readings": [
+          {
+            "value": "31",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "K1-L20-R1",
+            "specimen_id": null,
+            "run_id": null,
+            "batch_id": null,
+            "repeat_of": null
+          },
+          {
+            "value": "30",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "K1-L20-R2",
+            "specimen_id": null,
+            "run_id": null,
+            "batch_id": null,
+            "repeat_of": null
+          }
+        ]
+      },
+      {
+        "id": "K1-P1-M1-35",
+        "level": "35",
+        "readings": [
+          {
+            "value": "27",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "K1-L35-R1",
+            "specimen_id": null,
+            "run_id": null,
+            "batch_id": null,
+            "repeat_of": null
+          },
+          {
+            "value": "26",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "K1-L35-R2",
+            "specimen_id": null,
+            "run_id": null,
+            "batch_id": null,
+            "repeat_of": null
+          }
+        ]
+      },
+      {
+        "id": "K1-P1-M1-50",
+        "level": "50",
+        "readings": [
+          {
+            "value": "22",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "K1-L50-R1",
+            "specimen_id": null,
+            "run_id": null,
+            "batch_id": null,
+            "repeat_of": null
+          },
+          {
+            "value": "21",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "K1-L50-R2",
+            "specimen_id": null,
+            "run_id": null,
+            "batch_id": null,
+            "repeat_of": null
+          }
+        ]
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "B",
+      "mass_kg": 1.4,
+      "min_percent": 46,
+      "max_percent": 46,
+      "stock_name": "PE stock A (characterized 0 mass % PCRPE-A)",
+      "stock_percent": 0,
+      "question": "B: This separately supplied synthetic dataset is not execution of your earlier plan. Prefer the highest recorded recycled-containing point with all entered readings meeting the screen. I explicitly choose its exact 35 mass percent PCRPE-A composition for a new trial. My current hypothetical portion is 1.4 kg at exactly 46 mass percent PCRPE-A. PE stock A is the same MDPE-B, characterized at zero mass percent PCRPE-A. Review the actual calculator result and state the useful next preparation/process/property check. Do not predict new-mix properties."
+    },
+    {
+      "id": "C",
+      "mass_kg": 1.4,
+      "min_percent": 43,
+      "max_percent": 47,
+      "stock_name": "PE stock A (characterized 0 mass % PCRPE-A)",
+      "stock_percent": 0,
+      "question": "C update: the new hypothetical 1.4 kg portion is known only to span 43 to 47 mass percent PCRPE-A. This replaces the earlier exact 46 percent input. Stock A still has zero PCRPE-A. Keep the exact recorded 35 percent trial point and original physical-property target. Can one fixed addition cover this range? Give a constructive way to use this portion. Do not discard it or treat nearby compositions as property-qualified."
+    },
+    {
+      "id": "D",
+      "mass_kg": 1.4,
+      "min_percent": 46,
+      "max_percent": 46,
+      "stock_name": "PE stock U (PCRPE-A mass fraction unknown)",
+      "stock_percent": null,
+      "question": "D update: this new hypothetical portion is 1.4 kg at exactly 46 mass percent PCRPE-A. Its only available addition is now separately named PE stock U, whose PCRPE-A mass fraction is unknown. Stock A is not available and its zero-percent characterization does not apply to U. Keep the same exact 35 percent trial point and product targets. What missing measurement is needed and what useful step can I take now? Do not issue a numerical addition or call U virgin."
+    }
+  ]
+}

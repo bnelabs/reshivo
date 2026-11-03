@@ -1,0 +1,10 @@
+{
+  "protocol": "intake-v1",
+  "task": "changed_case",
+  "draft_present_before_change": true,
+  "apply_buttons_after_target_change": 0,
+  "mass_retained_on_target_change_kg": 0.95,
+  "mass_after_product_change": "",
+  "physical_product_tested": false,
+  "method": "scripted browser interactions and DOM field checks"
+}

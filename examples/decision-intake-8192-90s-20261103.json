@@ -1,0 +1,73 @@
+{
+  "request": {
+    "message": "I want to make an indoor floor mat from recycled rubber and a binder. The amount of paper-label residue in the rubber varies. How can I decide what to try while keeping grip and recovery within my targets and watching the cost?\n\nSynthetic indoor floor mat for the same intended use and nominal dimensions in all setups.\n\nIdentified recycled rubber stock with paper-label residue; the amount of named paper varies. The available zero-paper added stock is characterized clean rubber, with 0 percent paper by mass. All amounts, fractions and prices in this exercise use the same as-received mass basis.\n\nHome planning only. No physical handling, processing, measuring equipment, or lab access is available during this exercise. The same intended process and geometry are stated for each setup but unspecified."
+  },
+  "status": 200,
+  "response": {
+    "result_kind": "project_intake",
+    "reply": "I drafted only what you stated for review. Since the exact job and build are not set yet, the useful move is paper planning only with no handling or testing now, comparing your paper-residue options against grip, recovery and cost.",
+    "project_draft": {
+      "product": {
+        "value": "indoor floor mat",
+        "source": "message",
+        "quote": "I want to make an indoor floor mat from recycled rubber and a binder."
+      },
+      "input": {
+        "value": "recycled rubber and a binder",
+        "source": "message",
+        "quote": "I want to make an indoor floor mat from recycled rubber and a binder."
+      },
+      "variation": {
+        "value": "paper-label residue",
+        "source": "message",
+        "quote": "Identified recycled rubber stock with paper-label residue; the amount of named paper varies."
+      },
+      "use": {
+        "value": "indoor floor mat for the same intended use",
+        "source": "message",
+        "quote": "Synthetic indoor floor mat for the same intended use and nominal dimensions in all setups."
+      },
+      "priorities": {
+        "value": "keeping grip and recovery within my targets and watching the cost",
+        "source": "message",
+        "quote": "How can I decide what to try while keeping grip and recovery within my targets and watching the cost?"
+      },
+      "process": {
+        "value": "same intended process and geometry",
+        "source": "message",
+        "quote": "The same intended process and geometry are stated for each setup but unspecified."
+      },
+      "constraints": {
+        "value": "No physical handling, processing, measuring equipment, or lab access is available during this exercise.",
+        "source": "message",
+        "quote": "Home planning only. No physical handling, processing, measuring equipment, or lab access is available during this exercise."
+      }
+    },
+    "questions": [
+      "What job should the mat do most \u2014 grip, cushioning/recovery, wear resistance, or easy cleaning \u2014 and where indoors will it be used?",
+      "How will the finished mat be built \u2014 for example bonded solid sheet or other layered build \u2014 and what binder do you already have?",
+      "What are your current grip, recovery and cost targets or limits in your own terms for comparing paper-residue options?"
+    ],
+    "first_step": "On paper only, sketch the intended mat shape, nominal dimensions and bonded build, mark where grip contact versus recovery matters, and list your paper-label residue options including the 0 percent paper stock alongside your grip, recovery and cost notes from records. Use that table to narrow which residue levels to consider later and to identify a representative grip evaluation once the actual construction is clear.",
+    "unknown_fields": [],
+    "readiness": "can_explore",
+    "review_required": true,
+    "interpretation_verified": false,
+    "ready_for_calculation": false,
+    "physical_product_tested": false,
+    "performance_verified": false,
+    "request_fingerprint": "a6cb5e4cd0918c78eab0471a197938069a0a747c2bf3fbb23ece4f4a0298db80",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "live": true,
+    "usage": {
+      "completion_tokens": 4836,
+      "prompt_tokens": 1775,
+      "total_tokens": 6611
+    },
+    "request_id": "chatcmpl-01a1a18c-0fba-775d-9291-dae14adf4003",
+    "elapsed_ms": 39965,
+    "requested_reasoning_effort": "medium"
+  },
+  "observed_seconds": 40.02
+}

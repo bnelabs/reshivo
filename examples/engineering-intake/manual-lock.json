@@ -1,0 +1,7 @@
+{
+  "frozen_utc": "2026-11-01T08:18:40.013479+00:00",
+  "sha256": {
+    "examples/engineering-intake-task-v1.json": "abb7162be4c4fded0aafc93dd5ac17616c59d109c0d39e7ac2876919b17adc0a",
+    "docs/ENGINEERING_INTAKE_PROTOCOL.md": "94957fa833db77e264eb5e0e61352aa2c5437428877a0151303862e8a00d7f19"
+  }
+}

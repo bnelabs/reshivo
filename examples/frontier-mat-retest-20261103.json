@@ -1,0 +1,54 @@
+{
+  "request": {
+    "brief": {
+      "product": "Floor mat",
+      "input": "Clean identified recycled rubber granules; pieces vary roughly between three and eight millimetres",
+      "use_case": "Indoor entry mat used in wet conditions",
+      "targets": "Good wet grip and easy cleaning; I have no numerical limits or readings",
+      "variation": "Some portions contain more large pieces and others more small pieces",
+      "process": "At home: hand tools, scissors and cool water. No press, heated equipment or laboratory.",
+      "contamination": "No identified contaminants; no contaminant test has been done",
+      "available_changes": "Can change the layout or product design, but cannot purchase extra equipment or materials this week"
+    },
+    "question": "How should I handle the changing particle sizes and choose a useful first approach for the mat with what I already have? Please suggest a concrete next step and what the wet-grip and cleaning goals require.",
+    "history": []
+  },
+  "http_status": 200,
+  "response": {
+    "result_kind": "engineering_followup",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 2070,
+      "prompt_tokens": 3540,
+      "total_tokens": 5610
+    },
+    "elapsed_ms": 17624,
+    "request_id": "chatcmpl-01a1a167-5051-71ff-ba9b-383a29965bb3",
+    "requested_reasoning_effort": "high",
+    "reasoning_effort": "high",
+    "answer": "Start by hand-separating a small handful into larger-piece and smaller-piece piles and lay them as two separate patches with gaps between pieces for water to leave. This turns size variation into a direct comparison using only what you have, and gaps help both wet contact and rinsing.\n\nGood wet grip still needs instrumented pendulum assessment by a trained operator under your wet entry conditions, which home viewing cannot replace. Easy cleaning needs a rinse check for trapped dirt and water clearing in each patch.",
+    "quarantined_answer": [],
+    "next_steps": [
+      "Hand-sort one small sample into large-rich and small-rich piles",
+      "Lay two small trial patches with drainage gaps, keeping sizes separate",
+      "Rinse with cool water and note water clearing and trapped material"
+    ],
+    "questions": [
+      "How are granules held in place in your current mat idea with no press or binder?",
+      "What wet soil does the entry see - clean water or mud/grit?",
+      "What base, tray or edging do you already have to contain granules and gaps?"
+    ],
+    "sources": [
+      {
+        "id": "hse-slip-assessment",
+        "title": "HSE \u2014 assessing floor slip resistance",
+        "url": "https://www.hse.gov.uk/pubns/geis2.htm",
+        "scope": "General floor-slip testing guidance, including instrumented pendulum assessment by a suitably trained operator under relevant surface conditions. It supplies no measured slip value, acceptance target or qualification for the user's recycled material, and no home walking test substitutes for it. Check the current applicable method for the product and installation."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  }
+}

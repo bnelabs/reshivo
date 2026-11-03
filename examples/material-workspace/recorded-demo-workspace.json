@@ -1,0 +1,523 @@
+{
+  "format": "rematter-material-workspace",
+  "version": 1,
+  "saved_at": "2026-11-03T08:43:56.040Z",
+  "case_data": {
+    "brief": {
+      "input": "Two known recycled PE stocks: variable stream A (grade A1) and characterized stock B (grade B1). Hypothetical software-demo case; no material processed or tested.",
+      "variation": "Stream A’s share changes between raw portions. Each portion has its own weighing records. Moisture and contamination effects are unknown.",
+      "contamination": "Not characterized. No contamination effect is assumed in this demo.",
+      "product": "Plant-pot cover",
+      "use_case": "Decorative cover around a separate pot. The inner pot holds the soil and water.",
+      "targets": "Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Finished-cover fit, handling and outdoor durability still need their own targets.",
+      "process": "At home I can weigh known raw stocks using a scale. I have no moulding or tensile-testing equipment. Any processing and strength test needs a suitable facility; none is confirmed.",
+      "available_changes": "Adjust stream A using recycled stock B, change preparation or revise the cover design. Keep known stock identities and process fixed within each comparison."
+    },
+    "details": {
+      "label": "Plant-pot cover · hypothetical demo",
+      "components": [
+        {
+          "id": 1,
+          "name": "Recycled PE stream A (demo grade A1)",
+          "role": "main",
+          "amount": "250"
+        },
+        {
+          "id": 2,
+          "name": "Recycled PE stock B (demo grade B1)",
+          "role": "other",
+          "amount": "750"
+        }
+      ],
+      "amount_unit": "g",
+      "amount_basis": "Hypothetical raw portion: 250 g of recycled stream A plus 750 g of recycled stock B. Both are recycled; no material has been processed or tested.",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    }
+  },
+  "unit_system": "metric",
+  "plan": {
+    "result_kind": "engineering_proposals",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 5136,
+      "prompt_tokens": 2989,
+      "total_tokens": 8125
+    },
+    "elapsed_ms": 35232,
+    "request_id": "chatcmpl-01a1a077-c7b7-7107-b00a-68606675f287",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "Plant-pot cover · hypothetical demo",
+      "components": [
+        {
+          "id": 1,
+          "name": "Recycled PE stream A (demo grade A1)",
+          "role": "main",
+          "amount": "250"
+        },
+        {
+          "id": 2,
+          "name": "Recycled PE stock B (demo grade B1)",
+          "role": "other",
+          "amount": "750"
+        }
+      ],
+      "amount_unit": "g",
+      "amount_basis": "Hypothetical raw portion: 250 g of recycled stream A plus 750 g of recycled stock B. Both are recycled; no material has been processed or tested.",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "answer": "Start by keeping each weighed portion separate and planning two kept-separate blends that differ only in share of stream A, because that shows whether variation follows A-share without guessing about strength. You can do the weighing, sorting and labelling at home with your scale; moulding specimens and running the strength method needs a suitable facility that is not confirmed.\n\nTo do this you need your portion weighing records, one chosen A-share level to aim for first, and the single specimen shape and method you will count for your strength screen. Use the trial-composition balancing tool to work out how much of each stock gives each chosen share, and share polymer identity and additive information with any facility before heated work.",
+    "quarantined_answer": [],
+    "material_routes": [
+      {
+        "id": "material:M1",
+        "title": "Set A-share with stock B",
+        "change": "Adjust share of variable stream A by blending with stock B, keeping preparation and process fixed within the comparison.",
+        "why": "Changing only A-share may show whether strength variation tracks the variable stream, without guessing mixture behaviour.",
+        "steps": [
+          "Use your home scale to weigh stream A and stock B for each lot.",
+          "Prepare two kept-separate lots that differ only in A-share, for example your entered 250 g A plus 750 g B portion as one level and a lower-A level.",
+          "Use the trial-composition balancing tool to set the weights for the chosen share.",
+          "Label each lot with weights and A-share and keep identities fixed."
+        ],
+        "tradeoffs": [
+          "More levels means more specimens and test cost.",
+          "Lower-A blends use more of stock B.",
+          "Home weighing cannot show strength; facility moulding and testing are still needed."
+        ],
+        "check": "Mould specimens by one fixed process at a suitable facility and test to: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method."
+      },
+      {
+        "id": "material:M2",
+        "title": "Sort and prepare A first",
+        "change": "Change preparation of stream A before blending, keeping A-share fixed within the comparison.",
+        "why": "More consistent feed may help consistent moulding and a clearer strength comparison when moisture and contamination effects are unknown.",
+        "steps": [
+          "Sort stream A to remove obvious non-PE pieces and record what was removed.",
+          "Clean and dry as space allows and record dampness and treatment per lot.",
+          "Blend sorted A with B at the same A-share as an unsorted control where useful."
+        ],
+        "tradeoffs": [
+          "Extra labour, space and drying time.",
+          "Sorting may reduce usable amount of A."
+        ],
+        "check": "Compare lots at the same A-share by sorting record and moulding behaviour, then by: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method."
+      }
+    ],
+    "engineering_routes": [
+      {
+        "id": "engineering:E1",
+        "title": "Sleeve shape for easier handling",
+        "change": "Revise cover shape to lower stress in handling while keeping material identities and process fixed for comparison.",
+        "why": "Handling loads can be carried more by shape than by higher yield stress, which may help when input varies.",
+        "steps": [
+          "Keep function split: inner pot holds soil and water, cover is a decorative sleeve with clearance and a gap so water is not trapped.",
+          "Add shape stiffness as adjustable design choices, for example rolled rim, ribs and draft, without changing A/B identities.",
+          "Make a flat paper template to explore footprint and clearance with your inner pots."
+        ],
+        "tradeoffs": [
+          "Ribs or thicker walls may use more material and need a different mould, not confirmed.",
+          "Paper template answers footprint and clearance only; it does not prove drainage, stiffness or strength."
+        ],
+        "check": "Check fit and handling with the inner pot using real geometry; strength still needs: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Fit, handling and outdoor durability need their own separate targets and short outdoor time does not prove durability."
+      },
+      {
+        "id": "engineering:E2",
+        "title": "Traceable lots ready for facility",
+        "change": "Keep portions traceable and prepare weighed lots at home, defer moulding and testing to a suitable facility.",
+        "why": "Keeping A-share separate preserves a valid comparison and keeps a useful preparation decision ready without assuming processing is available.",
+        "steps": [
+          "Keep each raw portion and each trial blend labelled with its A and B weights and date.",
+          "Weigh trial blends at home; do not mould at home.",
+          "Ask a facility about moulding, specimen preparation and the stated tensile method; none is confirmed so this plan does not mean production can start.",
+          "Provide polymer and additive information to the facility before any heated processing."
+        ],
+        "tradeoffs": [
+          "More labelling and storage effort.",
+          "Facility time and specimen testing add cost and delay."
+        ],
+        "check": "Check scale capability and uncertainty is suited to the weight differences between lots; display steps alone do not prove accuracy. Strength still needs: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method."
+      }
+    ],
+    "next_steps": [
+      "Pick one A-share level for the first comparison and use the trial-composition tool to plan weights from your portion records.",
+      "Prepare two labelled lots: different A-share with same preparation, or same A-share with different preparation; change one variable only.",
+      "Confirm a facility for moulding and the single stated specimen and tensile method, and provide material identity information before heated work.",
+      "Make a paper template for cover footprint and clearance with your inner pots while facility testing is pending."
+    ],
+    "questions": [
+      "What exact specimen shape and test method will count for your strength screen?",
+      "Is only stream A, stock B, preparation and cover shape allowed, or could another binder, filler or tooling be considered?",
+      "What inner-pot sizes must the cover fit, and is any moulding or testing facility already in view?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      },
+      {
+        "id": "hse-ppis13",
+        "title": "HSE — controlling fume during plastics processing",
+        "url": "https://www.hse.gov.uk/pubns/ppis13.pdf",
+        "scope": "General guidance to identify polymer formulation/additives and processing information before heated processing. Temperature and dwell affect fumes; this is not a heat recipe for unidentified cable residue."
+      },
+      {
+        "id": "nist-weighing-tare",
+        "title": "NIST — weighing and scales FAQs",
+        "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+        "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "followup": {
+    "result_kind": "engineering_followup",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 3341,
+      "prompt_tokens": 5231,
+      "total_tokens": 8572
+    },
+    "elapsed_ms": 22927,
+    "request_id": "chatcmpl-01a1a087-0be8-7023-a726-0f3f8c5feaad",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "Plant-pot cover · hypothetical demo",
+      "components": [
+        {
+          "id": 1,
+          "name": "Recycled PE stream A (demo grade A1)",
+          "role": "main",
+          "amount": "250"
+        },
+        {
+          "id": 2,
+          "name": "Recycled PE stock B (demo grade B1)",
+          "role": "other",
+          "amount": "750"
+        }
+      ],
+      "amount_unit": "g",
+      "amount_basis": "Hypothetical raw portion: 250 g of recycled stream A plus 750 g of recycled stock B. Both are recycled; no material has been processed or tested.",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "answer": "Use the 0.3 kg addition only as arithmetic for that specific 1-kg portion to check the 20% trial level, because the calculation does not predict strength and the synthetic 26.1-26.3 MPa points at 20% do not transfer to this new lot.\n\nTo take that step you need the basis for the 26% figure for this portion from its own weighing or constituent-feed records, with the same tare procedure and scale capability noted; reweighing the mixed total alone does not show its A-share, and keep this lot separate from the earlier 250 g plus 750 g material.\n\nStrength still needs moulding by one fixed process at a suitable facility and testing to: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Fit, handling and outdoor durability need their own separate observations, with no batch-wide pass or dose-response inferred from the synthetic points.",
+    "quarantined_answer": [],
+    "next_steps": [
+      "Weigh and label this 1-kg lot separately, recording gross, tare and net weights, actual added stock B, and the record basis for its 26% A-share.",
+      "Confirm a suitable facility for moulding these PE stocks and tensile testing, sharing polymer identity and additive information before heated work.",
+      "At that facility only, mould specimens by one fixed process for this lot and test by the single stated method, recording per-specimen values; observe cover fit separately."
+    ],
+    "questions": [
+      "What records establish the 26% stream-A share for this specific 1-kg portion?",
+      "What facility, specimen type and test method will be used for this lot?",
+      "What preparation steps will you hold identical so this lot stays comparable without mixing portions?"
+    ],
+    "sources": [
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      },
+      {
+        "id": "nist-weighing-tare",
+        "title": "NIST — weighing and scales FAQs",
+        "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+        "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+      },
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "hse-ppis13",
+        "title": "HSE — controlling fume during plastics processing",
+        "url": "https://www.hse.gov.uk/pubns/ppis13.pdf",
+        "scope": "General guidance to identify polymer formulation/additives and processing information before heated processing. Temperature and dwell affect fumes; this is not a heat recipe for unidentified cable residue."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "selected_route": {
+    "id": "material:M1",
+    "title": "Set A-share with stock B",
+    "change": "Adjust share of variable stream A by blending with stock B, keeping preparation and process fixed within the comparison.",
+    "why": "Changing only A-share may show whether strength variation tracks the variable stream, without guessing mixture behaviour.",
+    "check": "Mould specimens by one fixed process at a suitable facility and test to: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method.",
+    "steps": [
+      "Use your home scale to weigh stream A and stock B for each lot.",
+      "Prepare two kept-separate lots that differ only in A-share, for example your entered 250 g A plus 750 g B portion as one level and a lower-A level.",
+      "Use the trial-composition balancing tool to set the weights for the chosen share.",
+      "Label each lot with weights and A-share and keep identities fixed."
+    ],
+    "tradeoffs": [
+      "More levels means more specimens and test cost.",
+      "Lower-A blends use more of stock B.",
+      "Home weighing cannot show strength; facility moulding and testing are still needed."
+    ]
+  },
+  "trial": {
+    "result_kind": "trial_proposal",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 3626,
+      "prompt_tokens": 3957,
+      "total_tokens": 7583
+    },
+    "elapsed_ms": 36292,
+    "request_id": "chatcmpl-01a1a07a-9b3e-7559-b51e-bb665a61eebd",
+    "requested_reasoning_effort": "medium",
+    "calculation_context": {
+      "label": "Plant-pot cover · hypothetical demo",
+      "components": [
+        {
+          "id": 1,
+          "name": "Recycled PE stream A (demo grade A1)",
+          "role": "main",
+          "amount": "250"
+        },
+        {
+          "id": 2,
+          "name": "Recycled PE stock B (demo grade B1)",
+          "role": "other",
+          "amount": "750"
+        }
+      ],
+      "amount_unit": "g",
+      "amount_basis": "Hypothetical raw portion: 250 g of recycled stream A plus 750 g of recycled stock B. Both are recycled; no material has been processed or tested.",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "route_id": "material:M1",
+    "targets": "Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Finished-cover fit, handling and outdoor durability still need their own targets.",
+    "brief": {
+      "available_changes": "Adjust stream A using recycled stock B, change preparation or revise the cover design. Keep known stock identities and process fixed within each comparison.",
+      "contamination": "Not characterized. No contamination effect is assumed in this demo.",
+      "input": "Two known recycled PE stocks: variable stream A (grade A1) and characterized stock B (grade B1). Hypothetical software-demo case; no material processed or tested.",
+      "process": "At home I can weigh known raw stocks using a scale. I have no moulding or tensile-testing equipment. Any processing and strength test needs a suitable facility; none is confirmed.",
+      "product": "Plant-pot cover",
+      "targets": "Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Finished-cover fit, handling and outdoor durability still need their own targets.",
+      "use_case": "Decorative cover around a separate pot. The inner pot holds the soil and water.",
+      "variation": "Stream A’s share changes between raw portions. Each portion has its own weighing records. Moisture and contamination effects are unknown."
+    },
+    "selected_route": {
+      "id": "material:M1",
+      "title": "Set A-share with stock B",
+      "change": "Adjust share of variable stream A by blending with stock B, keeping preparation and process fixed within the comparison.",
+      "why": "Changing only A-share may show whether strength variation tracks the variable stream, without guessing mixture behaviour.",
+      "check": "Mould specimens by one fixed process at a suitable facility and test to: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method.",
+      "steps": [
+        "Use your home scale to weigh stream A and stock B for each lot.",
+        "Prepare two kept-separate lots that differ only in A-share, for example your entered 250 g A plus 750 g B portion as one level and a lower-A level.",
+        "Use the trial-composition balancing tool to set the weights for the chosen share.",
+        "Label each lot with weights and A-share and keep identities fixed."
+      ],
+      "tradeoffs": [
+        "More levels means more specimens and test cost.",
+        "Lower-A blends use more of stock B.",
+        "Home weighing cannot show strength; facility moulding and testing are still needed."
+      ]
+    },
+    "title": "Set A-share with stock B — two-lot screen",
+    "objective": "Screen whether changing the share of variable stream A in blends with stock B tracks with tensile-yield variation for the plant-pot cover. Home weighing sets the comparison levels only; observing strength needs moulding and testing by one fixed method at a suitable facility.",
+    "comparison": "Compare two kept-separate lots that differ only in A-share: Lot 1 uses your entered hypothetical raw portion of 250 g of stream A plus 750 g of stock B; Lot 2 uses a lower A-share of the same two stocks. Keep preparation, facility moulding process, specimen and test method, and decorative-cover use context fixed so any strength difference can be linked to A-share level under test.",
+    "change": "Adjust the share of variable recycled stream A by blending with characterized stock B, keeping preparation and process fixed within the comparison.",
+    "keep_fixed": [
+      "Known stock identities: stream A grade A1 and stock B grade B1 in both lots",
+      "Preparation and weighing procedure identical for both lots",
+      "One facility moulding process and one stated specimen and test method for all specimens",
+      "Use context: decorative cover around a separate pot that holds soil and water"
+    ],
+    "materials": [
+      "Recycled PE stream A demo grade A1 - variable stream",
+      "Recycled PE stock B demo grade B1 - characterized blending stock",
+      "Home scale for weighing known raw stocks - record tare procedure and scale capability",
+      "Labels and weighing records per lot showing weights and A-share"
+    ],
+    "steps": [
+      {
+        "action": "Use your home scale to weigh stream A and stock B for each lot, using the same tare procedure.",
+        "record": "Record gross, tare and net weights per stock, scale resolution, and calculated A-share per lot."
+      },
+      {
+        "action": "Prepare two kept-separate lots that differ only in A-share: Lot 1 as the entered 250 g A plus 750 g B portion and Lot 2 as a lower-A level with the same stocks.",
+        "record": "Record target versus actual weights, A-share level, lot labels, and that identities stayed fixed."
+      },
+      {
+        "action": "Use the trial-composition balancing tool to set the weights for the chosen shares.",
+        "record": "Record tool inputs and resulting target weights per lot."
+      },
+      {
+        "action": "Before any moulding or testing, confirm a suitable facility with appropriate moulding capability for these PE stocks and tensile testing; do not heat-process without identified suitability and controls.",
+        "record": "Record facility name, confirmed capabilities, specimen type, test method, and processing information provided."
+      },
+      {
+        "action": "At that facility only, mould specimens by one fixed process for both lots and test by the one stated method.",
+        "record": "Record process conditions used, specimen IDs per lot, test method, and measured yield values per specimen and lot."
+      }
+    ],
+    "checks": [
+      {
+        "property": "Tensile yield stress",
+        "target": "tensile yield stress at least 25 MPa, using one stated specimen and method",
+        "method": "Mould specimens by one fixed process at a suitable facility and test tensile yield using one stated specimen and method; record specimen type, method, and result per lot. Home weighing cannot show strength.",
+        "if_outside": "If below the quoted target, prepare a new lot at a lower A-share with the same stocks, preparation and facility process, then mould and test again as a new comparison; do not rank either level as better without supporting observations."
+      },
+      {
+        "property": "Finished-cover fit and handling observation",
+        "target": "Not set",
+        "method": "Visual and fit check of cover concept around separate pot without soil/water load testing; record observations per lot. This does not establish durability or strength.",
+        "if_outside": "If fit or handling issues are noted, revise only the cover design in a separate comparison with material and process fixed, then re-observe."
+      }
+    ],
+    "questions": [
+      "What suitable facility with moulding and tensile testing is available, and what single specimen and method will be used for both lots?",
+      "What lower-A share can you make with available stock B while keeping enough material for specimens?",
+      "What preparation steps will you hold identical across both lots so only A-share varies?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      },
+      {
+        "id": "nist-weighing-tare",
+        "title": "NIST — weighing and scales FAQs",
+        "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+        "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "history": [
+    {
+      "role": "user",
+      "content": "How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments."
+    },
+    {
+      "role": "assistant",
+      "content": "Start by keeping each weighed portion separate and planning two kept-separate blends that differ only in share of stream A, because that shows whether variation follows A-share without guessing about strength. You can do the weighing, sorting and labelling at home with your scale; moulding specimens and running the strength method needs a suitable facility that is not confirmed.\n\nTo do this you need your portion weighing records, one chosen A-share level to aim for first, and the single specimen shape and method you will count for your strength screen. Use the trial-composition balancing tool to work out how much of each stock gives each chosen share, and share polymer identity and additive information with any facility before heated work.\nMaterial route: Set A-share with stock B. Adjust share of variable stream A by blending with stock B, keeping preparation and process fixed within the comparison. Changing only A-share may show whether strength variation tracks the variable stream, without guessing mixture behaviour. Next check: Mould specimens by one fixed process at a suitable facility and test to: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method.\nMaterial route: Sort and prepare A first. Change preparation of stream A before blending, keeping A-share fixed within the comparison. More consistent feed may help consistent moulding and a clearer strength comparison when moisture and contamination effects are unknown. Next check: Compare lots at the same A-share by sorting record and moulding behaviour, then by: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method.\nEngineering route: Sleeve shape for easier handling. Revise cover shape to lower stress in handling while keeping material identities and process fixed for comparison. Handling loads can be carried more by shape than by higher yield stress, which may help when input varies. Next check: Check fit and handling with the inner pot using real geometry; strength still needs: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Fit, handling and outdoor durability need their own separate targets and short outdoor time does not prove durability.\nEngineering route: Traceable lots ready for facility. Keep portions traceable and prepare weighed lots at home, defer moulding and testing to a suitable facility. Keeping A-share separate preserves a valid comparison and keeps a useful preparation decision ready without assuming processing is available. Next check: Check scale capability and uncertainty is suited to the weight differences between lots; display steps alone do not prove accuracy. Strength still needs: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method.\nPick one A-share level for the first comparison and use the trial-composition tool to plan weights from your portion records.\nPrepare two labelled lots: different A-share with same preparation, or same A-share with different preparation; change one variable only.\nConfirm a facility for moulding and the single stated specimen and tensile method, and provide material identity information before heated work.\nMake a paper template for cover footprint and clearance with your inner pots while facility testing is pending."
+    },
+    {
+      "role": "assistant",
+      "content": "Chosen route: Set A-share with stock B. Adjust share of variable stream A by blending with stock B, keeping preparation and process fixed within the comparison.\nProposed trial: Set A-share with stock B — two-lot screen. Screen whether changing the share of variable stream A in blends with stock B tracks with tensile-yield variation for the plant-pot cover. Home weighing sets the comparison levels only; observing strength needs moulding and testing by one fixed method at a suitable facility.\nTargets: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Finished-cover fit, handling and outdoor durability still need their own targets.\nCompare: Compare two kept-separate lots that differ only in A-share: Lot 1 uses your entered hypothetical raw portion of 250 g of stream A plus 750 g of stock B; Lot 2 uses a lower A-share of the same two stocks. Keep preparation, facility moulding process, specimen and test method, and decorative-cover use context fixed so any strength difference can be linked to A-share level under test.. Change: Adjust the share of variable recycled stream A by blending with characterized stock B, keeping preparation and process fixed within the comparison.\nKeep fixed: Known stock identities: stream A grade A1 and stock B grade B1 in both lots; Preparation and weighing procedure identical for both lots; One facility moulding process and one stated specimen and test method for all specimens; Use context: decorative cover around a separate pot that holds soil and water\nHave ready: Recycled PE stream A demo grade A1 - variable stream; Recycled PE stock B demo grade B1 - characterized blending stock; Home scale for weighing known raw stocks - record tare procedure and scale capability; Labels and weighing records per lot showing weights and A-share\nAction: Use your home scale to weigh stream A and stock B for each lot, using the same tare procedure. Record: Record gross, tare and net weights per stock, scale resolution, and calculated A-share per lot.\nAction: Prepare two kept-separate lots that differ only in A-share: Lot 1 as the entered 250 g A plus 750 g B portion and Lot 2 as a lower-A level with the same stocks. Record: Record target versus actual weights, A-share level, lot labels, and that identities stayed fixed.\nAction: Use the trial-composition balancing tool to set the weights for the chosen shares. Record: Record tool inputs and resulting target weights per lot.\nAction: Before any moulding or testing, confirm a suitable facility with appropriate moulding capability for these PE stocks and tensile testing; do not heat-process without identified suitability and controls. Record: Record facility name, confirmed capabilities, specimen type, test method, and processing information provided.\nAction: At that facility only, mould specimens by one fixed process for both lots and test by the one stated method. Record: Record process conditions used, specimen IDs per lot, test method, and measured yield values per specimen and lot.\nCheck Tensile yield stress: tensile yield stress at least 25 MPa, using one stated specimen and method. Mould specimens by one fixed process at a suitable facility and test tensile yield using one stated specimen and method; record specimen type, method, and result per lot. Home weighing cannot show strength. If outside: If below the quoted target, prepare a new lot at a lower A-share with the same stocks, preparation and facility process, then mould and test again as a new comparison; do not rank either level as better without supporting observations.\nCheck Finished-cover fit and handling observation: Not set. Visual and fit check of cover concept around separate pot without soil/water load testing; record observations per lot. This does not establish durability or strength. If outside: If fit or handling issues are noted, revise only the cover design in a separate comparison with material and process fixed, then re-observe.\nWhat suitable facility with moulding and tensile testing is available, and what single specimen and method will be used for both lots?\nWhat lower-A share can you make with available stock B while keeping enough material for specimens?\nWhat preparation steps will you hold identical across both lots so only A-share varies?"
+    },
+    {
+      "role": "user",
+      "content": "Review this proposed composition trial and suggest the next practical preparation, process and property checks. These are synthetic or user-reported reference readings, not a validated recipe. The composition calculation is not a property prediction. Keep the current product targets; do not infer batch independence, invent a dose-response link, or promise finished properties. Trial summary:\n{\"reading_type\":\"synthetic\",\"reference\":{\"property\":\"Tensile yield stress\",\"unit\":\"MPa\",\"target_min\":\"25\",\"target_max\":null,\"method\":\"Synthetic software demonstration only. Same hypothetical PE stocks A1/B1, identical declared moulding settings and one tensile specimen/method at both stream-A levels. No physical processing or testing.\",\"setting_id\":\"20% stream A · synthetic\",\"input\":\"Share of recycled stream A\",\"input_unit\":\"mass %\",\"recorded_level\":\"20\",\"observed_min\":\"26.1\",\"observed_max\":\"26.3\",\"reading_count\":2,\"in_target_count\":2,\"grouping\":\"Identifiers omitted from this summary; do not infer specimens, runs or batches.\"},\"proposed_trial\":{\"result_kind\":\"composition_calculation\",\"component\":\"Recycled PE stream A (demo grade A1)\",\"input_mass_kg\":1,\"addition_name\":\"Recycled PE stock B (demo grade B1)\",\"input_min_percent\":26,\"addition_percent\":0,\"input_max_percent\":26,\"target_max_percent\":20,\"target_min_percent\":20,\"feasible\":true,\"addition_min_kg\":0.3,\"addition_max_kg\":0.3,\"example_addition_kg\":0.3,\"resulting_min_percent\":20,\"resulting_max_percent\":20,\"action\":\"The calculated addition interval for Recycled PE stock B (demo grade B1) covers the entered composition range within your chosen trial target.\",\"next_options\":[\"Use the example only as a composition trial; record the actual weighed addition.\",\"Check mixing and the properties that matter for the product before choosing a working formulation.\"],\"assumptions\":[\"This is a user-chosen trial composition calculated from entered mass fractions, not a recipe proven to meet physical properties.\",\"The input range is supplied by the user; it is not inferred from repeated tests, standard deviations or batch statistics.\",\"One fixed added mass is checked against both endpoints of the specified input range for the entered portion mass.\",\"Input and added stock use the same mass basis. Their stated fractions are assumed representative, with no losses, reactions, moisture change or incomplete mixing.\",\"No density is used. Strength, sound performance, binder compatibility and finished-product consistency are not established.\"],\"physical_performance_verified\":false},\"original_case_unchanged\":true,\"new_mix_property_tested\":false}"
+    },
+    {
+      "role": "assistant",
+      "content": "Use the 0.3 kg addition only as arithmetic for that specific 1-kg portion to check the 20% trial level, because the calculation does not predict strength and the synthetic 26.1-26.3 MPa points at 20% do not transfer to this new lot.\n\nTo take that step you need the basis for the 26% figure for this portion from its own weighing or constituent-feed records, with the same tare procedure and scale capability noted; reweighing the mixed total alone does not show its A-share, and keep this lot separate from the earlier 250 g plus 750 g material.\n\nStrength still needs moulding by one fixed process at a suitable facility and testing to: Material strength screen: tensile yield stress at least 25 MPa, using one stated specimen and method. Fit, handling and outdoor durability need their own separate observations, with no batch-wide pass or dose-response inferred from the synthetic points.\nWeigh and label this 1-kg lot separately, recording gross, tare and net weights, actual added stock B, and the record basis for its 26% A-share.\nConfirm a suitable facility for moulding these PE stocks and tensile testing, sharing polymer identity and additive information before heated work.\nAt that facility only, mould specimens by one fixed process for this lot and test by the single stated method, recording per-specimen values; observe cover fit separately."
+    }
+  ],
+  "measurement_draft": {
+    "fields": {
+      "property_name": "Tensile yield stress",
+      "property_unit": "MPa",
+      "input_name": "Share of recycled stream A",
+      "input_unit": "mass %",
+      "target_min": "25",
+      "target_max": "",
+      "method": "Synthetic software demonstration only. Same hypothetical PE stocks A1/B1, identical declared moulding settings and one tensile specimen/method at both stream-A levels. No physical processing or testing."
+    },
+    "data_kind": "synthetic",
+    "settings": [
+      {
+        "id": "20% stream A · synthetic",
+        "level": "20",
+        "readings": [
+          {
+            "value": "26.3",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "",
+            "specimen_id": "",
+            "run_id": "",
+            "batch_id": "",
+            "repeat_of": ""
+          },
+          {
+            "value": "26.1",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "",
+            "specimen_id": "",
+            "run_id": "",
+            "batch_id": "",
+            "repeat_of": ""
+          }
+        ]
+      },
+      {
+        "id": "25% stream A · synthetic",
+        "level": "25",
+        "readings": [
+          {
+            "value": "22.0",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "",
+            "specimen_id": "",
+            "run_id": "",
+            "batch_id": "",
+            "repeat_of": ""
+          },
+          {
+            "value": "22.4",
+            "group_kind": "unknown",
+            "group_label": "Unknown",
+            "reading_id": "",
+            "specimen_id": "",
+            "run_id": "",
+            "batch_id": "",
+            "repeat_of": ""
+          }
+        ]
+      }
+    ]
+  },
+  "mix_draft": {
+    "component_id": 1,
+    "fields": {
+      "input_mass_kg": "1",
+      "input_min_percent": "26",
+      "input_max_percent": "26",
+      "addition_name": "Recycled PE stock B (demo grade B1)",
+      "addition_percent": "0",
+      "target_min_percent": "20",
+      "target_max_percent": "20"
+    }
+  }
+}

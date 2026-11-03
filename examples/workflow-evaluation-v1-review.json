@@ -1,0 +1,255 @@
+{
+  "reviewer": "independent developer review",
+  "source": "outputs/workflow-evaluation-v1-live.json",
+  "results": [
+    {
+      "case": "mat",
+      "arm": "baseline",
+      "criteria": {
+        "direct": {
+          "status": "pass",
+          "quote": "recovery 72% by Synthetic method R is below the 80% minimum",
+          "reason": "Correct A miss and missing grip; B and both costs are correctly stated."
+        },
+        "useful": {
+          "status": "partial",
+          "quote": "review why A v2 recovery and B v1 grip are out-of-range",
+          "reason": "The paper-planning direction is conditional but not a specific material or design trial."
+        },
+        "boundaries": {
+          "status": "pass",
+          "quote": "The earlier A v1 grip 0.71 is stale for revision change",
+          "reason": "Separates stale/current readings, cost scope and untested performance."
+        },
+        "clarity": {
+          "status": "partial",
+          "quote": "missing_records",
+          "reason": "Useful facts are present, but long prose includes an internal state name."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": null
+    },
+    {
+      "case": "mat",
+      "arm": "workflow",
+      "criteria": {
+        "direct": {
+          "status": "pass",
+          "quote": "Setup A v2 has recovery 72% below target and no current grip record",
+          "reason": "Correct B outcome and both material-only costs also appear."
+        },
+        "useful": {
+          "status": "partial",
+          "quote": "If you try a different R/P mix, save a changed version and record both checks",
+          "reason": "Retains useful separation of trials, but the suggested change is generic rather than a concrete product path."
+        },
+        "boundaries": {
+          "status": "pass",
+          "quote": "Process and geometry are both unspecified, so control is unknown",
+          "reason": "No stale transfer, claimed causal effect or physical qualification."
+        },
+        "clarity": {
+          "status": "partial",
+          "quote": "the decision stays needs more information",
+          "reason": "The answer is understandable overall, with a raw internal status phrase."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": null
+    },
+    {
+      "case": "mat_eligible",
+      "arm": "workflow",
+      "criteria": {
+        "direct": {
+          "status": "pass",
+          "quote": "Setup A v2 as your current synthetic record because it is the only setup with both entered readings in range",
+          "reason": "Correctly excludes cheaper B and gives both unit costs."
+        },
+        "useful": {
+          "status": "partial",
+          "quote": "change one thing in a separately saved version",
+          "reason": "A valid planning principle, but no specific feasible material or product change is developed."
+        },
+        "boundaries": {
+          "status": "pass",
+          "quote": "synthetic readings do not predict real performance, future batches or qualification",
+          "reason": "Correctly labels the limitations and explicitly unknown process/geometry."
+        },
+        "clarity": {
+          "status": "pass",
+          "quote": "Its lower materials-only figure of 3.00 CU per usable unit does not change that",
+          "reason": "Explains why the cheapest option is not the recorded choice."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": null
+    },
+    {
+      "case": "mat_eligible",
+      "arm": "baseline",
+      "criteria": {
+        "direct": {
+          "status": "pass",
+          "quote": "Setup B v1 is lower materials-only cost (24 CU total, 3.00 CU per usable unit) but failed grip",
+          "reason": "Identifies A as the only recorded option with both checks in range and 3.25 CU per item."
+        },
+        "useful": {
+          "status": "partial",
+          "quote": "first resolve preparation/sorting, R/P compatibility, contamination, binder/process and geometry",
+          "reason": "Relevant conditions, but mainly a list rather than a concrete next product design action."
+        },
+        "boundaries": {
+          "status": "pass",
+          "quote": "The stale A v1 grip reading 0.71 was ignored for current A v2",
+          "reason": "Keeps old measurements separate and does not claim a real mat was tested."
+        },
+        "clarity": {
+          "status": "partial",
+          "quote": "Formulation completeness was not assessed, quantity preparation is not supported",
+          "reason": "Accurate, but unnecessarily exposes internal system terminology."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": null
+    },
+    {
+      "case": "acoustic",
+      "arm": "baseline",
+      "criteria": {
+        "direct": {
+          "status": "partial",
+          "quote": "blocking versus absorbing, frequencies, and installation remain unknown",
+          "reason": "Distinguishes the job and missing context but does not name a matching acoustic measurement or method."
+        },
+        "useful": {
+          "status": "pass",
+          "quote": "reduce echo in the room versus reduce sound through the wall",
+          "reason": "Offers a practical first planning step and placement question."
+        },
+        "boundaries": {
+          "status": "pass",
+          "quote": "Cannot tell yet whether these offcuts will make the room quieter",
+          "reason": "No performance or material properties are invented."
+        },
+        "clarity": {
+          "status": "partial",
+          "quote": "note amount basis in kg",
+          "reason": "The first distinction is plain; this extra technical detail is not yet clearly useful."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": null
+    },
+    {
+      "case": "acoustic",
+      "arm": "workflow",
+      "criteria": {
+        "direct": {
+          "status": "partial",
+          "quote": "It does not show blocking or absorption",
+          "reason": "Distinguishes the job but does not name frequencies or a matching acoustic measurement."
+        },
+        "useful": {
+          "status": "pass",
+          "quote": "use a simple sketch to explore coverage and fit",
+          "reason": "Gives a specific home-planning activity while recognizing unknown material and installation."
+        },
+        "boundaries": {
+          "status": "pass",
+          "quote": "Nothing can be said yet about noise reduction",
+          "reason": "No acoustic values or guaranteed sound result are invented."
+        },
+        "clarity": {
+          "status": "pass",
+          "quote": "less echo inside the room or less sound coming through a wall",
+          "reason": "Explains the important distinction in everyday language."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": null
+    },
+    {
+      "case": "counterweight",
+      "arm": "workflow",
+      "criteria": {
+        "direct": {
+          "status": "pass",
+          "quote": "no binder amount can be set safely yet",
+          "reason": "Names unknown materials/amounts and suggests complete-assembly weighing without combining constituent densities."
+        },
+        "useful": {
+          "status": "fail",
+          "quote": "by adding or removing fill and reweighing",
+          "reason": "For unidentified dust at home, the text fails to restrict adjustment to existing sealed whole units or to a suitable facility; its instruction conflicts with keeping the batch untouched."
+        },
+        "boundaries": {
+          "status": "partial",
+          "quote": "Keep the batch sealed and untouched for now",
+          "reason": "The opening condition is contradicted or undercut by the later ambiguous fill-handling instruction; no numeric binder dose is invented."
+        },
+        "clarity": {
+          "status": "pass",
+          "quote": "Plan a sealed enclosure with replaceable fill",
+          "reason": "The words are understandable, though the missing handling condition makes the action unsafe or ambiguous."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": "Home dust handling condition missing from the fill-adjustment proposal."
+    },
+    {
+      "case": "counterweight",
+      "arm": "baseline",
+      "criteria": {
+        "direct": {
+          "status": "pass",
+          "quote": "No binder amount can be given",
+          "reason": "Identifies missing identity and amounts and refers to complete-assembly mass rather than a guessed mixed density."
+        },
+        "useful": {
+          "status": "pass",
+          "quote": "Only with confirmed handling, test weighed fill levels",
+          "reason": "Qualifies handling and separates present at-home planning from future physical work."
+        },
+        "boundaries": {
+          "status": "pass",
+          "quote": "do not process at home until metal identity/form and plastic formulation and suitable handling are confirmed",
+          "reason": "No fabricated physical property, binder dose, or future-batch claim appears."
+        },
+        "clarity": {
+          "status": "partial",
+          "quote": "state missing_records and can_prepare_quantities false",
+          "reason": "Exposes internal fields rather than explaining these limits naturally."
+        }
+      },
+      "preregistered_hard_fail": false,
+      "raw_answer_matches_delivered": true,
+      "quarantined_paragraphs": [],
+      "raw_review_note": "Raw answer, all next steps and questions were inspected; no preregistered hard-fail condition identified.",
+      "additional_material_issue": null
+    }
+  ],
+  "limits": "Visible developer-authored synthetic cases, one run, non-blinded review; the paired mat is not independent. No human time, physical performance or intrinsic-model-superiority inference."
+}

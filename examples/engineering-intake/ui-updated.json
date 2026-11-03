@@ -1,0 +1,829 @@
+{
+  "status": "reviewed_and_applied",
+  "note": "Synthetic software observation bench-2, not a physical test. This is a new independent observation of the same product, with the unchanged configuration and stated stocks below. Complete assembly, including enclosure: 1 kg; weighing uncertainty ±5 g. The same assembly has centre of mass x=+5 mm; centre uncertainty ±0.5 mm.\nAll coordinates share x=0 at the module centre, positive toward the right. The two location coordinates are the mass centres of the actual added or removed sealed trim, not hole centres.\nLocation L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.\nLocation R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.\nAcross both locations, the total addition limit is 150 g and total removable trim is 80 g.\nThe command increment is 1 g. The adjustment uncertainty is ±1 g independently at each active location.",
+  "original_case": {
+    "brief": {
+      "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+      "variation": "Each prepared assembly is observed separately. No prediction of future batches.",
+      "contamination": "Unknown and not modeled.",
+      "product": "Contained ballast module",
+      "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+      "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+      "process": "Software only; no material handling or heating.",
+      "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets."
+    },
+    "details": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02",
+      "balance": {
+        "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "target_min_mm": "-2",
+        "target_max_mm": "2"
+      }
+    }
+  },
+  "current_case": {
+    "brief": {
+      "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+      "variation": "Each prepared assembly is observed separately. No prediction of future batches.",
+      "contamination": "Unknown and not modeled.",
+      "product": "Contained ballast module",
+      "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+      "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+      "process": "Software only; no material handling or heating.",
+      "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets."
+    },
+    "details": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02",
+      "balance": {
+        "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "target_min_mm": "-2",
+        "target_max_mm": "2"
+      }
+    }
+  },
+  "draft": {
+    "result_kind": "engineering_draft",
+    "review_required": true,
+    "ready": false,
+    "fields": {
+      "observation_id": {
+        "quote": "Synthetic software observation bench-2, not a physical test.",
+        "source": "note",
+        "text": "bench-2"
+      },
+      "observation_kind": {
+        "kind": "simulated",
+        "quote": "Synthetic software observation bench-2, not a physical test.",
+        "source": "note"
+      },
+      "mass_kg": {
+        "number_text": "1",
+        "quote": "Complete assembly, including enclosure: 1 kg;",
+        "source": "note",
+        "unit": "kg",
+        "normalized_value": 1
+      },
+      "weighing_uncertainty_kg": {
+        "number_text": "5",
+        "quote": "weighing uncertainty ±5 g.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.005
+      },
+      "total_max_add_kg": {
+        "number_text": "150",
+        "quote": "Across both locations, the total addition limit is 150 g and total removable trim is 80 g.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.15
+      },
+      "total_max_remove_kg": {
+        "number_text": "80",
+        "quote": "Across both locations, the total addition limit is 150 g and total removable trim is 80 g.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.08
+      },
+      "adjustment_uncertainty_kg": {
+        "number_text": "1",
+        "quote": "The adjustment uncertainty is ±1 g independently at each active location.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.001
+      },
+      "mass_target_min_kg": {
+        "number_text": "980",
+        "quote": "Mass 980–1020 g;",
+        "source": "brief.targets",
+        "unit": "g",
+        "normalized_value": 0.98
+      },
+      "mass_target_max_kg": {
+        "number_text": "1020",
+        "quote": "Mass 980–1020 g;",
+        "source": "brief.targets",
+        "unit": "g",
+        "normalized_value": 1.02
+      },
+      "balance_target_min_mm": {
+        "number_text": "-2",
+        "quote": "centre of mass x between -2 and 2 mm.",
+        "source": "brief.targets",
+        "unit": "mm",
+        "normalized_value": -2
+      },
+      "balance_target_max_mm": {
+        "number_text": "2",
+        "quote": "centre of mass x between -2 and 2 mm.",
+        "source": "brief.targets",
+        "unit": "mm",
+        "normalized_value": 2
+      },
+      "coordinate_basis": {
+        "quote": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "source": "note",
+        "text": "All coordinates share x=0 at the module centre, positive toward the right."
+      },
+      "cg_x_mm": {
+        "number_text": "+5",
+        "quote": "The same assembly has centre of mass x=+5 mm;",
+        "source": "note",
+        "unit": "mm",
+        "normalized_value": 5
+      },
+      "cg_uncertainty_mm": {
+        "number_text": "0.5",
+        "quote": "centre uncertainty ±0.5 mm.",
+        "source": "note",
+        "unit": "mm",
+        "normalized_value": 0.5
+      },
+      "position_a_id": {
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm;",
+        "source": "note",
+        "text": "L"
+      },
+      "position_a_x_mm": {
+        "number_text": "-6",
+        "quote": "Location L: x=-6 cm;",
+        "source": "note",
+        "unit": "cm",
+        "normalized_value": -60
+      },
+      "position_a_uncertainty_mm": {
+        "number_text": "0",
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm;",
+        "source": "note",
+        "unit": "mm",
+        "normalized_value": 0
+      },
+      "position_a_max_add_kg": {
+        "number_text": "150",
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.15
+      },
+      "position_a_max_remove_kg": {
+        "number_text": "0",
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0
+      },
+      "position_b_id": {
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm;",
+        "source": "note",
+        "text": "R"
+      },
+      "position_b_x_mm": {
+        "number_text": "+60",
+        "quote": "Location R: x=+60 mm;",
+        "source": "note",
+        "unit": "mm",
+        "normalized_value": 60
+      },
+      "position_b_uncertainty_mm": {
+        "number_text": "0",
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm;",
+        "source": "note",
+        "unit": "mm",
+        "normalized_value": 0
+      },
+      "position_b_max_add_kg": {
+        "number_text": "150",
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.15
+      },
+      "position_b_max_remove_kg": {
+        "number_text": "80",
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.08
+      },
+      "command_resolution_kg": {
+        "number_text": "1",
+        "quote": "The command increment is 1 g.",
+        "source": "note",
+        "unit": "g",
+        "normalized_value": 0.001
+      }
+    },
+    "values": {
+      "observation_id": "bench-2",
+      "observation_kind": "simulated",
+      "mass_kg": 1,
+      "weighing_uncertainty_kg": 0.005,
+      "total_max_add_kg": 0.15,
+      "total_max_remove_kg": 0.08,
+      "adjustment_uncertainty_kg": 0.001,
+      "mass_target_min_kg": 0.98,
+      "mass_target_max_kg": 1.02,
+      "balance_target_min_mm": -2,
+      "balance_target_max_mm": 2,
+      "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+      "cg_x_mm": 5,
+      "cg_uncertainty_mm": 0.5,
+      "position_a_id": "L",
+      "position_a_x_mm": -60,
+      "position_a_uncertainty_mm": 0,
+      "position_a_max_add_kg": 0.15,
+      "position_a_max_remove_kg": 0,
+      "position_b_id": "R",
+      "position_b_x_mm": 60,
+      "position_b_uncertainty_mm": 0,
+      "position_b_max_add_kg": 0.15,
+      "position_b_max_remove_kg": 0.08,
+      "command_resolution_kg": 0.001
+    },
+    "source_fields": {
+      "adjustment_uncertainty_kg": {
+        "number_text": "1",
+        "quote": "The adjustment uncertainty is ±1 g independently at each active location.",
+        "source": "note",
+        "unit": "g"
+      },
+      "balance_target_max_mm": {
+        "number_text": "2",
+        "quote": "centre of mass x between -2 and 2 mm.",
+        "source": "brief.targets",
+        "unit": "mm"
+      },
+      "balance_target_min_mm": {
+        "number_text": "-2",
+        "quote": "centre of mass x between -2 and 2 mm.",
+        "source": "brief.targets",
+        "unit": "mm"
+      },
+      "cg_uncertainty_mm": {
+        "number_text": "0.5",
+        "quote": "centre uncertainty ±0.5 mm.",
+        "source": "note",
+        "unit": "mm"
+      },
+      "cg_x_mm": {
+        "number_text": "+5",
+        "quote": "The same assembly has centre of mass x=+5 mm;",
+        "source": "note",
+        "unit": "mm"
+      },
+      "command_resolution_kg": {
+        "number_text": "1",
+        "quote": "The command increment is 1 g.",
+        "source": "note",
+        "unit": "g"
+      },
+      "coordinate_basis": {
+        "quote": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "source": "note",
+        "text": "All coordinates share x=0 at the module centre, positive toward the right."
+      },
+      "mass_kg": {
+        "number_text": "1",
+        "quote": "Complete assembly, including enclosure: 1 kg;",
+        "source": "note",
+        "unit": "kg"
+      },
+      "mass_target_max_kg": {
+        "number_text": "1020",
+        "quote": "Mass 980–1020 g;",
+        "source": "brief.targets",
+        "unit": "g"
+      },
+      "mass_target_min_kg": {
+        "number_text": "980",
+        "quote": "Mass 980–1020 g;",
+        "source": "brief.targets",
+        "unit": "g"
+      },
+      "observation_id": {
+        "quote": "Synthetic software observation bench-2, not a physical test.",
+        "source": "note",
+        "text": "bench-2"
+      },
+      "observation_kind": {
+        "kind": "simulated",
+        "quote": "Synthetic software observation bench-2, not a physical test.",
+        "source": "note"
+      },
+      "position_a_id": {
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm;",
+        "source": "note",
+        "text": "L"
+      },
+      "position_a_max_add_kg": {
+        "number_text": "150",
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.",
+        "source": "note",
+        "unit": "g"
+      },
+      "position_a_max_remove_kg": {
+        "number_text": "0",
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.",
+        "source": "note",
+        "unit": "g"
+      },
+      "position_a_uncertainty_mm": {
+        "number_text": "0",
+        "quote": "Location L: x=-6 cm; position uncertainty ±0 mm;",
+        "source": "note",
+        "unit": "mm"
+      },
+      "position_a_x_mm": {
+        "number_text": "-6",
+        "quote": "Location L: x=-6 cm;",
+        "source": "note",
+        "unit": "cm"
+      },
+      "position_b_id": {
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm;",
+        "source": "note",
+        "text": "R"
+      },
+      "position_b_max_add_kg": {
+        "number_text": "150",
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.",
+        "source": "note",
+        "unit": "g"
+      },
+      "position_b_max_remove_kg": {
+        "number_text": "80",
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.",
+        "source": "note",
+        "unit": "g"
+      },
+      "position_b_uncertainty_mm": {
+        "number_text": "0",
+        "quote": "Location R: x=+60 mm; position uncertainty ±0 mm;",
+        "source": "note",
+        "unit": "mm"
+      },
+      "position_b_x_mm": {
+        "number_text": "+60",
+        "quote": "Location R: x=+60 mm;",
+        "source": "note",
+        "unit": "mm"
+      },
+      "total_max_add_kg": {
+        "number_text": "150",
+        "quote": "Across both locations, the total addition limit is 150 g and total removable trim is 80 g.",
+        "source": "note",
+        "unit": "g"
+      },
+      "total_max_remove_kg": {
+        "number_text": "80",
+        "quote": "Across both locations, the total addition limit is 150 g and total removable trim is 80 g.",
+        "source": "note",
+        "unit": "g"
+      },
+      "weighing_uncertainty_kg": {
+        "number_text": "5",
+        "quote": "weighing uncertainty ±5 g.",
+        "source": "note",
+        "unit": "g"
+      }
+    },
+    "target_resolution": {
+      "mass_target_min_kg": {
+        "current": 0.98,
+        "current_text": "0.98",
+        "proposed": 0.98,
+        "selected": 0.98,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "mass_target_max_kg": {
+        "current": 1.02,
+        "current_text": "1.02",
+        "proposed": 1.02,
+        "selected": 1.02,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "balance_target_min_mm": {
+        "current": -2,
+        "current_text": "-2",
+        "proposed": -2,
+        "selected": -2,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "balance_target_max_mm": {
+        "current": 2,
+        "current_text": "2",
+        "proposed": 2,
+        "selected": 2,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "coordinate_basis": {
+        "current": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "current_text": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "proposed": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "selected": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "origin": "current_case",
+        "conflict": false
+      }
+    },
+    "conflicts": [],
+    "invalid_current_fields": [],
+    "missing_fields": [],
+    "questions": [],
+    "request_fingerprint": "de1a4fb11ab68c2319ab3e2cfa9664b3ab0e606c85c7e2dad7cf081ba3b7d4c5",
+    "draft_fingerprint": "faa32f283616401ba3054375cd00f99920d51534efe1c9de146284ecce0f565a",
+    "source_path": "quoted_engineering_note",
+    "interpretation_verified": false,
+    "physical_product_tested": false,
+    "brief": {
+      "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+      "contamination": "Unknown and not modeled.",
+      "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+      "process": "Software only; no material handling or heating.",
+      "product": "Contained ballast module",
+      "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+      "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+      "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+    },
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02",
+      "balance": {
+        "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "target_min_mm": "-2",
+        "target_max_mm": "2"
+      }
+    },
+    "note": "Synthetic software observation bench-2, not a physical test. This is a new independent observation of the same product, with the unchanged configuration and stated stocks below. Complete assembly, including enclosure: 1 kg; weighing uncertainty ±5 g. The same assembly has centre of mass x=+5 mm; centre uncertainty ±0.5 mm.\nAll coordinates share x=0 at the module centre, positive toward the right. The two location coordinates are the mass centres of the actual added or removed sealed trim, not hole centres.\nLocation L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.\nLocation R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.\nAcross both locations, the total addition limit is 150 g and total removable trim is 80 g.\nThe command increment is 1 g. The adjustment uncertainty is ±1 g independently at each active location.",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "live": true,
+    "usage": {
+      "completion_tokens": 2652,
+      "prompt_tokens": 3649,
+      "total_tokens": 6301
+    },
+    "request_id": "chatcmpl-01a198c0-459b-759e-8377-f172d95a2017",
+    "elapsed_ms": 8551
+  },
+  "result": {
+    "result_kind": "engineering_preparation",
+    "ready": true,
+    "source_path": "quoted_engineering_note",
+    "request_fingerprint": "de1a4fb11ab68c2319ab3e2cfa9664b3ab0e606c85c7e2dad7cf081ba3b7d4c5",
+    "target_choice": "current",
+    "target_resolution": {
+      "mass_target_min_kg": {
+        "current": 0.98,
+        "current_text": "0.98",
+        "proposed": 0.98,
+        "selected": 0.98,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "mass_target_max_kg": {
+        "current": 1.02,
+        "current_text": "1.02",
+        "proposed": 1.02,
+        "selected": 1.02,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "balance_target_min_mm": {
+        "current": -2,
+        "current_text": "-2",
+        "proposed": -2,
+        "selected": -2,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "balance_target_max_mm": {
+        "current": 2,
+        "current_text": "2",
+        "proposed": 2,
+        "selected": 2,
+        "origin": "current_case",
+        "conflict": false
+      },
+      "coordinate_basis": {
+        "current": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "current_text": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "proposed": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "selected": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "origin": "current_case",
+        "conflict": false
+      }
+    },
+    "conflicts": [],
+    "missing_fields": [],
+    "questions": [],
+    "validation_errors": [],
+    "interpretation_verified": false,
+    "physical_product_tested": false,
+    "bound_request": {
+      "brief": {
+        "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+        "contamination": "Unknown and not modeled.",
+        "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+        "process": "Software only; no material handling or heating.",
+        "product": "Contained ballast module",
+        "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+        "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+        "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+      },
+      "calculation_context": {
+        "label": "",
+        "components": [
+          {
+            "id": 1,
+            "name": "",
+            "role": "main",
+            "amount": ""
+          }
+        ],
+        "amount_unit": "mass_percent",
+        "amount_basis": "",
+        "mass_target_min_kg": "0.98",
+        "mass_target_max_kg": "1.02",
+        "balance": {
+          "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+          "target_min_mm": "-2.0",
+          "target_max_mm": "2.0"
+        }
+      },
+      "feedback": {
+        "observation": {
+          "id": "bench-2",
+          "kind": "simulated",
+          "mass_kg": 1,
+          "uncertainty_kg": 0.005
+        },
+        "max_add_mass_kg": 0.15,
+        "max_remove_mass_kg": 0.08,
+        "adjustment_uncertainty_kg": 0.001
+      },
+      "balance": {
+        "cg_x_mm": 5,
+        "cg_uncertainty_mm": 0.5,
+        "command_resolution_kg": 0.001,
+        "baseline": {
+          "position_id": "L",
+          "command_kg": 0
+        },
+        "independent_adjustments": true,
+        "positions": [
+          {
+            "id": "L",
+            "x_mm": -60,
+            "position_uncertainty_mm": 0,
+            "max_add_kg": 0.15,
+            "max_remove_kg": 0
+          },
+          {
+            "id": "R",
+            "x_mm": 60,
+            "position_uncertainty_mm": 0,
+            "max_add_kg": 0.15,
+            "max_remove_kg": 0.08
+          }
+        ]
+      }
+    },
+    "draft_fingerprint": "faa32f283616401ba3054375cd00f99920d51534efe1c9de146284ecce0f565a",
+    "reviewed_values": {
+      "observation_id": "bench-2",
+      "observation_kind": "simulated",
+      "mass_kg": 1,
+      "weighing_uncertainty_kg": 0.005,
+      "total_max_add_kg": 0.15,
+      "total_max_remove_kg": 0.08,
+      "adjustment_uncertainty_kg": 0.001,
+      "mass_target_min_kg": 0.98,
+      "mass_target_max_kg": 1.02,
+      "balance_target_min_mm": -2,
+      "balance_target_max_mm": 2,
+      "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+      "cg_x_mm": 5,
+      "cg_uncertainty_mm": 0.5,
+      "position_a_id": "L",
+      "position_a_x_mm": -60,
+      "position_a_uncertainty_mm": 0,
+      "position_a_max_add_kg": 0.15,
+      "position_a_max_remove_kg": 0,
+      "position_b_id": "R",
+      "position_b_x_mm": 60,
+      "position_b_uncertainty_mm": 0,
+      "position_b_max_add_kg": 0.15,
+      "position_b_max_remove_kg": 0.08,
+      "command_resolution_kg": 0.001
+    },
+    "check": {
+      "result_kind": "simulation",
+      "model": "two_position_mass_moment_v1",
+      "request": {
+        "case_label": "Contained ballast module",
+        "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "command_resolution_kg": 0.001,
+        "total_max_add_kg": 0.15,
+        "total_max_remove_kg": 0.08,
+        "observation": {
+          "id": "bench-2",
+          "kind": "simulated",
+          "mass_kg": 1,
+          "mass_uncertainty_kg": 0.005,
+          "cg_x_mm": 5,
+          "cg_uncertainty_mm": 0.5
+        },
+        "targets": {
+          "mass_min_kg": 0.98,
+          "mass_max_kg": 1.02,
+          "cg_min_mm": -2,
+          "cg_max_mm": 2
+        },
+        "positions": [
+          {
+            "id": "L",
+            "x_mm": -60,
+            "position_uncertainty_mm": 0,
+            "max_add_kg": 0.15,
+            "max_remove_kg": 0,
+            "adjustment_uncertainty_kg": 0.001
+          },
+          {
+            "id": "R",
+            "x_mm": 60,
+            "position_uncertainty_mm": 0,
+            "max_add_kg": 0.15,
+            "max_remove_kg": 0.08,
+            "adjustment_uncertainty_kg": 0.001
+          }
+        ],
+        "baseline": {
+          "position_id": "L",
+          "command_kg": 0
+        }
+      },
+      "request_fingerprint": "9f5e5bb045437a078349b6bef707bd7ed4f289d09e5476de2dd97563962f7fc1",
+      "baseline": {
+        "commands_kg": [
+          0,
+          0
+        ],
+        "feasible": false,
+        "mass_inside_target": true,
+        "balance_inside_target": false,
+        "adjustment_limits_fit": true,
+        "mass_min_kg": 0.995,
+        "mass_max_kg": 1.005,
+        "cg_min_mm": 4.5,
+        "cg_max_mm": 5.5
+      },
+      "feasible": true,
+      "exact_model_feasible": true,
+      "status": "checked_commands",
+      "commands": [
+        {
+          "position_id": "L",
+          "x_mm": -60,
+          "command_kg": 0.042,
+          "action": "add"
+        },
+        {
+          "position_id": "R",
+          "x_mm": 60,
+          "command_kg": -0.042,
+          "action": "remove"
+        }
+      ],
+      "result": {
+        "feasible": true,
+        "mass_inside_target": true,
+        "balance_inside_target": true,
+        "adjustment_limits_fit": true,
+        "mass_min_kg": 0.993,
+        "mass_max_kg": 1.007,
+        "cg_min_mm": -0.6859296482412061,
+        "cg_max_mm": 0.6044776119402985
+      },
+      "selection": "nominal_midpoint_candidate",
+      "command_resolution_kg": 0.001,
+      "precision_note": null,
+      "assumptions": [
+        "Mass and one-axis centre-of-mass observations and bounds are supplied, not independently verified.",
+        "Coordinates share the stated datum. Each adjustment location is the mass centre of the added or removed portion, not an assumed hole centre.",
+        "Independent trim stocks and actual addition/removal limits are declared at each location. A no-operation location incurs no adjustment error.",
+        "Rigid static mass/moment balance is evaluated over every entered uncertainty corner. Changed geometry or a physical adjustment needs a new observation.",
+        "This does not establish tipping safety, sliding, load capacity, containment, material response, durability or future-batch consistency."
+      ],
+      "physical_product_tested": false,
+      "batch_consistency_established": false,
+      "case_context": {
+        "brief": {
+          "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets.",
+          "contamination": "Unknown and not modeled.",
+          "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+          "process": "Software only; no material handling or heating.",
+          "product": "Contained ballast module",
+          "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+          "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+          "variation": "Each prepared assembly is observed separately. No prediction of future batches."
+        },
+        "calculation_context": {
+          "label": "",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02",
+          "balance": {
+            "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+            "target_min_mm": "-2.0",
+            "target_max_mm": "2.0"
+          }
+        },
+        "feedback": {
+          "observation": {
+            "id": "bench-2",
+            "kind": "simulated",
+            "mass_kg": 1,
+            "uncertainty_kg": 0.005
+          },
+          "max_add_mass_kg": 0.15,
+          "max_remove_mass_kg": 0.08,
+          "adjustment_uncertainty_kg": 0.001
+        },
+        "balance": {
+          "cg_x_mm": 5,
+          "cg_uncertainty_mm": 0.5,
+          "command_resolution_kg": 0.001,
+          "baseline": {
+            "position_id": "L",
+            "command_kg": 0
+          },
+          "independent_adjustments": true,
+          "positions": [
+            {
+              "id": "L",
+              "x_mm": -60,
+              "position_uncertainty_mm": 0,
+              "max_add_kg": 0.15,
+              "max_remove_kg": 0
+            },
+            {
+              "id": "R",
+              "x_mm": 60,
+              "position_uncertainty_mm": 0,
+              "max_add_kg": 0.15,
+              "max_remove_kg": 0.08
+            }
+          ]
+        }
+      },
+      "layout_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1000 490\" role=\"img\" aria-label=\"Simulated trim placement diagram\"><metadata>{&quot;request_fingerprint&quot;: &quot;9f5e5bb045437a078349b6bef707bd7ed4f289d09e5476de2dd97563962f7fc1&quot;, &quot;model&quot;: &quot;two_position_mass_moment_v1&quot;, &quot;request&quot;: {&quot;case_label&quot;: &quot;Contained ballast module&quot;, &quot;coordinate_basis&quot;: &quot;All coordinates share x=0 at the module centre, positive toward the right.&quot;, &quot;command_resolution_kg&quot;: 0.001, &quot;total_max_add_kg&quot;: 0.15, &quot;total_max_remove_kg&quot;: 0.08, &quot;observation&quot;: {&quot;id&quot;: &quot;bench-2&quot;, &quot;kind&quot;: &quot;simulated&quot;, &quot;mass_kg&quot;: 1.0, &quot;mass_uncertainty_kg&quot;: 0.005, &quot;cg_x_mm&quot;: 5.0, &quot;cg_uncertainty_mm&quot;: 0.5}, &quot;targets&quot;: {&quot;mass_min_kg&quot;: 0.98, &quot;mass_max_kg&quot;: 1.02, &quot;cg_min_mm&quot;: -2.0, &quot;cg_max_mm&quot;: 2.0}, &quot;positions&quot;: [{&quot;id&quot;: &quot;L&quot;, &quot;x_mm&quot;: -60.0, &quot;position_uncertainty_mm&quot;: 0.0, &quot;max_add_kg&quot;: 0.15, &quot;max_remove_kg&quot;: 0.0, &quot;adjustment_uncertainty_kg&quot;: 0.001}, {&quot;id&quot;: &quot;R&quot;, &quot;x_mm&quot;: 60.0, &quot;position_uncertainty_mm&quot;: 0.0, &quot;max_add_kg&quot;: 0.15, &quot;max_remove_kg&quot;: 0.08, &quot;adjustment_uncertainty_kg&quot;: 0.001}], &quot;baseline&quot;: {&quot;position_id&quot;: &quot;L&quot;, &quot;command_kg&quot;: 0.0}}}</metadata><rect width=\"1000\" height=\"490\" rx=\"16\" fill=\"#f5faf7\"/><g font-family=\"Arial,sans-serif\"><text x=\"500.00\" y=\"36\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"23\">Contained ballast module</text><text x=\"500.00\" y=\"64\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"14\">SIMULATION · two stated mass-centre locations</text><rect x=\"489.07\" y=\"90\" width=\"21.87\" height=\"265\" fill=\"#d7f1df\"/><line x1=\"90\" y1=\"150\" x2=\"910\" y2=\"150\" stroke=\"#9ab7aa\" stroke-width=\"3\"/><circle cx=\"172.00\" cy=\"150\" r=\"17\" fill=\"#22765e\"/><text x=\"172.00\" y=\"112\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"18\">L · x=-60.0 mm</text><text x=\"172.00\" y=\"200\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"21\">ADD 42 g</text><circle cx=\"828.00\" cy=\"150\" r=\"17\" fill=\"#22765e\"/><text x=\"828.00\" y=\"112\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"18\">R · x=60.0 mm</text><text x=\"828.00\" y=\"200\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"21\">REMOVE 42 g</text><text x=\"90.00\" y=\"248\" text-anchor=\"start\" fill=\"#b76332\" font-size=\"16\">No-adjustment comparison</text><line x1=\"524.60\" x2=\"530.07\" y1=\"260\" y2=\"260\" stroke=\"#b76332\" stroke-width=\"9\" stroke-linecap=\"round\"/><text x=\"910.00\" y=\"248\" text-anchor=\"end\" fill=\"#b76332\" font-size=\"16\">CG ≈ 4.500…5.500 mm</text><text x=\"90.00\" y=\"318\" text-anchor=\"start\" fill=\"#22765e\" font-size=\"16\">Both-target adjustment</text><line x1=\"496.25\" x2=\"503.30\" y1=\"330\" y2=\"330\" stroke=\"#22765e\" stroke-width=\"9\" stroke-linecap=\"round\"/><text x=\"910.00\" y=\"318\" text-anchor=\"end\" fill=\"#22765e\" font-size=\"16\">CG ≈ -0.686…0.604 mm</text><text x=\"500.00\" y=\"390\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"17\">Mass target 0.98…1.02 kg · balance target -2.0…2.0 mm</text><text x=\"500.00\" y=\"425\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"14\">Green band: entered balance target. Confirm coordinates and remeasure after adjustment.</text><text x=\"500.00\" y=\"457\" text-anchor=\"middle\" fill=\"#183e36\" font-size=\"14\">Placement diagram only · no enclosure strength, retention or tipping-safety check</text></g></svg>"
+    }
+  }
+}

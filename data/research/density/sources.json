@@ -1,0 +1,122 @@
+{
+  "checked_on": "2026-10-30",
+  "sources": [
+    {
+      "source_id": "cecon2021",
+      "title": "Dataset of the properties of polyethylene (PE) blends of different densities mixed with post-consumer recycled polyethylene (PCRPE)",
+      "doi": "10.1016/j.dib.2021.107452",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+      "article_xml_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8517156/fullTextXML",
+      "supplement_package_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8517156/supplementaryFiles",
+      "supplement_url": "https://pmc.ncbi.nlm.nih.gov/articles/instance/8517156/bin/mmc1.xlsx",
+      "license": "CC-BY-4.0",
+      "license_locator": "Article permissions element and PMC copyright section",
+      "supplement_published_md5": "7b503c8f124a57d328a616fef2734227",
+      "supplement_published_size": 22583,
+      "supplement_local_md5_matches": true,
+      "retrieval_note": "Imported existing supplementary package from the preceding local audit; the extracted workbook matches the exact published attachment MD5 in a newly retrieved official article XML. Direct PMC attachment currently serves a challenge page, and a new supplement-package request timed out.",
+      "sampling": "Five density measurements for each of twenty host/PCRPE conditions and one pure-PCRPE condition. No independent batch-count information.",
+      "scope": "Exact study material and injection-moulding route only. No generic contamination effect, arbitrary mix recipe, universal polyethylene density or future batch bounds.",
+      "density_definition": "Immersion density of cut injection-moulded specimen fragments; loose granulate bulk density is not measured by this procedure.",
+      "missing": [
+        "commercial grade identifiers",
+        "complete PCRPE composition",
+        "individual fragment-to-dogbone allocation",
+        "independent batches",
+        "density uncertainty budget",
+        "target counterweight void content and density"
+      ]
+    },
+    {
+      "source_id": "hinczica2026",
+      "title": "Impact of Seasonal Composition on the Long-Term Performance of Post-Consumer Recycled Polypropylene",
+      "doi": "10.1002/app.70501",
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1002/app.70501",
+      "license": "CC-BY-4.0",
+      "license_locator": "Publisher-deposited Crossref metadata, license content-version=vor; retained in originals/hinczica2026_crossref.json",
+      "retained_data": "Four published aggregate density statistics, Table 5; method and process context in local transcription. No digitization or invented individual readings.",
+      "n_batches": 10,
+      "n_density_samples_per_batch": 5,
+      "scope": "Observed source cohort only. Unknown input provenance and unpaired composition prevent a contamination-response model or future-batch prediction.",
+      "retrieval_note": "Publisher full text read through web extraction; direct HTML/PDF/XML downloads returned HTTP403. The local transcription is labelled as such. Publisher-deposited Crossref license metadata is retained as an original JSON response."
+    }
+  ],
+  "files": [
+    {
+      "path": "originals/cecon2021_article.xml",
+      "bytes": 34323,
+      "sha256": "396dcaf76887b971d96570dca67fdfc3f895b6c422c5a1b26cf98b67cebda5c6"
+    },
+    {
+      "path": "originals/cecon2021_article_fresh.xml",
+      "bytes": 34323,
+      "sha256": "396dcaf76887b971d96570dca67fdfc3f895b6c422c5a1b26cf98b67cebda5c6"
+    },
+    {
+      "path": "originals/cecon2021_mmc1.xlsx",
+      "bytes": 22583,
+      "sha256": "e1d0ba4c3f572e8c0300720fb1ba4e93a5d46cc143151abd43562cec43d4f932"
+    },
+    {
+      "path": "originals/cecon2021_supplementary.zip",
+      "bytes": 745399,
+      "sha256": "529f5e8423aabab8d5995a621b16f039a7179aa8ec3e7c977318f3cffdf9fb82"
+    },
+    {
+      "path": "originals/hinczica2026_crossref.json",
+      "bytes": 19246,
+      "sha256": "282ad35b217310953ab6d576fc998be3e81a2750d2d36b0982454feedab52d2c"
+    },
+    {
+      "path": "originals/hinczica2026_publisher_web_extract.json",
+      "bytes": 33309,
+      "sha256": "db01d66a42e054a96a58114b133114d9701e1085e9fc5c031765d2046b12cb29"
+    }
+  ],
+  "access_attempts": [
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/instance/8517156/bin/mmc1.xlsx",
+      "result": "HTTP200 containing an HTML challenge, not a workbook",
+      "retained_response": "access_attempts/cecon-mmc1-challenge.html",
+      "sha256": "88ca15a361be97889be71a556d02cce1b74f703bd71bd888d723adbac0f14b97"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8517156/supplementaryFiles",
+      "result": "New request timed out; a prior valid package is retained and its workbook matches the freshly retrieved article's declared attachment checksum."
+    },
+    {
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1002/app.70501",
+      "result": "Structured web extraction succeeded; direct HTML request returned403. Direct PDF and full-XML requests returned403."
+    }
+  ],
+  "exclusions": [
+    {
+      "source": "Hinczica2026 Table 1",
+      "reason": "Ordered density specification 0.97 +/- 0.03 g/cm3 is not a measured variation range. Only measured Table 5 statistics retained."
+    },
+    {
+      "source": "Wagner2025 DOI10.1155/adv/7570978",
+      "url": "https://onlinelibrary.wiley.com/doi/10.1155/adv/7570978",
+      "reason": "Table 1 density figures are supplier specifications. Finished-part weight figures have five parts per condition, but raw numerical mass tables were not obtained; direct file download returned403. No graph values were guessed."
+    },
+    {
+      "source": "Gall2021 DOI10.3390/polym13101574",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8156794/",
+      "reason": "Supplier density data in Table 2 are not measured observations. Measured densities appear in plots; no exact numerical table retained. Recycling histories are proprietary; contaminant-dose response not supported."
+    },
+    {
+      "source": "Rodriguez-Liebana2022 DOI10.1016/j.jece.2022.108332",
+      "url": "https://doi.org/10.1016/j.jece.2022.108332",
+      "reason": "Open paper reports processed-recyclate densities but has CC-BY-NC-ND4 license and mixed-stream impurities incompletely resolved for a controlled contamination model. Not needed for the first eligible set; no numerical values imported."
+    },
+    {
+      "source": "Polymers2023 DOI10.3390/polym15071690",
+      "url": "https://www.mdpi.com/2073-4360/15/7/1690",
+      "reason": "Primary page returned429 during this pass; no unseen density table values retained."
+    },
+    {
+      "source": "Supplier generic/typical recycled-PP density sheets",
+      "reason": "Nominal supplier values without matched process/sampling do not supply the requested measured density variation."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Compact contextual follow-up — regression protocol v2
+
+This is a repair regression, not a new independent benchmark or a reversal of the negative [v1 material-task result](MATERIAL_TASK_RESULTS.md). V1's ordinary arm remains a valid stronger result for that visible task.
+
+The implementation changes the contextual response to a compact answer, one to three next steps, up to three questions and relevant sources. It retains high reasoning and the same 8,192-token limit; it does not generate new material/engineering route arrays. General instructions now distinguish endpoint calculations from choosing a dose for a portion of unknown composition, and distinguish total reweighing from component-fraction characterization.
+
+Before calls, freeze this protocol, harness, the complete v1 record and the invoked backend sources. Execute exactly one new production `follow_up_with_case` call for each of the original workflow B, C and D requests, preserving each request byte-for-byte as parsed JSON. These are inherited snapshots: C/D retain their actual v1 history, not newly generated compact responses. Do not retry or alter the task after an output. Keep all failures and original v1 results.
+
+Review the actual outputs against the original criteria: B scopes the supplied 0.44 kg as a new composition trial without predicting properties; C requires actual fraction information before selecting a dose and does not imply reweighing/splitting the total mix determines its fraction; D issues no numerical addition, requests stock U's missing fraction and does not inherit stock A's characterization. All preserve targets, synthetic status and the stated process/equipment limits. A usable compact contract and a correct next action are separate checks.
+
+Record request equality, actual model metadata, source hashes, latency, response text and any errors. The same configured model and transport are used. This is three known, dependent snapshots with a single call each, not unseen generalization, a fresh end-to-end sequence, a user study, a complete matched comparison or proof of general speed/reliability. The changed prompt addresses failures already seen in these tasks; successful regression cannot establish an AI advantage or prize-worthiness.

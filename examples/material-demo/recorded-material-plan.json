@@ -1,0 +1,354 @@
+{
+  "brief": {
+    "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+    "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized.",
+    "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+    "product": "A non-load-bearing planter sleeve — material development case",
+    "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+    "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+    "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+    "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin."
+  },
+  "calculation_details": {
+    "label": "Hypothetical PE material-development case",
+    "components": [
+      {
+        "id": 1,
+        "name": "Identified PCRPE resin (grade to record)",
+        "role": "main",
+        "amount": ""
+      },
+      {
+        "id": 2,
+        "name": "Identified virgin MDPE resin (grade to record)",
+        "role": "other",
+        "amount": ""
+      }
+    ],
+    "amount_unit": "mass_percent",
+    "amount_basis": "",
+    "mass_target_min_kg": "",
+    "mass_target_max_kg": ""
+  },
+  "plan": {
+    "result_kind": "engineering_proposals",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 8122,
+      "prompt_tokens": 4892,
+      "total_tokens": 13014
+    },
+    "elapsed_ms": 49579,
+    "request_id": "chatcmpl-01a19d1a-6153-701d-8c07-3ba84bc1c7d5",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": ""
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "answer": "Your synthetic comparison is a software demonstration only and does not describe your resin or planter. Simulation A at 20 mass% recycled PE showed one reading of 26 MPa, counted as in-target. Simulation B at 40 mass% showed one reading of 22 MPa, counted as below-target. Your quoted screen is \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\" With one reading per level, no uncertainty or independence check, and no batch links, do not treat the lower reading at higher share as proof your resin will behave the same or stay consistent. Use it only to plan a real comparison: separate coupon screening at a suitable facility, kept separate from sleeve fit checks, plus sleeve geometry that does not rely on unknown strength. You stated planning from home with no resin processing or tensile-testing equipment, so any moulding and testing needs a suitable facility that is still unconfirmed. Home work stays to recording grades and lots and paper fit planning.",
+    "quarantined_answer": [],
+    "material_routes": [
+      {
+        "id": "material:m-proportion-screen",
+        "title": "Lower vs higher recycled share coupons",
+        "change": "Change only the recycled-to-virgin PE proportion between separate recorded coupon trials, holding preparation the same within the comparison.",
+        "why": "Changing only recycled share might show how share shifts the screening result for those lots, and measurement is needed to find out. Testing separate levels illustrates the comparison approach and does not predict your resin.",
+        "steps": [
+          "At home record grade names and lot IDs for Identified PCRPE resin (grade to record) and Identified virgin MDPE resin (grade to record); leave amounts as unknown until weighed at a capable facility.",
+          "Confirm a suitable facility for coupon moulding and tensile testing with one stated specimen type and one stated method for all levels; this capability is unconfirmed from home.",
+          "Only at that facility, mould coupons for lower-share and higher-share levels separately using the same recorded lots, same preparation and same recorded process.",
+          "Test to the same method and record per-level results separately from sleeve fit and weathering observations."
+        ],
+        "tradeoffs": [
+          "Needs a suitable moulding and testing facility, which is unconfirmed from home.",
+          "One reading per level cannot show variation; repeats with recorded lots are needed to read consistency."
+        ],
+        "check": "Tensile screening at a suitable facility against your quoted screen: \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\" Keep separate from sleeve fit checks."
+      },
+      {
+        "id": "material:m-prep-lot-control",
+        "title": "Standardise preparation, keep lots separate",
+        "change": "Standardise preparation and keep supply lots separate before any blend comparison; hold preparation fixed while proportion is compared.",
+        "why": "Moisture, contamination and lot differences are uncharacterized and might shift results. Consistent preparation might make proportion effects easier to read, and measurement is needed to find out.",
+        "steps": [
+          "Sort and record lots separately for Identified PCRPE resin (grade to record) and Identified virgin MDPE resin (grade to record), noting visible moisture or contamination without assuming amount.",
+          "Define one preparation routine on paper and hold it fixed within the proportion comparison.",
+          "Only at a suitable facility, mould and test coupons per lot and blend level with recorded process, specimen and method.",
+          "Keep lot and preparation records separate from sleeve fit observations."
+        ],
+        "tradeoffs": [
+          "Sorting and recording take time and space at home without proving performance.",
+          "Needs a suitable facility for moulding and testing, which is unconfirmed.",
+          "Consistent preparation does not make variable lots identical."
+        ],
+        "check": "Preparation record plus per-lot coupon screening at a suitable facility against your quoted screen: \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\" Keep separate from sleeve fit checks."
+      }
+    ],
+    "engineering_routes": [
+      {
+        "id": "engineering:e-decoupled-shell",
+        "title": "Clearance-fit decorative shell",
+        "change": "Change sleeve geometry to an open clearance-fit decorative shell around the separate watertight liner, so soil and water load stays in the liner.",
+        "why": "Because the liner carries soil and water, sleeve stress stays low. This might reduce reliance on unknown tensile and creep behaviour while fit is checked directly, and measurement is needed to find out.",
+        "steps": [
+          "Measure the real liner footprint and height at home as a planning choice.",
+          "Set first sleeve clearance and taper as adjustable choices with an open top and bottom gap for drainage.",
+          "Check fit, clearance and drainage path only on real sleeve geometry with the liner.",
+          "Keep fit observations separate from tensile coupon results."
+        ],
+        "tradeoffs": [
+          "May need several clearance tries to look right and stay stable as a cover.",
+          "Fit and drainage observations do not prove weathering or creep behaviour.",
+          "Real liner and sleeve geometry are still needed; paper alone cannot confirm fit."
+        ],
+        "check": "Fit on the real liner, bottom clearance, drainage path and visible condition; separate from coupon tensile screening and does not establish creep or weathering."
+      },
+      {
+        "id": "engineering:e-paper-plan",
+        "title": "Paper footprint plan then real check",
+        "change": "Use home paper planning for footprint and clearance, then adjust geometry or blend choice from real sleeve observations.",
+        "why": "Paper planning might let you progress fit decisions without processing equipment while making clear what still needs the real sleeve and test.",
+        "steps": [
+          "Make a paper footprint template for the liner using paper, tape and ruler as proposed needs, not confirmed inventory.",
+          "Check footprint and clearance only on paper and record chosen clearance as a choice, not an optimum.",
+          "Record what still needs the real sleeve: fit, drainage path and appearance.",
+          "Use real sleeve results to decide the next geometry change, holding blend fixed."
+        ],
+        "tradeoffs": [
+          "Paper cannot show stiffness, drainage or outdoor behaviour.",
+          "Needs liner dimensions; without them clearance stays a guess.",
+          "Extra mock-up tools are proposed needs, not confirmed inventory."
+        ],
+        "check": "Paper template answers footprint and clearance only; real sleeve geometry, material and liner are still needed for fit, drainage and appearance. Drawing a channel does not create drainage and water on the drawing cannot test drainage."
+      }
+    ],
+    "next_steps": [
+      "Record grade names and lot IDs for Identified PCRPE resin (grade to record) and Identified virgin MDPE resin (grade to record); keep blank amounts as unknown until weighed with scale capability suited to the tolerance.",
+      "Define the stated specimen type and tensile method with the future facility, kept separate from sleeve fit and drainage checks.",
+      "Make a paper footprint template for your liner to set first clearance and taper as planning choices.",
+      "Arrange a suitable facility for coupon moulding and sleeve trials with full process records; do not heat-process at home.",
+      "When mass-fraction ranges are known, consider the trial-composition balancing tool to plan the next blend target, then confirm by coupon measurement."
+    ],
+    "questions": [
+      "What are the exact grades and lot IDs for your two resins, if known yet?",
+      "What suitable facility, specimen type and tensile method will be used, since capability is unconfirmed from home?",
+      "What are the liner dimensions and how much can sleeve clearance and shape change?"
+    ],
+    "sources": [
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "history": [
+    {
+      "role": "user",
+      "content": "How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments."
+    },
+    {
+      "role": "assistant",
+      "content": "You can work with this variable input by keeping two jobs separate: screen the PE blend for your chosen threshold, and design the sleeve so it does not depend on an unknown strength. Your case uses \"Identified PCRPE resin (grade to record)\" and \"Identified virgin MDPE resin (grade to record)\" with amounts currently unknown, for an outer decorative sleeve around a separate watertight pot. Your screen is \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\" From home you have no resin processing or tensile-testing equipment, so all moulding and tensile checks need a suitable facility and recorded process still to confirm. The routes below stay inside what you allowed: recycled-to-virgin proportion, preparation and sleeve geometry. No route assumes the recycled resin is clean, and no published values are transferred to your resin.\nMaterial route: Small-step proportion screen. Change recycled-to-virgin PE proportion across separate recorded trials, holding preparation the same within the comparison. Changing one variable might show how lot variation and recycled share affect the screening result, and measurement is needed to find out. Next check: Tensile coupon result against your quoted screen: \"tensile yield stress at least 25 MPa, using a stated specimen and method\" at a suitable facility with stated specimen and method. Keep this separate from sleeve fit checks.\nMaterial route: Preparation and lot control. Standardise preparation and keep supply lots separate before any blend comparison. Moisture, contamination and lot differences are uncharacterized and might shift results. Consistent preparation might make proportion effects easier to read. Next check: Preparation record plus per-lot coupon screening. Visual sorting and fit observations do not replace the stated tensile method.\nEngineering route: Decoupled decorative shell. Keep load and water in the separate watertight liner; make the sleeve an open, clearance-fit decorative shell. Because the liner carries soil and water, sleeve stress stays low. This might reduce reliance on the unknown tensile and creep behaviour while fit is checked directly. Next check: Fit on the real liner, bottom clearance and drainage path, and visible condition. This is separate from coupon tensile screening and does not establish weathering or creep.\nEngineering route: Paper fit plan plus feedback. Use home paper planning for footprint and clearance, then use real sleeve results to adjust geometry or blend choice. This lets you progress fit decisions without processing equipment, while making clear what still needs the real sleeve and test. Next check: Paper template answers footprint and clearance only. Real geometry, material and liner are still needed for fit, drainage and appearance.\nRecord both resin grades, lot IDs and current proportions; keep blank amounts as unknown until weighed at a capable facility.\nDefine the stated tensile specimen and method with the test facility, separate from sleeve fit and drainage checks.\nMake a paper footprint template for your liner to set first sleeve clearance and taper as planning choices.\nArrange a suitable facility for coupon moulding and for sleeve trials, with full process records; do not heat-process at home.\nWhen mass-fraction ranges are known, consider the trial-composition balancing tool to plan the next blend target, then confirm by coupon measurement."
+    },
+    {
+      "role": "assistant",
+      "content": "Chosen route: Small-step proportion screen. Change recycled-to-virgin PE proportion across separate recorded trials, holding preparation the same within the comparison.\nProposed trial: Small-step PCRPE proportion screen. Screen how recycled-to-virgin PE proportion shifts the tensile screening result for the identified PCRPE plus virgin MDPE, using separate recorded coupon trials at a suitable facility, kept separate from sleeve fit and durability which are not yet set.\nTargets: Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\nCompare: Compare two coupon batches: lower PCRPE share versus higher PCRPE share, made from the same recorded lots with the same preparation, same recorded moulding process, and same specimen and test method at the same suitable facility. Keep material screening separate from sleeve fit, creep and weathering. Only the proportion changes; all other stated material, process and use-case context stays fixed.. Change: Change only the recycled-to-virgin PE proportion between separate recorded coupon trials, holding preparation the same within the comparison. This might show how share affects the screening result, and measurement is needed to find out.\nKeep fixed: Same recorded PCRPE and virgin MDPE lots within the comparison; Same preparation within the comparison, as recorded; Same recorded moulding process, specimen type and tensile method at the same suitable facility; Same use-case context: non-load-bearing outer sleeve around a separate watertight pot; Keep material-trial records separate from sleeve fit, creep and weathering checks\nHave ready: Identified PCRPE resin (grade to record) - grade and lot ID to record; amount currently unknown; Identified virgin MDPE resin (grade to record) - grade and lot ID to record; amount currently unknown\nAction: At home, record the grade names and lot IDs for Identified PCRPE resin (grade to record) and Identified virgin MDPE resin (grade to record); no resin processing at home. Record: Grade names, lot IDs, supplier lots, and that amounts and proportions are still unknown.\nAction: On paper, plan two blend levels as an adjustable planning choice - lower PCRPE share vs higher PCRPE share - without setting percentages yet; do not process material at home. Record: Planned comparison definition, that levels are a choice not an optimum, and preparation held fixed.\nAction: Confirm a suitable facility for moulding coupons and tensile testing with a stated specimen and method; moulding and testing capability is unconfirmed from home so no moulding or testing starts until this is resolved. Record: Facility name, process suitability, specimen type and test method to be used for all levels.\nAction: Only at the confirmed suitable facility with recorded process, mould coupons for one blend level at a time using the same recorded conditions. Record: Per-level blend identity, process record, specimen IDs, and any preparation notes.\nAction: Only at the suitable facility, test coupons to the stated method and compare levels on the same basis, keeping results separate from sleeve fit. Record: Per-level tensile yield result, specimen/method reference, and observed difference between levels without transferring published values.\nCheck Tensile yield stress screening: tensile yield stress at least 25 MPa, using a stated specimen and method. Test moulded coupons at a suitable facility using one stated specimen type and one stated tensile method for all levels. Record lots, process, specimen, method and result per level. Keep this separate from sleeve fit checks. If outside: If below the screen, do not rank the other level as better without observations. Plan a new comparison changing only one lever within allowed changes, for example preparation or a small shift in virgin share, then re-test with the same specimen and method.\nCheck Sleeve fit: Not set. Keep coupon screening separate. Check sleeve fit later on real sleeve geometry with the separate watertight liner pot, and record fit observations only. If outside: If fit later misses once set, hold blend fixed and plan a new comparison that changes only sleeve geometry.\nCheck Lot traceability and contamination notes: Not set. Record lot IDs, grade names if known, and visible moisture/contamination notes before any facility trial. This is observation only, not proof of performance. If outside: If lots differ or contamination/moisture is noted, hold proportion fixed and plan a new comparison on preparation in a separate trial.\nWhat are the exact grades and lot IDs for your PCRPE and virgin MDPE, if known yet?\nWhat suitable facility, specimen type and tensile method will be used for moulding and testing, since capability is unconfirmed from home?\nIs preparation to stay fixed for this first comparison, or may it change next within your allowed changes?"
+    },
+    {
+      "role": "user",
+      "content": "These are my reported or synthetic observations, not a prediction. Suggest practical next checks or changes, without assuming future consistency or unmeasured properties. Comparison summary:\n{\n  \"reading_type\": \"synthetic simulation\",\n  \"input\": \"Recycled PE content\",\n  \"input_unit\": \"mass %\",\n  \"property\": \"Tensile yield stress screening\",\n  \"property_unit\": \"MPa\",\n  \"target\": [\n    \"25\",\n    null\n  ],\n  \"method\": \"Synthetic software demonstration only. No physical processing or tensile testing. These values do not describe my resin or planter.\",\n  \"limitations\": \"Numeric values are exact decimal strings; a null target maximum means no upper limit. Uncertainty and independence were not assessed. Individual grouping identifiers are not included in this summary; do not infer batch relationships.\",\n  \"settings\": [\n    {\n      \"id\": \"Simulation A\",\n      \"level\": \"20\",\n      \"observed_min\": \"26\",\n      \"observed_max\": \"26\",\n      \"reading_count\": 1,\n      \"in_target_count\": 1\n    },\n    {\n      \"id\": \"Simulation B\",\n      \"level\": \"40\",\n      \"observed_min\": \"22\",\n      \"observed_max\": \"22\",\n      \"reading_count\": 1,\n      \"in_target_count\": 0\n    }\n  ]\n}"
+    },
+    {
+      "role": "assistant",
+      "content": "Your synthetic comparison is a software demonstration only and does not describe your resin or planter. Simulation A at 20 mass% recycled PE showed one reading of 26 MPa, counted as in-target. Simulation B at 40 mass% showed one reading of 22 MPa, counted as below-target. Your quoted screen is \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\" With one reading per level, no uncertainty or independence check, and no batch links, do not treat the lower reading at higher share as proof your resin will behave the same or stay consistent. Use it only to plan a real comparison: separate coupon screening at a suitable facility, kept separate from sleeve fit checks, plus sleeve geometry that does not rely on unknown strength. You stated planning from home with no resin processing or tensile-testing equipment, so any moulding and testing needs a suitable facility that is still unconfirmed. Home work stays to recording grades and lots and paper fit planning.\nMaterial route: Lower vs higher recycled share coupons. Change only the recycled-to-virgin PE proportion between separate recorded coupon trials, holding preparation the same within the comparison. Changing only recycled share might show how share shifts the screening result for those lots, and measurement is needed to find out. Testing separate levels illustrates the comparison approach and does not predict your resin. Next check: Tensile screening at a suitable facility against your quoted screen: \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\" Keep separate from sleeve fit checks.\nMaterial route: Standardise preparation, keep lots separate. Standardise preparation and keep supply lots separate before any blend comparison; hold preparation fixed while proportion is compared. Moisture, contamination and lot differences are uncharacterized and might shift results. Consistent preparation might make proportion effects easier to read, and measurement is needed to find out. Next check: Preparation record plus per-lot coupon screening at a suitable facility against your quoted screen: \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\" Keep separate from sleeve fit checks.\nEngineering route: Clearance-fit decorative shell. Change sleeve geometry to an open clearance-fit decorative shell around the separate watertight liner, so soil and water load stays in the liner. Because the liner carries soil and water, sleeve stress stays low. This might reduce reliance on unknown tensile and creep behaviour while fit is checked directly, and measurement is needed to find out. Next check: Fit on the real liner, bottom clearance, drainage path and visible condition; separate from coupon tensile screening and does not establish creep or weathering.\nEngineering route: Paper footprint plan then real check. Use home paper planning for footprint and clearance, then adjust geometry or blend choice from real sleeve observations. Paper planning might let you progress fit decisions without processing equipment while making clear what still needs the real sleeve and test. Next check: Paper template answers footprint and clearance only; real sleeve geometry, material and liner are still needed for fit, drainage and appearance. Drawing a channel does not create drainage and water on the drawing cannot test drainage.\nRecord grade names and lot IDs for Identified PCRPE resin (grade to record) and Identified virgin MDPE resin (grade to record); keep blank amounts as unknown until weighed with scale capability suited to the tolerance.\nDefine the stated specimen type and tensile method with the future facility, kept separate from sleeve fit and drainage checks.\nMake a paper footprint template for your liner to set first clearance and taper as planning choices.\nArrange a suitable facility for coupon moulding and sleeve trials with full process records; do not heat-process at home.\nWhen mass-fraction ranges are known, consider the trial-composition balancing tool to plan the next blend target, then confirm by coupon measurement."
+    }
+  ],
+  "selected_route": {
+    "id": "material:mat-proportion-screen",
+    "title": "Small-step proportion screen",
+    "change": "Change recycled-to-virgin PE proportion across separate recorded trials, holding preparation the same within the comparison.",
+    "why": "Changing one variable might show how lot variation and recycled share affect the screening result, and measurement is needed to find out.",
+    "check": "Tensile coupon result against your quoted screen: \"tensile yield stress at least 25 MPa, using a stated specimen and method\" at a suitable facility with stated specimen and method. Keep this separate from sleeve fit checks.",
+    "steps": [
+      "Record grades and lot IDs for \"Identified PCRPE resin (grade to record)\" and \"Identified virgin MDPE resin (grade to record)\"; amounts are currently unknown.",
+      "Plan a small set of separate blend levels as an adjustable planning choice, for example two or three levels, not a measured optimum.",
+      "Mould coupons only at a suitable facility with recorded process; moulding and testing capability is unconfirmed from home.",
+      "Test one level at a time to see how proportion shifts the screening result."
+    ],
+    "tradeoffs": [
+      "More levels give clearer comparison but cost more facility time.",
+      "Higher virgin share may change cost and supply, without guaranteeing the screen is met."
+    ]
+  },
+  "trial": {
+    "result_kind": "trial_proposal",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 3776,
+      "prompt_tokens": 3884,
+      "total_tokens": 7660
+    },
+    "elapsed_ms": 22407,
+    "request_id": "chatcmpl-01a19d17-7e2b-728a-8e73-1602142b11d1",
+    "requested_reasoning_effort": "medium",
+    "calculation_context": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": ""
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "route_id": "material:mat-proportion-screen",
+    "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+    "brief": {
+      "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin.",
+      "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+      "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+      "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+      "product": "A non-load-bearing planter sleeve — material development case",
+      "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+      "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+      "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized."
+    },
+    "selected_route": {
+      "id": "material:mat-proportion-screen",
+      "title": "Small-step proportion screen",
+      "change": "Change recycled-to-virgin PE proportion across separate recorded trials, holding preparation the same within the comparison.",
+      "why": "Changing one variable might show how lot variation and recycled share affect the screening result, and measurement is needed to find out.",
+      "check": "Tensile coupon result against your quoted screen: \"tensile yield stress at least 25 MPa, using a stated specimen and method\" at a suitable facility with stated specimen and method. Keep this separate from sleeve fit checks.",
+      "steps": [
+        "Record grades and lot IDs for \"Identified PCRPE resin (grade to record)\" and \"Identified virgin MDPE resin (grade to record)\"; amounts are currently unknown.",
+        "Plan a small set of separate blend levels as an adjustable planning choice, for example two or three levels, not a measured optimum.",
+        "Mould coupons only at a suitable facility with recorded process; moulding and testing capability is unconfirmed from home.",
+        "Test one level at a time to see how proportion shifts the screening result."
+      ],
+      "tradeoffs": [
+        "More levels give clearer comparison but cost more facility time.",
+        "Higher virgin share may change cost and supply, without guaranteeing the screen is met."
+      ]
+    },
+    "title": "Small-step PCRPE proportion screen",
+    "objective": "Screen how recycled-to-virgin PE proportion shifts the tensile screening result for the identified PCRPE plus virgin MDPE, using separate recorded coupon trials at a suitable facility, kept separate from sleeve fit and durability which are not yet set.",
+    "comparison": "Compare two coupon batches: lower PCRPE share versus higher PCRPE share, made from the same recorded lots with the same preparation, same recorded moulding process, and same specimen and test method at the same suitable facility. Keep material screening separate from sleeve fit, creep and weathering. Only the proportion changes; all other stated material, process and use-case context stays fixed.",
+    "change": "Change only the recycled-to-virgin PE proportion between separate recorded coupon trials, holding preparation the same within the comparison. This might show how share affects the screening result, and measurement is needed to find out.",
+    "keep_fixed": [
+      "Same recorded PCRPE and virgin MDPE lots within the comparison",
+      "Same preparation within the comparison, as recorded",
+      "Same recorded moulding process, specimen type and tensile method at the same suitable facility",
+      "Same use-case context: non-load-bearing outer sleeve around a separate watertight pot",
+      "Keep material-trial records separate from sleeve fit, creep and weathering checks"
+    ],
+    "materials": [
+      "Identified PCRPE resin (grade to record) - grade and lot ID to record; amount currently unknown",
+      "Identified virgin MDPE resin (grade to record) - grade and lot ID to record; amount currently unknown"
+    ],
+    "steps": [
+      {
+        "action": "At home, record the grade names and lot IDs for Identified PCRPE resin (grade to record) and Identified virgin MDPE resin (grade to record); no resin processing at home.",
+        "record": "Grade names, lot IDs, supplier lots, and that amounts and proportions are still unknown."
+      },
+      {
+        "action": "On paper, plan two blend levels as an adjustable planning choice - lower PCRPE share vs higher PCRPE share - without setting percentages yet; do not process material at home.",
+        "record": "Planned comparison definition, that levels are a choice not an optimum, and preparation held fixed."
+      },
+      {
+        "action": "Confirm a suitable facility for moulding coupons and tensile testing with a stated specimen and method; moulding and testing capability is unconfirmed from home so no moulding or testing starts until this is resolved.",
+        "record": "Facility name, process suitability, specimen type and test method to be used for all levels."
+      },
+      {
+        "action": "Only at the confirmed suitable facility with recorded process, mould coupons for one blend level at a time using the same recorded conditions.",
+        "record": "Per-level blend identity, process record, specimen IDs, and any preparation notes."
+      },
+      {
+        "action": "Only at the suitable facility, test coupons to the stated method and compare levels on the same basis, keeping results separate from sleeve fit.",
+        "record": "Per-level tensile yield result, specimen/method reference, and observed difference between levels without transferring published values."
+      }
+    ],
+    "checks": [
+      {
+        "property": "Tensile yield stress screening",
+        "target": "tensile yield stress at least 25 MPa, using a stated specimen and method",
+        "method": "Test moulded coupons at a suitable facility using one stated specimen type and one stated tensile method for all levels. Record lots, process, specimen, method and result per level. Keep this separate from sleeve fit checks.",
+        "if_outside": "If below the screen, do not rank the other level as better without observations. Plan a new comparison changing only one lever within allowed changes, for example preparation or a small shift in virgin share, then re-test with the same specimen and method."
+      },
+      {
+        "property": "Sleeve fit",
+        "target": "Not set",
+        "method": "Keep coupon screening separate. Check sleeve fit later on real sleeve geometry with the separate watertight liner pot, and record fit observations only.",
+        "if_outside": "If fit later misses once set, hold blend fixed and plan a new comparison that changes only sleeve geometry."
+      },
+      {
+        "property": "Lot traceability and contamination notes",
+        "target": "Not set",
+        "method": "Record lot IDs, grade names if known, and visible moisture/contamination notes before any facility trial. This is observation only, not proof of performance.",
+        "if_outside": "If lots differ or contamination/moisture is noted, hold proportion fixed and plan a new comparison on preparation in a separate trial."
+      }
+    ],
+    "questions": [
+      "What are the exact grades and lot IDs for your PCRPE and virgin MDPE, if known yet?",
+      "What suitable facility, specimen type and tensile method will be used for moulding and testing, since capability is unconfirmed from home?",
+      "Is preparation to stay fixed for this first comparison, or may it change next within your allowed changes?"
+    ],
+    "sources": [
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      },
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  }
+}

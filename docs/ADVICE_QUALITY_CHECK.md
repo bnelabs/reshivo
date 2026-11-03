@@ -1,0 +1,32 @@
+# Advice quality check — 2 November 2026
+
+This repair addresses qualitative advice outside the numerical demo. An inspected plan assumed forming tools the user had not named and exposed an internal field name. The retained diagnostics use synthetic cases, not the user's private brief. They are previously seen development cases, not a benchmark, held-out evaluation or physical test. The settings and counts below describe that historical repair; subsequent changes are noted explicitly.
+
+## What changed
+
+- Advice distinguishes stated equipment, proposed needs and unknown capability. A generic press does not establish its process, tooling or suitability for a mixture. A required prerequisite belongs in the action that depends on it; unresolved prerequisites still allow useful permitted planning work.
+- Generated prose uses ordinary case/target wording, avoids internal storage names and does not create permission records or approval chains. Restrictions on additions, tooling and geometry remain part of the case.
+- Inspection, drainage observations and short exposure remain separate from product-performance tests. A drawing can explore footprint; drawn grooves do not reproduce channel drainage. An alternative cannot be ranked better before supporting observations exist.
+- The [HSE floor-slip reference](https://www.hse.gov.uk/pubns/geis2.htm) supplies contextual assessment guidance, including trained-operator pendulum assessment. It supplies no measured value or acceptance target for the user's product. Walking on an unknown wet prototype or subjective slip feel is not substituted for that assessment.
+- At the time of these diagnostics, qualitative help and trial generation both requested high reasoning with an 8,192-token completion budget. In a later change, route discovery remained high and selected-trial generation changed to medium after a high-effort trial was truncated; one medium-effort synthetic trial completed in approximately 43 seconds. Returned metadata records the requested setting. The [Meta reasoning documentation](https://dev.meta.ai/docs/reasoning) describes the supported settings. More reasoning can consume additional tokens and time; neither setting has a demonstrated general accuracy or reliability advantage here. Note readers, numerical tool turns and the existing matched baselines retain their default low setting.
+
+## Actual attempts, including failures
+
+| Retained record | Observed result |
+| --- | --- |
+| [Trial guidance v1](../examples/advice-quality/trial-guidance-v1.json) | Two direct trial diagnostics completed. Tool/process gaps remained conditional and confirmed cold assembly stayed usable. Later review identified overformal permission wording and premature references to the other/better design; this was not a general-quality pass. |
+| [Trial guidance v2](../examples/advice-quality/trial-guidance-v2.json) | The unknown-process response completed transport but **failed surrogate fidelity**: it proposed pouring water onto flat templates with drawn grooves. Calling that an observation aid does not make it a channel-drainage comparison. The failure is retained. |
+| [Trial guidance v3](../examples/advice-quality/trial-guidance-v3.json) | With the final guidance and high reasoning, the unknown-process attempt was rejected with `MetaValidationError`. Only the exception class was retained; the raw response and reason are unavailable, so its cause and semantic quality cannot be inferred. The confirmed cold-assembly attempt completed in 18.378 s and used the existing tray, slots, wrench, scale and closed cartridges. |
+| [Earlier UI routes](../examples/advice-quality/routes-before.json) | Included wet-surface feel and wet-foot grip as checks. This record remains an earlier failure, not a current successful response. |
+| [Intermediate UI trial](../examples/advice-quality/trial-v2.json) | Separated slip assessment from drainage but asked for a frequency range in a floor-slip question. That unrelated requirement is retained rather than silently corrected in the record. |
+| [Final UI routes and selected-route trial](../examples/advice-quality/trial-final.json) | Fresh live help and trial requests completed in 16.878 s and 18.392 s, both requesting high reasoning. The selected same-shape route became a portion-linked comparison without inventing new tooling or geometry. Press suitability is an explicit prerequisite in the action; unresolved forming stays deferred. Water observations require completed real-geometry trials, not wet drawings. Current route/trial prose contains no internal field names, frequency-band question or subjective wet-slip check. |
+
+The final UI reused the unknown-process brief but had blank numeric calculation fields. The direct headless cases included a shared 0.98–1.02 kg range that conflicted with that brief's unset numerical limits. The UI result therefore does **not** reproduce the rejected headless fixture or prove its failure was fixed; its cause remains unknown.
+
+The [retention manifest](../examples/advice-quality/manifest.json) records file and implementation hashes. The final UI export also retains earlier discussion; those older replies are historical context, not restamped as the final answer. These attempts changed guidance and reasoning settings while reusing visible cases, so they cannot isolate which change caused an improvement or establish comparative superiority.
+
+## Verification and remaining limits
+
+At the time of this repair, the full Python suite passed **290 tests**, including transport checks for default low, explicit supported reasoning settings, invalid settings rejected before HTTP, timeout/read bounds and credential handling. Numerical models and their guards were not changed by this repair. Request/trial structures remained intact; requested reasoning is additional result metadata. These tests check contracts and software behavior, not arbitrary engineering prose.
+
+The final rendered trial is a useful conditional plan, not a manufactured specimen, qualified process or passed product test. Scale uncertainty and retention criteria remain unresolved in the cold-assembly case. References remain background within their stated scopes; no study supplies missing properties for either synthetic mixture. The v2 semantic failure and v3 rejection prevent an all-attempts-pass claim. No general semantic reliability, future-batch consistency, unique AI value or award result follows from these diagnostics.

@@ -1,0 +1,125 @@
+{
+  "protocol": "material-task-v1",
+  "review_kind": "Non-blinded quote-based developer review of one visible synthetic task; not an independent human study",
+  "raw_result_sha256": "c9584090fef01017f397ff66e4bfe56c51ea032c557d83dcf7aa80402a9201f5",
+  "source_integrity_at_run_completion": "All frozen invoked-source hashes matched",
+  "checkpoint_results": [
+    {
+      "checkpoint": "A",
+      "ordinary": "pass",
+      "workflow": "pass",
+      "reason": "Both returned a controlled proportion plan, retained the exact target and separated home planning from unconfirmed facility work. Both structured trial-target checks passed."
+    },
+    {
+      "checkpoint": "B",
+      "ordinary": "pass",
+      "workflow": "not_completed",
+      "reason": "Ordinary scoped the supplied 0.44 kg quantity as composition arithmetic. Production rejected a length-truncated provider response after 62.738 seconds. The calculator result remained available; no substitute advice was fabricated."
+    },
+    {
+      "checkpoint": "C",
+      "ordinary": "pass",
+      "workflow": "partial",
+      "reason": "Both recognized infeasibility. Ordinary required verifying this portion’s fraction before its dose. Workflow planned endpoint additions and parked the uncertain portion; it did not clearly require characterization of its actual fraction before selecting a dose. Reweighing the total mix does not identify that fraction."
+    },
+    {
+      "checkpoint": "D",
+      "ordinary": "pass",
+      "workflow": "pass",
+      "reason": "Both withheld a dose and requested stock U’s fraction without inheriting stock A’s zero. Workflow also noted the stock-identity conflict; that observation was not added as a scoring criterion."
+    }
+  ],
+  "quotes": [
+    {
+      "stage": "A_trial",
+      "arm": "ordinary",
+      "field": "comparison",
+      "quote": "Compare separate M1 tensile yield stress measurements at proposed 20% vs 35% vs 50% PCRPE-A under fixed resin identities, preparation, P1 and M1."
+    },
+    {
+      "stage": "A_trial",
+      "arm": "workflow",
+      "field": "change",
+      "quote": "Vary only planned PCRPE-A mass fraction across three proposed target levels: 20, 35 and 50 mass percent PCRPE-A. These are target labels only; issue no gram additions now."
+    },
+    {
+      "stage": "B",
+      "arm": "ordinary",
+      "field": "answer",
+      "quote": "This is composition arithmetic only and does not predict strength, density or consistency, and the new 35% mix inherits no prior readings."
+    },
+    {
+      "stage": "C",
+      "arm": "ordinary",
+      "field": "answer",
+      "quote": "Only after its exact PCRPE-A % is verified for that specific portion, weigh the exact PE stock A addition to reach exactly 35.0%"
+    },
+    {
+      "stage": "C",
+      "arm": "workflow",
+      "field": "answer",
+      "quote": "plan two separate PE stock A additions — one for each end — to target exactly 35%."
+    },
+    {
+      "stage": "C",
+      "arm": "workflow",
+      "field": "material_routes",
+      "quote": "Revisit the reference portion later by splitting or re-weighing at a suitable facility if tighter input definition becomes possible."
+    },
+    {
+      "stage": "D",
+      "arm": "ordinary",
+      "field": "answer",
+      "quote": "Stock A at 0% is not available and that characterization does not apply to U. Do not call U virgin and do not issue a numerical addition."
+    },
+    {
+      "stage": "D",
+      "arm": "workflow",
+      "field": "answer",
+      "quote": "get the measured PCRPE-A mass fraction of PE stock U, with its basis and uncertainty."
+    }
+  ],
+  "limits": [
+    "One visible developer-authored task with four dependent checkpoints, not four independent cases or statistical generalization.",
+    "Both arms received the same actual comparison/calculator outputs. Correct supplied arithmetic is not AI advantage.",
+    "Headless functions and scripted handoffs do not measure browser persistence, human effort or user time.",
+    "The 25 MPa criterion is a chosen material screen, not a derived sleeve requirement; finished-product properties remain unsupported.",
+    "All grade/process/property labels and readings are synthetic. No physical processing or testing occurred.",
+    "No practical assay for recycled provenance in an unknown PE mixture is established by this task.",
+    "Workflow B has no usable response/usage metadata because the client rejected provider finish_reason length. Request/error retained.",
+    "Later stages receive equal current facts/tools but each arm’s own successful history; workflow has no B answer after its failure."
+  ],
+  "conclusion": "No material-task or AI advantage is demonstrated. Ordinary Meta completed this task more successfully with less recorded request-stage time. Reliability and next-action repairs require a separately frozen evaluation.",
+  "summary": {
+    "ordinary": {
+      "model_call_attempts": 5,
+      "usable_responses": 5,
+      "sum_stage_seconds": 178.173,
+      "median_attempt_seconds": 35.682,
+      "full_checkpoint_passes": 4,
+      "partial_checkpoints": 0,
+      "uncompleted_checkpoints": 0,
+      "reported_successful_response_usage": {
+        "prompt_tokens": 17329,
+        "completion_tokens": 23325,
+        "total_tokens": 40654
+      },
+      "usage_excludes_rejected_response": false
+    },
+    "workflow": {
+      "model_call_attempts": 5,
+      "usable_responses": 4,
+      "sum_stage_seconds": 264.5,
+      "median_attempt_seconds": 54.716,
+      "full_checkpoint_passes": 2,
+      "partial_checkpoints": 1,
+      "uncompleted_checkpoints": 1,
+      "reported_successful_response_usage": {
+        "prompt_tokens": 17367,
+        "completion_tokens": 24948,
+        "total_tokens": 42315
+      },
+      "usage_excludes_rejected_response": true
+    }
+  }
+}

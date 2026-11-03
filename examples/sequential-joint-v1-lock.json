@@ -1,0 +1,15 @@
+{
+  "protocol": "sequential-joint-v1",
+  "frozen_utc": "2026-11-02T05:20:03.675505+00:00",
+  "hashes": {
+    "docs/SEQUENTIAL_JOINT_PROTOCOL.md": "50a663c02da283890ee04df96fffdb5f478c14e517a8b8db039937452c090df7",
+    "examples/sequential-joint-v1.json": "6cf8bdd511482bde15c152ce0d8130a02f801745cd62be968968053e54d1b55f",
+    "scripts/benchmark_sequential_joint.py": "aeaaa957a4d00e6506cecb0fc92b292b8ad65a9455d9d89ff422571ca59ad49b",
+    "rematter/engineering_agent.py": "e7053470607f547c701d085cd373644558cd6e16ea78f9095e51dd2b0a90d196",
+    "rematter/balance.py": "0edce7ddff391dd279ad8770d49a4ff1925300fc5b5385a632ca05b5f42d4e6c",
+    "rematter/adaptation.py": "dccc048713e719b66089494ed40c20d73d7b7fc2373a4eb84cb168e5cbe13f46",
+    "rematter/advisor.py": "bba79e93837ba59be75eacb75de1ac92e5060042f96158ddc7c4a4f9b1626a51",
+    "rematter/meta.py": "488d2f47d0f24b18c0b9162f241fc2b9e420c23100abf9cf1ee2127c2e5ec25a",
+    "web/src/components/BalancePlanner.tsx": "703f5a04062e31d6701221ea3755771f2d0762e3e726b5edb412f96338e1b4a7"
+  }
+}

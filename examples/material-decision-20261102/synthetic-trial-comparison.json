@@ -1,0 +1,281 @@
+{
+  "workshop_case": {
+    "brief": {
+      "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+      "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized.",
+      "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+      "product": "A non-load-bearing planter sleeve — material development case",
+      "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+      "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+      "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+      "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin."
+    },
+    "details": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": ""
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    }
+  },
+  "selected_trial": {
+    "result_kind": "trial_proposal",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 2929,
+      "prompt_tokens": 3861,
+      "total_tokens": 6790
+    },
+    "elapsed_ms": 18483,
+    "request_id": "chatcmpl-01a19cfd-7f17-7054-8e11-cfbe3515d98e",
+    "requested_reasoning_effort": "medium",
+    "calculation_context": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": ""
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "route_id": "material:M1",
+    "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+    "brief": {
+      "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin.",
+      "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+      "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+      "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+      "product": "A non-load-bearing planter sleeve — material development case",
+      "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+      "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+      "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized."
+    },
+    "selected_route": {
+      "id": "material:M1",
+      "title": "Record grades and test separate PE ratios",
+      "change": "Adjust recycled-to-virgin PE proportion across separate recorded trials, holding preparation constant.",
+      "why": "Changing only the PE ratio while holding preparation constant may show the direction of yield shift in your resins, so measurement can guide the next choice.",
+      "check": "Moulded specimens tested for tensile yield stress at least 25 MPa, using a stated specimen and method; compare to this screen without transferring published specimen values to your resin.",
+      "steps": [
+        "Record identified PCRPE and virgin MDPE grades, lot IDs and current proportion on a mass-percent basis; blank amounts stay unknown.",
+        "Choose two or three clearly separated mass-percent levels as adjustable starting choices.",
+        "At a suitable facility, mould specimens for each level under a recorded process; facility and tester unconfirmed.",
+        "Test each level separately from sleeve fit checks and use the measurement to select a ratio to carry forward."
+      ],
+      "tradeoffs": [
+        "Higher recycled share may bring more lot variation and need stricter sorting.",
+        "Higher virgin share may lower recycled use and raise material cost.",
+        "Extra levels need more facility time and specimens."
+      ]
+    },
+    "title": "Two-ratio PE screen for 25 MPa threshold",
+    "objective": "Find which recorded PE-ratio direction moves tensile yield in your resins toward the chosen screen, without transferring published values to your resin and without using the screen as a planter requirement. Moulding and testing are conditional on a suitable facility.",
+    "comparison": "Level A versus Level B: two adjustable mass-percent choices with clearly separated recycled share, same identified PCRPE lot, same virgin MDPE lot, same recorded preparation, same facility process, same specimen and test method. Only the recycled-to-virgin proportion changes.",
+    "change": "Compare two clearly separated recycled-to-virgin PE mass-percent levels in separate recorded specimen trials, holding preparation and moulding process constant within the comparison.",
+    "keep_fixed": [
+      "Same identified PCRPE lot and same identified virgin MDPE lot for both levels.",
+      "Same recorded preparation, sorting and moisture handling for both levels.",
+      "Same facility moulding process and same stated specimen and tensile method for both levels.",
+      "Separate liner supports soil and water; material screen kept separate from sleeve fit, creep and weathering decisions."
+    ],
+    "materials": [
+      "Identified PCRPE resin - exact grade and lot ID to record; amount remains unknown until mass-percent levels are chosen.",
+      "Identified virgin MDPE resin - exact grade and lot ID to record; amount remains unknown until mass-percent levels are chosen."
+    ],
+    "steps": [
+      {
+        "action": "At home, record the identified PCRPE grade and lot ID and the virgin MDPE grade and lot ID on a mass-percent basis; leave blank amounts unknown.",
+        "record": "Grades, lot IDs, supply lots and current proportion basis; note moisture, contamination and lot differences as uncharacterized."
+      },
+      {
+        "action": "Choose two clearly separated mass-percent levels as adjustable starting choices and label them Level A and Level B without treating either choice as an optimum.",
+        "record": "Chosen Level A and Level B definitions, mass-percent basis and reason for separation."
+      },
+      {
+        "action": "Confirm a suitable facility with appropriate PE moulding capability, tooling, extraction and tensile-testing capability before any heated processing or testing; do not process resin at home.",
+        "record": "Facility name, confirmed capabilities, recorded moulding process and stated specimen and test method to be used."
+      },
+      {
+        "action": "At that suitable facility only, mould specimens for Level A and Level B under the same recorded process, keeping preparation constant.",
+        "record": "Process record per level, specimen count and identity, preparation record and any processing observations per level."
+      },
+      {
+        "action": "Test Level A and Level B separately for the screen and use the measured direction to choose one ratio to carry forward, keeping sleeve-fit checks separate.",
+        "record": "Yield result per level with specimen and method stated, ratio carried forward, and separate sleeve-fit notes unchanged by this screen."
+      }
+    ],
+    "checks": [
+      {
+        "property": "Tensile yield stress - material screen",
+        "target": "tensile yield stress at least 25 MPa, using a stated specimen and method.",
+        "method": "Mould specimens for each PE ratio at a suitable facility under one recorded process, then test each ratio separately with a stated specimen geometry and tensile method recorded with the result. Home planning alone cannot establish this property.",
+        "if_outside": "If below the screen, record the direction of shift and run a new one-variable comparison, for example a further adjustment to the mass-percent choice or a separate preparation comparison; do not carry an unmeasured level forward as selected."
+      },
+      {
+        "property": "Sleeve fit and drainage planning",
+        "target": "Not set",
+        "method": "Separate fit and clearance planning around the existing watertight liner using recorded dimensions; no tensile result and no published specimen value proves sleeve fit.",
+        "if_outside": "Keep sleeve-fit planning separate from the material screen; adjust sleeve geometry or liner clearance in a separate comparison if fit is an issue, without changing the PE-ratio conclusion."
+      },
+      {
+        "property": "Lot variation and preparation observations",
+        "target": "Not set",
+        "method": "Record lot IDs, visual condition, sorting/preparation notes and any facility processing notes separately for each level; short exposure or visual checks do not establish weathering or creep.",
+        "if_outside": "If sorting, moisture, odour, gels, discolouration or moulding notes differ between lots, hold the ratio comparison and make contamination or drying the subject of a separate recorded preparation comparison."
+      }
+    ],
+    "questions": [
+      "What are the exact PCRPE and virgin MDPE grades, lot IDs and current mass-percent proportion?",
+      "What suitable facility with confirmed PE moulding and tensile-testing capability can record process, specimen and method?",
+      "Is the sleeve geometry and outdoor exposure still open enough to keep fit and weathering as separate later checks?"
+    ],
+    "sources": [
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      },
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "result": {
+    "result_kind": "entered_readings_comparison",
+    "data_kind": "synthetic",
+    "brief": {
+      "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin.",
+      "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+      "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+      "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+      "product": "A non-load-bearing planter sleeve — material development case",
+      "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+      "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+      "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized."
+    },
+    "calculation_context": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": ""
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "property_name": "Tensile yield stress - material screen",
+    "property_unit": "MPa",
+    "input_name": "Recycled PE content",
+    "input_unit": "mass %",
+    "method": "Synthetic software diagnostic only: two declared PE ratio conditions. No actual processing or tensile test was performed. These values do not describe the resins or the planter.",
+    "target_min": "25",
+    "target_max": null,
+    "conditions_confirmed": true,
+    "settings": [
+      {
+        "id": "Setting 1",
+        "level": "20",
+        "readings": [
+          {
+            "value": "26",
+            "group_label": "Unknown",
+            "group_kind": "unknown",
+            "batch_id": null,
+            "reading_id": null,
+            "repeat_of": null,
+            "run_id": null,
+            "specimen_id": null,
+            "inside_target": true
+          }
+        ],
+        "observed_min": "26",
+        "observed_max": "26",
+        "reading_count": 1,
+        "in_target_count": 1,
+        "all_readings_in_target": true
+      },
+      {
+        "id": "Setting 2",
+        "level": "40",
+        "readings": [
+          {
+            "value": "22",
+            "group_label": "Unknown",
+            "group_kind": "unknown",
+            "batch_id": null,
+            "reading_id": null,
+            "repeat_of": null,
+            "run_id": null,
+            "specimen_id": null,
+            "inside_target": false
+          }
+        ],
+        "observed_min": "22",
+        "observed_max": "22",
+        "reading_count": 1,
+        "in_target_count": 0,
+        "all_readings_in_target": false
+      }
+    ],
+    "matching_setting_ids": [
+      "Setting 1"
+    ],
+    "interpolation_used": false,
+    "future_consistency_established": false,
+    "physical_product_tested_by_app": false,
+    "warnings": [
+      "Synthetic simulation: these entries are not physical measurements.",
+      "These comparisons describe only the readings and settings entered; they do not predict another setting or future production.",
+      "The result compares reported values only. Measurement uncertainty is not modeled and a value inside the target is not product qualification.",
+      "The entered target and units are used as stated; they are not converted or checked against other target text in the shared case.",
+      "Grouping labels, kinds and separate reading/specimen/run/batch/repeat-of identifiers are user supplied and retained. Their hierarchy, references and statistical independence are not assessed; only readings are counted.",
+      "The comparison does not establish causation, physical performance of an untested configuration, or consistency across batches.",
+      "No values are interpolated, averaged, pooled from studies, or copied from stored source data."
+    ]
+  }
+}

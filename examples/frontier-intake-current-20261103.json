@@ -1,0 +1,71 @@
+{
+  "endpoint": "/api/project/intake",
+  "request": {
+    "message": "I have recycled polypropylene packaging flakes. Each delivery has a different mix and sometimes paper label scraps in unknown amounts. I want to make a low-cost indoor entrance mat with good grip. I only have hand tools at home, no lab or heated press. What can I do when the input changes?"
+  },
+  "status": 200,
+  "response": {
+    "result_kind": "project_intake",
+    "reply": "You want a low-cost indoor entrance mat with good grip from variable flakes, using only hand tools. I drafted only what you stated - please review it before use. Since the mix changes, the useful next move is a small observation and paper comparison of no-heat ways to contain the flakes. See questions and first step.",
+    "project_draft": {
+      "product": {
+        "value": "indoor entrance mat",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "input": {
+        "value": "recycled polypropylene packaging flakes",
+        "source": "message",
+        "quote": "I have recycled polypropylene packaging flakes."
+      },
+      "variation": {
+        "value": "different mix and sometimes paper label scraps in unknown amounts",
+        "source": "message",
+        "quote": "Each delivery has a different mix and sometimes paper label scraps in unknown amounts."
+      },
+      "use": {
+        "value": "indoor entrance",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "priorities": {
+        "value": "low-cost indoor entrance mat with good grip",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "process": null,
+      "constraints": {
+        "value": "only have hand tools at home, no lab or heated press",
+        "source": "message",
+        "quote": "I only have hand tools at home, no lab or heated press."
+      }
+    },
+    "questions": [
+      "When you say good grip, is the priority shoes gripping the top, the mat staying still on the floor, or both - and what is your entrance floor made of?",
+      "With only hand tools and no heat, how were you thinking to hold loose flakes together - for example in a sewn pocket, glued to a backing, or another way?",
+      "For your current delivery, what does the mix look like and do you want to remove paper label scraps or use the flakes as-is?"
+    ],
+    "first_step": "From your current delivery, hand-sort one small bowl to note flake size/shape and paper share, and sketch your indoor entrance with mat size and floor type. Use that to compare no-heat containment ideas on paper for grip and cleaning, and line up a bench tilt comparison of tiny contained samples against a shoe sole - do not step on loose flakes or an untested mat to test it.",
+    "unknown_fields": [
+      "process"
+    ],
+    "readiness": "can_explore",
+    "review_required": true,
+    "interpretation_verified": false,
+    "ready_for_calculation": false,
+    "physical_product_tested": false,
+    "performance_verified": false,
+    "request_fingerprint": "165a08bb4cc20886f21dbf58de09707678d5228c66ad9fc8ff38ffc5be0a89c9",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "live": true,
+    "usage": {
+      "completion_tokens": 3496,
+      "prompt_tokens": 1578,
+      "total_tokens": 5074
+    },
+    "request_id": "chatcmpl-01a1a16c-7685-732b-8fc7-7bca7fc1953b",
+    "elapsed_ms": 32057,
+    "requested_reasoning_effort": "medium"
+  }
+}

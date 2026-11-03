@@ -1,0 +1,54 @@
+[
+  {
+    "id": "pp-study",
+    "title": "PP study: processing and appearance",
+    "summary": "Expanded flow, thermal, oxidation, molecular-weight and color measurements. Each set keeps its own test codes and repeat counts.",
+    "can_answer": "Compare the recorded property under its recorded material, process and test conditions.",
+    "cannot_answer": [
+      "Counterweight mass: density is missing",
+      "Sound blocking or absorption",
+      "Batch consistency, service life or arbitrary contamination"
+    ],
+    "source_url": "https://zenodo.org/records/19370161",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "id": "cecon2021",
+    "title": "Recycled PE blend density",
+    "summary": "105 density readings across 21 prepared conditions, including 17 recycled conditions. Five readings per condition; four virgin controls stay separate.",
+    "can_answer": "Calculate a simulated mass from one source condition's density readings and an assumed uniform volume.",
+    "cannot_answer": [
+      "Independent waste-batch variation",
+      "Density of an unmeasured plastic, process or contamination",
+      "Void formation or dimensional variation in a new product"
+    ],
+    "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "id": "hinczica2026",
+    "title": "PP density across ten batches",
+    "summary": "Four published density summary statistics from ten supplied PP batches. Five samples were measured per batch; individual values were not obtained.",
+    "can_answer": "Read the density summary reported for this source cohort.",
+    "cannot_answer": [
+      "Reconstruct individual batch values or the precise aggregation",
+      "Predict a new batch or a contamination effect",
+      "Guarantee finished-product consistency"
+    ],
+    "source_url": "https://doi.org/10.1002/app.70501",
+    "license": "CC-BY-4.0"
+  },
+  {
+    "id": "dawoud-taha-2024",
+    "title": "Named polymers mixed into PP",
+    "summary": "79 DSC table values and four exact tensile mean/SD pairs for stated post-industrial polymers, amounts and processing conditions.",
+    "can_answer": "Compare the retained thermal or tensile property at the source's named contamination amount and process.",
+    "cannot_answer": [
+      "Apply a general contamination penalty",
+      "Predict a new blend recipe",
+      "Infer density, sound performance or batch variation"
+    ],
+    "source_url": "https://doi.org/10.3390/polym16162301",
+    "license": "CC-BY-4.0"
+  }
+]

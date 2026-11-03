@@ -1,0 +1,755 @@
+{
+  "record_url": "https://zenodo.org/records/19370161",
+  "paper_url": "https://doi.org/10.1039/D6SU00069J",
+  "license": "CC-BY-4.0",
+  "metadata_path": "data/raw/zenodo-19370161.json",
+  "metadata_sha256": "6b44d02f58722e3c928fc36897708a60a1fef6cd437d4b219647a121855941ed",
+  "files": [
+    {
+      "name": "MVR.zip",
+      "path": "data/research/pp-study/raw/MVR.zip",
+      "url": "https://zenodo.org/api/records/19370161/files/MVR.zip/content",
+      "declared_checksum": "md5:bb4854050d1d1d420509702aa221bd4b",
+      "md5_verified": true,
+      "sha256": "d9b510fedac6a1f36d0b49d08bbde26e1c63d27ef680fe711f4590f78b4cfb1e",
+      "bytes": 194241,
+      "members": [
+        {
+          "name": "MVR/MVR.opju",
+          "bytes": 366617,
+          "sha256": "f720d1414ff3b7cdd519f06c5152e4836c273e55bb882c42aa16c3007343e534"
+        },
+        {
+          "name": "MVR/MVR.xlsx",
+          "bytes": 48461,
+          "sha256": "401e45a216202a3c3d32307d48dce79fe2b8130722c5d99ee45a9172270f5eab"
+        }
+      ]
+    },
+    {
+      "name": "Rheology.zip",
+      "path": "data/research/pp-study/raw/Rheology.zip",
+      "url": "https://zenodo.org/api/records/19370161/files/Rheology.zip/content",
+      "declared_checksum": "md5:ff7cbc8a60382ea075af92f0a921dd90",
+      "md5_verified": true,
+      "sha256": "cf1a783492ff032f0ad4ecec7985341f33e6b72b65070645edd52e7d693b3553",
+      "bytes": 3772622,
+      "members": [
+        {
+          "name": "Rheology/04441PP-REG(1)-1E1_1.txt",
+          "bytes": 2701,
+          "sha256": "03b1f0539b4096178938f4139b45850ccfb533f68deb033780c53f0df8ee29f6"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-1E1_2.txt",
+          "bytes": 2702,
+          "sha256": "0c22ce49428e6e0b07c1e628bd46d1178fff2b7cca2e2d504e00c6da2dc5d23e"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-1E3_1.txt",
+          "bytes": 2703,
+          "sha256": "2fb3e8d6b9c95e5f8a4d7468d3dc475bbed21ad162e71a08f4bb9bdacf36509d"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-1E3_2.txt",
+          "bytes": 2700,
+          "sha256": "3f650a0c3bdcd015c30feb1dc4284ae3e2c9b6144d0fc3cda4c943d9c510ada0"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-1E5_1.txt",
+          "bytes": 2697,
+          "sha256": "8061f3b8789dd27dfc9947e1bdfce1ad16b410654147f580e54b957d1f183ab4"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-1E5_2.txt",
+          "bytes": 2700,
+          "sha256": "16ce6715a63c31d629a10d7f13ffa459f4d8a701e695e73355cb35569c790bb5"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-2E1_1.txt",
+          "bytes": 2701,
+          "sha256": "819d2dff5c67940496e1a7b3233301577f31e8cc0c2e4812bfe922e36cc3357d"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-2E1_2.txt",
+          "bytes": 2704,
+          "sha256": "d6cc68a64344227920e296e5afd076e9e2dc67f9ce38d89faf4b96fd76b2a276"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-2E3_1.txt",
+          "bytes": 2705,
+          "sha256": "2abfbfe2a135d443a1a9008272bb5a16d71b63f781429a1d6fbdde2b922d3c7f"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-2E3_2.txt",
+          "bytes": 2702,
+          "sha256": "af508b1fbd56630050ed70b421e5d9badba3fadccf16048de3b530127999aed1"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-2E5_1.txt",
+          "bytes": 2704,
+          "sha256": "15cd1ad3e7e7bcba925dffd0c3edd2bda2d773f81ec65246fbbf2be8452fec78"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-2E5_2.txt",
+          "bytes": 2703,
+          "sha256": "0b1089c0fae02e50c8cbd9afd81fb1a59fb89c08036400a582aa8181e16e3f3d"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-3E1_1.txt",
+          "bytes": 2704,
+          "sha256": "81a4d0782a0872ff1511664f78c8e47d9ad92d1f2fecf7e97f80a647c1415180"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-3E1_2.txt",
+          "bytes": 2705,
+          "sha256": "08ba79479b135afe7bf20a65dd279e8e88db1fed4347976d145c71e3d37cf964"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-3E3_1.txt",
+          "bytes": 2705,
+          "sha256": "4a70c91b3eaaf0eb44746ff13a6a5622ddc4ea39a6a32fb2d55a6c262623d521"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-3E3_2.txt",
+          "bytes": 2702,
+          "sha256": "eeab9d3f4f8a00088078a8198f0f4b1aacc0aa4eeb008aaf0b15ae1bd2287d46"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-3E5_1.txt",
+          "bytes": 2704,
+          "sha256": "fcc0aa89feb356ac9c2065c97c7bd70afbede6bbe035393faaa1fb0c810e6f98"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-3E5_2.txt",
+          "bytes": 2702,
+          "sha256": "28cbe092d435b00e905fc189331027ffb716a1c72c2869f82e38a654713cb3fa"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-5E1_1.txt",
+          "bytes": 2703,
+          "sha256": "7635baaecbc7a6edc6c8a4af31b91ac61c17494b2c9c03a07ce123d6b89b4984"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-5E1_2.txt",
+          "bytes": 2702,
+          "sha256": "e6b20133828930c00054f449c8e72ee211516ce7933ec5aca15728b63c262207"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-5E3_1.txt",
+          "bytes": 2704,
+          "sha256": "bfba953df3631cdda5b94fb192841a0c99ba690771696754133fcf22844a3265"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-5E3_2.txt",
+          "bytes": 2704,
+          "sha256": "4710d28325b9be72064524344b74879737a6ea98e42ee7b036779f97fed5cd44"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-5E5_1.txt",
+          "bytes": 2701,
+          "sha256": "fba48999a351adae841d6985b6abb784cc2c9e0bc0f6c3c34b6dba59fb1b9baf"
+        },
+        {
+          "name": "Rheology/04441PP-REG(1)-5E5_2.txt",
+          "bytes": 2703,
+          "sha256": "f720b295a8e69798f21f891a887cd9e96190187265fa88250f1ef6cf404b0929"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-1E1_1.txt",
+          "bytes": 2706,
+          "sha256": "a2fd8f91cb4362939e2c9eac0e8a1f68f894698b9ac78f9bf8cd0501d7e5351d"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-1E1_2.txt",
+          "bytes": 2706,
+          "sha256": "bd9e1eb11d22544783afae122920945a9f45092de09847acf08e745e01d17dcb"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-1E3_1.txt",
+          "bytes": 2706,
+          "sha256": "98562a9cb9772b74adb482e340ec8c1e2cbf6a2cffe74199803ee36b21f3515d"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-1E3_2.txt",
+          "bytes": 2706,
+          "sha256": "b66f53266cc47c276814ce74d6aeb3f8c3f1d2fb9acd3f8c86ed4be2ba43c08a"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-1E5_1.txt",
+          "bytes": 2704,
+          "sha256": "d980a56f7fe3777af990bd8fe99bcf845534452e2a10798a4f7906b1bf01e6ea"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-1E5_2.txt",
+          "bytes": 2706,
+          "sha256": "aeff1b7241b172a3dc78ee474c9ed7385bda8458a3c89a9cb806928b457cd896"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-2E1_1.txt",
+          "bytes": 2706,
+          "sha256": "ef6f468ec1ed877cba885253ffc6b527d65b0e85197688e190fb2ab841ddc94c"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-2E1_2.txt",
+          "bytes": 2706,
+          "sha256": "2b67a64631ca26b075dca548886185e5622c3dccbab3fbf3ed8eec2019cc02c8"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-2E3_1.txt",
+          "bytes": 2706,
+          "sha256": "4b1501b8e5f0be5e7aad9e8a68d0b63160525c0d5d0e5f74f76864d0d04805b9"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-2E3_2.txt",
+          "bytes": 2704,
+          "sha256": "1078a34c82d1a12d6d277a4dd99bbc5edb2bd356a5bc6facc51ab7cc50d70524"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-2E5_1.txt",
+          "bytes": 2706,
+          "sha256": "14543c3de36df670770d6def187a98c5f285ea19b110376cb357b46a1477f3a7"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-2E5_2.txt",
+          "bytes": 2706,
+          "sha256": "c4cdac60f4fde4b845d132ba07dfea6298cc21f250e59d98aff9ac5624b1957d"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-3E1_1.txt",
+          "bytes": 2701,
+          "sha256": "372492c303452578af2e9d30516427e79c05ba1b1263dea4d35fdeb8f3a43fa6"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-3E1_2.txt",
+          "bytes": 2701,
+          "sha256": "d42ece0160603674c2f7f78105bd6bf83362439f02425853781f4b223c096791"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-3E3_1.txt",
+          "bytes": 2704,
+          "sha256": "5c18f87e8a0cb15771a81b327b0169af7bc63092c7d522438f7a0e125eebfa31"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-3E3_2.txt",
+          "bytes": 2705,
+          "sha256": "4a88df8609cc1998eff2d9c7f25a5e92d00569cc6e0fae12080dc4ef8a2c3a13"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-3E5_2.txt",
+          "bytes": 2706,
+          "sha256": "1dbbc95a0f2da4f89b5f1d9e7b2fd49b9984308eccff293e2f1e257ee5bfdcc0"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-5E1_1.txt",
+          "bytes": 2706,
+          "sha256": "4cfd3ea51e4f6cf69101ded76dc02f1ce13a537e5c855c00ace797363fc6b723"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-5E1_2.txt",
+          "bytes": 2706,
+          "sha256": "5f6ce5c39ff028a78e211050c2a73eb0950aa0ebbbd191ffd9ff0965a7565b6b"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-5E3_1.txt",
+          "bytes": 2706,
+          "sha256": "7588fa760e4447f49b840c769b97c5cf453b9628b0940f93d8c0501cc621cf4a"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-5E3_2.txt",
+          "bytes": 2706,
+          "sha256": "156575c2e9e7ce6f9833d3d6915c2944c2e1fee83f8ee117b54e188152da36f3"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-5E5_1.txt",
+          "bytes": 2707,
+          "sha256": "752efb7fb2a15252caa58a74a0707e27d86ddcaa77e73114a740eaee9014aaab"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak(1)-5E5_2.txt",
+          "bytes": 2706,
+          "sha256": "d6e8f57f90b458d829cb0fee2f4467a4b7dadb827601d0d5225adb11c8ef95b9"
+        },
+        {
+          "name": "Rheology/04441PP-VIRak1)-3E5_1.txt",
+          "bytes": 2707,
+          "sha256": "3909d36f87965351e09af3cc1ed99fdd3f5299686f74f23c65656462f944d499"
+        },
+        {
+          "name": "Rheology/04441PP-VIRnak(1)-1E1_1.txt",
+          "bytes": 2705,
+          "sha256": "a50b34323a6ffe0c5f08fb053d886cb015add83d0a23552374c4582862d976d9"
+        },
+        {
+          "name": "Rheology/04441PP-VIRnak(1)-1E1_2.txt",
+          "bytes": 2706,
+          "sha256": "4029816aa84b6530e01f6bcd8596b7b6a9cec8d9d976afa206fe52fe59eb34b0"
+        },
+        {
+          "name": "Rheology/04441PP-VIRnak(1)-1E3_1.txt",
+          "bytes": 2706,
+          "sha256": "fb8cdcc0d1de0d58f5ab54edaeedf8752810e7b943934dd03703ace63ab9bab0"
+        },
+        {
+          "name": "Rheology/04441PP-VIRnak(1)-1E3_2.txt",
+          "bytes": 2707,
+          "sha256": "10ab3b4312c86a1810fabd6ced31e1c287690f42f60e8bf8222537c450708737"
+        },
+        {
+          "name": "Rheology/04441PP-VIRnak(1)-1E5_1.txt",
+          "bytes": 2706,
+          "sha256": "dba27f3b850db9b3957fe60826f9d0398dc86f640ca9158270e6361a6c581493"
+        },
+        {
+          "name": "Rheology/04441PP-VIRnak(1)-1E5_2.txt",
+          "bytes": 2706,
+          "sha256": "153496071b0339977c2f634f860ef8e1cdcaa89dea772ad24bd07b4ef1a9ebe8"
+        },
+        {
+          "name": "Rheology/Intersect.xlsx",
+          "bytes": 13160,
+          "sha256": "a99cdbc6a8ca5fddc11eb00f91280abc7362cfa4bd28a2f5401ef5f91d2741ef"
+        },
+        {
+          "name": "Rheology/Rheology_PP.opju",
+          "bytes": 5731535,
+          "sha256": "a774433bb3e993f6b864939665cfead2e9f6bcec4070fbec763c6d56618d9cd4"
+        }
+      ]
+    },
+    {
+      "name": "DSC.zip",
+      "path": "data/research/pp-study/raw/DSC.zip",
+      "url": "https://zenodo.org/api/records/19370161/files/DSC.zip/content",
+      "declared_checksum": "md5:50ed51b07fa926b91d247b4d65914278",
+      "md5_verified": true,
+      "sha256": "be6b2b5713230c789eb8c929ca3005086301d3d3577e48773046fa88d0567c32",
+      "bytes": 733167,
+      "members": [
+        {
+          "name": "DSC/PP_DSC.opju",
+          "bytes": 766834,
+          "sha256": "2098b0853593c03f8654c37429776cf90fffcc271081a224c75a0256da292690"
+        },
+        {
+          "name": "DSC/PP_REG_cooling.txt",
+          "bytes": 151370,
+          "sha256": "f6f88a49fd258557e2e9a10e62ad1a0f228e6132b3bdd40faf00e4e41068237b"
+        },
+        {
+          "name": "DSC/PP_REG_heating.txt",
+          "bytes": 151370,
+          "sha256": "b3200049ace5dc6af66d57f9362f7aec161754255746923d76cc783a8072cab8"
+        },
+        {
+          "name": "DSC/PP_VIRnak_cooling.txt",
+          "bytes": 151370,
+          "sha256": "f1279506abf641b0f405c4468ee1331eddaf396ed8f9bc39c73f07bc31dc7d19"
+        },
+        {
+          "name": "DSC/PP_VIRnak_heating.txt",
+          "bytes": 151370,
+          "sha256": "fec2604f575199c5b5e9e8484d42a8a2db44402d41843f17d6940e1132247f6a"
+        }
+      ]
+    },
+    {
+      "name": "OIT.zip",
+      "path": "data/research/pp-study/raw/OIT.zip",
+      "url": "https://zenodo.org/api/records/19370161/files/OIT.zip/content",
+      "declared_checksum": "md5:93e763e62e6bea560c43dd0d2c6835c4",
+      "md5_verified": true,
+      "sha256": "4aa1328af04099199d3a9a4120bf56a340b27d586d468a5cbec68c5ae40e630b",
+      "bytes": 14487759,
+      "members": [
+        {
+          "name": "OIT/04441PP-REG(1)-0_1.txt",
+          "bytes": 155090,
+          "sha256": "ea6a8fda30228e73c650fcfd7f6cf9fce4e59b6891be396e0425adf156945146"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-0_2.txt",
+          "bytes": 155090,
+          "sha256": "f27c8f9457d5598e78fa4bed05cb6c718798b528d5295c6b08e8b20a236e2946"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-0_3.txt",
+          "bytes": 155071,
+          "sha256": "ce778dfe733b74c9125efc15acd7b19505b6be7c9306e6317ce23a7da0e3ba44"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-0_4.txt",
+          "bytes": 155071,
+          "sha256": "87da5a42874d4cbd88b73bf8ec9a70cb35d1bbece34aa49ea7f763c63ee85904"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-0_5.txt",
+          "bytes": 155071,
+          "sha256": "14e000cbb34e4cfbfd9f5ab58899c0617c8e3f7e9bc10377a69d3f1093ad698e"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-1E5_1.txt",
+          "bytes": 155085,
+          "sha256": "0cc80b9009a95a109cd15bf2f26c132714d19e0d98bd577b2352ba278e97eec4"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-1E5_2.txt",
+          "bytes": 155085,
+          "sha256": "89013448ff6915d6591bef6abc476b28473ba10b44f8b16dfb8997d2ab124aea"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-1E5_3.txt",
+          "bytes": 155075,
+          "sha256": "52bb1b84c5e37ebf90b7232b85d31e3e9ef2ef51170c24677da6350585446a6c"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-1E5_4.txt",
+          "bytes": 155075,
+          "sha256": "d575ad8e2c50ed887c27b0d6846eb0ff105de4819cb6db19e6b05fee0072eacc"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-1E5_5.txt",
+          "bytes": 155075,
+          "sha256": "e1a777bd4cc95afc066ee1104aa7a41a6f56e9437a78025d5f84853c329862d3"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-2E5_1.txt",
+          "bytes": 464685,
+          "sha256": "a45921b66893b1a68bf5c8e5fe17987a20d4e6378b9a6b83c09f188b598e8295"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-2E5_2.txt",
+          "bytes": 464685,
+          "sha256": "8df228f748064093c725fc1c4c3164faafe6edc9fd1fdc8db984c32a7715c206"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-2E5_3.txt",
+          "bytes": 155075,
+          "sha256": "b9e22db9a795c0b49f8fccc3136bf0c4d9ec23712201238f9378dd92490d83e9"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-2E5_4.txt",
+          "bytes": 155075,
+          "sha256": "1cd91c3b62484ab2ae19881628f2fa97309dc526d4a480acb8ed8fa644dc4591"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-2E5_5.txt",
+          "bytes": 155075,
+          "sha256": "ce22ea30d09ef61ed418ed50dede34999aa8ae46158fb2cdb97778dee332c622"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-3E5_1.txt",
+          "bytes": 309885,
+          "sha256": "918a9d7f0ea399238c744b6bd007dd20b7a68bbdc75cca626937c8c97459ea85"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-3E5_2.txt",
+          "bytes": 309885,
+          "sha256": "c791d18b2cef37d78955cd955eec9de8cc615e70dae87efc48250560eddabe25"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-3E5_3.txt",
+          "bytes": 155075,
+          "sha256": "0abad03f6b5f2c1f62b19cda3df360e2726cfeea402adcb8de0bec3b780f51cb"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-3E5_4.txt",
+          "bytes": 155075,
+          "sha256": "c51c1636cbe5c811de662993159cf70f9e3c81939df075ae2f6e0e6aca2e43cd"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-3E5_5.txt",
+          "bytes": 155075,
+          "sha256": "c78b0a30824572fac6358adcdb3641f2795c7e386513ee0096326bac4181add2"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-4E5_1.txt",
+          "bytes": 309885,
+          "sha256": "0e39f73d67255566d13b03d7781c43f62a7427738eac12b31639300164452a3a"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-4E5_2.txt",
+          "bytes": 309885,
+          "sha256": "9512f18ed5ddea622748e5b0e53da6f0840fbcdbc8543c17da455a0656c1ada4"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-5E5_1.txt",
+          "bytes": 929085,
+          "sha256": "e3fa07887915a158123a897820114c9a68c037c79a4f77a4b5fa8dc69d67d0c1"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-5E5_2.txt",
+          "bytes": 929085,
+          "sha256": "639150f65db28d27dc966f67d47940361e64f2e1594e70a52b22d49ca6b8c70a"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-5E5_3.txt",
+          "bytes": 155075,
+          "sha256": "b29f24034256305b8890cfadbf6a9a91aa20bc0470f112b8c67980c408d0c852"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-5E5_4.txt",
+          "bytes": 155075,
+          "sha256": "6654b74f550230c618d4416f7c52b11d5e5f3b9028e8e18776f18024899d50a8"
+        },
+        {
+          "name": "OIT/04441PP-REG(1)-5E5_5.txt",
+          "bytes": 155075,
+          "sha256": "8ec6648bc98a5e8073421e9bbbec509e238a2b38d5dcebe09e9bbf81c757b680"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-0_1.txt",
+          "bytes": 155092,
+          "sha256": "c82e47608c186ff7b940c8bc2bb333ffd9231aface6c9f4b0947c6512ad978fb"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-0_2.txt",
+          "bytes": 155092,
+          "sha256": "6300226e69702e4bff1dbd5535082e4af0403615efcce226c1e2776bdd2d9df5"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-0_3.txt",
+          "bytes": 155074,
+          "sha256": "07a764c100718bd17a79d6b741498ef61ca2514f60e0fd23fd4d9feaee176bf9"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-0_4.txt",
+          "bytes": 155074,
+          "sha256": "e6d861debe6b1a56d4ca9a146240c70dfff9103f1dc31a3303d2ec6f97da46d7"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-0_5.txt",
+          "bytes": 155074,
+          "sha256": "a56d7ee4ba7ab7ace05ba1a66cc07de55bfd8ba22b4ddf09e7ac9390c3022ca0"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-1E5_1.txt",
+          "bytes": 155087,
+          "sha256": "681bdbc8f3aef0d5bf8f6f8dd4fe9f2dc5ef9e4a60c90ae212a9efd5ff774163"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-1E5_2.txt",
+          "bytes": 155087,
+          "sha256": "31544406e14c342e0514447dae043bbaaf0d9c67709ebc8588b9cb62395657ec"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-1E5_3.txt",
+          "bytes": 155078,
+          "sha256": "02c5910252376617bc15a9dee37d1a36fc102c4b04890fcd2dbd886d3d7d0d98"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-1E5_4.txt",
+          "bytes": 155078,
+          "sha256": "8798af7bacea1bad7467a512dba73b6c3dd6bd6dda7330ecbf261e8b33e26361"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-1E5_5.txt",
+          "bytes": 155078,
+          "sha256": "2abfbc5d9e3e31ef6dab55e7ae729fdf88c6cf06855bfce4186c4e7ecd1f27ab"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-2E5_1.txt",
+          "bytes": 464687,
+          "sha256": "297ff129c3a480bda69d59d94568e8e6829df14f188f77e83be876dceba0af74"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-2E5_2.txt",
+          "bytes": 464687,
+          "sha256": "99623cbd97b5834b449b116855bcfe8c555abdf746ddabd2efac910c441a688f"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-2E5_3.txt",
+          "bytes": 309878,
+          "sha256": "5a6d3be4df7671dfa13f3c8b41371301f9a17c5c16ad0aab42acd148ee28964a"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-2E5_4.txt",
+          "bytes": 309878,
+          "sha256": "4369f8fbfd0529040721aa4b92376acd7a4fdd68ad386eaa9427a5a0ce17abc3"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-2E5_5.txt",
+          "bytes": 309878,
+          "sha256": "c8ba563c8b5a11c19ebae73000a975a69bea730741587e2b6806dd703e51d04b"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-3E5_1.txt",
+          "bytes": 309887,
+          "sha256": "883cb4c37854597e9f0397053c2556e57e53309427e15df2913b9844a5ec6ebb"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-3E5_2.txt",
+          "bytes": 309887,
+          "sha256": "d5e3b50b6b9195a7cd7861bdbdea105cefadb83d41fb5ab8b0fb8144f5678bd5"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-3E5_3.txt",
+          "bytes": 155078,
+          "sha256": "6a0f214369b82d5e790adc9aba66b4e03968888f0890a396e711990e40035a3a"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-3E5_4.txt",
+          "bytes": 155078,
+          "sha256": "cc0ffaece05d42cbac6c0b9faf780a8f658e8db2947e1be8ce5f0de3749e399e"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-3E5_5.txt",
+          "bytes": 155078,
+          "sha256": "c57cef473ec07574d5d4b600f9703f2dba95a9d948c40b1905d770c884ef74db"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-4E5_1.txt",
+          "bytes": 309887,
+          "sha256": "7d17062d18bfe93ee8a24b7713ad5a11e3a97440a64379a096039a66fa9aba6f"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-4E5_2.txt",
+          "bytes": 309887,
+          "sha256": "b268c32280059916fc22cd23a29838ed5daa6837db5d5ddd58d5458cf99beb9d"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-5E5_1.txt",
+          "bytes": 619487,
+          "sha256": "be850249ec9c0f733bfa6afc37670eba23ecdf7c98ac3c7a8956e016bc868d28"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-5E5_2.txt",
+          "bytes": 929087,
+          "sha256": "410d8a2fe36d272572284a6cee010ed74a5399e13aba294e39e6436b87741832"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-5E5_3.txt",
+          "bytes": 929078,
+          "sha256": "c580fc4601eae33ec17a72b20cc2bf1791e8309e2eb0da0735ee3750442e9fba"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-5E5_4.txt",
+          "bytes": 929078,
+          "sha256": "b8de93492ebf25d3adf75b59ddca5b0c5add8834202096419065e1d31d738e23"
+        },
+        {
+          "name": "OIT/04441PP-VIRak(1)-5E5_5.txt",
+          "bytes": 929078,
+          "sha256": "25d88a4316d333e1a3581843408061cf36f818a1b2119898ed55a00825c6e61a"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-0_1.txt",
+          "bytes": 155090,
+          "sha256": "56f2c9545ec84448d9444d80787a21c426b76cf21978955bd65c8d10d0971024"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-0_2.txt",
+          "bytes": 155090,
+          "sha256": "fd8228836176c7fa736a21238cf297e0b7e65b337224cc78450a643f28b01553"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-0_3.txt",
+          "bytes": 155075,
+          "sha256": "b84bf29c11960e659866988be9de26679c24728db799d12e31f51c1a8a61f533"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-0_4.txt",
+          "bytes": 155075,
+          "sha256": "8b905a71a0879c228bf1b21e5fd1ca26df69e695ccc5bf3cf41ca3a9751e6e34"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-0_5.txt",
+          "bytes": 155075,
+          "sha256": "e20e1be98723fb0bfda373ffac3745305ea795e67e92c6d87f8decc76bdbb08e"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-1E5_1.txt",
+          "bytes": 155085,
+          "sha256": "589dfb44ca37cea46bad2365ff6f3085fa9c015844f87ac5372ec57135377488"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-1E5_2.txt",
+          "bytes": 155085,
+          "sha256": "348c96a1030567d11af0bb19f986ee13561f437e4c5c42635954fbdc1c657bcb"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-1E5_3.txt",
+          "bytes": 155075,
+          "sha256": "f6d21f9941b1de53c12803e9f105f1308e7955cc4664a767855ed72c14da9962"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-1E5_4.txt",
+          "bytes": 155075,
+          "sha256": "a57405e49dd48e6d0eb3989e4ed603c54ad4e6e4a6663b6fb08ac42bc3466ac8"
+        },
+        {
+          "name": "OIT/04441PP-VIRnak(1)-1E5_5.txt",
+          "bytes": 155075,
+          "sha256": "f7f2133d68550370fa7f5c67782ba714153a5420ecebe8605855d7c2795819c8"
+        },
+        {
+          "name": "OIT/OIT.opju",
+          "bytes": 14387897,
+          "sha256": "7f9d7ddd32bd64532e7d76d8698d5cb6c380dc5fb499b162517d04e5060110ea"
+        },
+        {
+          "name": "OIT/OIT_calculation.xlsx",
+          "bytes": 11613,
+          "sha256": "a1d7f0349b84bc70e21fc9116718687878ff53dde1b8c5af7efe3ef22f8526df"
+        }
+      ]
+    },
+    {
+      "name": "GPC.zip",
+      "path": "data/research/pp-study/raw/GPC.zip",
+      "url": "https://zenodo.org/api/records/19370161/files/GPC.zip/content",
+      "declared_checksum": "md5:c51f1375f09371c4bf85f769f085907b",
+      "md5_verified": true,
+      "sha256": "53c83c06cad5008a4a9dc705b785cb33707f3dbbf854082bcd10f603a8844594",
+      "bytes": 388602,
+      "members": [
+        {
+          "name": "GPC/GPC.opju",
+          "bytes": 363674,
+          "sha256": "3efef7e28506ea51b84cf0b0283bee42708972dd384469871347445c18ee2d20"
+        },
+        {
+          "name": "GPC/GPC_data.xlsx",
+          "bytes": 10055,
+          "sha256": "e450ad297d8166e3244166a21f15d8fcde1ccaf3df39de81bad6b2f4dc88612f"
+        },
+        {
+          "name": "GPC/overview_GPC.docx",
+          "bytes": 42742,
+          "sha256": "02aaf0a722d454d128c059a4378d1240793babaf46d89543237c9531d4f81704"
+        },
+        {
+          "name": "GPC/PP_REG.TXT",
+          "bytes": 45570,
+          "sha256": "72e41768a9547c3c63401a060aee3eac58004a7c5c37d113bd1521943d8eed0b"
+        },
+        {
+          "name": "GPC/PP_VIRak.TXT",
+          "bytes": 43276,
+          "sha256": "f9e7bdc01677a4fbd67f7f64ebe6b2cd7e31e6d8960a40c7967dcf9bfcc546ad"
+        },
+        {
+          "name": "GPC/PP_VIRnak.TXT",
+          "bytes": 44330,
+          "sha256": "d5af284398410949f748ea16b5eed9943d3527d52099ad031ccc01dfdfcd4305"
+        }
+      ]
+    },
+    {
+      "name": "Colorimetry.zip",
+      "path": "data/research/pp-study/raw/Colorimetry.zip",
+      "url": "https://zenodo.org/api/records/19370161/files/Colorimetry.zip/content",
+      "declared_checksum": "md5:ee8a9a23686e64a7b4019aa4f8572e65",
+      "md5_verified": true,
+      "sha256": "35e8a8f20986a1f3299f1310c9529b20c822312cc1e17a7ddaf10092981774c2",
+      "bytes": 17807,
+      "members": [
+        {
+          "name": "Colorimetry/Colorimeter.xlsx",
+          "bytes": 20013,
+          "sha256": "919569178026941c501df7c64245ab9f10534783a46180fdab339c30ef4755ea"
+        }
+      ]
+    }
+  ]
+}

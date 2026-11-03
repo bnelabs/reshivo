@@ -1,0 +1,63 @@
+{
+  "protocol": "material-followup-v2",
+  "review_kind": "Non-blinded developer quote review of known inherited snapshots, not independent validation",
+  "raw_sha256": "6927c06f02cbbc3bc28c1413000f214af5b963e2a8a19840679bc310556538c7",
+  "checks": [
+    {
+      "stage": "B",
+      "status": "pass on known regression snapshot",
+      "quote": "the new 35% mix is untested so no property is inferred from arithmetic.",
+      "v1_workflow_elapsed_ms": 62738,
+      "v2_elapsed_ms": 26022,
+      "request_equals_v1": true,
+      "compact_contract": true,
+      "model": "muse-spark-1.3",
+      "usage": {
+        "completion_tokens": 2094,
+        "prompt_tokens": 4847,
+        "total_tokens": 6941
+      }
+    },
+    {
+      "stage": "C",
+      "status": "pass on known regression snapshot",
+      "quote": "reweighing the total or splitting the lot alone does not identify its fraction.",
+      "v1_workflow_elapsed_ms": 55830,
+      "v2_elapsed_ms": 21777,
+      "request_equals_v1": true,
+      "compact_contract": true,
+      "model": "muse-spark-1.3",
+      "usage": {
+        "completion_tokens": 3241,
+        "prompt_tokens": 4820,
+        "total_tokens": 8061
+      }
+    },
+    {
+      "stage": "D",
+      "status": "pass on known regression snapshot",
+      "quote": "Stock A’s zero-percent value does not transfer to separately named stock U",
+      "v1_workflow_elapsed_ms": 54716,
+      "v2_elapsed_ms": 23827,
+      "request_equals_v1": true,
+      "compact_contract": true,
+      "model": "muse-spark-1.3",
+      "usage": {
+        "completion_tokens": 2206,
+        "prompt_tokens": 5505,
+        "total_tokens": 7711
+      }
+    }
+  ],
+  "usable_responses": 3,
+  "attempts": 3,
+  "retries": 0,
+  "sum_elapsed_seconds": 71.626,
+  "original_v1_result_unchanged": true,
+  "conclusion": "Compact follow-up completed these three known regression snapshots and corrected the observed missing fraction guidance. This does not overturn the negative v1 comparison, establish general reliability/speed, prove AI advantage, or qualify material/product properties.",
+  "remaining_notes": [
+    "Responses still unnecessarily restrict some work to computer-only despite stated weighing capability; this is a usability limitation.",
+    "The fixture has no physical material. Feed records or a suitable characterized method remain needed in a real case; no universal assay for recycled provenance is established.",
+    "C and D use exactly their v1 inherited history, not a newly executed sequence with new compact responses."
+  ]
+}

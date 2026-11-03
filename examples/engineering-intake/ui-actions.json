@@ -1,0 +1,43 @@
+{
+  "protocol": "engineering-intake-v1",
+  "common_preparation_excluded": "Same eight-field brief; note authorship, focus layout, screenshots, inspection, downloads and separate Meta explanation request excluded. Numeric targets started blank.",
+  "stages": [
+    {
+      "id": "initial",
+      "actions": [
+        "Open Engineering",
+        "Open trial-note intake",
+        "Paste supplied trial note",
+        "Read trial note",
+        "Confirm reviewed interpretation",
+        "Confirm independent adjustment bounds",
+        "Apply and run joint check"
+      ],
+      "completion_actions": 7
+    },
+    {
+      "id": "updated",
+      "actions": [
+        "Paste new supplied trial note",
+        "Read revised trial note",
+        "Confirm reviewed interpretation",
+        "Confirm independent adjustment bounds",
+        "Apply revised joint check"
+      ],
+      "completion_actions": 5
+    },
+    {
+      "id": "missing_cg_error",
+      "actions": [
+        "Paste supplied missing-bound note",
+        "Read missing-bound note",
+        "Confirm reviewed interpretation",
+        "Confirm independent adjustment bounds",
+        "Apply known values without calculating"
+      ],
+      "completion_actions": 5
+    }
+  ],
+  "human_study": false,
+  "physical_product_tested": false
+}

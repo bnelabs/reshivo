@@ -1,0 +1,23 @@
+{
+  "protocol": "workflow-evaluation-v1",
+  "sha256": {
+    "docs/WORKFLOW_EVALUATION_PROTOCOL.md": "f18dd89b8f23f42c1874759d52af038f977380a5e84092d079591b6455975821",
+    "examples/workflow-evaluation-v1.json": "3a26ec57e29bf971dc2d2fab785a40b43ff33eaa2bb79dab848b63c768881d81",
+    "scripts/benchmark_workflow_evaluation.py": "8eb61301b8a7336108107b69f0ccd9facc316feadd1ed7562ed1353dbea50947",
+    "tests/test_workflow_evaluation.py": "8b30c6a76392cd8b0d4be1e82a94b22417fa4c282afeff7d16ebd5466d93165c",
+    "rematter/advisor.py": "428f33ac8154aa4c8512efd370233dceb4a8ae39c4eaad6a8722feababa3ca1d",
+    "rematter/meta.py": "8d30a67036a3dc2ba6b9d77b42fdc1540a711bb20394e78251041d9e40e04bb1",
+    "rematter/provider_transport.py": "db909aa83ccbb5995633ab7cb15af542bc1c161dfcdc48e6fcfc6d300d075725",
+    "rematter/providers.py": "7409b19d6cdb99c20e1e459d5314811706a3a2e1cbb85549427bda5ac13ac90f",
+    "rematter/trial_records.py": "cdf34be630b753441f13497702b3d56d8ca8d02c381449400689d77818705987",
+    "rematter/manufacturing_cost.py": "67bb5e08e273a0c28f33a19ae2f80ca78cac5780fc69a5b7593ea271361293e0",
+    "rematter/decision_comparison.py": "5c1aa469e03f9de8d282ee855e5da957c903eba9deb4a27c678b0a408b06ce56",
+    "rematter/products.py": "68c877348f3c03f73faeed9aaaa611b8bbbbb8a749a3802cccecdcc494729590",
+    "rematter/materials.py": "c8fdbe443112fbe6627b5069e9afed6b8ef41e6674376e42ffa831ba790860db",
+    "rematter/mechanics.py": "e329659616bb25e7d726247e91cc4718086af6573d48cabb9de1c5ded644f0a6",
+    "rematter/observation_intake.py": "0b613ede1f6120cd686922f4bf085cd4137907b534b7e7833c1f1e6e8961a1a6",
+    "rematter/quantity_guards.py": "bfc2feecd9efbdbb4497429d74d123ca82f0cf997e2f64395a3885f2693c1f55",
+    "rematter/reading_comparison.py": "84c1d4b41f3c6b62a6b7eda0cdfe3490c04bba8c99b7c57e94e3e71ef9041456",
+    "scripts/benchmark_note_intake.py": "88621cc42b7e7d4bb390a8817c1b53c4326a1d7255efe1ee5a9b8ef84e03d90f"
+  }
+}

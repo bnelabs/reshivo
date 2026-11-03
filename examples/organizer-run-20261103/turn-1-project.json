@@ -1,0 +1,295 @@
+{
+  "schema": "rematter-project-v2",
+  "case_id": "6e22929f-39dd-4e9d-a232-b236cd299647",
+  "project": {
+    "product": {
+      "value": "desk cable organizer tray, with the same fictional 200 by 80 mm nominal footprint for each setup.",
+      "source": "user_review",
+      "quote": "desk cable organizer tray, with the same fictional 200 by 80 mm nominal footprint for each setup."
+    },
+    "input": {
+      "value": "recovered HDPE matrix and cork filler; the HDPE is the matrix/binder, with no additional binder. Quantities, cork percentages and prices all use the same as-received mass basis. The incoming characterized portion contains an unknown 28–32 mass percent cork. The separately characterized added stock contains 5 mass percent cork, with the remainder HDPE.",
+      "source": "user_review",
+      "quote": "recovered HDPE matrix and cork filler; the HDPE is the matrix/binder, with no additional binder. Quantities, cork percentages and prices all use the same as-received mass basis. The incoming characterized portion contains an unknown 28–32 mass percent cork. The separately characterized added stock contains 5 mass percent cork, with the remainder HDPE."
+    },
+    "variation": {
+      "value": "cork content in my incoming mix changes",
+      "source": "user_review",
+      "quote": "cork content in my incoming mix changes"
+    },
+    "use": {
+      "value": "non-load-bearing indoor",
+      "source": "user_review",
+      "quote": "non-load-bearing indoor"
+    },
+    "priorities": {
+      "value": "keeping my deflection and thickness targets and considering cost",
+      "source": "user_review",
+      "quote": "keeping my deflection and thickness targets and considering cost"
+    },
+    "process": {
+      "value": "The same fictional compression-molding process P and nominal footprint are stated for both recorded setups, with process settings unspecified.",
+      "source": "user_review",
+      "quote": "The same fictional compression-molding process P and nominal footprint are stated for both recorded setups, with process settings unspecified."
+    },
+    "constraints": {
+      "value": "Home planning only: no physical handling, processing, measuring equipment or lab access is available during this exercise.",
+      "source": "user_review",
+      "quote": "Home planning only: no physical handling, processing, measuring equipment or lab access is available during this exercise."
+    }
+  },
+  "configurations": [
+    {
+      "id": "804e339e-418c-462d-bc45-33c66e46e01f",
+      "revision": 1,
+      "name": "A",
+      "materials": [
+        {
+          "id": "336afee5-b878-40f0-9a99-941c4a785e8d",
+          "name": "Recovered HDPE matrix",
+          "amount": "7",
+          "unit": "kg"
+        },
+        {
+          "id": "821b08e6-4132-4f2b-aead-9a8f2422c2d3",
+          "name": "Cork filler",
+          "amount": "3",
+          "unit": "kg"
+        }
+      ],
+      "process": "Fictional compression-molding process P; settings unspecified",
+      "geometry": "Organizer tray; nominal footprint 200 by 80 mm",
+      "notes": ""
+    },
+    {
+      "id": "62856a17-e644-4b01-8c47-98e36da8fc34",
+      "revision": 1,
+      "name": "B",
+      "materials": [
+        {
+          "id": "2bb093d4-cc32-4e24-a46a-67004326993f",
+          "name": "Recovered HDPE matrix",
+          "amount": "8",
+          "unit": "kg"
+        },
+        {
+          "id": "6bd5c055-5c62-4473-9bc4-a486c2f5430d",
+          "name": "Cork filler",
+          "amount": "2",
+          "unit": "kg"
+        }
+      ],
+      "process": "Fictional compression-molding process P; settings unspecified",
+      "geometry": "Organizer tray; nominal footprint 200 by 80 mm",
+      "notes": ""
+    }
+  ],
+  "checks": [
+    {
+      "id": "4b2af86b-caf4-4e3a-9d55-635ea669dd79",
+      "name": "Deflection",
+      "unit": "mm",
+      "method": "Synthetic 20 N bending check G",
+      "minimum": null,
+      "maximum": "3",
+      "required": true
+    },
+    {
+      "id": "dbc13f82-4570-4155-87c3-1c709ac0d59e",
+      "name": "Wall thickness",
+      "unit": "mm",
+      "method": "Synthetic wall-thickness check T",
+      "minimum": "4",
+      "maximum": "6",
+      "required": true
+    }
+  ],
+  "records": [
+    {
+      "id": "ee79ab5a-41bd-48de-a5e5-a075ef921d68",
+      "case_id": "6e22929f-39dd-4e9d-a232-b236cd299647",
+      "configuration_id": "804e339e-418c-462d-bc45-33c66e46e01f",
+      "configuration_revision": 1,
+      "check_id": "4b2af86b-caf4-4e3a-9d55-635ea669dd79",
+      "unit": "mm",
+      "method": "Synthetic 20 N bending check G",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "3.8"
+        }
+      ]
+    },
+    {
+      "id": "6e76ea14-c091-4087-b1b1-62f4ea106b39",
+      "case_id": "6e22929f-39dd-4e9d-a232-b236cd299647",
+      "configuration_id": "804e339e-418c-462d-bc45-33c66e46e01f",
+      "configuration_revision": 1,
+      "check_id": "dbc13f82-4570-4155-87c3-1c709ac0d59e",
+      "unit": "mm",
+      "method": "Synthetic wall-thickness check T",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "5.8"
+        }
+      ]
+    },
+    {
+      "id": "6917e66b-e2ba-4830-8e9b-3ae33987a23e",
+      "case_id": "6e22929f-39dd-4e9d-a232-b236cd299647",
+      "configuration_id": "62856a17-e644-4b01-8c47-98e36da8fc34",
+      "configuration_revision": 1,
+      "check_id": "4b2af86b-caf4-4e3a-9d55-635ea669dd79",
+      "unit": "mm",
+      "method": "Synthetic 20 N bending check G",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "2.6"
+        }
+      ]
+    },
+    {
+      "id": "5af0b372-79ca-4e9c-8e23-3ea1ea3a5f2f",
+      "case_id": "6e22929f-39dd-4e9d-a232-b236cd299647",
+      "configuration_id": "62856a17-e644-4b01-8c47-98e36da8fc34",
+      "configuration_revision": 1,
+      "check_id": "dbc13f82-4570-4155-87c3-1c709ac0d59e",
+      "unit": "mm",
+      "method": "Synthetic wall-thickness check T",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "5.4"
+        }
+      ]
+    }
+  ],
+  "costs": {
+    "804e339e-418c-462d-bc45-33c66e46e01f@1": {
+      "currency": "EUR",
+      "mass_basis": "as received",
+      "functional_basis": "The same nominal desk cable organizer and indoor use in both setups.",
+      "acceptance_basis": "A tray meeting the two stated checks; the counts below are fictional planning assumptions, not observed accepted output.",
+      "prices": {
+        "336afee5-b878-40f0-9a99-941c4a785e8d": "1.25",
+        "821b08e6-4132-4f2b-aead-9a8f2422c2d3": "0.50"
+      },
+      "energy_kwh": "",
+      "energy_rate": "",
+      "labor_hours": "",
+      "labor_rate": "",
+      "other_charge": "",
+      "other_name": "",
+      "usable_count": "",
+      "usable_mass_kg": "",
+      "usable_area_m2": "",
+      "mode": "planned",
+      "accepted_fraction": "1",
+      "gross_count": "10",
+      "gross_mass_kg": "",
+      "gross_area_m2": "",
+      "batch_mass_kg": "",
+      "process_statuses": {
+        "energy": "excluded",
+        "labor": "excluded",
+        "other": "excluded"
+      },
+      "price_units": {
+        "336afee5-b878-40f0-9a99-941c4a785e8d": "kg",
+        "821b08e6-4132-4f2b-aead-9a8f2422c2d3": "kg"
+      }
+    },
+    "62856a17-e644-4b01-8c47-98e36da8fc34@1": {
+      "currency": "EUR",
+      "mass_basis": "as received",
+      "functional_basis": "The same nominal desk cable organizer and indoor use in both setups.",
+      "acceptance_basis": "A tray meeting the two stated checks; the counts below are fictional planning assumptions, not observed accepted output.",
+      "prices": {
+        "2bb093d4-cc32-4e24-a46a-67004326993f": "1.25",
+        "6bd5c055-5c62-4473-9bc4-a486c2f5430d": "0.50"
+      },
+      "energy_kwh": "",
+      "energy_rate": "",
+      "labor_hours": "",
+      "labor_rate": "",
+      "other_charge": "",
+      "other_name": "",
+      "usable_count": "",
+      "usable_mass_kg": "",
+      "usable_area_m2": "",
+      "mode": "planned",
+      "accepted_fraction": "1",
+      "gross_count": "10",
+      "gross_mass_kg": "",
+      "gross_area_m2": "",
+      "batch_mass_kg": "",
+      "process_statuses": {
+        "energy": "excluded",
+        "labor": "excluded",
+        "other": "excluded"
+      },
+      "price_units": {
+        "2bb093d4-cc32-4e24-a46a-67004326993f": "kg",
+        "6bd5c055-5c62-4473-9bc4-a486c2f5430d": "kg"
+      }
+    }
+  },
+  "record_exclusions": {},
+  "advice_notes": [
+    {
+      "id": "0275f8ac-7e1e-4add-aba4-e56dae020171",
+      "created_at": "2026-11-03T14:42:26.039Z",
+      "provider": "meta",
+      "model": "muse-spark-1.3-contributor",
+      "project_snapshot": {
+        "product": {
+          "value": "desk cable organizer tray, with the same fictional 200 by 80 mm nominal footprint for each setup.",
+          "source": "user_review",
+          "quote": "desk cable organizer tray, with the same fictional 200 by 80 mm nominal footprint for each setup."
+        },
+        "input": {
+          "value": "recovered HDPE matrix and cork filler; the HDPE is the matrix/binder, with no additional binder. Quantities, cork percentages and prices all use the same as-received mass basis. The incoming characterized portion contains an unknown 28–32 mass percent cork. The separately characterized added stock contains 5 mass percent cork, with the remainder HDPE.",
+          "source": "user_review",
+          "quote": "recovered HDPE matrix and cork filler; the HDPE is the matrix/binder, with no additional binder. Quantities, cork percentages and prices all use the same as-received mass basis. The incoming characterized portion contains an unknown 28–32 mass percent cork. The separately characterized added stock contains 5 mass percent cork, with the remainder HDPE."
+        },
+        "variation": {
+          "value": "cork content in my incoming mix changes",
+          "source": "user_review",
+          "quote": "cork content in my incoming mix changes"
+        },
+        "use": {
+          "value": "non-load-bearing indoor",
+          "source": "user_review",
+          "quote": "non-load-bearing indoor"
+        },
+        "priorities": {
+          "value": "keeping my deflection and thickness targets and considering cost",
+          "source": "user_review",
+          "quote": "keeping my deflection and thickness targets and considering cost"
+        },
+        "process": {
+          "value": "fictional compression-molding process P",
+          "source": "user_review",
+          "quote": "fictional compression-molding process P"
+        },
+        "constraints": {
+          "value": "Home planning only: no physical handling, processing, measuring equipment or lab access is available during this exercise.",
+          "source": "user_review",
+          "quote": "Home planning only: no physical handling, processing, measuring equipment or lab access is available during this exercise."
+        }
+      },
+      "configuration_versions": [],
+      "assessment_kind": "user_reported",
+      "text": "Got it — indoor cable tray from your HDPE/cork mixes where incoming cork shifts. I drafted only what you stated for review. Next useful move is a paper comparison of blends against your thickness, deflection and cost notes to decide what to try.\n\nFirst step: On paper, work through how the incoming mix range (28-32% cork) blended with the 5% cork stock changes overall recipe cork % and cost basis, and line that up against your existing thickness and deflection notes for process P to shortlist what to explore for the 200 by 80 mm tray — no handling or molding in this step.\n\nQuestion to resolve: What do your deflection and thickness targets mean in practice for this tray, e.g. stays flat under cables and fits in a desk space?\n\nQuestion to resolve: What amounts and prices on the same as-received basis do you have for the incoming mix versus the 5% cork stock?\n\nQuestion to resolve: What shape/features does the tray need — simple flat tray, dividers or slots — and what cables will it hold?",
+      "kind": "model_proposal"
+    }
+  ],
+  "trial_ideas": {},
+  "mix_adjustment_drafts": []
+}

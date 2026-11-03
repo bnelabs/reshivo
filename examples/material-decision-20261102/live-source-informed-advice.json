@@ -1,0 +1,193 @@
+{
+  "brief": {
+    "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+    "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized.",
+    "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+    "product": "A non-load-bearing planter sleeve — material development case",
+    "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+    "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+    "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+    "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin."
+  },
+  "calculation_details": {
+    "label": "Hypothetical PE material-development case",
+    "components": [
+      {
+        "id": 1,
+        "name": "Identified PCRPE resin (grade to record)",
+        "role": "main",
+        "amount": ""
+      },
+      {
+        "id": 2,
+        "name": "Identified virgin MDPE resin (grade to record)",
+        "role": "other",
+        "amount": ""
+      }
+    ],
+    "amount_unit": "mass_percent",
+    "amount_basis": "",
+    "mass_target_min_kg": "",
+    "mass_target_max_kg": ""
+  },
+  "plan": {
+    "result_kind": "engineering_proposals",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 5391,
+      "prompt_tokens": 3421,
+      "total_tokens": 8812
+    },
+    "elapsed_ms": 35768,
+    "request_id": "chatcmpl-01a19d08-8a81-76fb-bef2-fb67df7b0444",
+    "requested_reasoning_effort": "high",
+    "calculation_context": {
+      "label": "Hypothetical PE material-development case",
+      "components": [
+        {
+          "id": 1,
+          "name": "Identified PCRPE resin (grade to record)",
+          "role": "main",
+          "amount": ""
+        },
+        {
+          "id": 2,
+          "name": "Identified virgin MDPE resin (grade to record)",
+          "role": "other",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "",
+      "mass_target_max_kg": ""
+    },
+    "answer": "For your case — Identified PCRPE resin (grade to record) + Identified virgin MDPE resin (grade to record), amounts not yet recorded — use the published example only as a method example, not as a recipe.\n\nWhat this source actually supports: Cecon 2021 blended virgin PE and a commercially sourced post-consumer recycled PE at discrete weight fractions and injection moulded ASTM Type I dogbones on a stated machine and profile, then tested ten individually loaded dogbones per blend on a stated tester at 500 mm/min, ambient 22 C unless noted. In that study only, the lower commercial PCRPE shares had specimens inside the 25 MPa screen and the higher shares had 0/10 inside in those runs. It supports the approach of testing each recycled-content level separately with a fixed specimen, method and specimen count. It does not support predicting your resins, interpolating between levels, claiming future-lot consistency, or using its temperatures, machine or values for your material. Your targets remain: \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\"\n\nWhat this means if you want more recycled input: change one lever at a time. Option A: hold preparation and facility process fixed and test discrete PCRPE shares to map how your screen responds. Option B: hold share fixed and improve lot recording and preparation consistency, since moisture, contamination and lot differences are still uncharacterized and can confound a proportion change. Option C (design): keep the sleeve non-structural around the separate watertight liner, so decorative function depends less on hitting the tensile screen, and adjust geometry/clearance instead.\n\nA useful controlled comparison: at a suitable facility — unconfirmed, you state no resin processing or tensile-testing at home — mould and test the same stated specimen with the same method for 2-3 discrete PCRPE shares made from recorded lots with identical preparation and recorded moulding process. Measure tensile yield stress per specimen, specimen count, conditioning and method details, plus lot, preparation and process records. Compare blends side-by-side without interpolation. Keep finished-sleeve checks separate: fit over liner, assembly, drainage/vent observation and visible condition, not tensile on the sleeve. Do not use source temperatures as your process and do not add weights to the finished assembly to answer the material question.",
+    "quarantined_answer": [],
+    "material_routes": [
+      {
+        "id": "material:M1",
+        "title": "Fixed-prep proportion steps",
+        "change": "Change recycled-to-virgin PE share across discrete trial blends while holding preparation and facility process fixed for that comparison.",
+        "why": "Holding prep and process fixed isolates the effect of proportion, mirroring the source approach of measuring each level separately.",
+        "steps": [
+          "Record both resin grades, supply lots and current proportions.",
+          "Choose 2-3 discrete PCRPE shares to trial — first trial described qualitatively, amount set by measurement need.",
+          "Hold preparation and facility moulding process fixed and record them.",
+          "Mould stated specimens and test the same number per blend with the same method.",
+          "Compare per-blend results and variability without predicting other lots."
+        ],
+        "tradeoffs": [
+          "More levels need more facility time and material.",
+          "Higher recycled share may show more lot-to-lot variability.",
+          "Mapping response does not guarantee meeting the screen."
+        ],
+        "check": "Tensile yield stress per specimen with the same stated specimen and method, compared side-by-side to your quoted screening threshold; no interpolation and no transfer of source values."
+      },
+      {
+        "id": "material:M2",
+        "title": "Preparation consistency at one blend",
+        "change": "Hold PCRPE share fixed and change preparation consistency and lot recording, as facility allows.",
+        "why": "Uncharacterized moisture, contamination and lot differences can mask the true proportion effect; consistent prep may help the screen be more interpretable.",
+        "steps": [
+          "Record lots, storage and visible sort state for each resin.",
+          "Define one preparation path at the facility (for example sorting and cleaning/drying as available) and record it.",
+          "Make the same blend before and after the defined prep change, one variable at a time.",
+          "Test with the same specimen, method and count.",
+          "Use prep records to interpret any change in screen outcome."
+        ],
+        "tradeoffs": [
+          "Extra preparation adds time and cost.",
+          "Cleaner prep does not change base polymer compatibility.",
+          "Needs suitable facility controls, still unconfirmed."
+        ],
+        "check": "Same tensile screen per specimen plus preparation, lot, moisture/contamination observations and process records; do not assume contamination-free."
+      }
+    ],
+    "engineering_routes": [
+      {
+        "id": "engineering:E1",
+        "title": "Liner-carried load, tolerant sleeve",
+        "change": "Keep soil/water load on the separate watertight liner; change sleeve geometry and clearance to tolerate material variation.",
+        "why": "A non-load-bearing outer sleeve may still function for fit and appearance even if a higher-PCRPE blend is near the tensile screen, reducing reliance on an unknown tensile value.",
+        "steps": [
+          "Record liner size and required clearance before any sleeve trial.",
+          "Propose wall thickness and stiffening shape as adjustable choices, not optima, for facility discussion.",
+          "Include a drainage/vent gap as an adjustable choice so trapped water does not load the sleeve.",
+          "Check fit and visible condition on the real liner; record outdoor exposure still to be set."
+        ],
+        "tradeoffs": [
+          "Thicker or ribbed shape may use more material and change appearance.",
+          "Larger clearance eases fit but may look loose.",
+          "Does not replace creep and weathering targets still to be set."
+        ],
+        "check": "Sleeve fit over liner, easy assembly/removal, and drainage/vent observation — kept separate from the dogbone tensile screen against your quoted screening threshold."
+      },
+      {
+        "id": "engineering:E2",
+        "title": "Facility-gated separate checks",
+        "change": "Keep home as planning only; gate all moulding and testing to a suitable facility with a recorded process and separate material vs product checks.",
+        "why": "Separating planning from recorded facility trials avoids confounding home limits with material response and creates a clear feedback loop.",
+        "steps": [
+          "Confirm facility capability for specimen moulding and tensile testing — unconfirmed.",
+          "Record resin grades, lots, preparation and moulding process for each run.",
+          "Run material screen first, then trial sleeve geometry from a passing or informative blend.",
+          "Use results to decide next proportion or prep change, one variable at a time."
+        ],
+        "tradeoffs": [
+          "Requires external time, cost and material.",
+          "Slower iteration than home planning.",
+          "Still needs defined specimen and method for your screen."
+        ],
+        "check": "Completeness of facility process record plus separate outcomes: dogbone screen vs sleeve fit/drainage, both against your quoted screening and fit needs."
+      }
+    ],
+    "next_steps": [
+      "Record exact grades, supply lots and current PCRPE to virgin MDPE proportions for your entered materials.",
+      "Confirm a suitable facility for moulding stated specimens and tensile testing, and the exact specimen and method it will use for your screen.",
+      "Plan one controlled comparison changing only proportion or only preparation, with records per run.",
+      "Keep sleeve fit, drainage and weathering observations as separate finished-product checks."
+    ],
+    "questions": [
+      "What are the exact grades, supply lots and current proportions of your PCRPE and virgin MDPE?",
+      "Which stated specimen and test method will your trial facility use for the 25 MPa screen?",
+      "What liner size, desired sleeve clearance and outdoor exposure should the sleeve design allow for?"
+    ],
+    "sources": [
+      {
+        "id": "cecon2021",
+        "title": "Cecon 2021 — measured recycled-PE blends",
+        "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8517156/",
+        "scope": "The study's PE blends and injection process only. It illustrates measuring a response at separate recycled-content levels, not a density or recipe for another material."
+      },
+      {
+        "id": "basel-plastic-waste-2023",
+        "title": "Basel Convention — plastic waste preparation and recycling",
+        "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+        "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+      },
+      {
+        "id": "hse-ppis13",
+        "title": "HSE — controlling fume during plastics processing",
+        "url": "https://www.hse.gov.uk/pubns/ppis13.pdf",
+        "scope": "General guidance to identify polymer formulation/additives and processing information before heated processing. Temperature and dwell affect fumes; this is not a heat recipe for unidentified cable residue."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  },
+  "history": [
+    {
+      "role": "user",
+      "content": "Help me decide the next material-development trial for my current case, using the following published example only as context.\nThese are source measurements, NOT my material or finished product. Do not transfer their values or recipe performance to my waste.\nCecon 2021, DOI 10.1016/j.dib.2021.107452; host MDPE; target at least 25 MPa tensile yield stress, no upper limit.\nProcess: Virgin PE and commercially sourced post-consumer recycled PE were manually blended at the stated weight fractions and injection moulded as ASTM Type I dogbones on a Battenfeld HM90/350 90-ton horizontal machine, using the reported 185–195 °C profile.. Test: Source section 2.5: tensile testing of ten individually loaded ASTM Type I dogbones per blend on an Autograph AGS-J with a 5 kN load cell and MWG-5kNA wedge grips, at 500 mm/min crosshead speed. The source states ambient 22 °C unless otherwise noted..\n0 wt% commercial PCRPE, remainder virgin MDPE: 27.5301–30.6328 MPa; 10/10 recorded specimens inside. Condition CECON21-MDPE-PCR0.\n20 wt% commercial PCRPE, remainder virgin MDPE: 25.7195–27.0553 MPa; 10/10 recorded specimens inside. Condition CECON21-MDPE-PCR20.\n40 wt% commercial PCRPE, remainder virgin MDPE: 17.8415–19.5275 MPa; 0/10 recorded specimens inside. Condition CECON21-MDPE-PCR40.\n60 wt% commercial PCRPE, remainder virgin MDPE: 16.8447–20.4948 MPa; 0/10 recorded specimens inside. Condition CECON21-MDPE-PCR60.\n80 wt% commercial PCRPE, remainder virgin MDPE: 14.5985–17.5724 MPa; 0/10 recorded specimens inside. Condition CECON21-MDPE-PCR80.\n100 wt% commercial PCRPE, remainder virgin MDPE: 12.6407–14.0558 MPa; 0/10 recorded specimens inside. Condition CECON21-PCRPE100.\nIndependent runs and batches and complete recycled contaminant composition are unknown. No interpolation or future consistency claim.\nExplain what to change in material, preparation, process or product design if I want to use more recycled input. Separate what this source actually supports from proposals for my case. Give a useful controlled comparison and what to measure; do not invent additive doses, processing settings or properties. Do not replace the material-development question with adding weights to a finished assembly."
+    },
+    {
+      "role": "assistant",
+      "content": "For your case — Identified PCRPE resin (grade to record) + Identified virgin MDPE resin (grade to record), amounts not yet recorded — use the published example only as a method example, not as a recipe.\n\nWhat this source actually supports: Cecon 2021 blended virgin PE and a commercially sourced post-consumer recycled PE at discrete weight fractions and injection moulded ASTM Type I dogbones on a stated machine and profile, then tested ten individually loaded dogbones per blend on a stated tester at 500 mm/min, ambient 22 C unless noted. In that study only, the lower commercial PCRPE shares had specimens inside the 25 MPa screen and the higher shares had 0/10 inside in those runs. It supports the approach of testing each recycled-content level separately with a fixed specimen, method and specimen count. It does not support predicting your resins, interpolating between levels, claiming future-lot consistency, or using its temperatures, machine or values for your material. Your targets remain: \"Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.\"\n\nWhat this means if you want more recycled input: change one lever at a time. Option A: hold preparation and facility process fixed and test discrete PCRPE shares to map how your screen responds. Option B: hold share fixed and improve lot recording and preparation consistency, since moisture, contamination and lot differences are still uncharacterized and can confound a proportion change. Option C (design): keep the sleeve non-structural around the separate watertight liner, so decorative function depends less on hitting the tensile screen, and adjust geometry/clearance instead.\n\nA useful controlled comparison: at a suitable facility — unconfirmed, you state no resin processing or tensile-testing at home — mould and test the same stated specimen with the same method for 2-3 discrete PCRPE shares made from recorded lots with identical preparation and recorded moulding process. Measure tensile yield stress per specimen, specimen count, conditioning and method details, plus lot, preparation and process records. Compare blends side-by-side without interpolation. Keep finished-sleeve checks separate: fit over liner, assembly, drainage/vent observation and visible condition, not tensile on the sleeve. Do not use source temperatures as your process and do not add weights to the finished assembly to answer the material question.\nMaterial route: Fixed-prep proportion steps. Change recycled-to-virgin PE share across discrete trial blends while holding preparation and facility process fixed for that comparison. Holding prep and process fixed isolates the effect of proportion, mirroring the source approach of measuring each level separately. Next check: Tensile yield stress per specimen with the same stated specimen and method, compared side-by-side to your quoted screening threshold; no interpolation and no transfer of source values.\nMaterial route: Preparation consistency at one blend. Hold PCRPE share fixed and change preparation consistency and lot recording, as facility allows. Uncharacterized moisture, contamination and lot differences can mask the true proportion effect; consistent prep may help the screen be more interpretable. Next check: Same tensile screen per specimen plus preparation, lot, moisture/contamination observations and process records; do not assume contamination-free.\nEngineering route: Liner-carried load, tolerant sleeve. Keep soil/water load on the separate watertight liner; change sleeve geometry and clearance to tolerate material variation. A non-load-bearing outer sleeve may still function for fit and appearance even if a higher-PCRPE blend is near the tensile screen, reducing reliance on an unknown tensile value. Next check: Sleeve fit over liner, easy assembly/removal, and drainage/vent observation — kept separate from the dogbone tensile screen against your quoted screening threshold.\nEngineering route: Facility-gated separate checks. Keep home as planning only; gate all moulding and testing to a suitable facility with a recorded process and separate material vs product checks. Separating planning from recorded facility trials avoids confounding home limits with material response and creates a clear feedback loop. Next check: Completeness of facility process record plus separate outcomes: dogbone screen vs sleeve fit/drainage, both against your quoted screening and fit needs.\nRecord exact grades, supply lots and current PCRPE to virgin MDPE proportions for your entered materials.\nConfirm a suitable facility for moulding stated specimens and tensile testing, and the exact specimen and method it will use for your screen.\nPlan one controlled comparison changing only proportion or only preparation, with records per run.\nKeep sleeve fit, drainage and weathering observations as separate finished-product checks."
+    }
+  ],
+  "selected_route": null,
+  "trial": null
+}

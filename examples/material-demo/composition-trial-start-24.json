@@ -1,0 +1,116 @@
+{
+  "result_kind": "proposed_composition_trial",
+  "label": "Simulation of synthetic entered readings and composition arithmetic",
+  "reference": {
+    "componentId": 1,
+    "componentName": "Identified PCRPE resin (grade to record)",
+    "exactLevel": "20",
+    "calculatorLevel": "20",
+    "settingId": "Setting 1",
+    "workshop_case": {
+      "brief": {
+        "input": "Identified post-consumer polyethylene (PCRPE) resin and an identified virgin MDPE resin. Exact grades and current proportions still need to be recorded.",
+        "variation": "The recycled-content proportion can change. Moisture, contamination and differences between supply lots have not been characterized.",
+        "contamination": "No named contaminant amount has been measured. Do not assume the recycled resin is contamination-free.",
+        "product": "A non-load-bearing planter sleeve — material development case",
+        "use_case": "An outer decorative sleeve around a separate watertight plant pot. The liner supports the soil and water. Sleeve geometry and outdoor exposure are not yet specified.",
+        "targets": "Material-development screen: tensile yield stress at least 25 MPa, using a stated specimen and method. This is a chosen screening threshold, not a measured planter requirement. Sleeve fit, creep and weathering targets still need to be set.",
+        "process": "Planning from home; no resin processing or tensile-testing equipment here. Any moulding and testing trial requires a suitable facility and a recorded process.",
+        "available_changes": "The recycled-to-virgin PE proportion, preparation and sleeve geometry may be considered. Keep proposed material trials separate from the finished-product checks. Do not transfer published specimen values to my resin."
+      },
+      "details": {
+        "label": "Hypothetical PE material-development case",
+        "components": [
+          {
+            "id": 1,
+            "name": "Identified PCRPE resin (grade to record)",
+            "role": "main",
+            "amount": "250"
+          },
+          {
+            "id": 2,
+            "name": "Identified virgin MDPE resin (grade to record)",
+            "role": "other",
+            "amount": "750"
+          }
+        ],
+        "amount_unit": "g",
+        "amount_basis": "Synthetic starting stock: one unprocessed portion, 250 g PCRPE and 750 g virgin MDPE. No physical mix or test.",
+        "mass_target_min_kg": "",
+        "mass_target_max_kg": ""
+      }
+    },
+    "selected_trial": null,
+    "comparison": {
+      "data_kind": "synthetic",
+      "property_name": "Tensile yield stress",
+      "property_unit": "MPa",
+      "input_name": "Recycled PE fraction",
+      "input_unit": "mass %",
+      "target_min": "25",
+      "target_max": null,
+      "method": "Synthetic software diagnostic only. Same nominal resin grades and injection process across settings; no physical processing or tensile testing.",
+      "setting": {
+        "id": "Setting 1",
+        "level": "20",
+        "readings": [
+          {
+            "value": "26",
+            "group_label": "Unknown",
+            "group_kind": "unknown",
+            "batch_id": null,
+            "reading_id": null,
+            "repeat_of": null,
+            "run_id": null,
+            "specimen_id": null,
+            "inside_target": true
+          }
+        ],
+        "observed_min": "26",
+        "observed_max": "26",
+        "reading_count": 1,
+        "in_target_count": 1,
+        "all_readings_in_target": true
+      }
+    },
+    "serial": 1
+  },
+  "calculation": {
+    "result_kind": "composition_calculation",
+    "component": "Identified PCRPE resin (grade to record)",
+    "input_mass_kg": 1,
+    "addition_name": "Virgin MDPE stock (zero PCRPE)",
+    "input_max_percent": 24,
+    "addition_percent": 0,
+    "target_max_percent": 20,
+    "input_min_percent": 24,
+    "target_min_percent": 20,
+    "feasible": true,
+    "addition_min_kg": 0.2,
+    "addition_max_kg": 0.2,
+    "example_addition_kg": 0.2,
+    "resulting_min_percent": 20,
+    "resulting_max_percent": 20,
+    "action": "The calculated addition interval for Virgin MDPE stock (zero PCRPE) covers the entered composition range within your chosen trial target.",
+    "next_options": [
+      "Use the example only as a composition trial; record the actual weighed addition.",
+      "Check mixing and the properties that matter for the product before choosing a working formulation."
+    ],
+    "assumptions": [
+      "This is a user-chosen trial composition calculated from entered mass fractions, not a recipe proven to meet physical properties.",
+      "The input range is supplied by the user; it is not inferred from repeated tests, standard deviations or batch statistics.",
+      "One fixed added mass is checked against both endpoints of the specified input range for the entered portion mass.",
+      "Input and added stock use the same mass basis. Their stated fractions are assumed representative, with no losses, reactions, moisture change or incomplete mixing.",
+      "No density is used. Strength, sound performance, binder compatibility and finished-product consistency are not established."
+    ],
+    "physical_performance_verified": false
+  },
+  "original_case_changed": false,
+  "new_mix_property_tested": false,
+  "limitations": [
+    "The recorded property belongs only to the reference readings and their stated conditions.",
+    "The calculation targets one exact composition; no property interpolation or dose-response model was used.",
+    "Changing composition creates a proposed new trial. No finished-property or future-batch performance is established.",
+    "The stated addition fraction, no-loss mixing assumptions and starting composition need to hold for this calculation."
+  ]
+}

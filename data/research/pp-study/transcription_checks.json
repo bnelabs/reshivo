@@ -1,0 +1,36 @@
+{
+  "checks": [
+    {
+      "check": "MVR first exact cell Tabelle1!P2",
+      "actual": "78.0176",
+      "expected_from_source": "78.017600000000002",
+      "pass": true
+    },
+    {
+      "check": "GPC Mn repeat1 Tabelle1!C2",
+      "actual": "30860.0",
+      "expected_from_source": "30860",
+      "pass": true
+    },
+    {
+      "check": "GPC reported mean Tabelle1!E2",
+      "actual": "29240.5",
+      "expected_from_source": "29240.5",
+      "pass": true
+    },
+    {
+      "check": "Color exact L cell Tabelle1!B2",
+      "actual": "78.64",
+      "expected_from_source": "78.64",
+      "pass": true
+    },
+    {
+      "check": "OIT exact endpoint Tabelle1!B2",
+      "actual": "4.74402",
+      "expected_from_source": "4.7440199999999999",
+      "pass": true
+    }
+  ],
+  "checks_pass": true,
+  "scope": "Independent source-cell transcription spot checks; archive integrity is checked separately by extractor."
+}

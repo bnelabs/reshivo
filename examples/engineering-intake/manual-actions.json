@@ -1,0 +1,234 @@
+{
+  "protocol": "engineering-intake-v1",
+  "preparation_excluded": "Shared8-field brief, optional case label; note authorship, inspection, downloads and screenshot/selector QA excluded. Dropdown selection counted as one completion action.",
+  "irrelevant_context_difference": "Empty recipe uses default mass_percent in manual path versus g in headless fixture. No quantities or material calculation uses this setting.",
+  "stages": [
+    {
+      "id": "initial",
+      "actions": [
+        {
+          "name": "Open numeric case details",
+          "count": 1,
+          "at": "2026-11-01T08:18:50.845Z"
+        },
+        {
+          "name": "Enter shared mass minimum",
+          "count": 1,
+          "at": "2026-11-01T08:18:58.607Z"
+        },
+        {
+          "name": "Enter shared mass maximum",
+          "count": 1,
+          "at": "2026-11-01T08:18:58.615Z"
+        },
+        {
+          "name": "Open optional balance target",
+          "count": 1,
+          "at": "2026-11-01T08:18:58.648Z"
+        },
+        {
+          "name": "Add balance target",
+          "count": 1,
+          "at": "2026-11-01T08:19:02.478Z"
+        },
+        {
+          "name": "Enter coordinate basis",
+          "count": 1,
+          "at": "2026-11-01T08:19:06.517Z"
+        },
+        {
+          "name": "Enter balance minimum",
+          "count": 1,
+          "at": "2026-11-01T08:19:06.527Z"
+        },
+        {
+          "name": "Enter balance maximum",
+          "count": 1,
+          "at": "2026-11-01T08:19:06.535Z"
+        },
+        {
+          "name": "Open Engineering",
+          "count": 1,
+          "at": "2026-11-01T08:19:06.567Z"
+        },
+        {
+          "name": "Open assembly check",
+          "count": 1,
+          "at": "2026-11-01T08:19:10.599Z"
+        },
+        {
+          "name": "Open manual observation",
+          "count": 1,
+          "at": "2026-11-01T08:19:16.183Z"
+        },
+        {
+          "name": "Enter observation reference",
+          "count": 1,
+          "at": "2026-11-01T08:19:24.998Z"
+        },
+        {
+          "name": "Select simulated provenance",
+          "count": 1,
+          "at": "2026-11-01T08:19:41.822Z"
+        },
+        {
+          "name": "Enter assembly mass",
+          "count": 1,
+          "at": "2026-11-01T08:19:41.829Z"
+        },
+        {
+          "name": "Enter weighing uncertainty",
+          "count": 1,
+          "at": "2026-11-01T08:19:41.835Z"
+        },
+        {
+          "name": "Enter total addition",
+          "count": 1,
+          "at": "2026-11-01T08:19:41.846Z"
+        },
+        {
+          "name": "Enter total removal",
+          "count": 1,
+          "at": "2026-11-01T08:19:41.851Z"
+        },
+        {
+          "name": "Enter adjustment uncertainty",
+          "count": 1,
+          "at": "2026-11-01T08:19:41.859Z"
+        },
+        {
+          "name": "Open spatial settings",
+          "count": 1,
+          "at": "2026-11-01T08:19:41.883Z"
+        },
+        {
+          "name": "Enter assembly centre",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.521Z"
+        },
+        {
+          "name": "Enter centre uncertainty",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.531Z"
+        },
+        {
+          "name": "Enter first location name",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.539Z"
+        },
+        {
+          "name": "Enter first location coordinate",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.549Z"
+        },
+        {
+          "name": "Enter first position uncertainty",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.554Z"
+        },
+        {
+          "name": "Enter first addition limit",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.561Z"
+        },
+        {
+          "name": "Enter first removal limit",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.565Z"
+        },
+        {
+          "name": "Enter second location name",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.570Z"
+        },
+        {
+          "name": "Enter second location coordinate",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.577Z"
+        },
+        {
+          "name": "Enter second position uncertainty",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.581Z"
+        },
+        {
+          "name": "Enter second addition limit",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.585Z"
+        },
+        {
+          "name": "Enter second removal limit",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.589Z"
+        },
+        {
+          "name": "Enter command increment",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.595Z"
+        },
+        {
+          "name": "Confirm independent adjustment bounds",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.617Z"
+        },
+        {
+          "name": "Run joint check",
+          "count": 1,
+          "at": "2026-11-01T08:19:56.649Z"
+        }
+      ],
+      "download": "/local/user/Downloads/rematter-mass-and-balance (2).json",
+      "completion_actions": 34
+    },
+    {
+      "id": "updated",
+      "actions": [
+        {
+          "name": "Change observation reference",
+          "count": 1,
+          "source": "executed browser action sequence; timestamp not retained"
+        },
+        {
+          "name": "Change assembly mass",
+          "count": 1,
+          "source": "executed browser action sequence; timestamp not retained"
+        },
+        {
+          "name": "Enter new assembly centre",
+          "count": 1,
+          "source": "executed browser action sequence; timestamp not retained"
+        },
+        {
+          "name": "Enter new centre uncertainty",
+          "count": 1,
+          "source": "executed browser action sequence; timestamp not retained"
+        },
+        {
+          "name": "Run revised joint check",
+          "count": 1,
+          "source": "executed browser action sequence; timestamp not retained"
+        }
+      ],
+      "download": "/local/user/Downloads/rematter-mass-and-balance (3).json",
+      "completion_actions": 5
+    },
+    {
+      "id": "missing_cg_error",
+      "actions": [
+        {
+          "name": "Change observation reference",
+          "count": 1,
+          "source": "executed browser action sequence; timestamp not retained"
+        },
+        {
+          "name": "Enter new assembly centre",
+          "count": 1,
+          "source": "executed browser action sequence; timestamp not retained"
+        }
+      ],
+      "result": "blocked, matching centre uncertainty absent; no joint result",
+      "completion_actions": 2
+    }
+  ],
+  "recording_note": "Initial 34-event log is intact. A REPL closure kept appending later events to the first array after reassignment, so stage2/3 arrays were empty in the raw log. Counts below are reconstructed from the actual executed browser calls, whose field changes and results were observed; no later timestamps are invented."
+}

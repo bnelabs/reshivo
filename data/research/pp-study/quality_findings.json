@@ -1,0 +1,47 @@
+[
+  {
+    "dataset_id": "pp_mvr",
+    "severity": "high",
+    "finding": "Cached Mean/Error formulas combine selected within-run readings, rather than simply calculating the mean/SD of two run means. They are retained separately; derived run means and their SD are explicit new calculations."
+  },
+  {
+    "dataset_id": "pp_mvr",
+    "severity": "medium",
+    "finding": "Ten source runs contain fewer than 25 numeric cells in the recorded reading columns (11 to 24). The reason for blank cells is not stated; derived means describe available numeric cells only, not a repaired complete run."
+  },
+  {
+    "dataset_id": "pp_melt_rheology",
+    "severity": "medium",
+    "finding": "Two literal source identifiers differ by a missing opening parenthesis: 04441PP-VIRak(1)-3E5 and 04441PP-VIRak1)-3E5. Each has one trace. This probable naming typo is preserved, not silently merged; 28 literal codes represent 54 trace files."
+  },
+  {
+    "dataset_id": "pp_oit",
+    "severity": "high",
+    "finding": "The source error formulas omit the first replicate and include the source mean row, e.g. STDEV(B3:B7). Source errors are preserved, not treated as correct repeatability SD. New sample SD is explicitly computed from actual replicate readings."
+  },
+  {
+    "dataset_id": "pp_oit",
+    "severity": "medium",
+    "finding": "04441PP-VIRak(1)-0 has four numeric values and one dash, despite the article method stating five measurements. Use actual n=4 for this workbook group."
+  },
+  {
+    "dataset_id": "pp_oit",
+    "severity": "medium",
+    "finding": "Workbook identifiers omit the E5 extrusion suffix present in matching raw-trace names. Original IDs are retained; no forced join to tensile conditions."
+  },
+  {
+    "dataset_id": "pp_gpc",
+    "severity": "high",
+    "finding": "Source error formulas use the second measurement and mean, e.g. STDEV(D2:E2), not the two original measurements. Preserve source errors separately; use labelled derived SD of both actual readings for descriptive repeatability."
+  },
+  {
+    "dataset_id": "pp_color",
+    "severity": "medium",
+    "finding": "Some labelled specimen slots have no numeric readings. Actual counts are retained separately from the article method of three specimens and nine readings. Gloss geometry and illuminant/observer are not stated in inspected method, so absolute display-color conversion is unsupported."
+  },
+  {
+    "dataset_id": "pp_color",
+    "severity": "medium",
+    "finding": "For 04441PP-VIRak(1)-1E1 the source mean/error formulas select seven of nine visible readings (e.g. AVERAGE(B15:B16,B18:B22)); the exclusion reason is not stated. Source cached summaries and newly derived all-visible-reading summaries are separate."
+  }
+]

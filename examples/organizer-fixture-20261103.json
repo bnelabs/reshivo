@@ -1,0 +1,52 @@
+{
+  "schema": "rematter-organizer-journey-v1",
+  "status": "Synthetic developer-authored inputs, observations and costs; no physical product or waste was measured.",
+  "initial_prompt": "I want to make a desk cable organizer from recovered plastic and cork, but the cork content in my incoming mix changes. How can I decide what to try while keeping my deflection and thickness targets and considering cost?",
+  "case": {
+    "product_and_use": "A non-load-bearing indoor desk cable organizer tray, with the same fictional 200 by 80 mm nominal footprint for each setup.",
+    "materials_and_variation": "Each whole recipe contains only recovered HDPE matrix and cork filler; the HDPE is the matrix/binder, with no additional binder. Quantities, cork percentages and prices all use the same as-received mass basis. The incoming characterized portion contains an unknown 28–32 mass percent cork. The separately characterized added stock contains 5 mass percent cork, with the remainder HDPE.",
+    "process_and_equipment": "The same fictional compression-molding process P and nominal footprint are stated for both recorded setups, with process settings unspecified. Home planning only: no physical handling, processing, measuring equipment or lab access is available during this exercise.",
+    "checks": [
+      {"id": "deflection", "name": "Deflection", "unit": "mm", "method": "Synthetic 20 N bending check G", "minimum": null, "maximum": "3", "required": true},
+      {"id": "wall_thickness", "name": "Wall thickness", "unit": "mm", "method": "Synthetic wall-thickness check T", "minimum": "4", "maximum": "6", "required": true}
+    ],
+    "setups": [
+      {"name": "A", "revision": 1, "materials": [{"name": "Recovered HDPE matrix", "amount": "7", "unit": "kg"}, {"name": "Cork filler", "amount": "3", "unit": "kg"}], "process": "Fictional compression-molding process P; settings unspecified", "geometry": "Organizer tray; nominal footprint 200 by 80 mm"},
+      {"name": "B", "revision": 1, "materials": [{"name": "Recovered HDPE matrix", "amount": "8", "unit": "kg"}, {"name": "Cork filler", "amount": "2", "unit": "kg"}], "process": "Fictional compression-molding process P; settings unspecified", "geometry": "Organizer tray; nominal footprint 200 by 80 mm"}
+    ],
+    "readings": [
+      {"setup": "A", "revision": 1, "check": "deflection", "value": "3.8", "unit": "mm", "data_kind": "synthetic", "grouping": "unknown"},
+      {"setup": "A", "revision": 1, "check": "wall_thickness", "value": "5.8", "unit": "mm", "data_kind": "synthetic", "grouping": "unknown"},
+      {"setup": "B", "revision": 1, "check": "deflection", "value": "2.6", "unit": "mm", "data_kind": "synthetic", "grouping": "unknown"},
+      {"setup": "B", "revision": 1, "check": "wall_thickness", "value": "5.4", "unit": "mm", "data_kind": "synthetic", "grouping": "unknown"}
+    ],
+    "costs": {
+      "currency": "EUR",
+      "mass_basis": "as received",
+      "prices_EUR_per_kg": {"Recovered HDPE matrix": "1.25", "Cork filler": "0.50"},
+      "scope": "Materials only. Energy, direct labor and all other costs are explicitly excluded.",
+      "functional_basis": "The same nominal desk cable organizer and indoor use in both setups.",
+      "acceptance_basis": "A tray meeting the two stated checks; the counts below are fictional planning assumptions, not observed accepted output.",
+      "output_mode": "planned",
+      "gross_planned_items_per_setup": "10",
+      "assumed_accepted_fraction": "1"
+    }
+  },
+  "turns": [
+    {"number": 1, "new_facts": {}, "question": "Using only these synthetic records and materials-only planning costs, which setup is the recorded choice and what trade-off should I understand?"},
+    {"number": 2, "new_facts": {"portion_mass_kg": "1.5", "tracked_component": "Cork filler", "input_min_mass_percent": "28", "input_max_mass_percent": "32", "added_stock": "Characterized HDPE/cork stock", "added_stock_cork_mass_percent": "5", "reference_setup": "B version 1", "reference_component": "Cork filler", "reference_basis": "whole recipe, as received", "assumptions": "All fractions use the same as-received mass basis; even, loss-free mixing and no reaction."}, "question": "Can one fixed amount of the 5% stock bring this whole uncertain portion to B's exact 20% composition? What would help me plan next?"},
+    {"number": 3, "new_facts": {"exploratory_target_min_mass_percent": "18", "exploratory_target_max_mass_percent": "22", "interpretation": "This is a user-selected exploratory composition range; no product-property results are provided for its endpoints."}, "question": "I choose an exploratory 18–22% composition range. Is one fixed amount possible across the uncertain input, and how should I interpret it alongside B's 20% readings and cost?"},
+    {"number": 4, "new_facts": {"setup": "B", "revision": 1, "check": "deflection", "value": "3.2", "unit": "mm", "method": "Synthetic 20 N bending check G", "data_kind": "synthetic", "grouping": "unknown", "conditions": "Same fictional conditions; prior 2.6 mm remains a separate reading.", "costs_and_other_readings": "unchanged"}, "question": "The additional synthetic B reading is 3.2 mm. What can I choose now, what does this change about the 20% reference, and what can I plan next without physical work?"}
+  ],
+  "calculator": {
+    "units": "kg, mass percent, EUR per planned usable item",
+    "addition_formula": "For a known input fraction p, exact point t and added-stock fraction s, x = m * (p - t) / (t - s), provided t differs from s. The same x must satisfy both input endpoints for a fixed-addition range.",
+    "cost_formula": "sum(entered component kg × price EUR/kg) / planned usable items; excluded costs remain excluded"
+  },
+  "oracle": {
+    "initial": {"A_deflection": "3.8 mm: above max 3 mm", "A_thickness": "5.8 mm: inside 4–6 mm", "B_deflection": "2.6 mm: inside max 3 mm", "B_thickness": "5.4 mm: inside 4–6 mm", "recorded_candidate": "B version 1", "A_batch_EUR": "10.25", "A_per_item_EUR": "1.025", "B_batch_EUR": "11", "B_per_item_EUR": "1.10", "B_whole_recipe_cork_mass_percent": "20"},
+    "exact_20_percent": {"one_fixed_addition_covers_entire_unknown_range": false, "if_28_percent_kg": "0.8", "if_32_percent_kg": "1.2"},
+    "exploratory_18_to_22_percent": {"addition_min_kg_exact": "15/17", "addition_max_kg_exact": "15/13", "one_valid_addition_kg": "1", "resulting_input_28_percent": "18.8", "resulting_input_32_percent": "21.2"},
+    "updated": {"B_deflection_readings_mm": ["2.6", "3.2"], "B_deflection_state": "outside target because 3.2 exceeds 3", "recorded_candidate_with_every_entered_required_reading_in_range": "none", "batch_count": "unknown"}
+  }
+}

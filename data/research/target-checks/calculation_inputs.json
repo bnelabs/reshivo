@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "purpose": "Checked source inputs for the Cecon published yield-stress target comparison; not user material data",
+  "files": [
+    {
+      "path": "data/research/target-checks/cecon2021_yield_stress.json",
+      "sha256": "a783f7b5c421690b9ef43f8a66c8b5f019883255afd7a089b639331b1eabfc85"
+    },
+    {
+      "path": "data/research/density/originals/cecon2021_mmc1.xlsx",
+      "sha256": "e1d0ba4c3f572e8c0300720fb1ba4e93a5d46cc143151abd43562cec43d4f932"
+    },
+    {
+      "path": "data/research/density/originals/cecon2021_article_fresh.xml",
+      "sha256": "396dcaf76887b971d96570dca67fdfc3f895b6c422c5a1b26cf98b67cebda5c6"
+    }
+  ]
+}

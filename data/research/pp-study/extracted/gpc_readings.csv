@@ -1,0 +1,19 @@
+dataset_id,source_test_code,laboratory_sample_id,repeat_id,property,value,unit,origin,quantity_definition,source_member,source_location
+pp_gpc,PP_REG,A25-0608,1,Mn,30860.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!C2
+pp_gpc,PP_REG,A25-0608,2,Mn,27621.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!D2
+pp_gpc,PP_REG,A25-0608,1,Mw,173360.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!G2
+pp_gpc,PP_REG,A25-0608,2,Mw,172920.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!H2
+pp_gpc,PP_REG,A25-0608,1,dispersity,5.6163,1,source_reported_calculation,Mw/Mn,GPC/GPC_data.xlsx,Tabelle1!K2
+pp_gpc,PP_REG,A25-0608,2,dispersity,6.2605,1,source_reported_calculation,Mw/Mn,GPC/GPC_data.xlsx,Tabelle1!L2
+pp_gpc,PP_VIRak,A25-0609,1,Mn,30707.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!C3
+pp_gpc,PP_VIRak,A25-0609,2,Mn,32464.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!D3
+pp_gpc,PP_VIRak,A25-0609,1,Mw,182220.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!G3
+pp_gpc,PP_VIRak,A25-0609,2,Mw,184300.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!H3
+pp_gpc,PP_VIRak,A25-0609,1,dispersity,5.9342,1,source_reported_calculation,Mw/Mn,GPC/GPC_data.xlsx,Tabelle1!K3
+pp_gpc,PP_VIRak,A25-0609,2,dispersity,5.677,1,source_reported_calculation,Mw/Mn,GPC/GPC_data.xlsx,Tabelle1!L3
+pp_gpc,PP_VIRnak,A25-0610,1,Mn,32128.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!C4
+pp_gpc,PP_VIRnak,A25-0610,2,Mn,33241.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!D4
+pp_gpc,PP_VIRnak,A25-0610,1,Mw,183390.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!G4
+pp_gpc,PP_VIRnak,A25-0610,2,Mw,183850.0,g/mol,source_reported_gpc_estimate,molecular-weight average reported by GPC,GPC/GPC_data.xlsx,Tabelle1!H4
+pp_gpc,PP_VIRnak,A25-0610,1,dispersity,5.7079,1,source_reported_calculation,Mw/Mn,GPC/GPC_data.xlsx,Tabelle1!K4
+pp_gpc,PP_VIRnak,A25-0610,2,dispersity,5.5309,1,source_reported_calculation,Mw/Mn,GPC/GPC_data.xlsx,Tabelle1!L4

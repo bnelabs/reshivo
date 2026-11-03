@@ -1,0 +1,51 @@
+{
+  "source_id": "hinczica2026",
+  "title": "Impact of Seasonal Composition on the Long-Term Performance of Post-Consumer Recycled Polypropylene",
+  "doi": "10.1002/app.70501",
+  "url": "https://onlinelibrary.wiley.com/doi/full/10.1002/app.70501",
+  "license": "CC-BY-4.0",
+  "license_verification": "Publisher-deposited Crossref metadata, license content-version=vor; retained in originals/hinczica2026_crossref.json",
+  "retrieved_on": "2026-10-30",
+  "capture_method": "Manually transcribed numerical row from the publisher's structured full-text web extraction; checked against a second retrieval of Table 5. This JSON is a local transcription, not an original article file.",
+  "material": "Study-specific commercial post-consumer polypropylene recyclate from one unnamed European supplier, batches B1 to B10. Material brand, collection area, exact feedstock history and additive additions are not reported.",
+  "process": {
+    "source_locator": "Section 2.1 and Table 3",
+    "preparation": "Allrounder 320 C injection moulding; same parameters for all ten batches; source reports prior supplier melt filtration at 110 micrometres.",
+    "product_tested": "Injection-moulded multipurpose test specimens; density samples cut from those specimens",
+    "nozzle_temperature_C": 230,
+    "mould_temperature_C": 40,
+    "cylinder_temperatures_C": [190, 210, 220, 230],
+    "injection_pressure_bar": 920,
+    "holding_pressure_bar": 900,
+    "holding_time_s": 16,
+    "injection_speed_cm3_s": 20,
+    "cycle_time_s": 70
+  },
+  "method": {
+    "source_locator": "Section 2.2.3",
+    "measurement": "Immersion density, ISO 1183-1, Mettler Toledo XS205 Dual Range balance",
+    "n_samples_per_batch": 5,
+    "n_batches": 10,
+    "sample_origin": "Pieces cut from injection-moulded multipurpose specimens",
+    "test_temperature_C": null,
+    "immersion_liquid": null
+  },
+  "observations": [
+    {"property": "density", "statistic": "reported_minimum", "value": 0.996, "unit": "g/cm3", "source_locator": "Table 5, density rho row, Min column"},
+    {"property": "density", "statistic": "reported_maximum", "value": 1.101, "unit": "g/cm3", "source_locator": "Table 5, density rho row, Max column"},
+    {"property": "density", "statistic": "reported_mean", "value": 1.031, "unit": "g/cm3", "source_locator": "Table 5, density rho row, Mean column"},
+    {"property": "density_coefficient_of_variation", "statistic": "reported_coefficient_of_variation", "value": 2.8, "unit": "%", "source_locator": "Table 5, density rho row, CV column"}
+  ],
+  "supports": [
+    "Display the reported density summary for this study's ten-batch cohort.",
+    "Calculate hypothetical mass at the source density for a specified uniform material volume, labelled simulation.",
+    "Scale the observed source density endpoints to a descriptive mass scenario for this source cohort; this is not a future-batch bound."
+  ],
+  "does_not_support": [
+    "Individual batch density values or the fifty underlying density readings are not supplied by this transcription.",
+    "The table's aggregation of individual readings versus batch means cannot be reconstructed without the underlying data.",
+    "The ordered specification 0.97 plus/minus 0.03 g/cm3 is not a measured variation range and is not retained as an observation.",
+    "No prediction of future batches, arbitrary recycled PP, another processing route, or a contamination dose-response is supported.",
+    "The tested products were specimens, not counterweights. Transfer to another geometry assumes the same processed bulk density; voids, processing differences and volume error remain unmeasured."
+  ]
+}

@@ -1,0 +1,349 @@
+{
+  "workshop_case": {
+    "brief": {
+      "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+      "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption.",
+      "contamination": "",
+      "product": "A desk ballast module",
+      "use_case": "Noncritical desk ballast; software demonstration only.",
+      "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+      "process": "",
+      "available_changes": ""
+    },
+    "details": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02"
+    }
+  },
+  "question": "Use this complete-assembly observation and its stated uncertainty and adjustment limits. What is the next mass correction? No density or recipe is available.",
+  "plan": null,
+  "feedback": {
+    "observation": {
+      "id": "trial-1",
+      "kind": "simulated",
+      "mass_kg": 0.95,
+      "uncertainty_kg": 0.005
+    },
+    "max_add_mass_kg": 0.1,
+    "max_remove_mass_kg": 0.1,
+    "adjustment_uncertainty_kg": 0.005
+  },
+  "result": {
+    "result_kind": "tool_backed_proposal",
+    "status": "completed",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "answer": "Proposed: add ~0.05 kg (required range 0.04 to 0.06 kg) to trial-1. Why: observed 0.95±0.005 kg (0.945-0.955 kg) is below target 0.98-1.02 kg, and computation shows this addition brings simulated mass to 0.99-1.01 kg within limits and within 0.1 kg add limit. Fixed: no recipe/density change, no volume claim. Next: reweigh closed assembly and separately verify occupied volume/adjustment space.",
+    "answer_kind": "model_proposal",
+    "answer_verified": false,
+    "decision": {
+      "action": "add_mass",
+      "basis_call_id": "call_75bef05f-ab83-41eb-92ef-6cded208ca69"
+    },
+    "tool_trace": [
+      {
+        "id": "call_75bef05f-ab83-41eb-92ef-6cded208ca69",
+        "name": "check_mass_feedback",
+        "arguments": {},
+        "inputs": {
+          "brief": {
+            "available_changes": "",
+            "contamination": "",
+            "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+            "process": "",
+            "product": "A desk ballast module",
+            "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+            "use_case": "Noncritical desk ballast; software demonstration only.",
+            "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption."
+          },
+          "calculation_context": {
+            "label": "",
+            "components": [
+              {
+                "id": 1,
+                "name": "",
+                "role": "main",
+                "amount": ""
+              }
+            ],
+            "amount_unit": "mass_percent",
+            "amount_basis": "",
+            "mass_target_min_kg": "0.98",
+            "mass_target_max_kg": "1.02"
+          },
+          "feedback": {
+            "observation": {
+              "id": "trial-1",
+              "kind": "simulated",
+              "mass_kg": 0.95,
+              "uncertainty_kg": 0.005
+            },
+            "max_add_mass_kg": 0.1,
+            "max_remove_mass_kg": 0.1,
+            "adjustment_uncertainty_kg": 0.005
+          }
+        },
+        "result": {
+          "input_mode": "observed_mass_only",
+          "request_fingerprint": "177cd9efc1af99d852b2b6363fd228840907a4596db55c261dab1a7e83e26925",
+          "case_fingerprint": "b13679a1d9d0103a3858996493f3aa247b86f75cd86ea1e0ce4eb8ea84a6932b",
+          "plan_fingerprint": null,
+          "density_data_kind": null,
+          "target_min_kg": 0.98,
+          "target_max_kg": 1.02,
+          "brief": {
+            "available_changes": "",
+            "contamination": "",
+            "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+            "process": "",
+            "product": "A desk ballast module",
+            "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+            "use_case": "Noncritical desk ballast; software demonstration only.",
+            "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption."
+          },
+          "calculation_context": {
+            "label": "",
+            "components": [
+              {
+                "id": 1,
+                "name": "",
+                "role": "main",
+                "amount": ""
+              }
+            ],
+            "amount_unit": "mass_percent",
+            "amount_basis": "",
+            "mass_target_min_kg": "0.98",
+            "mass_target_max_kg": "1.02"
+          },
+          "feedback_request": {
+            "observation": {
+              "id": "trial-1",
+              "kind": "simulated",
+              "mass_kg": 0.95,
+              "uncertainty_kg": 0.005
+            },
+            "max_add_mass_kg": 0.1,
+            "max_remove_mass_kg": 0.1,
+            "adjustment_uncertainty_kg": 0.005
+          },
+          "result_kind": "simulation",
+          "model": "bounded_mass_feedback_v1",
+          "mass_only": true,
+          "observation": {
+            "id": "trial-1",
+            "kind": "simulated",
+            "mass_kg": 0.95,
+            "uncertainty_kg": 0.005
+          },
+          "observed_mass_min_kg": 0.945,
+          "observed_mass_max_kg": 0.955,
+          "feasible": true,
+          "action": "add",
+          "signed_adjustment_min_kg": 0.04,
+          "signed_adjustment_max_kg": 0.06,
+          "chosen_signed_adjustment_kg": 0.05,
+          "simulated_mass_min_kg_after_adjustment": 0.99,
+          "simulated_mass_max_kg_after_adjustment": 1.01,
+          "volume_status": "Not checked from a mass observation; confirm occupied volume and adjustment space separately.",
+          "next_options": [
+            "Apply only a suitable available adjustment, reweigh the closed complete assembly and check volume separately."
+          ],
+          "assumptions": [
+            "The mass observation and adjustment-error bounds are supplied, not independently verified.",
+            "A signed positive correction adds mass and a negative correction removes mass; no density estimate is used.",
+            "Available addition/removal limits apply to actual adjusted mass; the command reserves room for adjustment uncertainty.",
+            "No-operation results do not incur adjustment error. Any actual adjustment needs a fresh complete-assembly measurement.",
+            "This mass-only result does not establish volume fit, retention, durability or future-batch performance."
+          ],
+          "physical_product_tested": false,
+          "batch_consistency_established": false
+        },
+        "elapsed_ms": 0
+      }
+    ],
+    "model_trace": [
+      {
+        "turn": 1,
+        "tool_results": [
+          {
+            "tool_call_id": "call_75bef05f-ab83-41eb-92ef-6cded208ca69",
+            "name": "check_mass_feedback",
+            "result": {
+              "execution_call_id": "call_75bef05f-ab83-41eb-92ef-6cded208ca69",
+              "tool_name": "check_mass_feedback",
+              "input_mode": "observed_mass_only",
+              "request_fingerprint": "177cd9efc1af99d852b2b6363fd228840907a4596db55c261dab1a7e83e26925",
+              "case_fingerprint": "b13679a1d9d0103a3858996493f3aa247b86f75cd86ea1e0ce4eb8ea84a6932b",
+              "plan_fingerprint": null,
+              "density_data_kind": null,
+              "target_min_kg": 0.98,
+              "target_max_kg": 1.02,
+              "result_kind": "simulation",
+              "model": "bounded_mass_feedback_v1",
+              "mass_only": true,
+              "observation": {
+                "id": "trial-1",
+                "kind": "simulated",
+                "mass_kg": 0.95,
+                "uncertainty_kg": 0.005
+              },
+              "observed_mass_min_kg": 0.945,
+              "observed_mass_max_kg": 0.955,
+              "feasible": true,
+              "action": "add",
+              "signed_adjustment_min_kg": 0.04,
+              "signed_adjustment_max_kg": 0.06,
+              "chosen_signed_adjustment_kg": 0.05,
+              "simulated_mass_min_kg_after_adjustment": 0.99,
+              "simulated_mass_max_kg_after_adjustment": 1.01,
+              "volume_status": "Not checked from a mass observation; confirm occupied volume and adjustment space separately.",
+              "next_options": [
+                "Apply only a suitable available adjustment, reweigh the closed complete assembly and check volume separately."
+              ],
+              "assumptions": [
+                "The mass observation and adjustment-error bounds are supplied, not independently verified.",
+                "A signed positive correction adds mass and a negative correction removes mass; no density estimate is used.",
+                "Available addition/removal limits apply to actual adjusted mass; the command reserves room for adjustment uncertainty.",
+                "No-operation results do not incur adjustment error. Any actual adjustment needs a fresh complete-assembly measurement.",
+                "This mass-only result does not establish volume fit, retention, durability or future-batch performance."
+              ],
+              "physical_product_tested": false,
+              "batch_consistency_established": false
+            }
+          }
+        ],
+        "assistant_message": {
+          "role": "assistant",
+          "content": "I'll check your observed assembly mass against its limits to determine the correction.",
+          "tool_calls": [
+            {
+              "id": "call_75bef05f-ab83-41eb-92ef-6cded208ca69",
+              "type": "function",
+              "function": {
+                "name": "check_mass_feedback",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        "model": "muse-spark-1.3",
+        "live": true,
+        "usage": {
+          "completion_tokens": 114,
+          "prompt_tokens": 1803,
+          "total_tokens": 1917
+        },
+        "request_id": "chatcmpl-01a193f2-b311-7048-ba5e-a72df040e378",
+        "elapsed_ms": 1652
+      },
+      {
+        "turn": 2,
+        "tool_results": [
+          {
+            "tool_call_id": "call_0bb72222-0c89-4cc3-857c-0b2e5a95727f",
+            "name": "present_recommendation",
+            "result": {
+              "execution_call_id": null,
+              "tool_name": "present_recommendation",
+              "status": "validated_proposal"
+            }
+          }
+        ],
+        "assistant_message": {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_0bb72222-0c89-4cc3-857c-0b2e5a95727f",
+              "type": "function",
+              "function": {
+                "name": "present_recommendation",
+                "arguments": "{\"action\":\"add_mass\",\"answer\":\"Proposed: add ~0.05 kg (required range 0.04 to 0.06 kg) to trial-1. Why: observed 0.95±0.005 kg (0.945-0.955 kg) is below target 0.98-1.02 kg, and computation shows this addition brings simulated mass to 0.99-1.01 kg within limits and within 0.1 kg add limit. Fixed: no recipe/density change, no volume claim. Next: reweigh closed assembly and separately verify occupied volume/adjustment space.\",\"basis_call_id\":\"call_75bef05f-ab83-41eb-92ef-6cded208ca69\"}"
+              }
+            }
+          ]
+        },
+        "model": "muse-spark-1.3",
+        "live": true,
+        "usage": {
+          "completion_tokens": 425,
+          "prompt_tokens": 2324,
+          "total_tokens": 2749
+        },
+        "request_id": "chatcmpl-01a193f2-bbc2-71e6-b392-89064c9069b4",
+        "elapsed_ms": 2240
+      }
+    ],
+    "model_turns": 2,
+    "usage": {
+      "completion_tokens": 539,
+      "prompt_tokens": 4127,
+      "total_tokens": 4666
+    },
+    "request_ids": [
+      "chatcmpl-01a193f2-b311-7048-ba5e-a72df040e378",
+      "chatcmpl-01a193f2-bbc2-71e6-b392-89064c9069b4"
+    ],
+    "elapsed_ms": 3894,
+    "brief": {
+      "available_changes": "",
+      "contamination": "",
+      "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+      "process": "",
+      "product": "A desk ballast module",
+      "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+      "use_case": "Noncritical desk ballast; software demonstration only.",
+      "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption."
+    },
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02"
+    },
+    "plan_request": null,
+    "feedback_request": {
+      "observation": {
+        "id": "trial-1",
+        "kind": "simulated",
+        "mass_kg": 0.95,
+        "uncertainty_kg": 0.005
+      },
+      "max_add_mass_kg": 0.1,
+      "max_remove_mass_kg": 0.1,
+      "adjustment_uncertainty_kg": 0.005
+    },
+    "physical_product_tested": false,
+    "performance_verified": false,
+    "batch_consistency_established": false,
+    "verified_summary": {
+      "scope": "Mass only; occupied volume and physical suitability remain unchecked.",
+      "feasible": true,
+      "action": "add_mass",
+      "chosen_signed_adjustment_kg": 0.05,
+      "observation_id": "trial-1"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "request": {
+    "brief": {
+      "product": "Sound insulation sheet",
+      "input": "Clean PET textile offcuts from known production; thickness and density of the pieces vary",
+      "use_case": "Reduce footstep noise entering a bedroom from the apartment above",
+      "targets": "Reduce the sound heard during footsteps, without a specified sound level target",
+      "variation": "The pieces vary in thickness and density",
+      "process": "At home with scissors and sewing supplies; no acoustic laboratory or construction equipment",
+      "contamination": "No contamination has been characterized",
+      "available_changes": "Can rearrange or sew the offcuts and design a removable sheet; cannot alter the building structure"
+    },
+    "question": "Can a sheet made with my offcuts solve this footstep-noise problem? Explain what I can plan or try at home, and what measurement would answer my goal.",
+    "history": []
+  },
+  "http_status": 200,
+  "response": {
+    "result_kind": "engineering_followup",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 2622,
+      "prompt_tokens": 3523,
+      "total_tokens": 6145
+    },
+    "elapsed_ms": 23876,
+    "request_id": "chatcmpl-01a1a167-add4-7409-ad31-17fbfca4ba46",
+    "requested_reasoning_effort": "high",
+    "reasoning_effort": "high",
+    "answer": "Plan the removable fit first, because fit can be checked at home while sound reduction cannot. Use a paper template for the bedroom area you can cover without altering structure, then a small sewn arrangement of offcuts to check weight, handling and removable fixings.\n\nThat work does not answer whether footsteps get quieter. Footstep noise is structure-borne impact through the floor-ceiling, not room echo, and varied thickness and density cannot predict the result. The matching check is a measurement of impact-sound transmission for your exact floor-ceiling build-up and sheet mounting, by frequency band, in place.",
+    "quarantined_answer": [],
+    "next_steps": [
+      "Cut a paper template to check coverage, clearance and removable mounting inside your bedroom without altering structure.",
+      "Sew a small handling panel to check weight, seams and fixing approach for the full sheet.",
+      "Arrange an impact-noise measurement for your exact floor-ceiling and sheet installation to answer the footstep goal."
+    ],
+    "questions": [
+      "Can you place anything in the upstairs apartment, or only work inside your bedroom?",
+      "Where exactly would the removable sheet mount \u2014 ceiling, walls \u2014 and what fixings are allowed?",
+      "Which footstep sounds bother you most \u2014 low thuds, higher clicks \u2014 and what is the ceiling/floor construction?"
+    ],
+    "sources": [],
+    "physical_product_tested": false,
+    "performance_verified": false
+  }
+}

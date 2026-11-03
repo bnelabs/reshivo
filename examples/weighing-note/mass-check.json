@@ -1,0 +1,115 @@
+{
+  "workshop_case": {
+    "brief": {
+      "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+      "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption.",
+      "contamination": "",
+      "product": "A desk ballast module",
+      "use_case": "Noncritical desk ballast; software demonstration only.",
+      "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+      "process": "",
+      "available_changes": ""
+    },
+    "details": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02"
+    }
+  },
+  "assembly_observation": {
+    "id": "trial-1",
+    "kind": "simulated",
+    "mass": "0.95",
+    "error": "0.005",
+    "maxAdd": "0.1",
+    "maxRemove": "0.1",
+    "adjustmentError": "0.005",
+    "idealFeedback": false
+  },
+  "result": {
+    "input_mode": "observed_mass_only",
+    "request_fingerprint": "177cd9efc1af99d852b2b6363fd228840907a4596db55c261dab1a7e83e26925",
+    "case_fingerprint": "b13679a1d9d0103a3858996493f3aa247b86f75cd86ea1e0ce4eb8ea84a6932b",
+    "plan_fingerprint": null,
+    "density_data_kind": null,
+    "target_min_kg": 0.98,
+    "target_max_kg": 1.02,
+    "brief": {
+      "available_changes": "",
+      "contamination": "",
+      "input": "A synthetic scenario of recycled filler in a sealed container. No material was handled.",
+      "process": "",
+      "product": "A desk ballast module",
+      "targets": "Assembled mass 0.98–1.02 kg. Other properties are not checked here.",
+      "use_case": "Noncritical desk ballast; software demonstration only.",
+      "variation": "Fill can vary; the next action uses only an observed complete-assembly mass, not a density assumption."
+    },
+    "calculation_context": {
+      "label": "",
+      "components": [
+        {
+          "id": 1,
+          "name": "",
+          "role": "main",
+          "amount": ""
+        }
+      ],
+      "amount_unit": "mass_percent",
+      "amount_basis": "",
+      "mass_target_min_kg": "0.98",
+      "mass_target_max_kg": "1.02"
+    },
+    "feedback_request": {
+      "observation": {
+        "id": "trial-1",
+        "kind": "simulated",
+        "mass_kg": 0.95,
+        "uncertainty_kg": 0.005
+      },
+      "max_add_mass_kg": 0.1,
+      "max_remove_mass_kg": 0.1,
+      "adjustment_uncertainty_kg": 0.005
+    },
+    "result_kind": "simulation",
+    "model": "bounded_mass_feedback_v1",
+    "mass_only": true,
+    "observation": {
+      "id": "trial-1",
+      "kind": "simulated",
+      "mass_kg": 0.95,
+      "uncertainty_kg": 0.005
+    },
+    "observed_mass_min_kg": 0.945,
+    "observed_mass_max_kg": 0.955,
+    "feasible": true,
+    "action": "add",
+    "signed_adjustment_min_kg": 0.04,
+    "signed_adjustment_max_kg": 0.06,
+    "chosen_signed_adjustment_kg": 0.05,
+    "simulated_mass_min_kg_after_adjustment": 0.99,
+    "simulated_mass_max_kg_after_adjustment": 1.01,
+    "volume_status": "Not checked from a mass observation; confirm occupied volume and adjustment space separately.",
+    "next_options": [
+      "Apply only a suitable available adjustment, reweigh the closed complete assembly and check volume separately."
+    ],
+    "assumptions": [
+      "The mass observation and adjustment-error bounds are supplied, not independently verified.",
+      "A signed positive correction adds mass and a negative correction removes mass; no density estimate is used.",
+      "Available addition/removal limits apply to actual adjusted mass; the command reserves room for adjustment uncertainty.",
+      "No-operation results do not incur adjustment error. Any actual adjustment needs a fresh complete-assembly measurement.",
+      "This mass-only result does not establish volume fit, retention, durability or future-batch performance."
+    ],
+    "physical_product_tested": false,
+    "batch_consistency_established": false
+  }
+}

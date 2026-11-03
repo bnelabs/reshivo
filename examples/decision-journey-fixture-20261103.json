@@ -1,0 +1,51 @@
+{
+  "schema": "rematter-decision-journey-fixture-v1",
+  "status": "synthetic developer-authored input; not a physical product or experimental record",
+  "initial_prompt": "I want to make an indoor floor mat from recycled rubber and a binder. The amount of paper-label residue in the rubber varies. How can I decide what to try while keeping grip and recovery within my targets and watching the cost?",
+  "initial_case": {
+    "product_and_use": "Synthetic indoor floor mat for the same intended use and nominal dimensions in all setups.",
+    "materials_and_variation": "Identified recycled rubber stock with paper-label residue; the amount of named paper varies. The available zero-paper added stock is characterized clean rubber, with 0 percent paper by mass. All amounts, fractions and prices in this exercise use the same as-received mass basis.",
+    "process_and_equipment": "Home planning only. No physical handling, processing, measuring equipment, or lab access is available during this exercise. The same intended process and geometry are stated for each setup but unspecified.",
+    "property_checks": [
+      {"id": "grip", "name": "wet grip", "unit": "coefficient", "synthetic_method": "Synthetic method G under the same stated conditions", "minimum": "0.60", "required": true},
+      {"id": "recovery", "name": "recovery", "unit": "%", "synthetic_method": "Synthetic method R under the same stated conditions", "minimum": "80", "required": true}
+    ],
+    "setups": [
+      {"setup": "A", "version": 1, "materials_kg": {"recycled rubber excluding paper": "9.5", "paper-label residue": "0.5", "binder": "1.5"}, "process": "same intended process; unspecified", "geometry": "same intended mat; unspecified", "historical": true},
+      {"setup": "A", "version": 2, "materials_kg": {"recycled rubber excluding paper": "9.5", "paper-label residue": "0.5", "binder": "1.75"}, "process": "same intended process; unspecified", "geometry": "same intended mat; unspecified", "historical": false},
+      {"setup": "B", "version": 1, "materials_kg": {"recycled rubber excluding paper": "9.5", "paper-label residue": "0.5", "binder": "0.5"}, "process": "same intended process; unspecified", "geometry": "same intended mat; unspecified", "historical": false}
+    ],
+    "readings": [
+      {"setup": "A", "version": 1, "check": "grip", "value": "0.66", "kind": "synthetic", "grouping": "unknown"},
+      {"setup": "A", "version": 2, "check": "recovery", "value": "82", "kind": "synthetic", "grouping": "unknown"},
+      {"setup": "B", "version": 1, "check": "grip", "value": "0.55", "kind": "synthetic", "grouping": "unknown"},
+      {"setup": "B", "version": 1, "check": "recovery", "value": "85", "kind": "synthetic", "grouping": "unknown"}
+    ],
+    "costs": {
+      "currency": "CU",
+      "mass_basis": "as received",
+      "material_prices_CU_per_kg": {"recycled rubber excluding paper": "2", "paper-label residue": "0", "binder": "4"},
+      "cost_scope": "Materials only; energy, labor and all other costs are explicitly excluded.",
+      "output_basis": "The same intended mat and use in both cases; usable output counts are synthetic planning entries.",
+      "planning_entry": "Use planning scenario mode; enter gross planned item counts 8 and 7 for A2 and B1 respectively, with assumed accepted fraction 1 for both. This is a calculation assumption, not measured yield or proof of usability.",
+      "usable_mats": {"A version 2": "8", "B version 1": "7"}
+    }
+  },
+  "turns": [
+    {"number": 1, "question": "Using the synthetic readings and materials-only costs, what can I choose now, what is missing, and what could I plan next at home?"},
+    {"number": 2, "new_facts": {"portion_mass_kg": "1", "tracked_component": "paper-label residue", "input_min_mass_percent": "4.8", "input_max_mass_percent": "5.2", "added_stock": "characterized clean rubber", "added_stock_paper_mass_percent": "0", "exploratory_target_min_mass_percent": "4", "exploratory_target_max_mass_percent": "4", "assumptions": "Even mixing, no losses or chemical reactions; all fractions and amounts share the as-received mass basis. The entered target is exploratory, not a predicted mat property."}, "question": "Can one amount of the characterized zero-paper rubber bring this entire uncertain input range to exactly four percent paper? What information or decision would help next?"},
+    {"number": 3, "new_facts": {"same_portion_paper_mass_percent": "5.2", "data_kind": "synthetic characterization information"}, "question": "If this one-kilogram portion is now known to contain exactly 5.2 percent paper, how much of the same characterized zero-paper rubber gives the exploratory four-percent composition, and what does that result tell me?"},
+    {"number": 4, "new_facts": {"setup": "A", "version": 2, "check": "grip", "value": "0.62", "kind": "synthetic", "method": "Synthetic method G under the same stated conditions", "costs_and_other_readings": "unchanged", "grouping": "unknown"}, "question": "With the new synthetic A2 grip reading, compare the current setups against both checks and materials-only cost. Which is the recorded eligible choice, and what is still needed?"}
+  ],
+  "calculator": {
+    "units": "kg, mass percent, CU per usable mat",
+    "addition_formula": "x = m * (p - t) / (t - s), provided t != s; p, t and s use the same mass-percent basis. Evaluate each known endpoint separately; compare results before claiming a single x works for a range.",
+    "cost_formula": "(sum of entered component kg times CU/kg) / entered usable mat count; all excluded costs remain excluded"
+  },
+  "oracle": {
+    "initial": {"A2_grip": "missing; A1 0.66 is historical", "A2_recovery": "82 meets minimum 80", "B1_grip": "0.55 below minimum 0.60", "B1_recovery": "85 meets minimum 80", "fully_eligible": "none", "A2_materials_CU_per_batch": "26", "A2_CU_per_usable_mat": "3.25", "B1_materials_CU_per_batch": "21", "B1_CU_per_usable_mat": "3"},
+    "range": {"one_fixed_addition_for_exact_target": false, "known_4_8_percent_endpoint_addition_kg": "0.2", "known_5_2_percent_endpoint_addition_kg": "0.3"},
+    "known_fraction": {"portion_mass_kg": "1", "paper_mass_percent": "5.2", "zero_paper_stock_addition_kg": "0.3", "result_paper_mass_percent": "4"},
+    "updated": {"A2_grip": "0.62 meets minimum 0.60", "A2_recovery": "82 meets minimum 80", "B1_grip": "0.55 below minimum 0.60", "B1_recovery": "85 meets minimum 80", "recorded_eligible": "A version 2", "cheaper_but_failing": "B version 1"}
+  }
+}

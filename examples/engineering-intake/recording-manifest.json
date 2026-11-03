@@ -1,0 +1,170 @@
+{
+  "label": "Actual app capture with synthetic observations; no physical processing/testing",
+  "recording_date": "2026-11-01",
+  "source_take": "examples/engineering-intake/recorded-take.mp4",
+  "original_take_duration_seconds": 284.124933,
+  "final_video": "docs/demo/rematter-demo.mp4",
+  "duration_seconds": 150.4,
+  "sha256": "08c23a395d22e475d20142717e42fe21af07689b64054970b297a72e26183138",
+  "source_clips_seconds": [
+    [
+      [
+        0,
+        13.1
+      ]
+    ],
+    [
+      [
+        13.3,
+        24.3
+      ],
+      [
+        59,
+        63.2
+      ]
+    ],
+    [
+      [
+        64,
+        69.4
+      ]
+    ],
+    [
+      [
+        70.2,
+        80.7
+      ],
+      [
+        135.4,
+        141.8
+      ]
+    ],
+    [
+      [
+        142.97,
+        153.4
+      ],
+      [
+        195.7,
+        200.2
+      ],
+      [
+        205.5,
+        207.0
+      ]
+    ],
+    [
+      [
+        214,
+        218.5
+      ],
+      [
+        271.2,
+        276.7
+      ],
+      [
+        280,
+        284
+      ]
+    ],
+    []
+  ],
+  "editing": "Seven scenes in original chronological order from one final-layout take. Idle/navigation/wait pauses removed or held; no cached response inserted into a fresh request. Scene7 is an editorial comparison card.",
+  "narration": "macOS Samantha,185wpm; docs/demo/narration.json",
+  "captions": "Visible approximate phrase captions + captions.vtt; not word-aligned.",
+  "capture_records": {
+    "examples/engineering-intake/recorded-take.mp4": {
+      "bytes": 1277311,
+      "sha256": "46dce31acc5f2ccc26dc1e88c16312da58d3ba66405d6810fafc8ae50ad98ede"
+    },
+    "examples/engineering-intake/final-ui-initial.json": {
+      "bytes": 33124,
+      "sha256": "5323f6bfc5a7a06d05f94a884420ee0cfb6db2e4af100c3074013f0ef5ac6a44"
+    },
+    "examples/engineering-intake/final-ui-updated.json": {
+      "bytes": 34837,
+      "sha256": "1b9b58c1a76976f099438fea3ecb896a02446fe6e33342aed5f5802b25373f8f"
+    },
+    "examples/engineering-intake/final-ui-missing.json": {
+      "bytes": 21352,
+      "sha256": "2f6ddac0823ae8d78bffbc0f1d0b461d81ee668fb0fa8ab45eb8a6e6caa08b29"
+    },
+    "examples/engineering-intake/final-ui-meta-tool-run.json": {
+      "bytes": 24413,
+      "sha256": "8eac0a17c1748f0781c894dd1d58e321ce261d0e166816470d6b32316e7dc382"
+    }
+  },
+  "original_markers": [
+    {
+      "name": "start",
+      "ms": 0
+    },
+    {
+      "name": "focus",
+      "ms": 5750
+    },
+    {
+      "name": "read_requested",
+      "ms": 13307
+    },
+    {
+      "name": "draft_observed",
+      "ms": 59036
+    },
+    {
+      "name": "applied",
+      "ms": 63694
+    },
+    {
+      "name": "result",
+      "ms": 69952
+    },
+    {
+      "name": "agent_requested",
+      "ms": 70231
+    },
+    {
+      "name": "agent_observed",
+      "ms": 135427
+    },
+    {
+      "name": "agent_trace",
+      "ms": 142723
+    },
+    {
+      "name": "updated_read_requested",
+      "ms": 142971
+    },
+    {
+      "name": "updated_draft_observed",
+      "ms": 195691
+    },
+    {
+      "name": "updated_applied",
+      "ms": 199820
+    },
+    {
+      "name": "updated_result",
+      "ms": 208343
+    },
+    {
+      "name": "missing_read_requested",
+      "ms": 208371
+    },
+    {
+      "name": "missing_draft_observed",
+      "ms": 271217
+    },
+    {
+      "name": "missing_applied",
+      "ms": 276296
+    },
+    {
+      "name": "missing_result",
+      "ms": 284070
+    }
+  ],
+  "original_start_epoch_ms": 1793564471621,
+  "unsubmitted_private_review": true,
+  "rendering": "Materialize source VFR frames at15fps before exact time trimming, then hold actual final frames for narration; encode H.264/AAC."
+}

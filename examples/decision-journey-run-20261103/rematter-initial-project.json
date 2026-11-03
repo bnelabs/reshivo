@@ -1,0 +1,277 @@
+{
+  "schema": "rematter-project-v2",
+  "case_id": "b9b341aa-e2dd-49df-9e77-fc514916a8f8",
+  "project": {
+    "product": {
+      "value": "Synthetic indoor floor mat",
+      "source": "user_review",
+      "quote": "Synthetic indoor floor mat"
+    },
+    "input": {
+      "value": "Identified recycled rubber stock with paper-label residue; the amount of named paper varies. The available zero-paper added stock is characterized clean rubber, with 0 percent paper by mass. All amounts, fractions and prices in this exercise use the same as-received mass basis.",
+      "source": "user_review",
+      "quote": "Identified recycled rubber stock with paper-label residue; the amount of named paper varies. The available zero-paper added stock is characterized clean rubber, with 0 percent paper by mass. All amounts, fractions and prices in this exercise use the same as-received mass basis."
+    },
+    "variation": {
+      "value": "The amount of paper-label residue in the rubber varies.",
+      "source": "user_review",
+      "quote": "The amount of paper-label residue in the rubber varies."
+    },
+    "use": {
+      "value": "Synthetic indoor floor mat for the same intended use and nominal dimensions in all setups.",
+      "source": "user_review",
+      "quote": "Synthetic indoor floor mat for the same intended use and nominal dimensions in all setups."
+    },
+    "priorities": {
+      "value": "keeping grip and recovery within my targets and watching the cost",
+      "source": "user_review",
+      "quote": "keeping grip and recovery within my targets and watching the cost"
+    },
+    "process": {
+      "value": "Home planning only. No physical handling, processing, measuring equipment, or lab access is available during this exercise. The same intended process and geometry are stated for each setup but unspecified.",
+      "source": "user_review",
+      "quote": "Home planning only. No physical handling, processing, measuring equipment, or lab access is available during this exercise. The same intended process and geometry are stated for each setup but unspecified."
+    },
+    "constraints": null
+  },
+  "configurations": [
+    {
+      "id": "856f16d0-00e8-4a6c-8661-e91b46b94696",
+      "revision": 1,
+      "name": "A",
+      "materials": [
+        {
+          "id": "8816d699-0cd7-4319-8289-9b2709b38ddc",
+          "name": "recycled rubber excluding paper",
+          "amount": "9.5",
+          "unit": "kg"
+        },
+        {
+          "id": "c3634b18-d632-40d1-90ac-8a40d7e4256d",
+          "name": "paper-label residue",
+          "amount": "0.5",
+          "unit": "kg"
+        },
+        {
+          "id": "30581b46-f420-4644-a1f5-1020041424ad",
+          "name": "binder",
+          "amount": "1.5",
+          "unit": "kg"
+        }
+      ],
+      "process": "same intended process; unspecified",
+      "geometry": "same intended mat; unspecified",
+      "notes": ""
+    },
+    {
+      "id": "856f16d0-00e8-4a6c-8661-e91b46b94696",
+      "revision": 2,
+      "name": "A",
+      "materials": [
+        {
+          "id": "8816d699-0cd7-4319-8289-9b2709b38ddc",
+          "name": "recycled rubber excluding paper",
+          "amount": "9.5",
+          "unit": "kg"
+        },
+        {
+          "id": "c3634b18-d632-40d1-90ac-8a40d7e4256d",
+          "name": "paper-label residue",
+          "amount": "0.5",
+          "unit": "kg"
+        },
+        {
+          "id": "30581b46-f420-4644-a1f5-1020041424ad",
+          "name": "binder",
+          "amount": "1.75",
+          "unit": "kg"
+        }
+      ],
+      "process": "same intended process; unspecified",
+      "geometry": "same intended mat; unspecified",
+      "notes": ""
+    },
+    {
+      "id": "27483357-34a9-4b13-bb0b-c094a73466ce",
+      "revision": 1,
+      "name": "B",
+      "materials": [
+        {
+          "id": "f9b81f7a-fafb-4214-a414-3c463d93cefb",
+          "name": "recycled rubber excluding paper",
+          "amount": "9.5",
+          "unit": "kg"
+        },
+        {
+          "id": "990ec8d4-bfff-4b62-abf2-e098bad185b1",
+          "name": "paper-label residue",
+          "amount": "0.5",
+          "unit": "kg"
+        },
+        {
+          "id": "b70149e0-e556-40b8-939b-275024eeddd1",
+          "name": "binder",
+          "amount": "0.5",
+          "unit": "kg"
+        }
+      ],
+      "process": "same intended process; unspecified",
+      "geometry": "same intended mat; unspecified",
+      "notes": ""
+    }
+  ],
+  "checks": [
+    {
+      "id": "1a625f5f-2762-4e4b-b4e2-d8797d8ee691",
+      "name": "wet grip",
+      "unit": "coefficient",
+      "method": "Synthetic method G under the same stated conditions",
+      "minimum": "0.60",
+      "maximum": null,
+      "required": true
+    },
+    {
+      "id": "73be07ce-680f-42af-b638-74612a1caa68",
+      "name": "recovery",
+      "unit": "%",
+      "method": "Synthetic method R under the same stated conditions",
+      "minimum": "80",
+      "maximum": null,
+      "required": true
+    }
+  ],
+  "records": [
+    {
+      "id": "7f105efa-623d-482b-b404-47fbc0d1087b",
+      "case_id": "b9b341aa-e2dd-49df-9e77-fc514916a8f8",
+      "configuration_id": "856f16d0-00e8-4a6c-8661-e91b46b94696",
+      "configuration_revision": 1,
+      "check_id": "1a625f5f-2762-4e4b-b4e2-d8797d8ee691",
+      "unit": "coefficient",
+      "method": "Synthetic method G under the same stated conditions",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "0.66"
+        }
+      ]
+    },
+    {
+      "id": "b26b7fa1-8655-4c0b-8f87-bcfc844b698a",
+      "case_id": "b9b341aa-e2dd-49df-9e77-fc514916a8f8",
+      "configuration_id": "27483357-34a9-4b13-bb0b-c094a73466ce",
+      "configuration_revision": 1,
+      "check_id": "73be07ce-680f-42af-b638-74612a1caa68",
+      "unit": "%",
+      "method": "Synthetic method R under the same stated conditions",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "85"
+        }
+      ]
+    },
+    {
+      "id": "cf1434c0-965c-4053-8da3-3dab78683370",
+      "case_id": "b9b341aa-e2dd-49df-9e77-fc514916a8f8",
+      "configuration_id": "27483357-34a9-4b13-bb0b-c094a73466ce",
+      "configuration_revision": 1,
+      "check_id": "1a625f5f-2762-4e4b-b4e2-d8797d8ee691",
+      "unit": "coefficient",
+      "method": "Synthetic method G under the same stated conditions",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "0.55"
+        }
+      ]
+    },
+    {
+      "id": "0e675cc9-f2d8-491b-b4a8-c891857a837d",
+      "case_id": "b9b341aa-e2dd-49df-9e77-fc514916a8f8",
+      "configuration_id": "856f16d0-00e8-4a6c-8661-e91b46b94696",
+      "configuration_revision": 2,
+      "check_id": "73be07ce-680f-42af-b638-74612a1caa68",
+      "unit": "%",
+      "method": "Synthetic method R under the same stated conditions",
+      "data_kind": "synthetic",
+      "conditions_confirmed": true,
+      "readings": [
+        {
+          "value": "82"
+        }
+      ]
+    }
+  ],
+  "costs": {
+    "856f16d0-00e8-4a6c-8661-e91b46b94696@2": {
+      "currency": "CU",
+      "mass_basis": "as received",
+      "functional_basis": "The same intended mat and use in both cases",
+      "acceptance_basis": "usable output counts are synthetic planning entries",
+      "prices": {
+        "8816d699-0cd7-4319-8289-9b2709b38ddc": "2",
+        "c3634b18-d632-40d1-90ac-8a40d7e4256d": "0",
+        "30581b46-f420-4644-a1f5-1020041424ad": "4"
+      },
+      "energy_kwh": "",
+      "energy_rate": "",
+      "labor_hours": "",
+      "labor_rate": "",
+      "other_charge": "",
+      "other_name": "",
+      "usable_count": "",
+      "usable_mass_kg": "",
+      "usable_area_m2": "",
+      "mode": "planned",
+      "accepted_fraction": "1",
+      "gross_count": "8",
+      "gross_mass_kg": "",
+      "gross_area_m2": "",
+      "batch_mass_kg": "",
+      "process_statuses": {
+        "energy": "excluded",
+        "labor": "excluded",
+        "other": "excluded"
+      }
+    },
+    "27483357-34a9-4b13-bb0b-c094a73466ce@1": {
+      "currency": "CU",
+      "mass_basis": "as received",
+      "functional_basis": "The same intended mat and use in both cases",
+      "acceptance_basis": "usable output counts are synthetic planning entries",
+      "prices": {
+        "f9b81f7a-fafb-4214-a414-3c463d93cefb": "2",
+        "990ec8d4-bfff-4b62-abf2-e098bad185b1": "0",
+        "b70149e0-e556-40b8-939b-275024eeddd1": "4"
+      },
+      "energy_kwh": "",
+      "energy_rate": "",
+      "labor_hours": "",
+      "labor_rate": "",
+      "other_charge": "",
+      "other_name": "",
+      "usable_count": "",
+      "usable_mass_kg": "",
+      "usable_area_m2": "",
+      "mode": "planned",
+      "accepted_fraction": "1",
+      "gross_count": "7",
+      "gross_mass_kg": "",
+      "gross_area_m2": "",
+      "batch_mass_kg": "",
+      "process_statuses": {
+        "energy": "excluded",
+        "labor": "excluded",
+        "other": "excluded"
+      }
+    }
+  },
+  "record_exclusions": {},
+  "advice_notes": [],
+  "trial_ideas": {},
+  "mix_adjustment_drafts": []
+}

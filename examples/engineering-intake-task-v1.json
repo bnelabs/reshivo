@@ -1,0 +1,202 @@
+{
+  "protocol": "engineering-intake-v1",
+  "created_utc": "2026-11-01",
+  "fixtures": [
+    {
+      "id": "initial",
+      "request": {
+        "brief": {
+          "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+          "variation": "Each prepared assembly is observed separately. No prediction of future batches.",
+          "contamination": "Unknown and not modeled.",
+          "product": "Contained ballast module",
+          "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+          "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+          "process": "Software only; no material handling or heating.",
+          "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets."
+        },
+        "calculation_context": {
+          "label": "Intake task, synthetic",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "g",
+          "amount_basis": "",
+          "mass_target_min_kg": "",
+          "mass_target_max_kg": ""
+        },
+        "note": "Synthetic software observation bench-1, not a physical test. Complete assembly, including enclosure: 950 g; weighing uncertainty ±5 g. The same assembly has centre of mass x=+1.0 cm; centre uncertainty ±0.05 cm.\nAll coordinates share x=0 at the module centre, positive toward the right. The two location coordinates are the mass centres of the actual added or removed sealed trim, not hole centres.\nLocation L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.\nLocation R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.\nAcross both locations, the total addition limit is 150 g and total removable trim is 80 g.\nThe command increment is 1 g. The adjustment uncertainty is ±1 g independently at each active location."
+      },
+      "expected": {
+        "observation_id": "bench-1",
+        "observation_kind": "simulated",
+        "mass_kg": 0.95,
+        "weighing_uncertainty_kg": 0.005,
+        "total_max_add_kg": 0.15,
+        "total_max_remove_kg": 0.08,
+        "adjustment_uncertainty_kg": 0.001,
+        "mass_target_min_kg": 0.98,
+        "mass_target_max_kg": 1.02,
+        "balance_target_min_mm": -2,
+        "balance_target_max_mm": 2,
+        "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "cg_x_mm": 10,
+        "cg_uncertainty_mm": 0.5,
+        "position_a_id": "L",
+        "position_a_x_mm": -60,
+        "position_a_uncertainty_mm": 0,
+        "position_a_max_add_kg": 0.15,
+        "position_a_max_remove_kg": 0,
+        "position_b_id": "R",
+        "position_b_x_mm": 60,
+        "position_b_uncertainty_mm": 0,
+        "position_b_max_add_kg": 0.15,
+        "position_b_max_remove_kg": 0.08,
+        "command_resolution_kg": 0.001
+      },
+      "expected_ready": true,
+      "expected_commands_kg": [
+        0.104,
+        -0.054
+      ]
+    },
+    {
+      "id": "updated",
+      "request": {
+        "brief": {
+          "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+          "variation": "Each prepared assembly is observed separately. No prediction of future batches.",
+          "contamination": "Unknown and not modeled.",
+          "product": "Contained ballast module",
+          "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+          "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+          "process": "Software only; no material handling or heating.",
+          "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets."
+        },
+        "calculation_context": {
+          "label": "Intake task, synthetic",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "g",
+          "amount_basis": "",
+          "mass_target_min_kg": ".98",
+          "mass_target_max_kg": "1.02",
+          "balance": {
+            "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+            "target_min_mm": "-2",
+            "target_max_mm": "2"
+          }
+        },
+        "note": "Synthetic software observation bench-2, not a physical test. This is a new independent observation of the same product, with the unchanged configuration and stated stocks below. Complete assembly, including enclosure: 1 kg; weighing uncertainty ±5 g. The same assembly has centre of mass x=+5 mm; centre uncertainty ±0.5 mm.\nAll coordinates share x=0 at the module centre, positive toward the right. The two location coordinates are the mass centres of the actual added or removed sealed trim, not hole centres.\nLocation L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.\nLocation R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.\nAcross both locations, the total addition limit is 150 g and total removable trim is 80 g.\nThe command increment is 1 g. The adjustment uncertainty is ±1 g independently at each active location."
+      },
+      "expected": {
+        "observation_id": "bench-2",
+        "observation_kind": "simulated",
+        "mass_kg": 1,
+        "weighing_uncertainty_kg": 0.005,
+        "total_max_add_kg": 0.15,
+        "total_max_remove_kg": 0.08,
+        "adjustment_uncertainty_kg": 0.001,
+        "mass_target_min_kg": 0.98,
+        "mass_target_max_kg": 1.02,
+        "balance_target_min_mm": -2,
+        "balance_target_max_mm": 2,
+        "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "cg_x_mm": 5,
+        "cg_uncertainty_mm": 0.5,
+        "position_a_id": "L",
+        "position_a_x_mm": -60,
+        "position_a_uncertainty_mm": 0,
+        "position_a_max_add_kg": 0.15,
+        "position_a_max_remove_kg": 0,
+        "position_b_id": "R",
+        "position_b_x_mm": 60,
+        "position_b_uncertainty_mm": 0,
+        "position_b_max_add_kg": 0.15,
+        "position_b_max_remove_kg": 0.08,
+        "command_resolution_kg": 0.001
+      },
+      "expected_ready": true,
+      "expected_commands_kg": [
+        0.042,
+        -0.042
+      ]
+    },
+    {
+      "id": "missing_cg_error",
+      "request": {
+        "brief": {
+          "input": "Synthetic recycled metal-rich core with a small binder, already contained. No material was processed.",
+          "variation": "Each prepared assembly is observed separately. No prediction of future batches.",
+          "contamination": "Unknown and not modeled.",
+          "product": "Contained ballast module",
+          "use_case": "Noncritical software demonstration of mass and one-axis static balance.",
+          "targets": "Mass 980–1020 g; centre of mass x between -2 and 2 mm. Retention, durability and tipping safety need separate checks.",
+          "process": "Software only; no material handling or heating.",
+          "available_changes": "Add or remove sealed trim at two stated mass-centre locations; keep the core and product targets."
+        },
+        "calculation_context": {
+          "label": "Intake task, synthetic",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "g",
+          "amount_basis": "",
+          "mass_target_min_kg": ".98",
+          "mass_target_max_kg": "1.02",
+          "balance": {
+            "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+            "target_min_mm": "-2",
+            "target_max_mm": "2"
+          }
+        },
+        "note": "Synthetic software observation bench-3, not a physical test. This is a new independent observation of the same product, with the unchanged configuration and stated stocks below. Complete assembly, including enclosure: 1 kg; weighing uncertainty ±5 g. The same assembly has centre of mass x=+5 mm; centre uncertainty was not recorded and is unknown.\nAll coordinates share x=0 at the module centre, positive toward the right. The two location coordinates are the mass centres of the actual added or removed sealed trim, not hole centres.\nLocation L: x=-6 cm; position uncertainty ±0 mm; up to 150 g can be added and 0 g removed.\nLocation R: x=+60 mm; position uncertainty ±0 mm; up to 150 g can be added and 80 g removed.\nAcross both locations, the total addition limit is 150 g and total removable trim is 80 g.\nThe command increment is 1 g. The adjustment uncertainty is ±1 g independently at each active location."
+      },
+      "expected": {
+        "observation_id": "bench-3",
+        "observation_kind": "simulated",
+        "mass_kg": 1,
+        "weighing_uncertainty_kg": 0.005,
+        "total_max_add_kg": 0.15,
+        "total_max_remove_kg": 0.08,
+        "adjustment_uncertainty_kg": 0.001,
+        "mass_target_min_kg": 0.98,
+        "mass_target_max_kg": 1.02,
+        "balance_target_min_mm": -2,
+        "balance_target_max_mm": 2,
+        "coordinate_basis": "All coordinates share x=0 at the module centre, positive toward the right.",
+        "cg_x_mm": 5,
+        "cg_uncertainty_mm": null,
+        "position_a_id": "L",
+        "position_a_x_mm": -60,
+        "position_a_uncertainty_mm": 0,
+        "position_a_max_add_kg": 0.15,
+        "position_a_max_remove_kg": 0,
+        "position_b_id": "R",
+        "position_b_x_mm": 60,
+        "position_b_uncertainty_mm": 0,
+        "position_b_max_add_kg": 0.15,
+        "position_b_max_remove_kg": 0.08,
+        "command_resolution_kg": 0.001
+      },
+      "expected_ready": false,
+      "expected_commands_kg": null
+    }
+  ]
+}

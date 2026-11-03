@@ -1,0 +1,70 @@
+{
+  "request": {
+    "message": "I have recycled polypropylene packaging flakes. Each delivery has a different mix and sometimes paper label scraps in unknown amounts. I want to make a low-cost indoor entrance mat with good grip. I only have hand tools at home, no lab or heated press. What can I do when the input changes?"
+  },
+  "status": 200,
+  "response": {
+    "result_kind": "project_intake",
+    "reply": "Thanks - I drafted only what you stated for your review. With only hand tools and a mix that changes each delivery, the next choice is how the flakes would stay together as a mat. That construction has to be clear before we can pick a suitable grip check for it.",
+    "project_draft": {
+      "product": {
+        "value": "indoor entrance mat",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "input": {
+        "value": "recycled polypropylene packaging flakes",
+        "source": "message",
+        "quote": "I have recycled polypropylene packaging flakes."
+      },
+      "variation": {
+        "value": "different mix and sometimes paper label scraps in unknown amounts",
+        "source": "message",
+        "quote": "Each delivery has a different mix and sometimes paper label scraps in unknown amounts."
+      },
+      "use": {
+        "value": "indoor",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "priorities": {
+        "value": "low-cost indoor entrance mat with good grip",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "process": null,
+      "constraints": {
+        "value": "hand tools at home, no lab or heated press",
+        "source": "message",
+        "quote": "I only have hand tools at home, no lab or heated press."
+      }
+    },
+    "questions": [
+      "How would you hold the flakes together as a mat using only hand tools - for example stitched cover, tied mesh, or other?",
+      "For grip at your entrance, what matters most - mat staying in place, shoe not slipping, or both - and what floor is underneath?",
+      "What size and shape area should the mat cover - can you share measurements from a paper sketch?"
+    ],
+    "first_step": "From one delivery, hand-sort two small handfuls into polypropylene flakes vs paper label scraps, note the share in a notebook, and draw a paper sketch of your entrance with the mat size you want. This shows how much the different mix shifts between deliveries so the construction choice can account for paper content, before a grip evaluation for that finished construction is chosen.",
+    "unknown_fields": [
+      "process"
+    ],
+    "readiness": "can_explore",
+    "review_required": true,
+    "interpretation_verified": false,
+    "ready_for_calculation": false,
+    "physical_product_tested": false,
+    "performance_verified": false,
+    "request_fingerprint": "165a08bb4cc20886f21dbf58de09707678d5228c66ad9fc8ff38ffc5be0a89c9",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "live": true,
+    "usage": {
+      "completion_tokens": 2877,
+      "prompt_tokens": 1677,
+      "total_tokens": 4554
+    },
+    "request_id": "chatcmpl-01a1a170-6e58-76fc-9129-686e532f8281",
+    "elapsed_ms": 23829,
+    "requested_reasoning_effort": "medium"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "cleanStart": 1793564471621,
+  "cleanMarkers": [
+    {
+      "name": "start",
+      "ms": 0
+    },
+    {
+      "name": "focus",
+      "ms": 5750
+    },
+    {
+      "name": "read_requested",
+      "ms": 13307
+    },
+    {
+      "name": "draft_observed",
+      "ms": 59036
+    },
+    {
+      "name": "applied",
+      "ms": 63694
+    },
+    {
+      "name": "result",
+      "ms": 69952
+    },
+    {
+      "name": "agent_requested",
+      "ms": 70231
+    },
+    {
+      "name": "agent_observed",
+      "ms": 135427
+    },
+    {
+      "name": "agent_trace",
+      "ms": 142723
+    },
+    {
+      "name": "updated_read_requested",
+      "ms": 142971
+    },
+    {
+      "name": "updated_draft_observed",
+      "ms": 195691
+    },
+    {
+      "name": "updated_applied",
+      "ms": 199820
+    },
+    {
+      "name": "updated_result",
+      "ms": 208343
+    },
+    {
+      "name": "missing_read_requested",
+      "ms": 208371
+    },
+    {
+      "name": "missing_draft_observed",
+      "ms": 271217
+    },
+    {
+      "name": "missing_applied",
+      "ms": 276296
+    },
+    {
+      "name": "missing_result",
+      "ms": 284070
+    }
+  ],
+  "cleanInitialPath": "/local/user/Downloads/rematter-engineering-note (3).json",
+  "cleanUpdatedPath": "/local/user/Downloads/rematter-engineering-note (4).json",
+  "cleanMissingPath": "/local/user/Downloads/rematter-engineering-note (5).json",
+  "cleanToolPath": "/local/user/Downloads/rematter-engineering-run (10).json"
+}

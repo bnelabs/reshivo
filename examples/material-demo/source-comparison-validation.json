@@ -1,0 +1,648 @@
+{
+  "artifact_kind": "editorial source-data visualization, not a captured app view",
+  "dimensions_px": [
+    1920,
+    1080
+  ],
+  "source_hash_verified": true,
+  "source_json_sha256": "a783f7b5c421690b9ef43f8a66c8b5f019883255afd7a089b639331b1eabfc85",
+  "point_count": 20,
+  "threshold_MPa": 25,
+  "counts_above_threshold": {
+    "20": 10,
+    "40": 0
+  },
+  "point_values_unchanged": true,
+  "original_workbook_cells_independently_checked": 20,
+  "x_axis": "Original source table-row order, not original specimen IDs; no point jitter",
+  "y_axis_MPa": [
+    15,
+    29
+  ],
+  "common_y_axis": true,
+  "line_interpolation_used": false,
+  "independent_batch_count": null,
+  "future_consistency_established": false,
+  "conditions": [
+    {
+      "condition_id": "CECON21-MDPE-PCR20",
+      "points": [
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-1",
+          "source_cell": "Data!AT14",
+          "value": 26.2476
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-2",
+          "source_cell": "Data!AT15",
+          "value": 25.7195
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-3",
+          "source_cell": "Data!AT16",
+          "value": 26.8818
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-4",
+          "source_cell": "Data!AT17",
+          "value": 26.502
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-5",
+          "source_cell": "Data!AT18",
+          "value": 27.0553
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-6",
+          "source_cell": "Data!AT19",
+          "value": 26.834
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-7",
+          "source_cell": "Data!AT20",
+          "value": 26.143
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-8",
+          "source_cell": "Data!AT21",
+          "value": 26.8236
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-9",
+          "source_cell": "Data!AT22",
+          "value": 26.6781
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR20-YIELD-10",
+          "source_cell": "Data!AT23",
+          "value": 26.9144
+        }
+      ]
+    },
+    {
+      "condition_id": "CECON21-MDPE-PCR40",
+      "points": [
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-1",
+          "source_cell": "Data!AT24",
+          "value": 17.8415
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-2",
+          "source_cell": "Data!AT25",
+          "value": 18.4141
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-3",
+          "source_cell": "Data!AT26",
+          "value": 18.3507
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-4",
+          "source_cell": "Data!AT27",
+          "value": 18.7539
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-5",
+          "source_cell": "Data!AT28",
+          "value": 18.331
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-6",
+          "source_cell": "Data!AT29",
+          "value": 19.5275
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-7",
+          "source_cell": "Data!AT30",
+          "value": 19.3473
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-8",
+          "source_cell": "Data!AT31",
+          "value": 19.1885
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-9",
+          "source_cell": "Data!AT32",
+          "value": 19.3196
+        },
+        {
+          "measurement_id": "CECON21-MDPE-PCR40-YIELD-10",
+          "source_cell": "Data!AT33",
+          "value": 19.2896
+        }
+      ]
+    }
+  ],
+  "files": {
+    "source-comparison.png": "ac01cc869557638b486a3038c292db0d1301d6000d7d04ab95846152e0c7b966",
+    "source-comparison.svg": "474d6a88f0fcc98f59a749277c4a0209516455e111ef2d2b26f694fdc0ce31cf",
+    "source-comparison-points.json": "0436edfc2d4e0fb189c100028906d849859260e82dbe9f50785de1f00c97d5d9",
+    "generate_source_comparison.py": "30d6baf8ec40eb7e9e3fec2f40ff92584872a234ee0ff32ff90253a6e806f875"
+  },
+  "fonts": [
+    {
+      "source": "web/node_modules/@fontsource/inter/files/inter-latin-400-normal.woff",
+      "sha256": "e20fa0b4fd2dd26e4d14b3ac3cc922509c3a63fa5e910e90c614544aa042dd45",
+      "license": "SIL-OFL-1.1"
+    },
+    {
+      "source": "web/node_modules/@fontsource/inter/files/inter-latin-700-normal.woff",
+      "sha256": "7c5ed5655730de337704d3fc94628515cd7e3d8d32368871709bf56ac0397e7a",
+      "license": "SIL-OFL-1.1"
+    }
+  ],
+  "matplotlib_version": "3.11.2",
+  "text_extents_inside_canvas": true,
+  "text_extents": [
+    {
+      "text": "Chosen minimum 25 MPa",
+      "bbox_px": [
+        574.757281553398,
+        592.0021220238095,
+        272.0,
+        26.88802083333337
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "Source row order (not specimen IDs)",
+      "bbox_px": [
+        301.59687499999995,
+        225.77006380208334,
+        414.40625,
+        28.568522135416657
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "1",
+      "bbox_px": [
+        193.93106796116504,
+        372.69248046875,
+        9.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "2",
+      "bbox_px": [
+        260.9019417475728,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "3",
+      "bbox_px": [
+        329.87281553398054,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "4",
+      "bbox_px": [
+        398.8436893203883,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "5",
+      "bbox_px": [
+        468.3145631067961,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "6",
+      "bbox_px": [
+        537.2854368932038,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "7",
+      "bbox_px": [
+        606.2563106796116,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "8",
+      "bbox_px": [
+        675.2271844660194,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "9",
+      "bbox_px": [
+        743.6980582524271,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "10",
+      "bbox_px": [
+        808.1689320388349,
+        372.69248046875,
+        22.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "Tensile yield stress (MPa)",
+      "bbox_px": [
+        31.32841276041664,
+        405.47,
+        31.92952473958335,
+        315.5
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "16",
+      "bbox_px": [
+        114.71111111111111,
+        414.0917801339286,
+        25.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "20",
+      "bbox_px": [
+        108.71111111111111,
+        501.41749441964294,
+        31.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "25",
+      "bbox_px": [
+        108.71111111111111,
+        610.5746372767858,
+        31.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "28",
+      "bbox_px": [
+        108.71111111111111,
+        676.0689229910715,
+        31.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "Chosen minimum 25 MPa",
+      "bbox_px": [
+        1477.1572815533982,
+        592.0021220238095,
+        272.0,
+        26.88802083333337
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "Source row order (not specimen IDs)",
+      "bbox_px": [
+        1203.996875,
+        225.77006380208334,
+        414.40625,
+        28.568522135416657
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "1",
+      "bbox_px": [
+        1096.331067961165,
+        372.69248046875,
+        9.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "2",
+      "bbox_px": [
+        1163.3019417475728,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "3",
+      "bbox_px": [
+        1232.2728155339805,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "4",
+      "bbox_px": [
+        1301.2436893203883,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "5",
+      "bbox_px": [
+        1370.714563106796,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "6",
+      "bbox_px": [
+        1439.685436893204,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "7",
+      "bbox_px": [
+        1508.6563106796116,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "8",
+      "bbox_px": [
+        1577.6271844660196,
+        372.69248046875,
+        12.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "9",
+      "bbox_px": [
+        1646.098058252427,
+        372.69248046875,
+        13.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "10",
+      "bbox_px": [
+        1710.568932038835,
+        372.69248046875,
+        22.0,
+        25.20751953125
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "16",
+      "bbox_px": [
+        1017.1111111111111,
+        414.0917801339286,
+        25.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "20",
+      "bbox_px": [
+        1011.1111111111111,
+        501.41749441964294,
+        31.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "25",
+      "bbox_px": [
+        1011.1111111111111,
+        610.5746372767858,
+        31.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "28",
+      "bbox_px": [
+        1011.1111111111111,
+        676.0689229910715,
+        31.0,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "PUBLISHED SOURCE MEASUREMENTS",
+      "bbox_px": [
+        115.19999999999999,
+        1018.1447417534721,
+        455.51562500000006,
+        28.568522135416742
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "What changes when recycled content changes?",
+      "bbox_px": [
+        115.19999999999999,
+        939.419453125,
+        1176.484375,
+        60.498046875
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "The study’s MDPE + recycled PE · mass proportions · injection-moulded specimens",
+      "bbox_px": [
+        115.19999999999999,
+        891.9346506076389,
+        1251.890625,
+        38.65152994791663
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "20% recycled PE",
+      "bbox_px": [
+        153.6,
+        809.7444986979166,
+        382.21875,
+        55.45654296875
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "+ 80% virgin MDPE",
+      "bbox_px": [
+        153.6,
+        768.7396961805555,
+        256.53125,
+        33.61002604166663
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "10/10",
+      "bbox_px": [
+        739.0,
+        810.1544683159722,
+        125.0,
+        58.81754557291674
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "readings meet minimum",
+      "bbox_px": [
+        581.171875,
+        769.4097265624999,
+        282.828125,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "40% recycled PE",
+      "bbox_px": [
+        1056.0,
+        809.7444986979166,
+        384.21875,
+        55.45654296875
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "+ 60% virgin MDPE",
+      "bbox_px": [
+        1056.0,
+        768.7396961805555,
+        256.53125,
+        33.61002604166663
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "0/10",
+      "bbox_px": [
+        1662.4,
+        810.1544683159722,
+        104.0,
+        58.81754557291674
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "readings meet minimum",
+      "bbox_px": [
+        1483.571875,
+        769.4097265624999,
+        282.828125,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "Published specimens — not my material or a finished-product result",
+      "bbox_px": [
+        115.19999999999999,
+        281.7346506076389,
+        1064.453125,
+        38.65152994791663
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "Ten dogbones per level, not ten batches · two of six tested contents shown · the 0% control also clears this minimum",
+      "bbox_px": [
+        115.19999999999999,
+        241.28972656250002,
+        1369.109375,
+        30.24902343750003
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "Injection 185–195 °C · tensile 500 mm/min at 22 °C · Cecon et al. (2021)",
+      "bbox_px": [
+        115.19999999999999,
+        199.1697265625,
+        837.1875,
+        30.2490234375
+      ],
+      "inside_canvas": true
+    },
+    {
+      "text": "DOI 10.1016/j.dib.2021.107452 · CC BY 4.0 · Editorial view of recorded source values; no predictions",
+      "bbox_px": [
+        115.19999999999999,
+        163.86474175347223,
+        1104.984375,
+        28.568522135416657
+      ],
+      "inside_canvas": true
+    }
+  ],
+  "caption_region_px": [
+    0,
+    930,
+    1920,
+    1080
+  ],
+  "caption_region_uniform_background": true,
+  "visual_review": "Passed: generated PNG inspected after fixing composition/count subheader overlap, x-label/footer overlap and threshold-label/point proximity. No clipped labels or marks. Cream/teal palette with open comparator dots; caption area y930–1080 is uniformly blank."
+}

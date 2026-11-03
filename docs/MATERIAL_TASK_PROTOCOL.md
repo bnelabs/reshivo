@@ -1,0 +1,45 @@
+# Full material-task diagnostic — frozen protocol v1
+
+This diagnostic compares the current ReMatter workflow with capable ordinary Meta help supplied with the same case, practical constraints and actual deterministic tool outputs. It is a developer-authored, headless software experiment. It is not a user study, a material test or a test of arithmetic superiority. The fixtures are synthetic and visible, not unseen generalization cases. A tie or baseline win is an acceptable result.
+
+## Task and checkpoints
+
+One fictional PE material-development case follows a non-load-bearing decorative sleeve around a separate watertight plant pot. The liner carries soil and water. The user chooses a material-screen minimum of 25 MPa tensile yield stress; sleeve fit, creep and weathering remain unqualified. Resin identifiers PCRPE-A and MDPE-B, process P1 and property method M1 are synthetic labels, not actual resin grades or test records. There is no home moulding or tensile-testing capability, and no suitable outside facility is confirmed. No physical trial occurs in this experiment.
+
+1. **A — plan the comparison.** Help the user compare material/process/design options and develop a controlled PCRPE-proportion trial. The user proposes 20, 35 and 50 mass percent as trial levels. Keep the stated resins, preparation, process and property method fixed for that comparison. Product checks remain separate. Do not invent additive doses, processing settings or measured outcomes.
+2. **B — use the entered readings for the next trial.** Supply two synthetic, grouping-unknown readings per level: 20 percent → 31/30 MPa; 35 percent → 27/26 MPa; 50 percent → 22/21 MPa. These are a separately supplied software dataset, not an execution of the generated plan. Prefer the highest recorded recycled-containing level whose entered readings all meet the 25 MPa screen. The exact recorded point is 35 percent. For a hypothetical 1.4 kg starting portion at 46 percent PCRPE, use named PE stock A, characterized as zero mass percent PCRPE. The composition calculator returns a 0.44 kg addition. It does not predict the resulting mix's properties.
+3. **C — work with an input range.** Replace the current portion's exact 46 percent with an entered 43–47 percent range, still 1.4 kg and still targeting the exact 35 percent point. No one fixed addition reaches that exact point across the entire range. A constructive next action is to characterize the portion more precisely and calculate its dose, or propose another composition that still needs its own property check. Do not discard the material or widen the property-backed point as if nearby properties were measured.
+4. **D — missing stock information.** A new hypothetical 1.4 kg portion is exactly 46 percent PCRPE, but its only available addition is now separately named PE stock U. Its PCRPE mass fraction is unknown. The earlier characterization of stock A does not apply. No numerical addition is issued. Ask for stock U's component fraction and basis; offer a constructive conditional next action. Density, source studies or the word PE cannot substitute for that fraction.
+
+Unknown reading groups remain unknown. Two entries at a setting do not establish two batches or independence. A measured/source link is never transferred from another material. Any proposed new mix, preparation or product change remains untested. The starting-portion fraction can differ from the nominal shared recipe; the actual calculator input is retained separately without overwriting the reference case.
+
+## Arms and matched information
+
+**Workflow arm:** invoke production `help_with_case`, select a proportion route by the predeclared rule below, invoke production `plan_trial`, then production reading comparison and composition arithmetic followed by actual production contextual advice for B/C/D. The production TypeScript measured-composition handoff is invoked directly with explicit component mapping and confirmation. Its exact point is preserved. This is a headless exercise of those functions, not an actual browser-action experiment.
+
+**Ordinary arm:** use the same configured Meta model through the same bounded transport, with a practical engineering prompt, the same full factual guardrails, references, case and current data. It receives the same actual reading-comparison and composition-calculation results without re-entry or artificial friction. It uses the same route/trial response schemas but does not receive ReMatter's production system prompts or target-validation wrapper. Its selected route may differ and is judged on suitability, not identical wording.
+
+Both arms have five planned model calls: A discovery, A trial, then B/C/D contextual advice. Discovery and advice use high reasoning and 8,192 completion tokens; trial uses medium reasoning and 8,192 completion tokens, mirroring the current production settings. No extra reasoning turns or retry budget is given to either arm. Calls run in alternating arm order at each substage, beginning ordinary/workflow for discovery and workflow/ordinary for trial. A transport/schema failure is retained as a failed checkpoint, not replaced by a stored answer. Later checkpoints may still receive the same current case and tools, with the failed earlier plan explicitly missing.
+
+Route selection is a scripted stand-in for an operator choice: choose the first returned material route whose title or change mentions a ratio, proportion, fraction, recycled content or recycled-to-virgin relationship; otherwise choose the first material route. Each arm develops its own selected route. This selection rule and the user preference at B are not model achievements.
+
+The full actual comparison, calculation, handoff, original readings and all available identifiers remain in the result artifact. The model receives a compact, identical tool summary, including the unknown grouping and synthetic status. Each arm's prior generated trial/advice is preserved as its own context, within the same six-message/6,000-character limits. New input information explicitly supersedes older quantities. No starting-fraction range is derived from the property readings.
+
+## Scoring before seeing outputs
+
+The deterministic reference checks are independent Decimal arithmetic: matching input levels are 20 and 35; the preferred recorded level is 35; B needs 0.44 kg of zero-PCRPE stock; C's two endpoints require different doses (0.32 and 0.48 kg), proving no fixed dose; D lacks a required component fraction. The production result is checked against these references before live calls. Correct supplied calculator output is not scored as superior model reasoning.
+
+Each completed checkpoint receives a quote-based manual review on these criteria, with failures and ambiguous cases retained:
+
+| Checkpoint | Required useful behavior | Disqualifying behavior |
+| --- | --- | --- |
+| A | One concrete controlled comparison; states change, fixed context, records and property-specific next check; respects home equipment; preserves original target | Invented measured property/dose/process settings, home processing claim, target replacement, or no usable next action |
+| B | Treats 35 percent as one recorded candidate for the user's preference; uses 0.44 kg only as a composition-trial quantity; names preparation/process/property checks still needed | Recipe/property assurance, source transfer, interpolation, invented independence or a conflicting dose |
+| C | Recognizes no one fixed dose; gives a constructive characterization/recalculation or separately tested new-trial route | Discard-only answer, a fixed dose claimed to cover the range, or unsupported widening of the property-backed point |
+| D | Issues no numerical addition; identifies stock U's missing PCRPE mass fraction and a useful conditional next step | Inherits stock A's zero percent, calls U virgin without support, substitutes density or source properties, or invents a dose |
+
+The report distinguishes model-call availability, structured target retention, completed task checkpoints, qualitative review, recorded latency/token usage and any invalid statements. It cannot claim human time savings, general reliability, originality, physical performance or a statistically meaningful advantage. Model latency and fixed scripted handoffs are not human workflow time. A review may be unresolved until a second reader checks the quotes; an unreviewed model response is not automatically a pass.
+
+## Freeze and execution
+
+Before calls, freeze hashes of this protocol, fixture, harness and invoked production files into a new lock. The harness refuses changed hashes or an existing result. It saves each actual request, output, model usage, timing and error incrementally, with credentials excluded. `--offline` executes only deterministic reference checks and the actual TypeScript handoff. `--freeze` records the lock; `--live` performs the five planned calls per arm without tuning the task, prompts or graders. Complete successes and failures remain private.

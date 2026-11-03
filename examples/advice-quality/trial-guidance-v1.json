@@ -1,0 +1,328 @@
+{
+  "purpose": "Fresh synthetic qualitative quality diagnostics, not a benchmark or physical test",
+  "started_utc": "2026-11-01T21:30:55.246039+00:00",
+  "advisor_sha256": "e7654640a7ea9c8b1fefac3d3f836ed2278da3e7369acf059482cc5f18b05b2e",
+  "status": "completed",
+  "physical_product_tested": false,
+  "rows": [
+    {
+      "id": "unconfirmed_process_and_restricted_changes",
+      "request": {
+        "brief": {
+          "input": "Synthetic case: recycled HDPE and nylon offcuts; their proportions are unknown.",
+          "variation": "The proportions and visible grit change between received portions.",
+          "contamination": "Grit identity and amount are not measured.",
+          "product": "Doorway drainage insert",
+          "use_case": "A proposed walking surface in a wet doorway; no prototype has been made.",
+          "targets": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+          "process": "A press is available; its type and tooling have not been confirmed.",
+          "available_changes": "No new materials, equipment or geometry changes are authorized yet."
+        },
+        "route": {
+          "id": "engineering:drainage-shape",
+          "title": "Compare drainage shapes",
+          "change": "Consider a grooved insert versus a plain insert only if shape changes and suitable tooling are confirmed.",
+          "why": "A drainage path may change standing water without establishing wet-slip performance.",
+          "steps": [
+            "Clarify whether geometry changes are permitted.",
+            "Confirm the process and any tooling needed before making specimens."
+          ],
+          "tradeoffs": [
+            "The process and ability to make either shape remain unconfirmed."
+          ],
+          "check": "Separate drainage observations from a product-specific wet-slip evaluation."
+        },
+        "calculation_context": {
+          "label": "Synthetic quality check",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02"
+        }
+      },
+      "result": {
+        "result_kind": "trial_proposal",
+        "live": true,
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "usage": {
+          "completion_tokens": 1957,
+          "prompt_tokens": 3176,
+          "total_tokens": 5133
+        },
+        "elapsed_ms": 9506,
+        "request_id": "chatcmpl-01a19905-ec42-725a-b306-110f683125e5",
+        "calculation_context": {
+          "label": "Synthetic quality check",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02"
+        },
+        "route_id": "engineering:drainage-shape",
+        "targets": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+        "brief": {
+          "available_changes": "No new materials, equipment or geometry changes are authorized yet.",
+          "contamination": "Grit identity and amount are not measured.",
+          "input": "Synthetic case: recycled HDPE and nylon offcuts; their proportions are unknown.",
+          "process": "A press is available; its type and tooling have not been confirmed.",
+          "product": "Doorway drainage insert",
+          "targets": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+          "use_case": "A proposed walking surface in a wet doorway; no prototype has been made.",
+          "variation": "The proportions and visible grit change between received portions."
+        },
+        "selected_route": {
+          "id": "engineering:drainage-shape",
+          "title": "Compare drainage shapes",
+          "change": "Consider a grooved insert versus a plain insert only if shape changes and suitable tooling are confirmed.",
+          "why": "A drainage path may change standing water without establishing wet-slip performance.",
+          "check": "Separate drainage observations from a product-specific wet-slip evaluation.",
+          "steps": [
+            "Clarify whether geometry changes are permitted.",
+            "Confirm the process and any tooling needed before making specimens."
+          ],
+          "tradeoffs": [
+            "The process and ability to make either shape remain unconfirmed."
+          ]
+        },
+        "title": "Conditional grooved vs plain drainage comparison",
+        "objective": "Prepare a one-variable grooved-versus-plain drainage-shape comparison for the doorway insert without making specimens until shape change and suitable tooling are authorized.",
+        "comparison": "Compare grooved versus plain insert shape as the single changed variable, with material portion, installation, and use-case context fixed. Keep the comparison at design and permission-check stage because geometry changes are not yet authorized and the press and tooling are unconfirmed.",
+        "change": "Conditionally compare a grooved insert against a plain insert using the same received HDPE/nylon portion. No specimen is made until geometry change is authorized and press type plus tooling suitability are confirmed.",
+        "keep_fixed": [
+          "Same received HDPE/nylon portion with its unknown proportions and grit",
+          "Same wet doorway walking-surface installation and use-case context",
+          "Same press conditions once capability and tooling are confirmed"
+        ],
+        "materials": [
+          "Existing recycled HDPE and nylon offcuts as received, proportions unknown",
+          "Existing press only — type and tooling unconfirmed, suitability must be confirmed before any specimen",
+          "Paper or permitted design record for grooved versus plain drainage paths"
+        ],
+        "steps": [
+          {
+            "action": "Confirm whether a shape change is permitted; do not cut, press, or alter material until permission is recorded.",
+            "record": "Permission decision for grooved versus plain comparison, date, and who authorized it."
+          },
+          {
+            "action": "Confirm press type, available tooling, and suitability for the grit-containing HDPE/nylon portion before any specimen step.",
+            "record": "Press type, tooling description, suitability decision, and any missing capability."
+          },
+          {
+            "action": "Prepare a paper comparison of grooved versus plain water paths in the same doorway footprint: entry, channel, and exit points.",
+            "record": "Sketches or notes for both shapes, assumed footprint, and unresolved drainage or fit questions."
+          },
+          {
+            "action": "Inspect the received portions and record variation without further processing.",
+            "record": "Visible grit differences and proportion uncertainty between portions, and portion used for the planned comparison."
+          }
+        ],
+        "checks": [
+          {
+            "property": "Drainage observation",
+            "target": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+            "method": "On paper or permitted mock-up only until tooling is confirmed: describe where water would enter, travel, and exit for each shape, then if making is later authorized, observe poured-water behaviour separately from slip testing.",
+            "if_outside": "If water ponds in one option, keep the other drainage path as the adjustable design choice and re-check permission and tooling before any remake."
+          },
+          {
+            "property": "Wet-slip resistance",
+            "target": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+            "method": "Do not use walking, treading, hand feel, or subjective slip feel as proof; explain what local fit and drainage observation can and cannot show and name the product-specific wet-slip evaluation in wet doorway conditions as still needed.",
+            "if_outside": "If slip performance is uncertain, do not rate the insert as slip-resistant; retain the better-draining design choice and arrange the still-needed product-specific wet-slip evaluation."
+          }
+        ],
+        "questions": [
+          "Are geometry changes now permitted for a grooved versus plain insert, or must planning stay on paper?",
+          "What is the press type and what tooling is available and confirmed suitable for HDPE/nylon offcuts with grit?",
+          "Your entered mass range is 0.98-1.02 kg but your targets state numerical acceptance limits are not set — which limit should be used for weighing checks?"
+        ],
+        "sources": [
+          {
+            "id": "basel-plastic-waste-2023",
+            "title": "Basel Convention — plastic waste preparation and recycling",
+            "url": "https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-WAST-GUID-ESM-PlasticWastes-20230512.English.pdf",
+            "scope": "General guidance on identifying, preparing and sorting plastic streams and material-specific compatibility. It supplies no binder identity, additive dose or performance prediction for the user's mix."
+          }
+        ],
+        "physical_product_tested": false,
+        "performance_verified": false
+      },
+      "status": "completed"
+    },
+    {
+      "id": "confirmed_cold_assembly",
+      "request": {
+        "brief": {
+          "input": "Synthetic case: four existing presealed cartridges of recovered steel fasteners. The cartridges remain closed.",
+          "variation": "Each closed cartridge has a different, as-yet unmeasured mass.",
+          "contamination": "Contents stay sealed; no loose material handling is available.",
+          "product": "Stationary desk ballast module",
+          "use_case": "Cold assembly into an existing closed tray; keep the cartridges retained.",
+          "targets": "Complete assembly mass between 0.98 kg and 1.02 kg; cartridges must remain retained.",
+          "process": "Existing bolted tray, suitable cartridge slots, wrench and bench scale are available. Cold assembly only.",
+          "available_changes": "Swap whole sealed cartridges using the existing slots; no opening, heating, loose fill or new tooling."
+        },
+        "route": {
+          "id": "engineering:sealed-exchange",
+          "title": "Exchange whole sealed cartridges",
+          "change": "Compare the complete tray assembly before and after exchanging one closed cartridge.",
+          "why": "Complete-assembly weighing can inform a mass adjustment without assuming fill density.",
+          "steps": [
+            "Weigh the complete closed assembly and record the scale uncertainty.",
+            "Exchange one whole sealed cartridge in the existing slot, close the tray and reweigh."
+          ],
+          "tradeoffs": [
+            "Available cartridge masses may not reach the desired interval.",
+            "Retention needs its own configuration-specific check."
+          ],
+          "check": "Check assembly mass separately from cartridge retention."
+        },
+        "calculation_context": {
+          "label": "Synthetic quality check",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02"
+        }
+      },
+      "result": {
+        "result_kind": "trial_proposal",
+        "live": true,
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "usage": {
+          "completion_tokens": 1531,
+          "prompt_tokens": 3211,
+          "total_tokens": 4742
+        },
+        "elapsed_ms": 6743,
+        "request_id": "chatcmpl-01a19906-06b9-704e-9a6d-01f683fc0e90",
+        "calculation_context": {
+          "label": "Synthetic quality check",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02"
+        },
+        "route_id": "engineering:sealed-exchange",
+        "targets": "Complete assembly mass between 0.98 kg and 1.02 kg; cartridges must remain retained.",
+        "brief": {
+          "available_changes": "Swap whole sealed cartridges using the existing slots; no opening, heating, loose fill or new tooling.",
+          "contamination": "Contents stay sealed; no loose material handling is available.",
+          "input": "Synthetic case: four existing presealed cartridges of recovered steel fasteners. The cartridges remain closed.",
+          "process": "Existing bolted tray, suitable cartridge slots, wrench and bench scale are available. Cold assembly only.",
+          "product": "Stationary desk ballast module",
+          "targets": "Complete assembly mass between 0.98 kg and 1.02 kg; cartridges must remain retained.",
+          "use_case": "Cold assembly into an existing closed tray; keep the cartridges retained.",
+          "variation": "Each closed cartridge has a different, as-yet unmeasured mass."
+        },
+        "selected_route": {
+          "id": "engineering:sealed-exchange",
+          "title": "Exchange whole sealed cartridges",
+          "change": "Compare the complete tray assembly before and after exchanging one closed cartridge.",
+          "why": "Complete-assembly weighing can inform a mass adjustment without assuming fill density.",
+          "check": "Check assembly mass separately from cartridge retention.",
+          "steps": [
+            "Weigh the complete closed assembly and record the scale uncertainty.",
+            "Exchange one whole sealed cartridge in the existing slot, close the tray and reweigh."
+          ],
+          "tradeoffs": [
+            "Available cartridge masses may not reach the desired interval.",
+            "Retention needs its own configuration-specific check."
+          ]
+        },
+        "title": "Exchange whole sealed cartridges - desk ballast trial",
+        "objective": "Reach the stated assembly mass interval by exchanging whole sealed cartridges while keeping cartridges retained in the existing closed tray.",
+        "comparison": "Compare the same complete tray assembly before versus after exchanging only one closed cartridge: record closed-assembly mass and retention in configuration A, then repeat after the single exchange in configuration B.",
+        "change": "Exchange one whole presealed cartridge for a different whole presealed cartridge in the existing slot, with no opening, heating, loose fill, or new tooling.",
+        "keep_fixed": [
+          "Same existing bolted tray, slots, and cold assembly method",
+          "Same closed-tray installation and stationary desk ballast use-case",
+          "Cartridges remain sealed; no opening, pouring, heating, or loose material"
+        ],
+        "materials": [
+          "Existing bolted tray with suitable cartridge slots",
+          "Four existing presealed cartridges of recovered steel fasteners, kept closed",
+          "Wrench and bench scale for cold assembly and external weighing only"
+        ],
+        "steps": [
+          {
+            "action": "Confirm bench scale capability and uncertainty are suitable for the target tolerance, then weigh the complete closed assembly with cartridges installed and tray closed.",
+            "record": "Assembly configuration, scale identity, each mass reading, tare procedure, and stated uncertainty."
+          },
+          {
+            "action": "Open tray using existing method, exchange only one whole sealed cartridge in its existing slot without opening any cartridge, then re-close tray to the same closed configuration.",
+            "record": "Which sealed unit was removed and which sealed unit was installed, slot position, and tray closure condition."
+          },
+          {
+            "action": "Reweigh the complete closed assembly with the same scale and tare procedure and check retention separately.",
+            "record": "New mass readings, uncertainty, mass difference from prior configuration, and retention observation."
+          }
+        ],
+        "checks": [
+          {
+            "property": "assembly mass",
+            "target": "Complete assembly mass between 0.98 kg and 1.02 kg",
+            "method": "Weigh the complete closed tray assembly on the bench scale using consistent tare procedure; record each reading plus scale capability and measurement uncertainty. Do not use display resolution as accuracy.",
+            "if_outside": "If outside the interval, try a different single-cartridge exchange and reweigh the complete closed assembly; do not open cartridges or add loose fill."
+          },
+          {
+            "property": "cartridge retention",
+            "target": "cartridges must remain retained",
+            "method": "With tray closed in its use-case configuration, inspect and record whether all installed cartridges remain seated and retained without opening them.",
+            "if_outside": "If any cartridge shifts or is not held, re-seat in the existing slot, re-close the tray to its existing closed configuration, and re-check; do not modify slots or add tooling."
+          }
+        ],
+        "questions": [
+          "What is the bench scale capacity and measurement uncertainty for weighing about 1 kg, and is it suitable for the 0.98-1.02 kg interval?",
+          "How is retained defined for this tray in its closed configuration?",
+          "Are there additional sealed cartridges beyond the four available to try if the interval is not reached?"
+        ],
+        "sources": [
+          {
+            "id": "nist-weighing-tare",
+            "title": "NIST — weighing and scales FAQs",
+            "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+            "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+          }
+        ],
+        "physical_product_tested": false,
+        "performance_verified": false
+      },
+      "status": "completed"
+    }
+  ],
+  "finished_utc": "2026-11-01T21:31:11.509877+00:00"
+}

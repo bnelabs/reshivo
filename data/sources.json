@@ -1,0 +1,65 @@
+{
+  "record_url": "https://zenodo.org/records/19370161",
+  "doi": "10.5281/zenodo.19370161",
+  "title": "Evaluating the Recyclability and Restabilization of Laboratory Plastics Consumables: Impact of Autoclaving and Mechanical Recycling on Polypropylene",
+  "creators": [
+    {
+      "name": "Ng, Kim Hao",
+      "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability",
+      "orcid": "0000-0003-3373-6666"
+    },
+    {
+      "name": "S\u00fcss, Leonard D.",
+      "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability"
+    },
+    {
+      "name": "Hirschel, Franziska",
+      "affiliation": "Darmstadt University of Applied Sciences"
+    },
+    {
+      "name": "M\u00fcller, Michael",
+      "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability"
+    },
+    {
+      "name": "Schell, Bianca Ricarda",
+      "affiliation": "University of Konstanz",
+      "orcid": "0000-0003-0314-5259"
+    },
+    {
+      "name": "Metzsch-Zilligen, Elke",
+      "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability"
+    },
+    {
+      "name": "Pfaendner, Rudolf",
+      "affiliation": "Fraunhofer Institute for Structural Durability and System Reliability",
+      "orcid": "0000-0001-6743-1495"
+    },
+    {
+      "name": "Bruns, Nico",
+      "affiliation": "University of Strathclyde",
+      "orcid": "0000-0001-6199-9995"
+    }
+  ],
+  "license": {
+    "id": "cc-by-4.0"
+  },
+  "paper_doi": "10.1039/D6SU00069J",
+  "files": [
+    {
+      "path": "data/raw/pp_tensile_report_summary.csv",
+      "bytes": 4115,
+      "sha256": "384d1906cd432a5237ceb159d51e755ff42cb73ef8078896ce875a1a0dc41ec1"
+    },
+    {
+      "path": "data/raw/Tensile_tests.zip",
+      "bytes": 3074775,
+      "sha256": "9b00370b377bdf55868ac40f40c37567db7a5e239f1d44ea4c85d96ca216579d"
+    },
+    {
+      "path": "data/raw/zenodo-19370161.json",
+      "bytes": 7923,
+      "sha256": "6b44d02f58722e3c928fc36897708a60a1fef6cd437d4b219647a121855941ed"
+    }
+  ],
+  "csv_provenance": "Derived by the preceding material-data audit from 18 source PDF reports; reported mean and specimen SD retained. No formulation mapping inferred."
+}

@@ -1,0 +1,78 @@
+[
+  {
+    "name": "start",
+    "ms": 0
+  },
+  {
+    "name": "case_loaded",
+    "ms": 328
+  },
+  {
+    "name": "routes_requested",
+    "ms": 4291
+  },
+  {
+    "name": "routes_observed",
+    "ms": 24052
+  },
+  {
+    "name": "focused_routes",
+    "ms": 28505
+  },
+  {
+    "name": "route_selected",
+    "ms": 37887
+  },
+  {
+    "name": "engineering_start",
+    "ms": 42032
+  },
+  {
+    "name": "first_diagram",
+    "ms": 46642
+  },
+  {
+    "name": "first_meta_requested",
+    "ms": 50479
+  },
+  {
+    "name": "first_meta_observed",
+    "ms": 64185
+  },
+  {
+    "name": "first_trace_open",
+    "ms": 67292
+  },
+  {
+    "name": "second_observation_start",
+    "ms": 71168
+  },
+  {
+    "name": "old_balance_cleared",
+    "ms": 75603
+  },
+  {
+    "name": "second_observation_ready",
+    "ms": 79641
+  },
+  {
+    "name": "second_meta_requested",
+    "ms": 82553
+  },
+  {
+    "name": "second_meta_observed",
+    "ms": 106979
+  },
+  {
+    "name": "second_diagram",
+    "ms": 111419
+  },
+  {
+    "name": "second_download",
+    "ms": 116465
+  },
+  {
+    "name": "stop",
+    "ms": 117289
+  }
+]

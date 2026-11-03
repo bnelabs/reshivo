@@ -1,0 +1,76 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:06.446
+Recycled inputs change. A product still has a job to do. ReMatter starts with what you have,
+
+00:00:06.446 --> 00:00:12.891
+what varies, and the result you need. This is a software demonstration using synthetic readings, not a
+
+00:00:12.891 --> 00:00:19.337
+tested recycled material. The user chooses the product. Here, a contained ballast module needs both a mass
+
+00:00:19.337 --> 00:00:21.232
+range and a balance-point range.
+
+00:00:21.232 --> 00:00:28.052
+Meta proposes practical routes from this same case. Instead of rejecting a variable core, this route keeps
+
+00:00:28.052 --> 00:00:34.872
+it contained and adds two sealed trim locations. These are engineering proposals, not verified material recipes. The
+
+00:00:34.872 --> 00:00:40.488
+case and targets carry into the calculation; I do not select the material again.
+
+00:00:40.488 --> 00:00:46.345
+Here is the trap in checking weight alone. The assembly is nine hundred and fifty grams, with
+
+00:00:46.345 --> 00:00:52.203
+a stated weighing bound. Adding fifty grams on the left meets the mass target, but the balance
+
+00:00:52.203 --> 00:00:58.060
+point still misses. The joint tool checks both targets, both trim locations, the available amounts, and the
+
+00:00:58.060 --> 00:01:03.917
+entered uncertainty bounds. Rounded commands are checked again. The result is add one hundred and four grams
+
+00:01:03.917 --> 00:01:09.085
+on the left and remove fifty-four on the right. Both ranges fit within this simulation.
+
+00:01:09.085 --> 00:01:15.549
+This is a fresh Meta request. Meta calls the engineering tool and explains the checked action. The
+
+00:01:15.549 --> 00:01:22.013
+downloadable record retains the actual calculation, inputs, and model turns. The model does not invent a density
+
+00:01:22.013 --> 00:01:28.477
+or transfer a public plastic study into my mix. The diagram shows where the trim belongs; it
+
+00:01:28.477 --> 00:01:30.379
+is not a manufacturing drawing.
+
+00:01:30.379 --> 00:01:36.473
+Now consider another synthetic observation of the same product. The mass is already one kilogram, but the
+
+00:01:36.473 --> 00:01:42.568
+balance point is five millimetres off centre. The old balance reading and result clear automatically. I enter
+
+00:01:42.568 --> 00:01:48.663
+the matching new balance reading. Meta runs the joint check again. This time the action is add
+
+00:01:48.663 --> 00:01:54.757
+forty-two grams on the left and remove forty-two on the right. Total nominal mass stays the same
+
+00:01:54.757 --> 00:01:59.776
+while the balance moves. The downloadable record keeps this observation and its actual calculation.
+
+00:01:59.776 --> 00:02:06.721
+What have we proved? A working software loop from a shared case to an adjustment amount and
+
+00:02:06.721 --> 00:02:13.665
+location, then a revised action from a new observation. We have not proved physical performance or future-batch
+
+00:02:13.665 --> 00:02:20.610
+consistency. Simpler baselines matched the arithmetic, and a parser matched note extraction faster. ReMatter connects engineering proposals,
+
+00:02:20.610 --> 00:02:27.554
+checked calculations and a clear next action. Retention, durability and tipping safety still need their own tests.

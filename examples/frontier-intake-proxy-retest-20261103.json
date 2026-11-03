@@ -1,0 +1,72 @@
+{
+  "request": {
+    "message": "I have recycled polypropylene packaging flakes. Each delivery has a different mix and sometimes paper label scraps in unknown amounts. I want to make a low-cost indoor entrance mat with good grip. I only have hand tools at home, no lab or heated press. What can I do when the input changes?"
+  },
+  "status": 200,
+  "response": {
+    "result_kind": "project_intake",
+    "reply": "Thanks - mixed flakes with paper scraps and hand-tools only makes the build method the key unknown. A paper sketch can compare shape and fit, not grip or cleaning. Before we can pick a grip check we need to know how the finished mat will be built. This draft uses only your stated facts - please review it before use.",
+    "project_draft": {
+      "product": {
+        "value": "indoor entrance mat",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "input": {
+        "value": "recycled polypropylene packaging flakes",
+        "source": "message",
+        "quote": "I have recycled polypropylene packaging flakes."
+      },
+      "variation": {
+        "value": "Each delivery has a different mix and sometimes paper label scraps in unknown amounts.",
+        "source": "message",
+        "quote": "Each delivery has a different mix and sometimes paper label scraps in unknown amounts."
+      },
+      "use": {
+        "value": "indoor",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "priorities": {
+        "value": "low-cost indoor entrance mat with good grip",
+        "source": "message",
+        "quote": "I want to make a low-cost indoor entrance mat with good grip."
+      },
+      "process": {
+        "value": "hand tools at home",
+        "source": "message",
+        "quote": "I only have hand tools at home, no lab or heated press."
+      },
+      "constraints": {
+        "value": "no lab or heated press",
+        "source": "message",
+        "quote": "I only have hand tools at home, no lab or heated press."
+      }
+    },
+    "questions": [
+      "How would you hold the flakes together as a finished mat using only hand tools?",
+      "What matters most for grip: mat not sliding on the floor, shoes not slipping, or both?",
+      "What doorway size and floor type will the mat sit on?"
+    ],
+    "first_step": "Draw a to-scale paper outline of where the indoor mat would sit and write on it how you plan to hold the flakes together with hand tools, and what floor it will sit on. This compares shape and fit, not grip, and lets us pick a suitable grip check for the actual construction.",
+    "unknown_fields": [],
+    "readiness": "can_explore",
+    "review_required": true,
+    "interpretation_verified": false,
+    "ready_for_calculation": false,
+    "physical_product_tested": false,
+    "performance_verified": false,
+    "request_fingerprint": "165a08bb4cc20886f21dbf58de09707678d5228c66ad9fc8ff38ffc5be0a89c9",
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "live": true,
+    "usage": {
+      "completion_tokens": 3022,
+      "prompt_tokens": 1631,
+      "total_tokens": 4653
+    },
+    "request_id": "chatcmpl-01a1a16f-35fc-768b-b822-6a3aa0638b13",
+    "elapsed_ms": 24434,
+    "requested_reasoning_effort": "medium"
+  }
+}

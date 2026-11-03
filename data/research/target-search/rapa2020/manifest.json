@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": "data/research/target-search/rapa2020/originals/rapa2020.xml",
+      "bytes": 154491,
+      "sha256": "c5e4a32199ffe8fed2d8b258649c5e7f585e5bf8c04269771a052f186b6db642"
+    },
+    {
+      "path": "data/research/target-search/rapa2020/observations.json",
+      "bytes": 31602,
+      "sha256": "f6580e12d2b0eb71e0454ae5311cc194d5a42c2885e00f1974535214e0a7468f"
+    },
+    {
+      "path": "data/research/target-search/rapa2020/README.md",
+      "bytes": 3610,
+      "sha256": "a5b6042b2b97e278c7d58826264f9ecf7c8d71019c41ce7197425abed2f8f25f"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "request": {
+    "message": "I want to make an indoor floor mat from recycled rubber and a binder. The amount of paper-label residue in the rubber varies. How can I decide what to try while keeping grip and recovery within my targets and watching the cost?\n\nSynthetic indoor floor mat for the same intended use and nominal dimensions in all setups.\n\nIdentified recycled rubber stock with paper-label residue; the amount of named paper varies. The available zero-paper added stock is characterized clean rubber, with 0 percent paper by mass. All amounts, fractions and prices in this exercise use the same as-received mass basis.\n\nHome planning only. No physical handling, processing, measuring equipment, or lab access is available during this exercise. The same intended process and geometry are stated for each setup but unspecified."
+  },
+  "status": 502,
+  "response": {
+    "error": {
+      "code": "provider_request_failed",
+      "message": "Meta is taking too long. Your inputs are still here; try again."
+    }
+  }
+}

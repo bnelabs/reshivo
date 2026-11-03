@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "common_metadata": {
+    "source_url": "https://zenodo.org/records/19370161",
+    "paper_url": "https://doi.org/10.1039/D6SU00069J",
+    "license": "CC-BY-4.0",
+    "label": "source measurements and explicitly classified source-reported calculations/instrument outputs; newly derived descriptive summaries are separately labelled; no product prediction",
+    "material": "PP REG is the study post-consumer laboratory PP regranulate; PP VIRak/VIRnak are virgin controls; original source names preserved",
+    "process": "Article section 2.5: repeated twin-screw extrusion, maximum 230 C, 300 rpm, 4 kg/h. Original code-to-named-additive mapping has not been verified and is not applied. GPC/DSC base-state IDs do not identify the eight tensile conditions.",
+    "sample_count_rule": "Use actual numeric readings and specimen IDs in each export; these are not independent waste batches. Frequency/temperature points in one trace are not independent samples.",
+    "use_status": "source comparison and source-linked descriptive calculations only",
+    "unsupported": [
+      "mass density",
+      "counterweight mass",
+      "solid-state damping",
+      "acoustic transmission or absorption",
+      "batch-to-batch consistency",
+      "contamination response",
+      "service life",
+      "new blend recipes"
+    ]
+  },
+  "datasets": {
+    "pp_mvr": {
+      "measurement": "melt volume rate",
+      "source_archive": "MVR.zip",
+      "method": "DIN EN ISO 1133-1; article section 2.4.3 and workbook header",
+      "conditions": {
+        "temperature_C": 230,
+        "load_kg": 2.16,
+        "die_length_mm": 8,
+        "die_diameter_mm": 2.095
+      },
+      "reported_repetition": {
+        "runs_per_condition": 2,
+        "readings_per_run": 25,
+        "independent_batches": null
+      },
+      "question": "Compare recorded melt-flow behavior for the same coded material/process conditions; no mould-filling or finished-part guarantee.",
+      "units": {
+        "mvr": "cm3/10min"
+      }
+    },
+    "pp_melt_rheology": {
+      "measurement": "oscillatory melt shear frequency sweep",
+      "source_archive": "Rheology.zip",
+      "method": "plate–plate rheometry; article section 2.4.6",
+      "conditions": {
+        "temperature_C": 200,
+        "atmosphere": "nitrogen",
+        "plate_diameter_mm": 35,
+        "gap_mm": 0.75,
+        "disc_compression_moulding_temperature_C": 170,
+        "disc_compression_moulding_time_min": 10,
+        "pre_melt_time_min": 3,
+        "frequency_range_Hz": [
+          1,
+          100
+        ]
+      },
+      "reported_repetition": {
+        "measurements_per_condition": 2,
+        "independent_batches": null
+      },
+      "question": "Compare melt complex viscosity and viscoelastic response at 200 C. These are not room-temperature solid damping or sound-insulation measurements."
+    },
+    "pp_dsc": {
+      "measurement": "heat-flow versus temperature curves",
+      "source_archive": "DSC.zip",
+      "method": "DSC second-heating/cooling protocol; article section 2.4.1",
+      "conditions": {
+        "atmosphere": "nitrogen",
+        "flow_mL_min": 50,
+        "nominal_sample_mass_mg": 5,
+        "heating_cooling_rate_K_min": 10,
+        "temperature_range_C": [
+          -50,
+          300
+        ]
+      },
+      "reported_repetition": {
+        "specimens": null,
+        "independent_batches": null
+      },
+      "question": "Inspect recorded thermal transitions of two base PP states. No service-temperature, flame, insulation or lifetime rating."
+    },
+    "pp_oit": {
+      "measurement": "oxidation induction time",
+      "source_archive": "OIT.zip",
+      "method": "thermal pretreatment under nitrogen, then air at 210 C; article section 2.4.2; source workbook calculation",
+      "conditions": {
+        "test_temperature_C": 210,
+        "atmosphere_after_switch": "air"
+      },
+      "reported_repetition": {
+        "measurements_per_condition": 5,
+        "independent_batches": null
+      },
+      "question": "Compare oxidation onset under this accelerated laboratory protocol. No actual product lifetime or outdoor-aging forecast.",
+      "units": {
+        "oit": "min"
+      }
+    },
+    "pp_gpc": {
+      "measurement": "number-average molecular weight, weight-average molecular weight and source-calculated dispersity",
+      "property_origins": {
+        "Mn": "source-reported GPC molecular-weight estimate",
+        "Mw": "source-reported GPC molecular-weight estimate",
+        "dispersity": "source-reported calculated quantity, Mw/Mn"
+      },
+      "count_rule": "Two repeated GPC measurements per base state; three output fields do not represent six specimens.",
+      "source_archive": "GPC.zip",
+      "method": "GPC; article Table 2 defines units and repeated measurements. Detailed chromatography calibration/solvent settings not established in inspected text.",
+      "conditions": {
+        "chromatography_settings": null
+      },
+      "reported_repetition": {
+        "measurements_per_base_state": 2,
+        "independent_batches": null
+      },
+      "question": "Compare the three measured base PP states. No direct conversion to mass density, solid damping, strength or contamination level."
+    },
+    "pp_color": {
+      "measurement": "source-reported instrument outputs: CIELAB coordinates, gloss G and yellowness index",
+      "output_origin": "source-reported instrument coordinate/index output; numerical coordinates and indices are not independent test specimens",
+      "count_rule": "Repeated readings are counted by specimen ID and within-specimen reading, not by the five output fields. No C/h outputs have been extracted.",
+      "source_archive": "Colorimetry.zip",
+      "method": "BYK spectro-guide on injection-moulded tensile specimens; article section 2.4.7",
+      "conditions": {
+        "specimen_form": "injection-moulded tensile specimens",
+        "illuminant": null,
+        "observer": null,
+        "gloss_geometry_degree": null
+      },
+      "reported_repetition": {
+        "specimens_per_condition": 3,
+        "readings_per_specimen": 3,
+        "total_readings_per_condition": 9,
+        "independent_batches": null
+      },
+      "question": "Compare source appearance measurements of the same moulded form and test setup; no actual sheet color tolerance or weathering guarantee."
+    }
+  },
+  "summary": {
+    "mvr": {
+      "conditions": 36,
+      "runs": 72,
+      "readings": 1740,
+      "actual_runs_per_condition": {
+        "2": 36
+      },
+      "actual_readings_per_run": {
+        "25": 62,
+        "22": 2,
+        "14": 1,
+        "23": 1,
+        "11": 1,
+        "20": 1,
+        "17": 1,
+        "16": 1,
+        "24": 1,
+        "21": 1
+      }
+    },
+    "rheology": {
+      "trace_files": 54,
+      "test_codes": 28,
+      "points": 2106
+    },
+    "dsc": {
+      "curve_files": 4,
+      "base_material_states": 2,
+      "points": 8400
+    },
+    "oit": {
+      "workbook_test_codes": 12,
+      "numeric_readings": 59,
+      "raw_trace_files": 64
+    },
+    "gpc": {
+      "base_material_states": 3,
+      "repeat_measurements_per_state": 2,
+      "property_values": 18
+    },
+    "color": {
+      "test_codes": 18,
+      "specimens_with_values": 54,
+      "reading_sets": 153,
+      "property_values": 765,
+      "actual_readings_per_condition_property": {
+        "6": 10,
+        "9": 70,
+        "7": 5,
+        "8": 5
+      }
+    }
+  },
+  "exports": [
+    {
+      "path": "data/research/pp-study/extracted/mvr_readings.csv",
+      "rows": 1740,
+      "sha256": "8bb5619e00d16a21e981fa1985254b499e709a928ab107bc8e06af2e8400c16a"
+    },
+    {
+      "path": "data/research/pp-study/extracted/mvr_runs.csv",
+      "rows": 72,
+      "sha256": "7734071e509e8d12c4a2ae13367a7ac87d65a836d3b28a7f49cd4ed494eda700"
+    },
+    {
+      "path": "data/research/pp-study/extracted/mvr_conditions.csv",
+      "rows": 36,
+      "sha256": "1245e5b5a9f46593f80a4294c930486ae10fcefa2a5cca5bd2410645afa97273"
+    },
+    {
+      "path": "data/research/pp-study/extracted/mvr_source_summaries.csv",
+      "rows": 72,
+      "sha256": "bec554a259ae5bc93acac338ec5fc1ae36a34455623e5b24b7f93ae07c632108"
+    },
+    {
+      "path": "data/research/pp-study/extracted/rheology_points.csv",
+      "rows": 2106,
+      "sha256": "f706afe9c059d2a6d07848e529075f5ecf250fb3ea77542777a00735d9a74b30"
+    },
+    {
+      "path": "data/research/pp-study/extracted/dsc_points.csv",
+      "rows": 8400,
+      "sha256": "247621d1a4c5eea2522cfc3a259b1b2e9c2e4e94430e2c21097613e34509f009"
+    },
+    {
+      "path": "data/research/pp-study/extracted/oit_readings.csv",
+      "rows": 59,
+      "sha256": "ddc168e38d68b086fbcf8b1168fb0a0542baf8897026ca5157bbf0d49c24de35"
+    },
+    {
+      "path": "data/research/pp-study/extracted/oit_summaries.csv",
+      "rows": 12,
+      "sha256": "b83eaf2c6b8ab41ad912939466136a98f97ad969e9db97463d830a0872146b65"
+    },
+    {
+      "path": "data/research/pp-study/extracted/gpc_readings.csv",
+      "rows": 18,
+      "sha256": "8d83585913c25a2e870e1faf1d7b9513ff49af544c9c1a9d0a306cb0a93fcdc4"
+    },
+    {
+      "path": "data/research/pp-study/extracted/gpc_summaries.csv",
+      "rows": 9,
+      "sha256": "e7fee7474c29646b230a1ab68d51ee20abc187ab761faf0ff7e2c6cf2186cfdd"
+    },
+    {
+      "path": "data/research/pp-study/extracted/color_readings.csv",
+      "rows": 765,
+      "sha256": "76f17c3423794ed038a5b4dc1579e9b149bf63bc99cd4494f8bb6e1276dc040c"
+    },
+    {
+      "path": "data/research/pp-study/extracted/color_summaries.csv",
+      "rows": 90,
+      "sha256": "bce8832b079db9a50adca4b556a24b22bd659ea281215b085f61fc7812dc4220"
+    },
+    {
+      "path": "data/research/pp-study/extracted/color_source_summaries.csv",
+      "rows": 180,
+      "sha256": "e4cb627db492f42ca46f0ce0b6741f76b98067b7c0433a07a052fc7ab794d3a2"
+    }
+  ]
+}

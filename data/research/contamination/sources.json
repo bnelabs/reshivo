@@ -1,0 +1,31 @@
+[
+  {
+    "source_id": "dawoud-taha-2024",
+    "title": "Effects of Contamination with Selected Polymers on the Mechanical Properties of Post-Industrial Recycled Polypropylene",
+    "authors": [
+      "Michael Dawoud",
+      "Iman Taha"
+    ],
+    "doi": "10.3390/polym16162301",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11360251/",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "download_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11360251/fullTextXML",
+    "retrieved_date": "2026-10-30",
+    "files": [
+      {
+        "path": "data/research/contamination/raw/PMC11360251.xml",
+        "sha256": "1a11b9c9bbb08c024d721d0642d39ac13306edf3d0c96ca2c91e0b8b0377f541",
+        "bytes": 213679
+      }
+    ],
+    "applicability": "Exact processed post-industrial plastics, named contaminant and tested amount only",
+    "exclusions": [
+      "The publisher URL returned HTTP 429; the open full-text XML archive supplies the same DOI.",
+      "Figure-only tensile/MVR values are not digitized or invented.",
+      "Table 6 reference crystal enthalpies and calculated crystallinity are not extracted as direct measurements.",
+      "No density, acoustic response or independent batch variation is supplied by this retained set.",
+      "Table 1 labels a screw speed in rpm, while Table 2 labels it mm/s. Those labels are not silently reconciled."
+    ]
+  }
+]

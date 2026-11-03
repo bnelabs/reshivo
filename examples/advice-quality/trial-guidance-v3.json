@@ -1,0 +1,220 @@
+{
+  "purpose": "Same previously seen synthetic cases after surrogate-fidelity guidance and deeper qualitative reasoning; quality diagnostics only, not a benchmark, held-out evaluation or physical test",
+  "prior_record_sha256": "b3f486c9514d4b7357e93491e81ff6d0ba0233657ef48c2b25e857a86c2ecc52",
+  "advisor_sha256": "70529992a3413ba814e090949ade9bfe6c6126c357a59677a9770277eaec5403",
+  "meta_sha256": "7d40985f67b9827646dfd8d85ab10e0d860b1973a252e0779094de8886880292",
+  "requested_reasoning_effort": "high",
+  "max_completion_tokens": 8192,
+  "started_utc": "2026-11-01T21:37:48.916852+00:00",
+  "status": "completed",
+  "physical_product_tested": false,
+  "rows": [
+    {
+      "id": "unconfirmed_process_and_restricted_changes",
+      "request": {
+        "brief": {
+          "input": "Synthetic case: recycled HDPE and nylon offcuts; their proportions are unknown.",
+          "variation": "The proportions and visible grit change between received portions.",
+          "contamination": "Grit identity and amount are not measured.",
+          "product": "Doorway drainage insert",
+          "use_case": "A proposed walking surface in a wet doorway; no prototype has been made.",
+          "targets": "Drain surface water and maintain wet-slip resistance; numerical acceptance limits are not set.",
+          "process": "A press is available; its type and tooling have not been confirmed.",
+          "available_changes": "No new materials, equipment or geometry changes are authorized yet."
+        },
+        "route": {
+          "id": "engineering:drainage-shape",
+          "title": "Compare drainage shapes",
+          "change": "Consider a grooved insert versus a plain insert only if shape changes and suitable tooling are confirmed.",
+          "why": "A drainage path may change standing water without establishing wet-slip performance.",
+          "steps": [
+            "Clarify whether geometry changes are permitted.",
+            "Confirm the process and any tooling needed before making specimens."
+          ],
+          "tradeoffs": [
+            "The process and ability to make either shape remain unconfirmed."
+          ],
+          "check": "Separate drainage observations from a product-specific wet-slip evaluation."
+        },
+        "calculation_context": {
+          "label": "Synthetic quality check",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02"
+        }
+      },
+      "status": "failed",
+      "error_type": "MetaValidationError"
+    },
+    {
+      "id": "confirmed_cold_assembly",
+      "request": {
+        "brief": {
+          "input": "Synthetic case: four existing presealed cartridges of recovered steel fasteners. The cartridges remain closed.",
+          "variation": "Each closed cartridge has a different, as-yet unmeasured mass.",
+          "contamination": "Contents stay sealed; no loose material handling is available.",
+          "product": "Stationary desk ballast module",
+          "use_case": "Cold assembly into an existing closed tray; keep the cartridges retained.",
+          "targets": "Complete assembly mass between 0.98 kg and 1.02 kg; cartridges must remain retained.",
+          "process": "Existing bolted tray, suitable cartridge slots, wrench and bench scale are available. Cold assembly only.",
+          "available_changes": "Swap whole sealed cartridges using the existing slots; no opening, heating, loose fill or new tooling."
+        },
+        "route": {
+          "id": "engineering:sealed-exchange",
+          "title": "Exchange whole sealed cartridges",
+          "change": "Compare the complete tray assembly before and after exchanging one closed cartridge.",
+          "why": "Complete-assembly weighing can inform a mass adjustment without assuming fill density.",
+          "steps": [
+            "Weigh the complete closed assembly and record the scale uncertainty.",
+            "Exchange one whole sealed cartridge in the existing slot, close the tray and reweigh."
+          ],
+          "tradeoffs": [
+            "Available cartridge masses may not reach the desired interval.",
+            "Retention needs its own configuration-specific check."
+          ],
+          "check": "Check assembly mass separately from cartridge retention."
+        },
+        "calculation_context": {
+          "label": "Synthetic quality check",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02"
+        }
+      },
+      "result": {
+        "result_kind": "trial_proposal",
+        "live": true,
+        "provider": "meta",
+        "model": "muse-spark-1.3",
+        "usage": {
+          "completion_tokens": 4915,
+          "prompt_tokens": 3566,
+          "total_tokens": 8481
+        },
+        "elapsed_ms": 18378,
+        "request_id": "chatcmpl-01a1990c-e0f3-744e-89ee-bfb84c02624f",
+        "requested_reasoning_effort": "high",
+        "calculation_context": {
+          "label": "Synthetic quality check",
+          "components": [
+            {
+              "id": 1,
+              "name": "",
+              "role": "main",
+              "amount": ""
+            }
+          ],
+          "amount_unit": "mass_percent",
+          "amount_basis": "",
+          "mass_target_min_kg": "0.98",
+          "mass_target_max_kg": "1.02"
+        },
+        "route_id": "engineering:sealed-exchange",
+        "targets": "Complete assembly mass between 0.98 kg and 1.02 kg; cartridges must remain retained.",
+        "brief": {
+          "available_changes": "Swap whole sealed cartridges using the existing slots; no opening, heating, loose fill or new tooling.",
+          "contamination": "Contents stay sealed; no loose material handling is available.",
+          "input": "Synthetic case: four existing presealed cartridges of recovered steel fasteners. The cartridges remain closed.",
+          "process": "Existing bolted tray, suitable cartridge slots, wrench and bench scale are available. Cold assembly only.",
+          "product": "Stationary desk ballast module",
+          "targets": "Complete assembly mass between 0.98 kg and 1.02 kg; cartridges must remain retained.",
+          "use_case": "Cold assembly into an existing closed tray; keep the cartridges retained.",
+          "variation": "Each closed cartridge has a different, as-yet unmeasured mass."
+        },
+        "selected_route": {
+          "id": "engineering:sealed-exchange",
+          "title": "Exchange whole sealed cartridges",
+          "change": "Compare the complete tray assembly before and after exchanging one closed cartridge.",
+          "why": "Complete-assembly weighing can inform a mass adjustment without assuming fill density.",
+          "check": "Check assembly mass separately from cartridge retention.",
+          "steps": [
+            "Weigh the complete closed assembly and record the scale uncertainty.",
+            "Exchange one whole sealed cartridge in the existing slot, close the tray and reweigh."
+          ],
+          "tradeoffs": [
+            "Available cartridge masses may not reach the desired interval.",
+            "Retention needs its own configuration-specific check."
+          ]
+        },
+        "title": "Exchange whole sealed cartridges",
+        "objective": "Make a stationary desk ballast module by cold assembly into the existing closed tray, using whole sealed-cartridge exchange to move assembly mass toward the interval while keeping cartridges retained.",
+        "comparison": "Compare two complete closed-tray assemblies that differ by one whole sealed cartridge only: baseline set versus the same tray, slots, closure and scale with one sealed cartridge exchanged for another existing sealed cartridge.",
+        "change": "Exchange one whole sealed cartridge in its existing slot, keeping the same tray, closure and cold assembly.",
+        "keep_fixed": [
+          "Existing bolted tray, suitable slots and closed-tray desk position",
+          "Cold assembly only; cartridges stay sealed with no opening, heating, loose fill or new tooling",
+          "Same bench scale and weighing setup for both weighings"
+        ],
+        "materials": [
+          "Existing bolted tray with suitable cartridge slots",
+          "Existing presealed cartridges of recovered steel fasteners, kept closed",
+          "Wrench for tray closure",
+          "Bench scale for complete-assembly weighing"
+        ],
+        "steps": [
+          {
+            "action": "Using the available bench scale confirmed suitable for about 1 kg weighing, weigh the complete closed and bolted tray assembly with the starting set of sealed cartridges. Keep all cartridges closed.",
+            "record": "Record total mass, scale uncertainty, and which sealed cartridges are installed."
+          },
+          {
+            "action": "Using the existing slots and wrench with cold assembly only, open the tray, swap one whole sealed cartridge for a different existing sealed cartridge without opening either cartridge, then re-close and bolt the tray.",
+            "record": "Record which cartridge was removed, which was added, slot used, and closure condition."
+          },
+          {
+            "action": "Using the same bench scale and setup, reweigh the complete closed assembly.",
+            "record": "Record total mass and scale uncertainty for the exchanged configuration."
+          }
+        ],
+        "checks": [
+          {
+            "property": "Complete assembly mass",
+            "target": "Complete assembly mass between 0.98 kg and 1.02 kg",
+            "method": "Weigh the complete closed and bolted assembly on the bench scale. Confirm scale capability and measurement uncertainty suit the 0.04 kg tolerance window; display resolution alone does not show accuracy. You can use the final weight adjustment calculation to track the weighed assembly against the interval.",
+            "if_outside": "If outside the interval, keep all cartridges sealed and run a new comparison exchanging a different whole sealed cartridge, then reweigh. Do not open cartridges or add loose fill."
+          },
+          {
+            "property": "Cartridge retention",
+            "target": "cartridges must remain retained",
+            "method": "With the tray closed and bolted in its desk configuration, check that each whole sealed cartridge stays in its slot. Record seating, slot used and closure condition. Mass alone does not show retention.",
+            "if_outside": "If any cartridge is not retained, reseat the same whole sealed cartridges in the existing slots, re-close the tray and recheck in a new comparison."
+          }
+        ],
+        "questions": [
+          "What is the bench scale uncertainty around 1 kg, and is it small enough for the 0.98 to 1.02 kg interval?",
+          "Are only the four sealed cartridges available, or are other sealed cartridges available to exchange if mass is outside the interval?",
+          "How is retained defined for this closed tray in its desk position?"
+        ],
+        "sources": [
+          {
+            "id": "nist-weighing-tare",
+            "title": "NIST — weighing and scales FAQs",
+            "url": "https://www.nist.gov/pml/owm/faqs/weighing-and-scales-faqs",
+            "scope": "General weighing/tare guidance supports weighing the complete assembly including its enclosure. Scale capability and measurement uncertainty must suit the target tolerance; display resolution alone does not establish accuracy. This does not establish enclosure strength, fill retention or product qualification."
+          }
+        ],
+        "physical_product_tested": false,
+        "performance_verified": false
+      },
+      "status": "completed"
+    }
+  ],
+  "finished_utc": "2026-11-01T21:38:40.811285+00:00"
+}

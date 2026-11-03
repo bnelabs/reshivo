@@ -1,0 +1,52 @@
+{
+  "request": {
+    "brief": {
+      "input": "Identified recycled rubber with varying paper-label residue and characterized zero-paper rubber stock",
+      "variation": "Known synthetic current portion is 5.2 percent paper by as-received mass",
+      "contamination": "Paper label residue",
+      "product": "Indoor floor mat",
+      "use_case": "Indoor entrance",
+      "targets": "Synthetic grip minimum 0.60, recovery minimum 80 percent",
+      "process": "Home planning only. No physical handling, processing, measuring equipment, or lab access is available during this exercise. The same intended process and geometry are stated for each setup but unspecified.",
+      "available_changes": "Planning only, no physical work"
+    },
+    "history": [],
+    "question": "For a one-kilogram portion known to have 5.2 mass percent paper, the composition calculator shows a 0.3 kg addition of characterized zero-paper rubber for an exploratory 4 percent paper mix, assuming even, loss-free mixing. What does this tell me and what should I do next?"
+  },
+  "status": 200,
+  "response": {
+    "result_kind": "engineering_followup",
+    "live": true,
+    "provider": "meta",
+    "model": "muse-spark-1.3",
+    "usage": {
+      "completion_tokens": 2301,
+      "prompt_tokens": 3649,
+      "total_tokens": 5950
+    },
+    "elapsed_ms": 21728,
+    "request_id": "chatcmpl-01a1a18a-c709-772f-9962-99448e3a3cf4",
+    "requested_reasoning_effort": "high",
+    "reasoning_effort": "high",
+    "answer": "Save this as a separate planning scenario: 1 kg at 5.2% paper plus 0.3 kg zero-paper rubber gives 1.3 kg at 4% paper if mixing is even and loss-free. That arithmetic sets the masses for that one portion only.\n\nIt does not show grip or recovery. Process control remains unknown because the same intended process and geometry are stated but unspecified. Keep the earlier setup and save a changed version for this 4% point for later comparison against separate grip and recovery checks.",
+    "quarantined_answer": [],
+    "next_steps": [
+      "Keep the earlier setup and save this 1 kg + 0.3 kg case as a separate 4% planning scenario.",
+      "Record the even, loss-free mixing assumption with the calculation.",
+      "Plan separate grip and recovery checks on the exact finished mix when testing is possible."
+    ],
+    "questions": [
+      "Which grip and recovery checks will you use later for the exact finished mat?"
+    ],
+    "sources": [
+      {
+        "id": "hse-slip-assessment",
+        "title": "HSE \u2014 assessing floor slip resistance",
+        "url": "https://www.hse.gov.uk/pubns/geis2.htm",
+        "scope": "General floor-slip testing guidance, including instrumented pendulum assessment by a suitably trained operator under relevant surface conditions. It supplies no measured slip value, acceptance target or qualification for the user's recycled material, and no home walking test substitutes for it. Check the current applicable method for the product and installation."
+      }
+    ],
+    "physical_product_tested": false,
+    "performance_verified": false
+  }
+}

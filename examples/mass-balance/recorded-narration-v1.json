@@ -1,0 +1,26 @@
+[
+  [
+    "01-case",
+    "Recycled inputs change. A product still has a job to do. ReMatter starts with what you have, what varies, and the result you need. This is a software demonstration using synthetic readings, not a tested recycled material. The user chooses the product. Here, a contained ballast module needs both a mass range and a balance-point range."
+  ],
+  [
+    "02-routes",
+    "Meta proposes practical routes from this same case. Instead of rejecting a variable core, this route keeps it contained and adds two sealed trim locations. These are engineering proposals, not verified material recipes. The case and targets carry into the calculation; I do not select the material again."
+  ],
+  [
+    "03-check",
+    "Here is the trap in checking weight alone. The assembly is nine hundred and fifty grams, with a stated weighing bound. Adding fifty grams on the left meets the mass target, but the balance point still misses. The joint tool checks both targets, both trim locations, the available amounts, and the entered uncertainty bounds. Rounded commands are checked again. The result is add one hundred and four grams on the left and remove fifty-four on the right. Both ranges fit within this simulation."
+  ],
+  [
+    "04-meta",
+    "This is a fresh Meta request. Meta calls the engineering tool and explains the checked action. The downloadable record retains the actual calculation, inputs, and model turns. The model does not invent a density or transfer a public plastic study into my mix. The diagram shows where the trim belongs; it is not a manufacturing drawing."
+  ],
+  [
+    "05-loop",
+    "Now consider another synthetic observation of the same product. The mass is already one kilogram, but the balance point is five millimetres off centre. The old balance reading and result clear automatically. I enter the matching new balance reading. Meta runs the joint check again. This time the action is add forty-two grams on the left and remove forty-two on the right. Total nominal mass stays the same while the balance moves. The downloadable record keeps this observation and its actual calculation."
+  ],
+  [
+    "06-limits",
+    "What have we proved? A working software loop from a shared case to an adjustment amount and location, then a revised action from a new observation. We have not proved physical performance or future-batch consistency. Simpler baselines matched the arithmetic, and a parser matched note extraction faster. ReMatter connects engineering proposals, checked calculations and a clear next action. Retention, durability and tipping safety still need their own tests."
+  ]
+]

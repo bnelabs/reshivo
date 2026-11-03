@@ -1,0 +1,682 @@
+{
+  "schema_version": 1,
+  "label": "source_measurements",
+  "source": {
+    "id": "rapa2020",
+    "title": "Effect of Styrene-Diene Block Copolymers and Glass Bubbles on the Post-Consumer Recycled Polypropylene Properties",
+    "doi": "10.3390/ma13030543",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7040787/",
+    "license": "CC BY 4.0",
+    "license_url": "http://creativecommons.org/licenses/by/4.0/",
+    "license_location": "front/article-meta/permissions/license",
+    "retrieved_date": "2026-10-30",
+    "download_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7040787/fullTextXML",
+    "original_path": "data/research/target-search/rapa2020/originals/rapa2020.xml",
+    "original_sha256": "c5e4a32199ffe8fed2d8b258649c5e7f585e5bf8c04269771a052f186b6db642"
+  },
+  "observations": [
+    {
+      "id": "rapa2020-rpp-sbs-gb-0-tensile-strength",
+      "source_id": "rapa2020",
+      "source_doi": "10.3390/ma13030543",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7040787/",
+      "license": "CC BY 4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "series_id": "rapa2020-rpp-sbs-glass-bubbles",
+      "original_condition_label": "rPP/SBS",
+      "material": {
+        "recycled_input": "Post-consumer rPP collected from post-user injection-moulded boxes by a Romanian collector",
+        "matrix_modifier": "SBS",
+        "matrix_modifier_description": "Synthesized styrene-butadiene block copolymer",
+        "filler": "3M Glass Bubbles S22, soda lime borosilicate glass",
+        "source_locations": [
+          "sec2dot2-materials-13-00543",
+          "sec2dot3-materials-13-00543",
+          "sec2dot4-materials-13-00543"
+        ]
+      },
+      "varied_input": {
+        "name": "Glass Bubbles S22 addition",
+        "level": 0,
+        "unit": "vol.%",
+        "source_value": "-",
+        "level_origin": "no-added-GB reference inferred from dash and formulation label"
+      },
+      "composition_source_values": {
+        "rPP [wt%]": "90",
+        "Thermoplastic Elastomer [wt%]": "10",
+        "GB [vol.%]": "-"
+      },
+      "process": {
+        "mixing_equipment": "Brabender Plastograph",
+        "mixing_temperature_C": 180,
+        "mixing_time_min": 10,
+        "rotor_speed_rpm": 50,
+        "forming": "Compression-moulded sheets; mechanical specimens cut from those sheets",
+        "sheet_preheating_min": 4,
+        "sheet_pressing_min": 2,
+        "sheet_pressing_temperature_C": 185,
+        "sheet_pressure_atm": 125,
+        "sheet_cooling_min": 45,
+        "source_locations": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ]
+      },
+      "test_method": {
+        "property": "Tensile strength at break",
+        "standard": "ISO 527",
+        "equipment": "Instron 8802",
+        "gage_length_mm": 90,
+        "width_mm": 6.6,
+        "thickness_mm": 4,
+        "reported_pull_off_speed_mm_min": 50,
+        "test_temperature_C": 23,
+        "relative_humidity_percent_approx": 50,
+        "source_location": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph and final environment statement"
+      },
+      "property": "tensile_strength_at_break",
+      "property_label": "Tensile Strength at Break",
+      "unit": "MPa",
+      "reported_mean": 21.99,
+      "reported_sd": 1.75,
+      "value_origin": "reported_mean_and_sd",
+      "source_cell_text": "21.99 ± 1.75",
+      "sample_count": 5,
+      "sample_count_kind": "tensile specimens (source calls them samples) per blend",
+      "individual_readings_available": false,
+      "independent_run_count": null,
+      "independent_batch_count": null,
+      "source_locations": {
+        "measurement": {
+          "table_id": "materials-13-00543-t006",
+          "table_label": "Table 6",
+          "row_label": "rPP/SBS",
+          "body_row_number": 2,
+          "column_label": "Tensile Strength at Break (MPa)",
+          "column_number": 3
+        },
+        "composition": {
+          "table_id": "materials-13-00543-t001",
+          "table_label": "Table 1",
+          "row_label": "rPP/SBS",
+          "body_row_number": 2,
+          "column_labels": [
+            "rPP [wt%]",
+            "Thermoplastic Elastomer [wt%]",
+            "GB [vol.%]"
+          ]
+        },
+        "process": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ],
+        "sample_count": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph"
+      },
+      "product_question": "At this tested glass-bubble level within this source matrix family, is the reported mean tensile strength at break inside a stated target? Individual-specimen or finished-product compliance cannot be checked.",
+      "limits": [
+        "Only source-reported means and standard deviations are retained; the five individual specimen values and observed min/max are unavailable.",
+        "Standard deviation is not an observed range, a confidence interval, a tolerance or a future-batch prediction.",
+        "SBS and SIS are separate matrix families. Do not pool them or interpolate between tested glass-bubble levels.",
+        "Source composition columns mix wt% for the polymer components and vol.% for glass bubbles. These labels are preserved; no amount-basis conversion is inferred.",
+        "The two zero-added-filler references use a source dash in the GB column. Numeric zero is a reference-level interpretation, not an extracted numeric cell.",
+        "The source does not establish independent production batches or a result for the user's recycled input or finished product.",
+        "No density, mass, acoustic property, porosity effect or finished-product consistency is calculated from these tensile results."
+      ]
+    },
+    {
+      "id": "rapa2020-rpp-sbs-gb-5-tensile-strength",
+      "source_id": "rapa2020",
+      "source_doi": "10.3390/ma13030543",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7040787/",
+      "license": "CC BY 4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "series_id": "rapa2020-rpp-sbs-glass-bubbles",
+      "original_condition_label": "rPP/SBS/GB 5",
+      "material": {
+        "recycled_input": "Post-consumer rPP collected from post-user injection-moulded boxes by a Romanian collector",
+        "matrix_modifier": "SBS",
+        "matrix_modifier_description": "Synthesized styrene-butadiene block copolymer",
+        "filler": "3M Glass Bubbles S22, soda lime borosilicate glass",
+        "source_locations": [
+          "sec2dot2-materials-13-00543",
+          "sec2dot3-materials-13-00543",
+          "sec2dot4-materials-13-00543"
+        ]
+      },
+      "varied_input": {
+        "name": "Glass Bubbles S22 addition",
+        "level": 5,
+        "unit": "vol.%",
+        "source_value": "5",
+        "level_origin": "numeric Table 1 cell"
+      },
+      "composition_source_values": {
+        "rPP [wt%]": "89.1",
+        "Thermoplastic Elastomer [wt%]": "9.9",
+        "GB [vol.%]": "5"
+      },
+      "process": {
+        "mixing_equipment": "Brabender Plastograph",
+        "mixing_temperature_C": 180,
+        "mixing_time_min": 10,
+        "rotor_speed_rpm": 50,
+        "forming": "Compression-moulded sheets; mechanical specimens cut from those sheets",
+        "sheet_preheating_min": 4,
+        "sheet_pressing_min": 2,
+        "sheet_pressing_temperature_C": 185,
+        "sheet_pressure_atm": 125,
+        "sheet_cooling_min": 45,
+        "source_locations": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ]
+      },
+      "test_method": {
+        "property": "Tensile strength at break",
+        "standard": "ISO 527",
+        "equipment": "Instron 8802",
+        "gage_length_mm": 90,
+        "width_mm": 6.6,
+        "thickness_mm": 4,
+        "reported_pull_off_speed_mm_min": 50,
+        "test_temperature_C": 23,
+        "relative_humidity_percent_approx": 50,
+        "source_location": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph and final environment statement"
+      },
+      "property": "tensile_strength_at_break",
+      "property_label": "Tensile Strength at Break",
+      "unit": "MPa",
+      "reported_mean": 21.36,
+      "reported_sd": 1.24,
+      "value_origin": "reported_mean_and_sd",
+      "source_cell_text": "21.36 ± 1.24",
+      "sample_count": 5,
+      "sample_count_kind": "tensile specimens (source calls them samples) per blend",
+      "individual_readings_available": false,
+      "independent_run_count": null,
+      "independent_batch_count": null,
+      "source_locations": {
+        "measurement": {
+          "table_id": "materials-13-00543-t006",
+          "table_label": "Table 6",
+          "row_label": "rPP/SBS/GB 5",
+          "body_row_number": 3,
+          "column_label": "Tensile Strength at Break (MPa)",
+          "column_number": 3
+        },
+        "composition": {
+          "table_id": "materials-13-00543-t001",
+          "table_label": "Table 1",
+          "row_label": "rPP/SBS/GB 5",
+          "body_row_number": 3,
+          "column_labels": [
+            "rPP [wt%]",
+            "Thermoplastic Elastomer [wt%]",
+            "GB [vol.%]"
+          ]
+        },
+        "process": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ],
+        "sample_count": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph"
+      },
+      "product_question": "At this tested glass-bubble level within this source matrix family, is the reported mean tensile strength at break inside a stated target? Individual-specimen or finished-product compliance cannot be checked.",
+      "limits": [
+        "Only source-reported means and standard deviations are retained; the five individual specimen values and observed min/max are unavailable.",
+        "Standard deviation is not an observed range, a confidence interval, a tolerance or a future-batch prediction.",
+        "SBS and SIS are separate matrix families. Do not pool them or interpolate between tested glass-bubble levels.",
+        "Source composition columns mix wt% for the polymer components and vol.% for glass bubbles. These labels are preserved; no amount-basis conversion is inferred.",
+        "The two zero-added-filler references use a source dash in the GB column. Numeric zero is a reference-level interpretation, not an extracted numeric cell.",
+        "The source does not establish independent production batches or a result for the user's recycled input or finished product.",
+        "No density, mass, acoustic property, porosity effect or finished-product consistency is calculated from these tensile results."
+      ]
+    },
+    {
+      "id": "rapa2020-rpp-sbs-gb-20-tensile-strength",
+      "source_id": "rapa2020",
+      "source_doi": "10.3390/ma13030543",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7040787/",
+      "license": "CC BY 4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "series_id": "rapa2020-rpp-sbs-glass-bubbles",
+      "original_condition_label": "rPP/SBS/GB 20",
+      "material": {
+        "recycled_input": "Post-consumer rPP collected from post-user injection-moulded boxes by a Romanian collector",
+        "matrix_modifier": "SBS",
+        "matrix_modifier_description": "Synthesized styrene-butadiene block copolymer",
+        "filler": "3M Glass Bubbles S22, soda lime borosilicate glass",
+        "source_locations": [
+          "sec2dot2-materials-13-00543",
+          "sec2dot3-materials-13-00543",
+          "sec2dot4-materials-13-00543"
+        ]
+      },
+      "varied_input": {
+        "name": "Glass Bubbles S22 addition",
+        "level": 20,
+        "unit": "vol.%",
+        "source_value": "20",
+        "level_origin": "numeric Table 1 cell"
+      },
+      "composition_source_values": {
+        "rPP [wt%]": "86.7",
+        "Thermoplastic Elastomer [wt%]": "9.6",
+        "GB [vol.%]": "20"
+      },
+      "process": {
+        "mixing_equipment": "Brabender Plastograph",
+        "mixing_temperature_C": 180,
+        "mixing_time_min": 10,
+        "rotor_speed_rpm": 50,
+        "forming": "Compression-moulded sheets; mechanical specimens cut from those sheets",
+        "sheet_preheating_min": 4,
+        "sheet_pressing_min": 2,
+        "sheet_pressing_temperature_C": 185,
+        "sheet_pressure_atm": 125,
+        "sheet_cooling_min": 45,
+        "source_locations": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ]
+      },
+      "test_method": {
+        "property": "Tensile strength at break",
+        "standard": "ISO 527",
+        "equipment": "Instron 8802",
+        "gage_length_mm": 90,
+        "width_mm": 6.6,
+        "thickness_mm": 4,
+        "reported_pull_off_speed_mm_min": 50,
+        "test_temperature_C": 23,
+        "relative_humidity_percent_approx": 50,
+        "source_location": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph and final environment statement"
+      },
+      "property": "tensile_strength_at_break",
+      "property_label": "Tensile Strength at Break",
+      "unit": "MPa",
+      "reported_mean": 20.45,
+      "reported_sd": 1.23,
+      "value_origin": "reported_mean_and_sd",
+      "source_cell_text": "20.45 ± 1.23",
+      "sample_count": 5,
+      "sample_count_kind": "tensile specimens (source calls them samples) per blend",
+      "individual_readings_available": false,
+      "independent_run_count": null,
+      "independent_batch_count": null,
+      "source_locations": {
+        "measurement": {
+          "table_id": "materials-13-00543-t006",
+          "table_label": "Table 6",
+          "row_label": "rPP/SBS/GB 20",
+          "body_row_number": 4,
+          "column_label": "Tensile Strength at Break (MPa)",
+          "column_number": 3
+        },
+        "composition": {
+          "table_id": "materials-13-00543-t001",
+          "table_label": "Table 1",
+          "row_label": "rPP/SBS/GB 20",
+          "body_row_number": 4,
+          "column_labels": [
+            "rPP [wt%]",
+            "Thermoplastic Elastomer [wt%]",
+            "GB [vol.%]"
+          ]
+        },
+        "process": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ],
+        "sample_count": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph"
+      },
+      "product_question": "At this tested glass-bubble level within this source matrix family, is the reported mean tensile strength at break inside a stated target? Individual-specimen or finished-product compliance cannot be checked.",
+      "limits": [
+        "Only source-reported means and standard deviations are retained; the five individual specimen values and observed min/max are unavailable.",
+        "Standard deviation is not an observed range, a confidence interval, a tolerance or a future-batch prediction.",
+        "SBS and SIS are separate matrix families. Do not pool them or interpolate between tested glass-bubble levels.",
+        "Source composition columns mix wt% for the polymer components and vol.% for glass bubbles. These labels are preserved; no amount-basis conversion is inferred.",
+        "The two zero-added-filler references use a source dash in the GB column. Numeric zero is a reference-level interpretation, not an extracted numeric cell.",
+        "The source does not establish independent production batches or a result for the user's recycled input or finished product.",
+        "No density, mass, acoustic property, porosity effect or finished-product consistency is calculated from these tensile results."
+      ]
+    },
+    {
+      "id": "rapa2020-rpp-sis-gb-0-tensile-strength",
+      "source_id": "rapa2020",
+      "source_doi": "10.3390/ma13030543",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7040787/",
+      "license": "CC BY 4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "series_id": "rapa2020-rpp-sis-glass-bubbles",
+      "original_condition_label": "rPP/SIS",
+      "material": {
+        "recycled_input": "Post-consumer rPP collected from post-user injection-moulded boxes by a Romanian collector",
+        "matrix_modifier": "SIS",
+        "matrix_modifier_description": "Synthesized styrene-isoprene block copolymer",
+        "filler": "3M Glass Bubbles S22, soda lime borosilicate glass",
+        "source_locations": [
+          "sec2dot2-materials-13-00543",
+          "sec2dot3-materials-13-00543",
+          "sec2dot4-materials-13-00543"
+        ]
+      },
+      "varied_input": {
+        "name": "Glass Bubbles S22 addition",
+        "level": 0,
+        "unit": "vol.%",
+        "source_value": "-",
+        "level_origin": "no-added-GB reference inferred from dash and formulation label"
+      },
+      "composition_source_values": {
+        "rPP [wt%]": "90",
+        "Thermoplastic Elastomer [wt%]": "10",
+        "GB [vol.%]": "-"
+      },
+      "process": {
+        "mixing_equipment": "Brabender Plastograph",
+        "mixing_temperature_C": 180,
+        "mixing_time_min": 10,
+        "rotor_speed_rpm": 50,
+        "forming": "Compression-moulded sheets; mechanical specimens cut from those sheets",
+        "sheet_preheating_min": 4,
+        "sheet_pressing_min": 2,
+        "sheet_pressing_temperature_C": 185,
+        "sheet_pressure_atm": 125,
+        "sheet_cooling_min": 45,
+        "source_locations": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ]
+      },
+      "test_method": {
+        "property": "Tensile strength at break",
+        "standard": "ISO 527",
+        "equipment": "Instron 8802",
+        "gage_length_mm": 90,
+        "width_mm": 6.6,
+        "thickness_mm": 4,
+        "reported_pull_off_speed_mm_min": 50,
+        "test_temperature_C": 23,
+        "relative_humidity_percent_approx": 50,
+        "source_location": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph and final environment statement"
+      },
+      "property": "tensile_strength_at_break",
+      "property_label": "Tensile Strength at Break",
+      "unit": "MPa",
+      "reported_mean": 22.39,
+      "reported_sd": 1.45,
+      "value_origin": "reported_mean_and_sd",
+      "source_cell_text": "22.39 ± 1.45",
+      "sample_count": 5,
+      "sample_count_kind": "tensile specimens (source calls them samples) per blend",
+      "individual_readings_available": false,
+      "independent_run_count": null,
+      "independent_batch_count": null,
+      "source_locations": {
+        "measurement": {
+          "table_id": "materials-13-00543-t006",
+          "table_label": "Table 6",
+          "row_label": "rPP/SIS",
+          "body_row_number": 5,
+          "column_label": "Tensile Strength at Break (MPa)",
+          "column_number": 3
+        },
+        "composition": {
+          "table_id": "materials-13-00543-t001",
+          "table_label": "Table 1",
+          "row_label": "rPP/SIS",
+          "body_row_number": 5,
+          "column_labels": [
+            "rPP [wt%]",
+            "Thermoplastic Elastomer [wt%]",
+            "GB [vol.%]"
+          ]
+        },
+        "process": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ],
+        "sample_count": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph"
+      },
+      "product_question": "At this tested glass-bubble level within this source matrix family, is the reported mean tensile strength at break inside a stated target? Individual-specimen or finished-product compliance cannot be checked.",
+      "limits": [
+        "Only source-reported means and standard deviations are retained; the five individual specimen values and observed min/max are unavailable.",
+        "Standard deviation is not an observed range, a confidence interval, a tolerance or a future-batch prediction.",
+        "SBS and SIS are separate matrix families. Do not pool them or interpolate between tested glass-bubble levels.",
+        "Source composition columns mix wt% for the polymer components and vol.% for glass bubbles. These labels are preserved; no amount-basis conversion is inferred.",
+        "The two zero-added-filler references use a source dash in the GB column. Numeric zero is a reference-level interpretation, not an extracted numeric cell.",
+        "The source does not establish independent production batches or a result for the user's recycled input or finished product.",
+        "No density, mass, acoustic property, porosity effect or finished-product consistency is calculated from these tensile results."
+      ]
+    },
+    {
+      "id": "rapa2020-rpp-sis-gb-5-tensile-strength",
+      "source_id": "rapa2020",
+      "source_doi": "10.3390/ma13030543",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7040787/",
+      "license": "CC BY 4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "series_id": "rapa2020-rpp-sis-glass-bubbles",
+      "original_condition_label": "rPP/SIS/GB 5",
+      "material": {
+        "recycled_input": "Post-consumer rPP collected from post-user injection-moulded boxes by a Romanian collector",
+        "matrix_modifier": "SIS",
+        "matrix_modifier_description": "Synthesized styrene-isoprene block copolymer",
+        "filler": "3M Glass Bubbles S22, soda lime borosilicate glass",
+        "source_locations": [
+          "sec2dot2-materials-13-00543",
+          "sec2dot3-materials-13-00543",
+          "sec2dot4-materials-13-00543"
+        ]
+      },
+      "varied_input": {
+        "name": "Glass Bubbles S22 addition",
+        "level": 5,
+        "unit": "vol.%",
+        "source_value": "5",
+        "level_origin": "numeric Table 1 cell"
+      },
+      "composition_source_values": {
+        "rPP [wt%]": "89.1",
+        "Thermoplastic Elastomer [wt%]": "9.9",
+        "GB [vol.%]": "5"
+      },
+      "process": {
+        "mixing_equipment": "Brabender Plastograph",
+        "mixing_temperature_C": 180,
+        "mixing_time_min": 10,
+        "rotor_speed_rpm": 50,
+        "forming": "Compression-moulded sheets; mechanical specimens cut from those sheets",
+        "sheet_preheating_min": 4,
+        "sheet_pressing_min": 2,
+        "sheet_pressing_temperature_C": 185,
+        "sheet_pressure_atm": 125,
+        "sheet_cooling_min": 45,
+        "source_locations": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ]
+      },
+      "test_method": {
+        "property": "Tensile strength at break",
+        "standard": "ISO 527",
+        "equipment": "Instron 8802",
+        "gage_length_mm": 90,
+        "width_mm": 6.6,
+        "thickness_mm": 4,
+        "reported_pull_off_speed_mm_min": 50,
+        "test_temperature_C": 23,
+        "relative_humidity_percent_approx": 50,
+        "source_location": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph and final environment statement"
+      },
+      "property": "tensile_strength_at_break",
+      "property_label": "Tensile Strength at Break",
+      "unit": "MPa",
+      "reported_mean": 23.51,
+      "reported_sd": 1.34,
+      "value_origin": "reported_mean_and_sd",
+      "source_cell_text": "23.51 ± 1.34",
+      "sample_count": 5,
+      "sample_count_kind": "tensile specimens (source calls them samples) per blend",
+      "individual_readings_available": false,
+      "independent_run_count": null,
+      "independent_batch_count": null,
+      "source_locations": {
+        "measurement": {
+          "table_id": "materials-13-00543-t006",
+          "table_label": "Table 6",
+          "row_label": "rPP/SIS/GB 5",
+          "body_row_number": 6,
+          "column_label": "Tensile Strength at Break (MPa)",
+          "column_number": 3
+        },
+        "composition": {
+          "table_id": "materials-13-00543-t001",
+          "table_label": "Table 1",
+          "row_label": "rPP/SIS/GB 5",
+          "body_row_number": 6,
+          "column_labels": [
+            "rPP [wt%]",
+            "Thermoplastic Elastomer [wt%]",
+            "GB [vol.%]"
+          ]
+        },
+        "process": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ],
+        "sample_count": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph"
+      },
+      "product_question": "At this tested glass-bubble level within this source matrix family, is the reported mean tensile strength at break inside a stated target? Individual-specimen or finished-product compliance cannot be checked.",
+      "limits": [
+        "Only source-reported means and standard deviations are retained; the five individual specimen values and observed min/max are unavailable.",
+        "Standard deviation is not an observed range, a confidence interval, a tolerance or a future-batch prediction.",
+        "SBS and SIS are separate matrix families. Do not pool them or interpolate between tested glass-bubble levels.",
+        "Source composition columns mix wt% for the polymer components and vol.% for glass bubbles. These labels are preserved; no amount-basis conversion is inferred.",
+        "The two zero-added-filler references use a source dash in the GB column. Numeric zero is a reference-level interpretation, not an extracted numeric cell.",
+        "The source does not establish independent production batches or a result for the user's recycled input or finished product.",
+        "No density, mass, acoustic property, porosity effect or finished-product consistency is calculated from these tensile results."
+      ]
+    },
+    {
+      "id": "rapa2020-rpp-sis-gb-20-tensile-strength",
+      "source_id": "rapa2020",
+      "source_doi": "10.3390/ma13030543",
+      "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7040787/",
+      "license": "CC BY 4.0",
+      "license_url": "http://creativecommons.org/licenses/by/4.0/",
+      "series_id": "rapa2020-rpp-sis-glass-bubbles",
+      "original_condition_label": "rPP/SIS/GB 20",
+      "material": {
+        "recycled_input": "Post-consumer rPP collected from post-user injection-moulded boxes by a Romanian collector",
+        "matrix_modifier": "SIS",
+        "matrix_modifier_description": "Synthesized styrene-isoprene block copolymer",
+        "filler": "3M Glass Bubbles S22, soda lime borosilicate glass",
+        "source_locations": [
+          "sec2dot2-materials-13-00543",
+          "sec2dot3-materials-13-00543",
+          "sec2dot4-materials-13-00543"
+        ]
+      },
+      "varied_input": {
+        "name": "Glass Bubbles S22 addition",
+        "level": 20,
+        "unit": "vol.%",
+        "source_value": "20",
+        "level_origin": "numeric Table 1 cell"
+      },
+      "composition_source_values": {
+        "rPP [wt%]": "86.7",
+        "Thermoplastic Elastomer [wt%]": "9.6",
+        "GB [vol.%]": "20"
+      },
+      "process": {
+        "mixing_equipment": "Brabender Plastograph",
+        "mixing_temperature_C": 180,
+        "mixing_time_min": 10,
+        "rotor_speed_rpm": 50,
+        "forming": "Compression-moulded sheets; mechanical specimens cut from those sheets",
+        "sheet_preheating_min": 4,
+        "sheet_pressing_min": 2,
+        "sheet_pressing_temperature_C": 185,
+        "sheet_pressure_atm": 125,
+        "sheet_cooling_min": 45,
+        "source_locations": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ]
+      },
+      "test_method": {
+        "property": "Tensile strength at break",
+        "standard": "ISO 527",
+        "equipment": "Instron 8802",
+        "gage_length_mm": 90,
+        "width_mm": 6.6,
+        "thickness_mm": 4,
+        "reported_pull_off_speed_mm_min": 50,
+        "test_temperature_C": 23,
+        "relative_humidity_percent_approx": 50,
+        "source_location": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph and final environment statement"
+      },
+      "property": "tensile_strength_at_break",
+      "property_label": "Tensile Strength at Break",
+      "unit": "MPa",
+      "reported_mean": 24.22,
+      "reported_sd": 1.63,
+      "value_origin": "reported_mean_and_sd",
+      "source_cell_text": "24.22 ± 1.63",
+      "sample_count": 5,
+      "sample_count_kind": "tensile specimens (source calls them samples) per blend",
+      "individual_readings_available": false,
+      "independent_run_count": null,
+      "independent_batch_count": null,
+      "source_locations": {
+        "measurement": {
+          "table_id": "materials-13-00543-t006",
+          "table_label": "Table 6",
+          "row_label": "rPP/SIS/GB 20",
+          "body_row_number": 7,
+          "column_label": "Tensile Strength at Break (MPa)",
+          "column_number": 3
+        },
+        "composition": {
+          "table_id": "materials-13-00543-t001",
+          "table_label": "Table 1",
+          "row_label": "rPP/SIS/GB 20",
+          "body_row_number": 7,
+          "column_labels": [
+            "rPP [wt%]",
+            "Thermoplastic Elastomer [wt%]",
+            "GB [vol.%]"
+          ]
+        },
+        "process": [
+          "sec2dot4-materials-13-00543",
+          "materials-13-00543-t002, Sheet column"
+        ],
+        "sample_count": "sec2dot5dot6-materials-13-00543, tensile-properties paragraph"
+      },
+      "product_question": "At this tested glass-bubble level within this source matrix family, is the reported mean tensile strength at break inside a stated target? Individual-specimen or finished-product compliance cannot be checked.",
+      "limits": [
+        "Only source-reported means and standard deviations are retained; the five individual specimen values and observed min/max are unavailable.",
+        "Standard deviation is not an observed range, a confidence interval, a tolerance or a future-batch prediction.",
+        "SBS and SIS are separate matrix families. Do not pool them or interpolate between tested glass-bubble levels.",
+        "Source composition columns mix wt% for the polymer components and vol.% for glass bubbles. These labels are preserved; no amount-basis conversion is inferred.",
+        "The two zero-added-filler references use a source dash in the GB column. Numeric zero is a reference-level interpretation, not an extracted numeric cell.",
+        "The source does not establish independent production batches or a result for the user's recycled input or finished product.",
+        "No density, mass, acoustic property, porosity effect or finished-product consistency is calculated from these tensile results."
+      ]
+    }
+  ],
+  "limits": [
+    "Only source-reported means and standard deviations are retained; the five individual specimen values and observed min/max are unavailable.",
+    "Standard deviation is not an observed range, a confidence interval, a tolerance or a future-batch prediction.",
+    "SBS and SIS are separate matrix families. Do not pool them or interpolate between tested glass-bubble levels.",
+    "Source composition columns mix wt% for the polymer components and vol.% for glass bubbles. These labels are preserved; no amount-basis conversion is inferred.",
+    "The two zero-added-filler references use a source dash in the GB column. Numeric zero is a reference-level interpretation, not an extracted numeric cell.",
+    "The source does not establish independent production batches or a result for the user's recycled input or finished product.",
+    "No density, mass, acoustic property, porosity effect or finished-product consistency is calculated from these tensile results."
+  ]
+}

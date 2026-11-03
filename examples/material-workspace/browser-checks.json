@@ -1,0 +1,111 @@
+{
+  "scope": "Actual browser checks of a hypothetical two-recycled-PE-stock case. No physical material was processed or tested. Model records were genuinely generated, then explicitly saved and reopened.",
+  "build_bundle": "index-C6550Fhr.js",
+  "checks": {
+    "route_continuity": {
+      "same_route_initially_selected": true,
+      "old_advice_present_before_change": true,
+      "same_route_retains_advice": true,
+      "review_tab_selected": "true",
+      "mix_panel_hidden": true,
+      "original_trial_visible": true,
+      "different_route_clears_advice": true,
+      "other_route_selected": true
+    },
+    "unit_roundtrip": {
+      "displayed_pounds": "2.204623",
+      "saved_canonical_kg": "1",
+      "recipe_literal_amounts": [
+        "250",
+        "750"
+      ],
+      "saved_display_units": "us",
+      "metric_value_after_return": "1"
+    },
+    "mobile_quantity_form": {
+      "client": 375,
+      "controls": [
+        {
+          "height": 36,
+          "name": "Edit case details",
+          "width": 107.796875
+        },
+        {
+          "height": 44,
+          "name": "Component to balance\nRecycled PE stream A (demo grade A1)\nRecycled PE stock B (demo grade B1)",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Input mass (kg)",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Current minimum (mass %)",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Current maximum (mass %)",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Addition material name",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Component in addition (mass %)",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Trial target minimum (mass %)",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Trial target maximum (mass %)",
+          "width": 335
+        },
+        {
+          "height": 44,
+          "name": "Calculate trial addition",
+          "width": 185.421875
+        }
+      ],
+      "scroll": 375,
+      "viewport": {
+        "height": 844,
+        "width": 390
+      }
+    },
+    "save_open": {
+      "workspace_source": "/local/user/Downloads/rematter-material-workspace (3).json",
+      "capture_file": "actual-final-workspace.json",
+      "network_after_save": [
+        {
+          "url": "http://127.0.0.1:8799/api/advisor/status",
+          "method": "GET"
+        }
+      ],
+      "no_automatic_model_generation": true,
+      "current_result_restored": false,
+      "comparison_confirmation_restored": false,
+      "reading_draft_retained": true,
+      "mix_draft_retained": true,
+      "saved_meta_labels_visible": true,
+      "console_warnings_errors": []
+    }
+  },
+  "workspace_sha256": "7d95fa4c429978d591fadc240d6d81de8b3f4385f681249113226f0781b1b83f",
+  "limits": [
+    "No human user-time or workflow-advantage study.",
+    "Mobile viewport checks do not test physical-device keyboards.",
+    "A restored composition target is manual until matching readings are reviewed and confirmed again.",
+    "A saved model result is not a new request or a current calculation."
+  ],
+  "published_or_submitted": false
+}

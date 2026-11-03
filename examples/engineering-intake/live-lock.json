@@ -1,0 +1,16 @@
+{
+  "protocol": "engineering-intake-v1",
+  "frozen_utc": "2026-11-01T08:26:26.621037+00:00",
+  "sha256": {
+    "docs/ENGINEERING_INTAKE_PROTOCOL.md": "94957fa833db77e264eb5e0e61352aa2c5437428877a0151303862e8a00d7f19",
+    "examples/engineering-intake-task-v1.json": "abb7162be4c4fded0aafc93dd5ac17616c59d109c0d39e7ac2876919b17adc0a",
+    "scripts/benchmark_engineering_intake.py": "b945c7ea2b77875e35c7f271d11221bb111446844275b13a5a219cf449698b73",
+    "rematter/engineering_intake.py": "64bf9c04ce92086153c8478be484280f1022c29a5d6f0442f614380960c54171",
+    "rematter/balance.py": "0edce7ddff391dd279ad8770d49a4ff1925300fc5b5385a632ca05b5f42d4e6c",
+    "rematter/advisor.py": "18b10558bc18083d8f9c7e64992df21d84a93566a855b48ba9120e75a07ba345",
+    "rematter/adaptation.py": "dccc048713e719b66089494ed40c20d73d7b7fc2373a4eb84cb168e5cbe13f46",
+    "rematter/meta.py": "f38ea0ed5dca74dedc8ee1bb7d09f35aac7f5c7147ba5fe215426e3d9af7844e",
+    "rematter/observation_intake.py": "70fbcce90100d45b10db47f32fda4401566393aa9967615cfc3aab7946763ab9",
+    "scripts/benchmark_note_intake.py": "88621cc42b7e7d4bb390a8817c1b53c4326a1d7255efe1ee5a9b8ef84e03d90f"
+  }
+}
