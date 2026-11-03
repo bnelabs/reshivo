@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T20:00:32.893782+00:00",
+  "prepared_utc": "2026-11-03T20:03:14.256453+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -66,8 +66,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4094,
-      "sha256": "f8553f682d48bdb39ef5b335d42a9950b220cf28836820d52943fb4d32091371"
+      "bytes": 4105,
+      "sha256": "a6173e9b5c0a8fc99bc74d27d37ffffec059d8018470fd9ccada0c4d01697e26"
     },
     {
       "path": "data/ATTRIBUTION.md",

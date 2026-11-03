@@ -35,9 +35,9 @@ For AI assistance, open **AI settings**, select a provider and model, and enter 
 
 The Meta planning model tested for this project is `muse-spark-1.3-contributor`. Meta may use content sent in Contributor mode to train future models; check the provider's terms before sharing your data. See [inference connections](docs/INFERENCE_PROVIDERS.md) for supported providers.
 
-## What the results mean
+## From ideas to decisions
 
-An entered reading, a calculated composition and an AI suggestion each answer a different question. A calculated recipe does not establish how the finished product performs, and entered readings do not predict future batches. The sample data used in the demo is synthetic.
+Reshivo brings material options, mix calculations and product checks together so you can decide what to try next. Calculations use the values you enter, and readings describe the samples tested. Check your product and new batches against your targets. The demo uses synthetic data.
 
 ## Versions
 
