@@ -1,6 +1,6 @@
 import type { ProjectIntakeDraft } from './projectIntake'
 import { validateMaterialAmount } from './checkEditing.ts'
-import { recordedRecipeFraction, recordedRecipeTarget } from './referenceComposition.ts'
+import { recordedRecipeFraction, recordedRecipeMatchesFraction, recordedRecipeTarget } from './referenceComposition.ts'
 import type { MixAdjustmentDraft } from './mixAdjustment'
 
 export type TrialConfiguration = {
@@ -24,18 +24,25 @@ export type TrialRecord = {
 export type ProcessCostStatus = 'unknown' | 'known' | 'excluded'
 export type CostDraft = {
   currency: string; mass_basis: string; functional_basis: string; acceptance_basis: string
-  prices: Record<string, string>; energy_kwh: string; energy_rate: string
+  prices: Record<string, string>; price_units?: Record<string, 'kg' | 'lb'>; energy_kwh: string; energy_rate: string
   labor_hours: string; labor_rate: string; other_charge: string; other_name: string
   usable_count: string; usable_mass_kg: string; usable_area_m2: string
   mode: 'actual' | 'planned'; accepted_fraction: string
   gross_count: string; gross_mass_kg: string; gross_area_m2: string; batch_mass_kg: string
   process_statuses?: Partial<Record<'energy' | 'labor' | 'other', ProcessCostStatus>>
 }
+export type SavedMixContext = {
+  case_id: string
+  destination: { id: string; revision: number; component_id: string; component_name: string }
+  inputs: { component: string; input_mass_kg: number; input_min_percent: number; input_max_percent: number; addition_name: string; addition_percent: number; target_min_percent: number; target_max_percent: number }
+  source_recipe?: { id: string; revision: number; name: string; component_id: string; component_name: string; basis: 'whole_recipe'; fraction: { numerator: string; denominator: string }; materials: { id: string; name: string; amount: string; unit: string }[]; process: string; geometry: string; readings_included: false }
+}
 export type ProjectAdviceNote = {
   id: string; created_at: string; provider: string; model: string
   project_snapshot: ProjectIntakeDraft
   configuration_versions: { id: string; revision: number }[]
   assessment_kind: 'synthetic' | 'user_reported'; text: string; kind: 'model_proposal' | 'local_guidance'
+  mix_context?: SavedMixContext
 }
 export type TrialIdea = {title:string;change:string;why:string;steps:string[];tradeoffs:string[];check:string;provider:string;model:string;note_id?:string}
 export type SavedMixAdjustmentDraft = {
@@ -92,6 +99,46 @@ function validateProjectDraft(value: unknown, label: string): void {
     text(record.value, `${label} ${field}`, 1000, true); text(record.quote, 'Source quote', 1500, true)
     if (typeof record.source !== 'string' || !/^(message|history\.[0-5]|user_review)$/.test(record.source)
       || !record.quote.includes(record.value) || (record.source === 'user_review' && record.quote !== record.value)) throw new Error('Project details need their literal source text.')
+  }
+}
+
+function validateSavedMixContext(value: unknown, caseId: unknown): void {
+  const mix = object(value, ['case_id', 'destination', 'inputs'], ['source_recipe'], 'Saved mix context')
+  if (mix.case_id !== caseId) throw new Error('A saved mix context must belong to its project.')
+  const destination = object(mix.destination, ['id', 'revision', 'component_id', 'component_name'], [], 'Saved mix destination')
+  text(destination.id, 'Saved mix setup', 160, true); revision(destination.revision)
+  text(destination.component_id, 'Saved mix material ID', 160, true); text(destination.component_name, 'Saved mix material', 160, true)
+  const inputs = object(mix.inputs, ['component', 'input_mass_kg', 'input_min_percent', 'input_max_percent', 'addition_name', 'addition_percent', 'target_min_percent', 'target_max_percent'], [], 'Saved mix inputs')
+  text(inputs.component, 'Saved mix component', 160, true); text(inputs.addition_name, 'Saved mix added stock', 120, true)
+  if (inputs.component !== (destination.component_name as string).trim()) throw new Error('A saved mix must retain its selected material.')
+  for (const field of ['input_mass_kg', 'input_min_percent', 'input_max_percent', 'addition_percent', 'target_min_percent', 'target_max_percent']) {
+    const number = inputs[field]
+    if (typeof number !== 'number' || !Number.isFinite(number) || number < 0 || (field === 'input_mass_kg' ? number === 0 || number > 1_000_000 : number > 100)) throw new Error('Saved mix inputs need valid finite numbers.')
+  }
+  if ((inputs.input_min_percent as number) > (inputs.input_max_percent as number) || (inputs.target_min_percent as number) > (inputs.target_max_percent as number)) throw new Error('Saved mix ranges need ordered limits.')
+  if (mix.source_recipe !== undefined) {
+    const source = object(mix.source_recipe, ['id', 'revision', 'name', 'component_id', 'component_name', 'basis', 'fraction', 'materials', 'process', 'geometry', 'readings_included'], [], 'Saved recipe source')
+    text(source.id, 'Saved recipe setup', 160, true); revision(source.revision); text(source.name, 'Saved recipe name', 160, true)
+    text(source.component_id, 'Saved recipe ingredient ID', 160, true); text(source.component_name, 'Saved recipe ingredient', 160, true)
+    text(source.process, 'Saved recipe process', 2000); text(source.geometry, 'Saved recipe shape', 2000)
+    if (source.basis !== 'whole_recipe' || source.readings_included !== false) throw new Error('A saved recipe source needs its whole-recipe basis.')
+    const fraction = object(source.fraction, ['numerator', 'denominator'], [], 'Saved recipe fraction')
+    if (typeof fraction.numerator !== 'string' || typeof fraction.denominator !== 'string' || !/^\d{1,2500}$/.test(fraction.numerator) || !/^[1-9]\d{0,2499}$/.test(fraction.denominator)) throw new Error('A saved recipe fraction needs valid nonnegative terms.')
+    list(source.materials, 50, 'Saved recipe ingredients')
+    if (!source.materials.length) throw new Error('A saved recipe needs its recorded ingredients.')
+    const ids: string[] = []
+    for (const material of source.materials) {
+      const item = object(material, ['id', 'name', 'amount', 'unit'], [], 'Saved recipe ingredient')
+      text(item.id, 'Saved ingredient ID', 160, true); ids.push(item.id)
+      text(item.name, 'Saved ingredient name', 160, true); text(item.amount, 'Saved ingredient amount', 160, true); text(item.unit, 'Saved ingredient unit', 160, true)
+    }
+    unique(ids, 'Saved ingredient')
+    if (!source.materials.some((material) => (material as Record<string, unknown>).id === source.component_id && (material as Record<string, unknown>).name === source.component_name)) throw new Error('A saved recipe must retain its selected ingredient.')
+    const recipe = { id: source.id, revision: source.revision, name: source.name, materials: source.materials,
+      process: source.process, geometry: source.geometry, notes: '' } as TrialConfiguration
+    if (!recordedRecipeMatchesFraction(recipe, source.component_id as string, fraction.numerator as string,
+      fraction.denominator as string, inputs.target_min_percent as number, inputs.target_max_percent as number))
+      throw new Error('A saved recipe fraction must match its ingredients and trial range.')
   }
 }
 
@@ -196,7 +243,7 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
     list(root.advice_notes, 30, 'Saved planning notes')
     const noteIds: string[] = []
     for (const entry of root.advice_notes) {
-      const note = object(entry, ['id', 'created_at', 'provider', 'model', 'project_snapshot', 'configuration_versions', 'assessment_kind', 'text', 'kind'], [], 'Saved planning note')
+      const note = object(entry, ['id', 'created_at', 'provider', 'model', 'project_snapshot', 'configuration_versions', 'assessment_kind', 'text', 'kind'], ['mix_context'], 'Saved planning note')
       text(note.id, 'Planning note identifier', 160, true); noteIds.push(note.id)
       text(note.created_at, 'Planning note creation time', 64, true)
       if (!Number.isFinite(Date.parse(note.created_at))) throw new Error('Planning note creation time must be a valid timestamp.')
@@ -207,6 +254,7 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
       if (note.kind==='model_proposal' && note.provider==='local') throw new Error('Local guidance cannot be saved as a model proposal.')
       if (!['synthetic', 'user_reported'].includes(note.assessment_kind as string)) throw new Error('A planning note needs its explicit assessment kind.')
       validateProjectDraft(note.project_snapshot, 'Planning note project snapshot')
+      if (note.mix_context !== undefined) validateSavedMixContext(note.mix_context, root.case_id)
       list(note.configuration_versions, 100, 'Planning note configuration versions')
       const references: string[] = []
       for (const version of note.configuration_versions) {
@@ -299,7 +347,7 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
   for (const [key, entry] of Object.entries(root.costs)) {
     const configuration = configurations.get(key)
     if (!configuration) throw new Error('A cost draft must belong to an exact captured configuration version.')
-    const cost = object(entry, [...COST_FIELDS, 'prices', 'mode'], ['process_statuses'], 'Cost draft')
+    const cost = object(entry, [...COST_FIELDS, 'prices', 'mode'], ['process_statuses', 'price_units'], 'Cost draft')
     for (const field of COST_FIELDS) text(cost[field], `Cost ${field}`, ['mass_basis', 'functional_basis', 'acceptance_basis', 'other_name'].includes(field) ? 2000 : 160)
     if (!['actual', 'planned'].includes(cost.mode as string)) throw new Error('Cost mode must be actual or planned.')
     if (!cost.prices || typeof cost.prices !== 'object' || Array.isArray(cost.prices)) throw new Error('Material prices must be keyed by material identifier.')
@@ -308,6 +356,12 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
     for (const [materialId, price] of Object.entries(cost.prices)) {
       if (!materials.has(materialId)) throw new Error('A price must belong to a material in this exact configuration.')
       text(price, 'Material price')
+    }
+    if (cost.price_units !== undefined) {
+      if (!cost.price_units || typeof cost.price_units !== 'object' || Array.isArray(cost.price_units) || Object.keys(cost.price_units).length > 50) throw new Error('Price units must be keyed by material identifier.')
+      for (const [materialId, unit] of Object.entries(cost.price_units)) {
+        if (!materials.has(materialId) || !['kg', 'lb'].includes(unit as string)) throw new Error('A price unit must use kg or lb for a material in this setup.')
+      }
     }
     if (cost.process_statuses !== undefined) {
       const statuses = object(cost.process_statuses, [], ['energy', 'labor', 'other'], 'Process cost statuses')

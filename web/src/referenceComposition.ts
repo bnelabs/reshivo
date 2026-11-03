@@ -105,3 +105,17 @@ export function recordedRecipeFraction(setup: TrialConfiguration, componentId: s
   if (result !== null) return { ok: true, value: result }
   return enclosingRange(ratio, proportion) ?? { ok: false, reason: 'This fraction is too precise to carry into the calculator. Enter your own trial range instead.' }
 }
+
+/** Check a saved source ratio and target against its captured recipe without floating-point rounding. */
+export function recordedRecipeMatchesFraction(setup: TrialConfiguration, componentId: string,
+  numerator: string, denominator: string, targetMin: number, targetMax: number): boolean {
+  if (!/^\d{1,2500}$/.test(numerator) || !/^[1-9]\d{0,2499}$/.test(denominator)) return false
+  const proportion = fraction(BigInt(numerator), BigInt(denominator))
+  const percent = fraction(proportion.n * 100n, proportion.d)
+  const point = recordedRecipeFraction(setup, componentId)
+  const low = decimal(String(targetMin)), high = decimal(String(targetMax))
+  if (!point.ok || !low || !high || low.n * percent.d > percent.n * low.d || high.n * percent.d < percent.n * high.d) return false
+  if ('range' in point) return BigInt(point.range.numerator) * proportion.d === proportion.n * BigInt(point.range.denominator)
+  const recorded = decimal(point.value)
+  return Boolean(recorded && recorded.n * percent.d === percent.n * recorded.d)
+}

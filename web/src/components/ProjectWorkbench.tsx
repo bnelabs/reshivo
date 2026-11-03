@@ -20,6 +20,7 @@ import type { AdvisorResult, AdvisorFollowupResult, AdvisorRoute, LocalPlanningR
 import { useUnitSettings } from '../units'
 import { costRequest } from '../manufacturingCost'
 import { mixQuestionFingerprint, mixQuestionIsCurrent } from '../mixQuestion'
+import type { PreparedMixCalculation } from '../mixQuestion'
 import { briefFrom } from '../projectBrief'
 import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
 import './ProjectWorkbench.css'
@@ -64,6 +65,7 @@ export function ProjectWorkbench() {
   const [preparedCheckName, setPreparedCheckName] = useState('')
   const [workspaceOpenEpoch, setWorkspaceOpenEpoch] = useState(0)
   const [mixQuestionContext, setMixQuestionContext] = useState<string | null>(null)
+  const [preparedMix, setPreparedMix] = useState<PreparedMixCalculation | null>(null)
   const [previousQuestion, setPreviousQuestion] = useState('')
   const [lastAdviceUsedIdea, setLastAdviceUsedIdea] = useState(false)
   const [question, setQuestion] = useState('')
@@ -320,6 +322,7 @@ export function ProjectWorkbench() {
                 },
               }
             : {}),
+          ...(mixQuestionContext && preparedMix ? { mix_calculation: preparedMix } : {}),
           ...(w.configurations.some((c) => w.costs[`${c.id}@${c.revision}`])
             ? {
                 manufacturing_costs: currentSetups(w.configurations)
@@ -341,6 +344,9 @@ export function ProjectWorkbench() {
         setAdviceQuestion(prompt)
         const noteId = crypto.randomUUID()
         setAdviceNoteId((w.advice_notes?.length ?? 0) < 30 ? noteId : null)
+        const boundMix = 'mix_calculation' in result && result.mix_calculation
+          ? (({ result: _result, ...snapshot }) => structuredClone(snapshot))(result.mix_calculation)
+          : null
         const text = [
           ...('guidance_adjusted' in result && result.guidance_adjusted ? ['Locally adapted for planning.'] : []),
           `Question: ${prompt}`,
@@ -389,6 +395,7 @@ export function ProjectWorkbench() {
                     assessment_kind: adviceKind,
                     text,
                     kind: result.result_kind==='local_planning_guidance'?'local_guidance':'model_proposal',
+                    ...(boundMix ? { mix_context: boundMix } : {}),
                   },
                 ],
               }
@@ -922,6 +929,15 @@ export function ProjectWorkbench() {
                           {note.project_snapshot.product?.value ?? 'Project'} · {note.kind==='local_guidance'?'Local planning guide':`${note.provider} / ${note.model}`} · {note.created_at.slice(0, 16).replace('T', ' ')} UTC
                         </summary>
                         <p className="pw-saved-note">{note.text}</p>
+                        {note.mix_context && <details>
+                          <summary>Recorded mix context</summary>
+                          <p>Destination: {note.mix_context.destination.component_name} · version {note.mix_context.destination.revision}.</p>
+                          {note.mix_context.source_recipe && <>
+                            <p>Reference: {note.mix_context.source_recipe.name} · version {note.mix_context.source_recipe.revision}. Ingredient: {note.mix_context.source_recipe.component_name}. Whole-recipe fraction: {note.mix_context.source_recipe.fraction.numerator}/{note.mix_context.source_recipe.fraction.denominator}.</p>
+                            <ul>{note.mix_context.source_recipe.materials.map((item) => <li key={item.id}>{item.name}: {item.amount} {item.unit.replaceAll('_', ' ')}</li>)}</ul>
+                            <p>Process: {note.mix_context.source_recipe.process || 'not entered'} · Shape: {note.mix_context.source_recipe.geometry || 'not entered'}</p>
+                          </>}
+                        </details>}
                       </details>
                     ))}
                   </details>
@@ -954,7 +970,7 @@ export function ProjectWorkbench() {
                   setW((current) => updateDraft(current))
                   setNotice('Unsaved changes. Save a project file to keep this work.')
                 }}
-                onDiscuss={(prompt) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setPage('options') }}
+                onDiscuss={(prompt, calculation) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setPreparedMix(calculation); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setPage('options') }}
               />
             </div>
             <div hidden={page !== 'costs'}>

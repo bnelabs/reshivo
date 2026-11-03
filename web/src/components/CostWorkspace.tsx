@@ -7,6 +7,9 @@ import { currentSetups, setupKey } from './TrialWorkspace'
 import { costIssueText, displayCostAmount, roundedWinnerCollision } from '../costDisplay'
 import { selectedCurrentSetup, setupRevisionNotice } from '../setupSelection'
 import { reuseCostComparisonDetails } from '../costComparisonSetup'
+import { currentPriceUnit, enteredMaterialPrice, exactPriceUnitConversion, resolvePriceUnit } from '../costPriceUnit'
+import type { PendingPriceUnit, PriceUnit } from '../costPriceUnit'
+import { useUnitSystem } from '../units'
 
 type Props = {
   workspace: ProjectWorkspace
@@ -23,6 +26,7 @@ export function CostWorkspace({
   onReadingKindChange,
   showHistoricalIdeas,
 }: Props) {
+  const system = useUnitSystem()
   const setups = currentSetups(w.configurations)
   const setupName = (s: (typeof setups)[number]) =>
     !showHistoricalIdeas && (w.trial_ideas?.[setupKey(s)]?.title === s.name || s.notes.startsWith(`Unverified trial idea: ${s.name}.`))
@@ -36,6 +40,7 @@ export function CostWorkspace({
   const [compareKey, setCompareKey] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [pendingPriceUnit, setPendingPriceUnit] = useState<PendingPriceUnit | null>(null)
   const c = selectedCurrentSetup(setups, selected)
   const missingSelected = Boolean(selected && !setups.some((setup) => setup.id === selected))
   useEffect(() => {
@@ -43,6 +48,7 @@ export function CostWorkspace({
     setVersionNotice(setupRevisionNotice(previousSetup.current, c))
     previousSetup.current = c ? { id: c.id, revision: c.revision } : null
   }, [selected, c?.id, c?.revision])
+  useEffect(() => { setPendingPriceUnit(null) }, [w.case_id, c?.id, c?.revision])
   const d: CostDraft = c ? (w.costs[setupKey(c)] ?? newCostDraft()) : newCostDraft()
   const reusableDestinations = c ? setups.filter((setup) => setup.id !== c.id && !Object.hasOwn(w.costs, setupKey(setup))) : []
   const hasComparisonDetails = [d.currency, d.functional_basis, d.acceptance_basis].some((value) => value.trim())
@@ -68,6 +74,10 @@ export function CostWorkspace({
       comparison?.configurations?.some((entry: any) => entry.cost?.unit_costs?.[metric] != null),
   )
   async function calculate(compare = false) {
+    if (pendingPriceUnit) {
+      setError('Choose how to change the material price before calculating.')
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -177,32 +187,73 @@ export function CostWorkspace({
                   <tr>
                     <th>Material</th>
                     <th>Amount used</th>
-                    <th>Price per kg in {d.currency || 'your currency'}</th>
+                    <th>Price in {d.currency || 'your currency'}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {c.materials.map((m) => (
-                    <tr key={m.id}>
+                  {c.materials.map((m) => {
+                    const price = enteredMaterialPrice(d, m.id)
+                    const unit = currentPriceUnit(d, m.id, system)
+                    const pending = pendingPriceUnit?.materialId === m.id ? pendingPriceUnit : null
+                    return <tr key={m.id}>
                       <th>{m.name}</th>
                       <td>
                         {m.amount || 'Unknown'} {m.unit.replaceAll('_', ' ')}
                       </td>
                       <td>
                         <label className="pw-sr-only" htmlFor={`price-${m.id}`}>
-                          Price per kg for {m.name}
+                          Price for {m.name}
                         </label>
                         <input
                           id={`price-${m.id}`}
                           inputMode="decimal"
-                          value={d.prices[m.id] ?? ''}
-                          onChange={(e) =>
-                            edit({ prices: { ...d.prices, [m.id]: e.target.value } })
-                          }
+                          value={price}
+                          onChange={(e) => {
+                            if (pending) setPendingPriceUnit(null)
+                            edit({ prices: { ...d.prices, [m.id]: e.target.value },
+                              price_units: { ...d.price_units, [m.id]: unit } })
+                          }}
                           placeholder="Unknown"
                         />
+                        <label>
+                          <span className="pw-sr-only">Price unit for {m.name}</span>
+                          <select value={unit} disabled={Boolean(pendingPriceUnit && !pending)} onChange={(e) => {
+                            const next = e.target.value as PriceUnit
+                            if (next === unit) { setPendingPriceUnit(null); return }
+                            if (price === '') {
+                              edit({ price_units: { ...d.price_units, [m.id]: next } })
+                              return
+                            }
+                            setPendingPriceUnit({ caseId: w.case_id, setupId: c.id, revision: c.revision,
+                              materialId: m.id, value: price, from: unit, to: next,
+                              converted: exactPriceUnitConversion(price, unit, next) })
+                          }}>
+                            <option value="kg">per kg</option>
+                            <option value="lb">per lb</option>
+                          </select>
+                        </label>
+                        {pending && <div className="pw-notice" role="group" aria-label={`Choose how to change the price unit for ${m.name}`}>
+                          <p>This price is {pending.value} per {pending.from}. How should it change to per {pending.to}?</p>
+                          {pending.converted !== null && <button type="button" onClick={() => {
+                            const next = resolvePriceUnit(d, pending, w.case_id, c.id, c.revision, system, 'convert')
+                            if (next) edit(next)
+                            setPendingPriceUnit(null)
+                          }}>Convert to {pending.converted} per {pending.to}</button>}
+                          <button type="button" onClick={() => {
+                            const next = resolvePriceUnit(d, pending, w.case_id, c.id, c.revision, system, 'keep')
+                            if (next) edit(next)
+                            setPendingPriceUnit(null)
+                          }}>Keep {pending.value} and use per {pending.to}</button>
+                          <button type="button" onClick={() => {
+                            const next = resolvePriceUnit(d, pending, w.case_id, c.id, c.revision, system, 'clear')
+                            if (next) edit(next)
+                            setPendingPriceUnit(null)
+                          }}>Clear price and use per {pending.to}</button>
+                          <button type="button" onClick={() => setPendingPriceUnit(null)}>Cancel</button>
+                        </div>}
                       </td>
                     </tr>
-                  ))}
+                  })}
                 </tbody>
               </table>
             </div>
@@ -384,7 +435,7 @@ export function CostWorkspace({
             )}
           </details>
           <div className="pw-actions pw-spaced">
-            <button className="pw-primary" disabled={busy} onClick={() => calculate()}>
+            <button className="pw-primary" disabled={busy || Boolean(pendingPriceUnit)} onClick={() => calculate()}>
               {busy ? 'Calculating…' : 'Calculate this setup'}
             </button>
             <label className="pw-inline-label">
@@ -397,7 +448,7 @@ export function CostWorkspace({
                 <option value="synthetic">Software simulation only</option>
               </select>
             </label>
-            <button disabled={busy || setups.length < 2} onClick={() => calculate(true)}>
+            <button disabled={busy || Boolean(pendingPriceUnit) || setups.length < 2} onClick={() => calculate(true)}>
               Compare checks and costs
             </button>
             {setups.length < 2 && <small>Add another trial setup to compare.</small>}

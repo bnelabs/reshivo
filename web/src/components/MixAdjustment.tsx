@@ -3,6 +3,8 @@ import { api } from '../api'
 import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
 import { describeMixOutcome } from '../mixCandidate'
 import { MixAdditionResult } from './MixAdditionResult'
+import { prepareMixCalculation } from '../mixQuestion'
+import type { PreparedMixCalculation } from '../mixQuestion'
 import type { MixAdjustmentDraft } from '../mixAdjustment'
 import type { ProjectWorkspace } from '../projectWorkspace'
 import type { AdvisorBrief, BalanceMixRequest, BalanceMixResult } from '../types'
@@ -26,7 +28,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   showHistoricalIdeas: boolean
   planningContext: MixPlanningContext
   onDraftChange: (update: (current: ProjectWorkspace) => ProjectWorkspace) => void
-  onDiscuss?: (question: string) => void
+  onDiscuss?: (question: string, calculation: PreparedMixCalculation) => void
 }) {
   const system = useUnitSystem()
   const setups = currentSetups(w.configurations)
@@ -136,11 +138,13 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
     }
   }
   function discuss() {
-    if (!visibleResult || !onDiscuss || !setup) return
+    if (!visibleResult || !onDiscuss || !setup || !material) return
     const { request: input, value } = visibleResult
+    const binding = prepareMixCalculation(w, setup, material, input)
+    if (!binding) { setError('The setup or mix inputs changed. Calculate again before asking about them.'); return }
     const outcome = describeMixOutcome(value, system)
-    const source = material ? recordedRecipeDiscussion(w, setup, material, w.project, setupName) : ''
-    onDiscuss(`Help me interpret this mix simulation for ${setupName(setup)}, version ${setup.revision} (ID ${setup.id}), and suggest the next actions and product checks.\n\nPortion: ${input.input_mass_kg} kg, with ${showRange(input.input_min_percent, input.input_max_percent)} mass percent ${input.component}. Added stock: ${input.addition_name}, with ${input.addition_percent} mass percent ${input.component}. Chosen mix: ${showRange(input.target_min_percent, input.target_max_percent)} mass percent ${input.component}.${source ? `\n\n${source}` : ''}\n\n${outcome} Figures are approximate and assume complete, loss-free mixing.`)
+    const source = recordedRecipeDiscussion(w, setup, material, w.project, setupName)
+    onDiscuss(`Help me interpret this mix simulation for ${setupName(setup)}, version ${setup.revision}, and suggest the next actions and product checks.\n\nPortion: ${input.input_mass_kg} kg, with ${showRange(input.input_min_percent, input.input_max_percent)} mass percent ${input.component}. Added stock: ${input.addition_name}, with ${input.addition_percent} mass percent ${input.component}. Chosen mix: ${showRange(input.target_min_percent, input.target_max_percent)} mass percent ${input.component}.${source ? `\n\n${source}` : ''}\n\n${outcome} Figures are approximate and assume complete, loss-free mixing.`, binding)
   }
 
   if (!enabled) return <section className="pw-section"><h1>Adjust a mix</h1><p>Adjustment calculations are unavailable while this case is being checked or needs local planning. See Options for guidance.</p></section>
