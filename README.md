@@ -41,13 +41,11 @@ An entered reading, a calculated composition and an AI suggestion each answer a 
 
 ## Versions
 
-The version in the app menu and footer identifies the frontend build. The `version` field at `/api/health` identifies the backend; the two should match after a deployment. Changes are listed in [CHANGELOG.md](CHANGELOG.md), and tagged source versions use the `vX.Y.Z` format. The first tagged release is `v0.2.0`; the earlier `0.1.0` package label was not a tagged release.
-
-Before a release, update the version in `pyproject.toml`, `rematter/__init__.py`, `web/package.json`, and both root version entries in `web/package-lock.json`; update the changelog; then run `python3 scripts/check_versions.py`. Use plain `X.Y.Z` versions unless any prerelease format has also been checked against Python packaging rules. Tag the tested commit with the corresponding `vX.Y.Z` tag.
+Find your version in the app menu or footer. See the [changelog](CHANGELOG.md) for what changed.
 
 ## Development and checks
 
-The commit history retains dated application, frontend and test changes from the hackathon. Earlier commits were filtered to remove old research data, documents, examples and media; their commit IDs therefore changed, and those earlier snapshots may not build on their own. The latest commit contains the complete source package.
+The repository includes filtered, dated development history; earlier snapshots may not build because research data and media were removed.
 
 ```sh
 .venv/bin/python scripts/check_versions.py
@@ -57,9 +55,9 @@ node web/checks/quantity.test.mjs
 npm --prefix web run build
 ```
 
-For frontend development, run the Python server and `npm --prefix web run dev` in separate terminals. The development interface proxies API requests to the local server.
+For frontend development, run the Python server and `npm --prefix web run dev` in separate terminals. The development interface proxies API requests to the local server. Release steps are in the [maintainer guide](docs/RELEASING.md).
 
-The measurement sources, their scope and terms are described in the [data inventory](docs/DATA_INVENTORY.md). [Historical evaluations](docs/EVALUATIONS.md) document tests of earlier versions. The demo uses synthetic data; no physical product test is claimed.
+The measurement sources, their scope and terms are described in the [data inventory](docs/DATA_INVENTORY.md). [Historical evaluations](docs/EVALUATIONS.md) document tests of earlier versions.
 
 ## License
 
