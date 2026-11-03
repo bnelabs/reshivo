@@ -11,6 +11,8 @@ from .meta import MetaClient, MetaConfigurationError, MetaValidationError
 from .products import ProductInputError
 from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_guidance
 from .walking_guidance import has_unsafe_walking_guidance
+from .intake_grip_proxy import has_misleading_grip_proxy
+from .delivery_comparison import has_single_delivery_comparison
 from .providers import ProviderConfigurationError, load_provider_profile
 from .trial_records import assess_trial_records
 
@@ -610,6 +612,19 @@ def _quarantine_assured_summary(value):
     return "\n\n".join(kept).strip(), quarantined
 
 
+def _guard_assured_fields(value):
+    """Hold a bounded assurance phrase outside the separately quarantined summary."""
+    if isinstance(value, str):
+        if _ASSURED_TARGET.search(value):
+            raise MetaValidationError("The suggestion says a target is assured. Ask for a comparison with checks.")
+    elif isinstance(value, dict):
+        for child in value.values():
+            _guard_assured_fields(child)
+    elif isinstance(value, (list, tuple)):
+        for child in value:
+            _guard_assured_fields(child)
+
+
 _WALK_SURFACE = re.compile(r"\b(?:mat|floor|flooring|surface|tile|walkway|pavement|deck|carpet|footwear|shoe|sole|foot|feet|slip|traction|grip)\w*\b", re.I)
 _WALK_GRIP = re.compile(r"\b(?:wet|water|damp|slip|slippery|traction|grip|friction|slick)\w*\b", re.I)
 
@@ -631,6 +646,26 @@ def _walking_guidance_in(value):
         return any(_walking_guidance_in(item) for item in value.values())
     if isinstance(value, (list, tuple)):
         return any(_walking_guidance_in(item) for item in value)
+    return False
+
+
+def _grip_proxy_in(value):
+    if isinstance(value, str):
+        return has_misleading_grip_proxy(value)
+    if isinstance(value, dict):
+        return any(_grip_proxy_in(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_grip_proxy_in(item) for item in value)
+    return False
+
+
+def _single_delivery_comparison_in(value):
+    if isinstance(value, str):
+        return has_single_delivery_comparison(value)
+    if isinstance(value, dict):
+        return any(_single_delivery_comparison_in(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_single_delivery_comparison_in(item) for item in value)
     return False
 
 
@@ -657,12 +692,20 @@ def _guard_prior_walking_guidance(case):
     prior = [history, case.get("trial_ideas", {}), case.get("route", {}), copied_text]
     if (_walking_surface_context(case) and _walking_guidance_in(prior)) or _explicit_wet_walking(prior):
         raise ProductInputError("An earlier idea suggests standing or walking on the product. Remove it from this request and ask for another way to check it.")
+    if _grip_proxy_in(prior):
+        raise ProductInputError("An earlier idea uses an unsuitable comparison for product performance. Remove it and ask for a different check.")
+    if _single_delivery_comparison_in(prior):
+        raise ProductInputError("An earlier comparison needs observations from more than one delivery. Remove it and ask for a revised comparison.")
 
 
 def _guard_generated_walking_guidance(case, data):
     """Hold recognized person-on-surface test instructions before display or storage."""
     if (_walking_surface_context(case) and _walking_guidance_in(data)) or _explicit_wet_walking(data):
         raise MetaValidationError("That suggestion involved standing or walking on the product. Ask for another way to check it.")
+    if _grip_proxy_in(data):
+        raise MetaValidationError("The suggestion uses an unsuitable comparison for product performance. Ask for a different check.")
+    if _single_delivery_comparison_in(data):
+        raise MetaValidationError("A comparison across deliveries needs observations from more than one delivery. Ask for a revised comparison.")
 
 
 _DUST = re.compile(r"\b(?:dust|powder|fines|fine particulate(?:s)?)\b", re.I)
@@ -775,6 +818,7 @@ def help_with_case(request, client=None, root=ROOT):
         raise MetaValidationError("Meta's help response has an unexpected format")
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
+    _guard_assured_fields({key: data[key] for key in ("material_routes", "engineering_routes", "next_steps", "questions")})
     sources = _sources(data["source_ids"])
     answer, quarantined = _quarantine_assured_summary(_text(data["answer"], "answer", 3000, error=MetaValidationError))
     return {
@@ -817,6 +861,7 @@ def follow_up_with_case(request, client=None, root=ROOT):
         raise MetaValidationError("Meta's follow-up response has an unexpected format")
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
+    _guard_assured_fields({key: data[key] for key in ("next_steps", "questions")})
     answer, quarantined = _quarantine_assured_summary(_text(data["answer"], "answer", 3000, error=MetaValidationError))
     if not answer:
         raise MetaValidationError("Meta did not return usable follow-up advice. Try a more specific question.")
@@ -867,6 +912,7 @@ def plan_trial(request, client=None, root=ROOT):
         raise MetaValidationError("Meta's trial response has an unexpected format")
     _guard_generated_walking_guidance(case, data)
     _guard_home_unknown_dust(case, data)
+    _guard_assured_fields({key: value for key, value in data.items() if key != "source_ids"})
     checks = _trial_rows(data["checks"], "checks", 1, 6,
                          {"property": 120, "target": 3000, "method": 1500, "if_outside": 1500})
     for check in checks:

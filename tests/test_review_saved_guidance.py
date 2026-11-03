@@ -41,6 +41,10 @@ class ReviewSavedGuidanceTests(unittest.TestCase):
             self.assertEqual((status,result),(200,{'needs_review':True}))
             self.assertEqual(headers['Cache-Control'],'no-store')
             self.assertEqual(self.call({'texts':['Do not walk on the wet mat.']})[:2],(200,{'needs_review':False}))
+            self.assertEqual(self.call({'texts':['Compare containment ideas on paper for grip.']})[:2],(200,{'needs_review':True}))
+            self.assertEqual(self.call({'texts':['Sketch the mat on paper for fit, then select a grip test.']})[:2],(200,{'needs_review':False}))
+            self.assertEqual(self.call({'texts':['Sample one delivery. This shows how much the mix shifts between deliveries.']})[:2],(200,{'needs_review':True}))
+            self.assertEqual(self.call({'texts':['One delivery does not show how the mix shifts between deliveries.']})[:2],(200,{'needs_review':False}))
 
     def test_rejects_bad_shapes_fields_lengths_and_origin(self):
         for value in ({}, {'texts':'a'}, {'texts':[None]}, {'texts':['x'*100001]},

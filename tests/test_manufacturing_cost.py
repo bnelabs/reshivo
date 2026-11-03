@@ -309,6 +309,56 @@ class ManufacturingCostTests(unittest.TestCase):
                 result = compare_manufacturing_costs([floor_request(), b])
                 self.assertFalse(result["comparable"])
 
+    def test_other_cost_categories_must_match_before_choosing_a_winner(self):
+        a, b = floor_request(), floor_request("B")
+        a["process"]["other"]["charges"][0]["name"] = "Rent"
+        b["process"]["other"]["charges"][0]["name"] = "Transport"
+        result = compare_manufacturing_costs([a, b])
+        self.assertFalse(result["comparable"])
+        self.assertIsNone(result["winners"]["per_usable_unit"])
+        self.assertIn("Use the same named other-cost categories in each setup before comparing.", result["reasons"])
+        self.assertIsNotNone(result["results"][0]["unit_costs"]["per_usable_unit"])
+        self.assertIsNotNone(result["results"][1]["unit_costs"]["per_usable_unit"])
+
+        # Names describe category scope; the charge amounts may differ by setup.
+        b["process"]["other"]["charges"][0].update(name="  RENT  ", amount="8")
+        self.assertTrue(compare_manufacturing_costs([a, b])["comparable"])
+        b["process"]["other"]["charges"] = []
+        self.assertFalse(compare_manufacturing_costs([a, b])["comparable"])
+
+    def test_other_cost_categories_compare_as_a_multiset(self):
+        a, b = floor_request(), floor_request("B")
+        for request in (a, b):
+            request["process"]["other"]["charges"] = [
+                {"name": "Rental", "amount": "2"},
+                {"name": "Transport", "amount": "3"},
+            ]
+        b["process"]["other"]["charges"].reverse()
+        self.assertTrue(compare_manufacturing_costs([a, b])["comparable"])
+        b["process"]["other"]["charges"][1]["name"] = "Transport"
+        self.assertFalse(compare_manufacturing_costs([a, b])["comparable"])
+
+    def test_process_charge_inclusions_must_match(self):
+        a, b = floor_request(), floor_request("B")
+        a["process"]["labor"] = b["process"]["labor"] = {"status": "excluded"}
+        a["process"]["energy"]["includes"] = ["labor"]
+        result = compare_manufacturing_costs([a, b])
+        self.assertFalse(result["comparable"])
+        self.assertIsNone(result["winners"]["per_usable_unit"])
+        self.assertIn("Match what each process charge includes across setups.", result["reasons"])
+        b["process"]["energy"]["includes"] = ["labor"]
+        self.assertTrue(compare_manufacturing_costs([a, b])["comparable"])
+
+    def test_other_charge_level_inclusions_must_match(self):
+        a, b = floor_request(), floor_request("B")
+        a["process"]["labor"] = b["process"]["labor"] = {"status": "excluded"}
+        a["process"]["other"]["charges"][0]["includes"] = ["labor"]
+        result = compare_manufacturing_costs([a, b])
+        self.assertFalse(result["comparable"])
+        self.assertIsNone(result["winners"]["per_usable_unit"])
+        b["process"]["other"]["charges"][0]["includes"] = ["labor"]
+        self.assertTrue(compare_manufacturing_costs([a, b])["comparable"])
+
     def test_exact_tie_and_close_costs_are_not_rounded_into_winners(self):
         a, b = floor_request(), floor_request()
         b["configuration_id"] = "B"

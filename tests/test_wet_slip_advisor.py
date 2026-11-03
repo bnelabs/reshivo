@@ -136,5 +136,52 @@ class WetSlipAdvisorTests(unittest.TestCase):
         with self.assertRaises(ProductInputError): follow_up_with_case(request,client)
         self.assertEqual(client.calls,0)
 
+    def test_target_assurance_in_help_routes_and_followup_steps_is_held(self):
+        assurance = 'You will meet your targets by making this change.'
+        for section, field in (('material_routes', 'why'), ('material_routes', 'steps'),
+                               ('engineering_routes', 'check')):
+            data = help_data()
+            data[section][0][field] = [assurance] if field == 'steps' else assurance
+            with self.subTest(section=section, field=field), self.assertRaisesRegex(MetaValidationError, 'comparison with checks'):
+                help_with_case(mat_request(), FakeClient(data))
+        data = follow_data(); data['next_steps'] = [assurance]
+        with self.assertRaisesRegex(MetaValidationError, 'comparison with checks'):
+            follow_up_with_case(mat_request(), FakeClient(data))
+
+    def test_target_assurance_in_trial_action_or_adjustment_is_held(self):
+        request = {'brief': mat_request()['brief'], 'route': route()}
+        for group, field in (('steps', 'action'), ('checks', 'if_outside')):
+            data = trial_data()
+            data[group][0][field] = 'You can meet your targets by using this design.'
+            with self.subTest(group=group, field=field), self.assertRaisesRegex(MetaValidationError, 'comparison with checks'):
+                plan_trial(request, FakeClient(data))
+
+    def test_conditional_comparison_remains_available(self):
+        data = follow_data()
+        data['next_steps'] = ['Compare both layouts and measure grip against your target.']
+        self.assertEqual(follow_up_with_case(mat_request(), FakeClient(data))['next_steps'], data['next_steps'])
+
+    def test_recognized_surrogate_proxy_is_held_in_advice_and_history(self):
+        data = follow_data(); data['next_steps'] = ['Compare containment ideas on paper for grip.']
+        with self.assertRaisesRegex(MetaValidationError, 'different check'):
+            follow_up_with_case(mat_request(), FakeClient(data))
+        request = mat_request()
+        request['history'] = [{'role': 'assistant', 'content': 'Compare layouts on paper for grip.'}]
+        client = FakeClient(follow_data())
+        with self.assertRaisesRegex(ProductInputError, 'different check'):
+            follow_up_with_case(request, client)
+        self.assertEqual(client.calls, 0)
+
+    def test_single_delivery_comparison_is_held_in_advice_and_history(self):
+        invalid = 'Observe one delivery. This shows how the mix shifts between deliveries.'
+        data = follow_data(); data['next_steps'] = [invalid]
+        with self.assertRaisesRegex(MetaValidationError, 'more than one delivery'):
+            follow_up_with_case(mat_request(), FakeClient(data))
+        request = mat_request(); request['history'] = [{'role': 'assistant', 'content': invalid}]
+        client = FakeClient(follow_data())
+        with self.assertRaisesRegex(ProductInputError, 'more than one delivery'):
+            follow_up_with_case(request, client)
+        self.assertEqual(client.calls, 0)
+
 
 if __name__ == '__main__': unittest.main()

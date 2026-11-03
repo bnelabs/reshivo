@@ -107,6 +107,15 @@ class DecisionComparisonTests(unittest.TestCase):
         request = sample(); request["cost_records"][1]["output"]["usable_count"] = "0"
         self.assertIsNone(compare_project_decisions(request)["decisions"]["per_usable_unit"])
 
+    def test_different_other_cost_categories_block_target_qualified_winner(self):
+        request = sample()
+        request["records"][1]["readings"][0]["value"] = "5"
+        for cost, category in zip(request["cost_records"], ("Rent", "Transport")):
+            cost["process"]["other"] = {"status": "known", "charges": [{"name": category, "amount": "1"}]}
+        result = compare_project_decisions(request)
+        self.assertIsNone(result["decisions"]["per_usable_unit"])
+        self.assertIn("Use the same named other-cost categories in each setup before comparing.", result["reasons"])
+
     def test_changed_recipe_or_foreign_case_cannot_bind_to_cost(self):
         request = sample(); request["cost_records"][0]["materials"][0]["quantity"] = "2"
         with self.assertRaises(ProductInputError): compare_project_decisions(request)

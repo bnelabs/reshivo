@@ -155,13 +155,16 @@ class WorkbenchService:
     def review_saved_guidance(self, request):
         """Screen bounded saved text locally before it is displayed or reused."""
         from .walking_guidance import has_unsafe_walking_guidance
+        from .intake_grip_proxy import has_misleading_grip_proxy
+        from .delivery_comparison import has_single_delivery_comparison
         _allowed(request, {"texts"}, "saved-guidance review")
         texts = request.get("texts")
         if set(request) != {"texts"} or not isinstance(texts, list) or len(texts) > 230:
             raise ServiceError("invalid_request", "Include up to 230 saved guidance texts.")
         if any(not isinstance(text, str) or len(text) > 100000 for text in texts):
             raise ServiceError("invalid_request", "Keep each saved guidance text within 100000 characters.")
-        return {"needs_review": any(has_unsafe_walking_guidance(text) for text in texts)}
+        return {"needs_review": any(has_unsafe_walking_guidance(text) or has_misleading_grip_proxy(text)
+                                    or has_single_delivery_comparison(text) for text in texts)}
 
     def manufacturing_cost(self, request):
         from .manufacturing_cost import calculate_manufacturing_cost

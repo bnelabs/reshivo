@@ -7,6 +7,7 @@ import unittest
 
 from rematter.project_intake import read_project_intake
 from rematter.walking_guidance import has_unsafe_walking_guidance
+from rematter.intake_grip_proxy import has_misleading_grip_proxy
 from test_project_intake import empty_draft, record, simple_request, simple_response
 
 
@@ -152,6 +153,42 @@ class WalkingGuidanceTests(unittest.TestCase):
         self.assertEqual(result["first_step"], response["first_step"])
         self.assertEqual(result["questions"], response["questions"])
         self.assertNotIn("guidance_origin", result)
+
+    def test_observed_paper_and_loose_sample_proxies_are_held(self):
+        observed = (
+            'Use that to compare no-heat containment ideas on paper for grip and cleaning.',
+            'Line up a bench tilt comparison of tiny contained samples against a shoe sole.',
+        )
+        for text in observed:
+            with self.subTest(text=text):
+                self.assertTrue(has_misleading_grip_proxy(text))
+                response = simple_response(); response['first_step'] = text
+                result = read_project_intake(simple_request(), client=FixtureClient(response))
+                self.assertEqual(result['guidance_origin'], 'local')
+                self.assertEqual(result['project_draft'], response['project_draft'])
+                self.assertNotIn(text, json.dumps(result))
+
+    def test_paper_design_and_unrelated_tilt_are_not_rejected(self):
+        for text in ('Sketch the mat on paper to compare shape and fit.',
+                     'Compare the costs of two designs on paper.',
+                     'Sketch the mat to compare fit, then choose a grip assessment.',
+                     'Compare materials on paper; select a grip test for the finished mat.',
+                     'Ask what shoe sole and flooring will be used.',
+                     'Compare the assembly tilt with its finished product sample.',
+                     'Do not compare designs on paper for grip.'):
+            with self.subTest(text=text):
+                self.assertFalse(has_misleading_grip_proxy(text))
+
+    def test_prior_recognized_proxy_is_not_replayed_as_assistant_advice(self):
+        request = simple_request()
+        request['history'] = [
+            {'role': 'assistant', 'content': 'Compare your layouts on paper for grip.'},
+            {'role': 'user', 'content': 'Can paper tell me about grip?'},
+        ]
+        client = FixtureClient(simple_response())
+        read_project_intake(request, client=client)
+        self.assertNotIn('Compare your layouts on paper for grip.', json.dumps(client.prompt))
+        self.assertEqual(client.prompt['history'][1], request['history'][1])
 
 
 if __name__ == "__main__":

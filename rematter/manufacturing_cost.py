@@ -352,6 +352,40 @@ def calculate_manufacturing_cost(request):
     return _Calculation(request).run()
 
 
+def _other_charge_scope(request):
+    """Describe the named extra costs without considering their amounts or IDs."""
+    if not isinstance(request, dict) or not isinstance(request.get("process"), dict):
+        return None
+    other = request["process"].get("other")
+    if not isinstance(other, dict) or other.get("status", "unknown") != "known":
+        return None
+    charges = other.get("charges")
+    if not isinstance(charges, list):
+        return None
+    scope = []
+    for charge in charges:
+        if not isinstance(charge, dict) or not isinstance(charge.get("name"), str):
+            return None
+        name = " ".join(charge["name"].split()).casefold()
+        includes = charge.get("includes") or []
+        if not name or not isinstance(includes, list) or any(not isinstance(item, str) for item in includes):
+            return None
+        scope.append((name, tuple(sorted(set(includes)))))
+    return tuple(sorted(scope))
+
+
+def _process_inclusions(request, category):
+    if not isinstance(request, dict) or not isinstance(request.get("process"), dict):
+        return None
+    item = request["process"].get(category)
+    if not isinstance(item, dict):
+        return None
+    includes = item.get("includes") or []
+    if not isinstance(includes, list) or any(not isinstance(value, str) for value in includes):
+        return None
+    return tuple(sorted(set(includes)))
+
+
 def compare_manufacturing_costs(requests):
     """Compare only complete, current records on a common declared cost/output scope."""
     if not isinstance(requests, list) or len(requests) < 2:
@@ -372,6 +406,16 @@ def compare_manufacturing_costs(requests):
             reasons.append("Records need the same explicit " + field + ".")
     if any(result["category_statuses"] != results[0]["category_statuses"] for result in results):
         reasons.append("Included/excluded manufacturing categories must match.")
+    for category in ("energy", "labor", "other"):
+        if all(result["category_statuses"].get(category) == "known" for result in results):
+            inclusions = [_process_inclusions(request, category) for request in requests]
+            if any(item is None or item != inclusions[0] for item in inclusions):
+                reasons.append("Match what each process charge includes across setups.")
+                break
+    if all(result["category_statuses"].get("other") == "known" for result in results):
+        other_scopes = [_other_charge_scope(request) for request in requests]
+        if any(scope is None or scope != other_scopes[0] for scope in other_scopes):
+            reasons.append("Use the same named other-cost categories in each setup before comparing.")
     acceptance = results[0]["output"]["acceptance_basis"]
     if not acceptance or any(result["output"]["acceptance_basis"] != acceptance for result in results):
         reasons.append("Usable-output acceptance definitions must match.")

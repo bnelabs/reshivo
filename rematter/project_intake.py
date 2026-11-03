@@ -9,6 +9,8 @@ from .meta import MetaClient, MetaValidationError
 from .products import ProductInputError
 from .unknown_metal_planning import needs_local_metal_planning, local_metal_planning_guidance, literal_particle_excerpt
 from .walking_guidance import has_unsafe_walking_guidance
+from .intake_grip_proxy import has_misleading_grip_proxy
+from .delivery_comparison import has_single_delivery_comparison
 
 
 DRAFT_FIELDS = ("product", "input", "variation", "use", "priorities", "process", "constraints")
@@ -32,10 +34,16 @@ and how/where it will be installed. Ask for Hz/dB only when relevant, or use the
 For a walking surface, never tell a person to step, stand, walk, tread, jump or place
 their foot or weight on loose material or an untested prototype to assess grip or comfort.
 Offer a sketch, installation or records comparison and identify a suitable grip evaluation.
+A paper sketch can compare shape or fit. Ask how the actual mat will be constructed before
+selecting a representative grip assessment; a tilt of loose flakes or contained granules
+against a shoe sole is not that assessment. Do not quote these instructions in the reply;
+state the purpose of the proposed step directly.
 Other products remain open. Product, available input and a use or goal can be enough for
 conditional ideas. Do not keep asking until every detail is known: give a concrete useful
 first step with the known unknowns. That step may be a focused observation, records check
 or comparison; do not regenerate route arrays or a complete trial plan.
+When the user asks about changing input, include the variation they named in the next useful
+decision. Mark any material or tool they have not mentioned as a question or optional need.
 Draft only facts stated by the user. Each non-null field needs an exact contiguous quote
 from message or an identified USER history entry, and a verbatim value within that quote,
 or the same field's supplied reviewed value as described below. Do not clip numeric tokens.
@@ -260,7 +268,9 @@ def read_project_intake(request, *, client=None, root=ROOT):
     # user messages and history indices intact, but do not send that answer back.
     prompt_case = deepcopy(case)
     for entry in prompt_case["history"]:
-        if entry["role"] == "assistant" and has_unsafe_walking_guidance(entry["content"]):
+        if entry["role"] == "assistant" and (has_unsafe_walking_guidance(entry["content"])
+                                              or has_misleading_grip_proxy(entry["content"])
+                                              or has_single_delivery_comparison(entry["content"])):
             entry["content"] = "Earlier suggestion omitted. Continue from the user's stated details."
     generated = (client if client is not None else MetaClient(root=root)).generate(
         json.dumps({**prompt_case, "task": "Help clarify this project and draft only the user's stated facts for review."},
@@ -272,14 +282,18 @@ def read_project_intake(request, *, client=None, root=ROOT):
     # risky action appears anywhere in the generated guidance, replace the whole
     # guidance set so it cannot be displayed or replayed as an earlier suggestion.
     guidance = [result["reply"], result["first_step"], *result["questions"]]
-    if any(has_unsafe_walking_guidance(text) for text in guidance):
+    unsafe_floor = any(has_unsafe_walking_guidance(text) or has_misleading_grip_proxy(text) for text in guidance)
+    invalid_delivery_comparison = any(has_single_delivery_comparison(text) for text in guidance)
+    if unsafe_floor or invalid_delivery_comparison:
         product = "your product" if result["project_draft"]["product"] else "a possible product"
         result.update({
             "reply": "Let's plan the product around the material and tools you have.",
-            "first_step": f"Sketch {product} and how it would be used. Note what changes in the input, then choose one material or design change to compare.",
+            "first_step": (f"Sketch {product} and how it would be used. Note what changes in the input, then choose one material or design change to compare."
+                           if unsafe_floor else
+                           "For this delivery, record your material observations and how you selected the sample. When another delivery is available, use the same sampling and recording method and compare the records."),
             "questions": _local_planning_questions(result["project_draft"]),
             "guidance_origin": "local",
-            "guidance_reason": "floor_slip",
+            "guidance_reason": "floor_slip" if unsafe_floor else "delivery_variation",
         })
     return {
         **result,
