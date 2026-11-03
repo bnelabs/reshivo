@@ -12,6 +12,7 @@ try {
   const display = (props) => renderToStaticMarkup(React.createElement(CheckedMixAdvice, props))
   const metric = display({ feasible: true, bounds, stock: '5%-A stock', system: 'metric' })
   assert.match(metric, /0\.89 kg/)
+  assert.match(display({ feasible: true, bounds, stock: 'clean HDPE', system: 'metric', component: 'paper', targetMin: 0, targetMax: 2.9 }), /Target: 0–2\.9% paper by mass/)
   assert.doesNotMatch(metric, /0\.88 kg/)
   assert.match(display({ feasible: true, bounds, stock: '5%-A stock', system: 'us' }), /lb/)
   assert.match(display({ feasible: false, bounds: null, stock: '5%-A stock', system: 'metric' }), /No single fixed addition/)

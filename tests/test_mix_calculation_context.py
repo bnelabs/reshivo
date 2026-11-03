@@ -42,7 +42,8 @@ class MixCalculationContextTests(unittest.TestCase):
         self.assertNotIn("notes", source)
         self.assertNotIn("111.123456789", json.dumps(prompt))
         self.assertTrue(mix["result"]["feasible"])
-        self.assertIn("earlier version", client.calls[0][3]["system_prompt"])
+        self.assertIn("action_ids", client.calls[0][1]["properties"])
+        self.assertIn("Return only the requested IDs", client.calls[0][3]["system_prompt"])
 
     def test_wide_target_attaches_one_fixed_solution_for_both_input_endpoints(self):
         data = prepared()
@@ -58,10 +59,7 @@ class MixCalculationContextTests(unittest.TestCase):
         self.assertLessEqual(result["resulting_min_percent"], result["resulting_max_percent"])
         self.assertGreaterEqual(result["resulting_min_percent"], 18)
         self.assertLessEqual(result["resulting_max_percent"], 22)
-        self.assertIn("BOTH endpoints", client.calls[0][3]["system_prompt"])
-        instructions = " ".join(client.calls[0][3]["system_prompt"].split())
-        self.assertIn("rounded displayed amount is not necessarily the minimum", instructions)
-        self.assertIn("matches the exact lower bound", instructions)
+        self.assertEqual(set(client.calls[0][1]["properties"]), {"action_ids"})
 
     def test_duplicate_names_use_source_id_and_version(self):
         data = prepared()
@@ -109,7 +107,7 @@ class MixCalculationContextTests(unittest.TestCase):
         self.assertEqual(bound["inputs"]["component"], "Paper label residue")
         self.assertEqual((bound["inputs"]["input_min_percent"], bound["inputs"]["input_max_percent"]), (2, 5))
         self.assertNotIn("source_recipe", bound)
-        self.assertIn("explicitly entered by the", client.calls[0][3]["system_prompt"])
+        self.assertEqual(set(client.calls[0][1]["properties"]), {"action_ids"})
 
     def test_component_within_stream_rejects_mismatches_and_unverified_recipe_references(self):
         mutations = [
@@ -141,6 +139,17 @@ class MixCalculationContextTests(unittest.TestCase):
         result = follow_up_with_case(data, client=client)
         self.assertEqual(result["provider"], "local")
         self.assertEqual(client.calls, [], "current tracked material must reach planning guards before generation")
+
+    def test_added_stock_is_seen_when_followup_question_omits_it(self):
+        data = prepared()
+        data["question"] = "What should I do next?"
+        calculation = data["mix_calculation"]
+        calculation.update(source=None)
+        calculation["inputs"]["addition_name"] = "unknown metal dust"
+        client = FixtureClient(followup=True)
+        result = follow_up_with_case(data, client=client)
+        self.assertEqual(result["provider"], "local")
+        self.assertEqual(client.calls, [], "the current added material must reach planning guards before generation")
 
     def test_earlier_assistant_mention_does_not_restrict_unrelated_tracked_component(self):
         data = prepared()

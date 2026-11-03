@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T21:05:36.808152+00:00",
+  "prepared_utc": "2026-11-03T22:36:26.273503+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -35,7 +35,8 @@
     "Improved project-specific advice, sketch context and dimensioned section, and printable reports in version 0.7.0.",
     "Improved comparison flow, local project recovery, unit entry and bounded work capacity in version 0.8.0.",
     "Refocused printable project reports and preserved plan-specific calculation and reading context in version 0.8.1.",
-    "Added within-stream mix tracking, a plan-aware calculation overview, and improved comparison guidance in version 0.9.0."
+    "Added within-stream mix tracking, a plan-aware calculation overview, and improved comparison guidance in version 0.9.0.",
+    "Updated checked calculation guidance and release metadata for version 0.10.0."
   ],
   "files": [
     {
@@ -55,8 +56,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 7709,
-      "sha256": "f7cbbcb4ccbdf2288dbda92d01d049c8a185366f90125bdc4ca3d4aeca64dd47"
+      "bytes": 8027,
+      "sha256": "98476e39454ed79eeaea77603e735a47378a6144527762aef1fd109deba8a419"
     },
     {
       "path": "LICENSE",
@@ -1180,13 +1181,13 @@
     },
     {
       "path": "pyproject.toml",
-      "bytes": 329,
-      "sha256": "a8f8ec607a0b265f37fb42f0a099a53a4722bed37e7a45f4fba761c10ed2fde0"
+      "bytes": 330,
+      "sha256": "430217daea822b5a4685d799ca17f0e10d48e1b6899676972fbe0b56c3942276"
     },
     {
       "path": "reshivo/__init__.py",
-      "bytes": 62,
-      "sha256": "0ad734ca3fd33cf5f63bcaf274730e839f189ae08a6a09bba453560dbe3b6a38"
+      "bytes": 63,
+      "sha256": "cf712eb61cc41e62a5197b046307310bf3748932728b4e771518d9f630b436da"
     },
     {
       "path": "reshivo/__main__.py",
@@ -1205,8 +1206,8 @@
     },
     {
       "path": "reshivo/advisor.py",
-      "bytes": 110338,
-      "sha256": "94ae27e92d3304a8e0faf83b926575ced4401e04ca28f0421a34504ecf164477"
+      "bytes": 115176,
+      "sha256": "41b0496e4a9d501fc649c7d356379b700406723049a920f9c5460102918206fe"
     },
     {
       "path": "reshivo/balance.py",
@@ -1350,8 +1351,8 @@
     },
     {
       "path": "reshivo/unknown_metal_planning.py",
-      "bytes": 9924,
-      "sha256": "8a29227a78dc78c612a0d1ca8373722b23b054e325a1207895014e60eeeb81f4"
+      "bytes": 10118,
+      "sha256": "f0503f00f7e41051c66b97203e7bd5f44097dd2fe5cc965060bc83d01aa5a7c9"
     },
     {
       "path": "reshivo/walking_guidance.py",
@@ -1470,13 +1471,13 @@
     },
     {
       "path": "tests/test_advisor_mix_range_guard.py",
-      "bytes": 7239,
-      "sha256": "0c4f63474a7f3c330ae516cbd729a2c0879b8e81b30fd7079f2eb502159b4994"
+      "bytes": 7556,
+      "sha256": "e67d6c7b189ca2ec88b83059a5e013b18a9c9c22ae4daa2f4b65f517a9a758ad"
     },
     {
       "path": "tests/test_advisor_project_context.py",
-      "bytes": 22712,
-      "sha256": "6400899017cf07a8aa6b6d194d89b96a84db199fef7be19fc3d161b1b5c887ba"
+      "bytes": 22937,
+      "sha256": "337a20008f32bcb9f7379e64664876c376ada7dd8b3152c31b78a574b51293e4"
     },
     {
       "path": "tests/test_balance.py",
@@ -1585,8 +1586,8 @@
     },
     {
       "path": "tests/test_mix_calculation_context.py",
-      "bytes": 8972,
-      "sha256": "bc34a4f0f54768459878f3b05b288058795b65b09a93c8aa4938cd31000d47dd"
+      "bytes": 9393,
+      "sha256": "34fadc92fa1c6ccdd7b75dccd7fa849256cd53deaffaacba045b22118e294001"
     },
     {
       "path": "tests/test_mix_mass.py",
@@ -1730,8 +1731,8 @@
     },
     {
       "path": "web/checks/checked-mix-advice.test.mjs",
-      "bytes": 1240,
-      "sha256": "d79b5a1750928713b2ba1b3179ab24e81d908351c2f042cc736b53364adc9c77"
+      "bytes": 1416,
+      "sha256": "3da712f7c82c4fce85b3cddc122399a1a0100a1073bc6fcf3c113e5605e44b3b"
     },
     {
       "path": "web/checks/cost-comparison-setup.test.mjs",
@@ -1900,13 +1901,13 @@
     },
     {
       "path": "web/package-lock.json",
-      "bytes": 44693,
-      "sha256": "2d080b8c16b9d6e3afa267c32900d648eb10631349339b4e2d7663a491995e57"
+      "bytes": 44695,
+      "sha256": "057d54fc865bd8b0da03344b9eb54b5241ea0a016152ce5437cc91c3345a4822"
     },
     {
       "path": "web/package.json",
-      "bytes": 734,
-      "sha256": "0bd0a9b5cb1db3f6c10aee7c409e39a10d67d174a9ecee20f0cbf328bbab40cf"
+      "bytes": 735,
+      "sha256": "c1ac0ef61c7a91716febc6f4a590ff61ee7443b40eda5da563da980513d024b1"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -1970,8 +1971,8 @@
     },
     {
       "path": "web/src/components/CheckedMixAdvice.tsx",
-      "bytes": 1161,
-      "sha256": "a6da9c822c0eb80df583442aa449db12531e092ec3fdd80426efb49d97d24b4e"
+      "bytes": 1472,
+      "sha256": "9f0a05ff1eab8c8ceed5c37ec855ed00f2dfa24dbe7cd73d50f01caa71d60635"
     },
     {
       "path": "web/src/components/ConceptSketch.tsx",
@@ -2070,8 +2071,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 79709,
-      "sha256": "d14fa1d317c93f8b5d0ec454733167e6c3b7c62711a7244b42965a9c05e2f638"
+      "bytes": 80660,
+      "sha256": "7ed6deb771bc115cfae79e1951ac8da84c3654e227e2edd894227f0e2347706e"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",

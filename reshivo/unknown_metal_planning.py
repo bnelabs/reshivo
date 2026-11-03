@@ -44,6 +44,9 @@ def _user_texts(case):
     destination = mix.get("destination") if isinstance(mix, dict) else None
     if isinstance(destination, dict) and isinstance(destination.get("tracked_component"), str):
         texts.append(destination["tracked_component"])
+    inputs = mix.get("inputs") if isinstance(mix, dict) else None
+    if isinstance(inputs, dict) and isinstance(inputs.get("addition_name"), str):
+        texts.append(inputs["addition_name"])
     plan = case.get("plan")
     plan_case = plan.get("case") if isinstance(plan, dict) else None
     if isinstance(plan_case, dict):

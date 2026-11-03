@@ -208,7 +208,8 @@ export function ProjectWorkbench() {
   const savedNeedsReview = savedTexts.length > 0 && savedGuidanceReview?.key === savedReviewKey && savedGuidanceReview.needsReview
   const showCurrentGuidance = Boolean(modeReady && !planningMode?.planningOnly)
   const showHistoricalIdeas = Boolean(showCurrentGuidance && savedReviewReady && !savedNeedsReview)
-  const visibleSavedNotes = (w.advice_notes ?? []).filter((note) => modeReady && savedReviewReady && !savedNeedsReview && (showHistoricalIdeas || note.kind === 'local_guidance'))
+  // Imported and recovered mix notes may predate the checked response format.
+  const visibleSavedNotes = (w.advice_notes ?? []).filter((note) => !note.mix_context && modeReady && savedReviewReady && !savedNeedsReview && (showHistoricalIdeas || note.kind === 'local_guidance'))
   useEffect(() => {
     const focusHeading = pendingOptionsHeadingFocus.current
     pendingOptionsHeadingFocus.current = false
@@ -473,7 +474,16 @@ export function ProjectWorkbench() {
       setError('The local planning check is unavailable. Please try again when the app is connected.')
       return
     }
-    if (!comparison && !mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext)) {
+    const comparisonMix = comparison?.advice.mix_calculation
+    const requiresMix = Boolean(comparisonMix)
+    const sameMix = Boolean(comparisonMix && preparedMix && mixQuestionContext &&
+      comparisonMix.case_id === preparedMix.case_id &&
+      comparisonMix.destination.id === preparedMix.configuration_id &&
+      comparisonMix.destination.revision === preparedMix.configuration_revision &&
+      comparisonMix.destination.component_id === preparedMix.component_id &&
+      (comparisonMix.destination.tracked_component ?? undefined) === preparedMix.tracked_component &&
+      JSON.stringify(comparisonMix.inputs) === JSON.stringify(preparedMix.inputs))
+    if ((requiresMix && !sameMix) || ((!comparison || requiresMix) && !mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext))) {
       setError('The project, setup or mix inputs changed after this calculation. Recalculate and ask again, or clear the calculation question below.')
       return
     }
@@ -536,7 +546,7 @@ export function ProjectWorkbench() {
                 },
               }
             : {}),
-          ...(!comparison && mixQuestionContext && preparedMix ? { mix_calculation: preparedMix } : {}),
+          ...((!comparison || requiresMix) && mixQuestionContext && preparedMix ? { mix_calculation: preparedMix } : {}),
           ...(w.configurations.some((c) => w.costs[`${c.id}@${c.revision}`])
             ? {
                 manufacturing_costs: currentSetups(w.configurations)
@@ -1089,7 +1099,7 @@ export function ProjectWorkbench() {
                     <section className="pw-answer" aria-live="polite" aria-label="Your planning result" ref={adviceResult} tabIndex={-1}>
                       <h2>{adviceCase === currentAdviceContext ? 'Your answer' : 'Earlier answer'}</h2>
                       {'mix_calculation' in advice && advice.mix_calculation && adviceCase === currentAdviceContext && (
-                        <CheckedMixAdvice feasible={advice.mix_calculation.result.feasible} bounds={advice.mix_calculation.result.exact_addition_kg} stock={advice.mix_calculation.inputs.addition_name} system={system} />
+                        <CheckedMixAdvice feasible={advice.mix_calculation.result.feasible} bounds={advice.mix_calculation.result.exact_addition_kg} stock={advice.mix_calculation.inputs.addition_name} system={system} component={advice.mix_calculation.inputs.component} targetMin={advice.mix_calculation.inputs.target_min_percent} targetMax={advice.mix_calculation.inputs.target_max_percent} />
                       )}
                       <span className="pw-overline">
                         {advice.result_kind==='local_planning_guidance'?'Local planning guide · no AI call':`Proposed next steps · ${advice.provider} / ${advice.model}${advice.guidance_adjusted ? ' · locally adapted for planning' : ''}`}
@@ -1268,8 +1278,8 @@ export function ProjectWorkbench() {
                     <p>Portion: {preparedMix.inputs.input_mass_kg} kg, {preparedMix.inputs.input_min_percent}–{preparedMix.inputs.input_max_percent}% component. Added stock: {preparedMix.inputs.addition_name}, {preparedMix.inputs.addition_percent}% component. Chosen range: {preparedMix.inputs.target_min_percent}–{preparedMix.inputs.target_max_percent}%.</p>
                     {preparedMix.source && <p>Recorded whole-recipe reference: {(() => { const source = w.configurations.find((item) => item.id === preparedMix.source?.configuration_id && item.revision === preparedMix.source?.configuration_revision); const ingredient = source?.materials.find((item) => item.id === preparedMix.source?.component_id); return source ? `${showHistoricalIdeas ? source.name : safeSetupName(w, source, 'Recorded setup')} · version ${source.revision} · ${ingredient?.name ?? 'Unavailable ingredient'}` : 'Unavailable setup' })()}.</p>}
                     {mixQuestionContext ? <>
-                      <p>{mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext) ? 'This calculation will be sent with your question and recalculated from these inputs.' : 'The project, setup or mix inputs changed. Recalculate before sending this calculation.'}</p>
-                      <button type="button" onClick={() => { setPreviousQuestion(question); setQuestion(''); setMixQuestionContext(null) }}>Remove calculation and clear question</button>
+                      <p>{mixQuestionIsCurrent(mixQuestionContext, currentMixQuestionContext) ? 'The calculation is checked again. The plan uses a fixed set of next steps; remove it for an open question.' : 'The project, setup or mix inputs changed. Recalculate before sending this calculation.'}</p>
+                      <button type="button" onClick={() => setMixQuestionContext(null)}>Remove calculation</button>
                     </> : <button type="button" onClick={() => setMixQuestionContext(recentMixContext)}>Attach this calculation to my question</button>}
                   </div>}
                   {showHistoricalIdeas && previousQuestion && <details>

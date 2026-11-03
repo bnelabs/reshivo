@@ -1,10 +1,11 @@
-"""Targeted checks for recognizable AI claims about an attached mix calculation."""
+"""Calculation-backed advice never exposes unvalidated generated claims."""
 from copy import deepcopy
+from fractions import Fraction
 import json
 import unittest
 
 from reshivo.advisor import follow_up_with_case, help_with_case
-from reshivo.meta import Generation
+from reshivo.meta import Generation, MetaAPIError, MetaValidationError
 from test_advisor_project_context import response
 from test_mix_calculation_context import prepared
 
@@ -12,121 +13,121 @@ from test_mix_calculation_context import prepared
 class Client:
     def __init__(self, data):
         self.data = data
+        self.calls = []
 
-    def generate(self, *args, **kwargs):
+    def generate(self, prompt, schema, count, **options):
+        self.calls.append((json.loads(prompt), schema, count, options))
         return Generation(deepcopy(self.data), 'fixture-model', False, {}, 'fixture', 1)
 
 
-def wide_case():
-    request = prepared()
-    request['mix_calculation']['source'] = None
-    request['mix_calculation']['inputs'].update(
-        input_mass_kg=1.5, input_min_percent=28, input_max_percent=32,
-        addition_name='5%-A stock', addition_percent=5,
-        target_min_percent=18, target_max_percent=22,
+def case():
+    data = prepared()
+    data['mix_calculation']['source'] = None
+    data['mix_calculation']['inputs'].update(
+        input_mass_kg=20, input_min_percent=2, input_max_percent=5,
+        addition_percent=0, target_min_percent=0, target_max_percent=2.9,
     )
-    return request
+    return data
 
 
-class MixRangeGuardTests(unittest.TestCase):
-    def test_real_follow_up_preserves_other_advice_and_corrects_exactly(self):
-        data = response(True)
-        bad = 'For 1.5 kg input, about 0.88 to 1.15 kg of 5%-A stock keeps the result inside your 18-22% trial target.'
-        data['answer'] = 'Mix evenly. ' + bad + ' Check grip afterward.'
-        result = follow_up_with_case(wide_case(), client=Client(data))
-        self.assertIn('Mix evenly.', result['answer'])
-        self.assertIn('Check grip afterward.', result['answer'])
-        self.assertIn('Use the checked amount in your mix calculation.', result['answer'])
-        self.assertEqual(result['mix_calculation']['result']['exact_addition_kg']['min'],
-                         {'numerator': '15', 'denominator': '17'})
-        self.assertEqual(result['mix_calculation']['result']['exact_addition_kg']['max'],
-                         {'numerator': '15', 'denominator': '13'})
-        self.assertNotIn('0.88 to 1.15', json.dumps(result))
-        self.assertTrue(result['mix_guidance_adjusted'])
-        self.assertEqual(result['next_steps'], data['next_steps'])
+def visible(result):
+    return json.dumps({key: result.get(key) for key in (
+        'answer', 'next_steps', 'questions', 'sources', 'quarantined_answer',
+        'material_routes', 'engineering_routes')}, ensure_ascii=False)
 
-    def test_help_corrects_nested_routes_without_losing_other_advice(self):
-        data = response(False)
-        data['material_routes'][0]['steps'][0] = 'Add 0.88–1.15 kg of 5%-A stock. Record what you added.'
-        result = help_with_case(wide_case(), client=Client(data))
-        step = result['material_routes'][0]['steps'][0]
-        self.assertIn('Use the checked amount in your mix calculation.', step)
-        self.assertIn('Record what you added.', step)
-        self.assertNotIn('0.88–1.15', step)
-        self.assertEqual(result['engineering_routes'][0]['title'], data['engineering_routes'][0]['title'])
-        self.assertTrue(result['mix_guidance_adjusted'])
 
-    def test_inside_range_and_unrelated_ranges_are_untouched(self):
-        data = response(True)
-        text = ('Add 0.89 to 1.15 kg of 5%-A stock. '
-                'The input has a mass of 1 to 2 kg. Dry for 4 to 5 hours. '
-                'Keep 2 to 3 kg of 5%-A stock in storage. Add 200 to 300 g of an additive. '
-                'Add 2 to 3 lb of 5%-A stock. Add 2 to 3 kg of a different additive.')
-        data['answer'] = text
-        result = follow_up_with_case(wide_case(), client=Client(data))
-        self.assertEqual(result['answer'], text)
-        self.assertNotIn('mix_guidance_adjusted', result)
+class BoundMixAdviceTests(unittest.TestCase):
+    def test_calculation_and_selected_actions_are_separate_from_model_prose(self):
+        for operation in (follow_up_with_case, help_with_case):
+            client = Client({'action_ids': ['work_with_available', 'separate_component', 'compare_specimens']})
+            result = operation(case(), client=client)
+            minimum = result['mix_calculation']['result']['exact_addition_kg']['min']
+            self.assertEqual(Fraction(int(minimum['numerator']), int(minimum['denominator'])), Fraction(420, 29))
+            self.assertEqual(len(result['next_steps']), 3)
+            self.assertIn('separate labelled portions', visible(result).lower())
+            self.assertIn('at least three separate samples per option', visible(result).lower())
+            self.assertIn('safe handling is available', visible(result).lower())
+            self.assertIn('required equipment and settings', visible(result).lower())
+            self.assertEqual(result['sources'], [])
+            self.assertEqual(set(client.calls[0][1]['properties']), {'action_ids'})
+            self.assertNotIn('14.48', visible(result))
 
-    def test_singleton_and_unbounded_corrections(self):
-        singleton = prepared(); singleton['mix_calculation']['source'] = None
-        data = response(True); data['answer'] = 'Add 0.2 to 0.3 kg of zero-A stock.'
-        result = follow_up_with_case(singleton, client=Client(data))
-        self.assertIn('Use the checked amount in your mix calculation.', result['answer'])
-        self.assertEqual(result['mix_calculation']['result']['exact_addition_kg']['min'],
-                         {'numerator': '1', 'denominator': '4'})
-        self.assertEqual(result['mix_calculation']['result']['exact_addition_kg']['max'],
-                         {'numerator': '1', 'denominator': '4'})
-        unbounded = prepared(); unbounded['mix_calculation']['source'] = None
-        unbounded['mix_calculation']['inputs'].update(input_min_percent=25, input_max_percent=25,
-                                                     addition_percent=20, target_min_percent=20, target_max_percent=25)
-        data['answer'] = 'Add -1 to 100 kg of zero-A stock.'
-        result = follow_up_with_case(unbounded, client=Client(data))
-        self.assertIn('Use the checked amount in your mix calculation.', result['answer'])
+    def test_unrecognized_payloads_never_leak_model_text(self):
+        attacks = [
+            {'answer': 'Use 14.48 kg; all properties pass', 'next_steps': ['Heat it now'], 'questions': [], 'source_ids': []},
+            {'action_ids': ['separate_component', '14.48 kg meets the target']},
+            {'action_ids': ['work_with_available'], 'explanation': '14.48 kg is exact'},
+            {'action_ids': ['work_with_available', 'work_with_available']},
+            {'action_ids': ['on dört kilo yeterli']},
+        ]
+        for operation in (follow_up_with_case, help_with_case):
+            for attack in attacks:
+                with self.subTest(operation=operation.__name__, attack=attack):
+                    result = operation(case(), client=Client(attack))
+                    text = visible(result)
+                    for phrase in ('14.48 kg', 'all properties pass', 'Heat it now', 'on dört kilo'):
+                        self.assertNotIn(phrase, text)
+                    self.assertEqual(result['provider'], 'local')
+                    self.assertTrue(result['next_steps'], 'fallback gives a practical plan')
+                    self.assertFalse(result['performance_verified'])
+
+    def test_infeasible_singleton_and_unbounded_results_stay_authoritative(self):
+        data = case(); inputs = data['mix_calculation']['inputs']
+        inputs.update(input_mass_kg=1, input_min_percent=25, input_max_percent=25,
+                      addition_percent=0, target_min_percent=20, target_max_percent=20)
+        result = follow_up_with_case(data, client=Client({'action_ids': ['check_fraction']}))
+        self.assertEqual(result['mix_calculation']['result']['exact_addition_kg']['min'], {'numerator': '1', 'denominator': '4'})
+        inputs.update(addition_percent=20, target_min_percent=20, target_max_percent=25)
+        result = follow_up_with_case(data, client=Client({'action_ids': ['compare_costs']}))
         self.assertIsNone(result['mix_calculation']['result']['exact_addition_kg']['max'])
+        inputs.update(addition_percent=30, target_min_percent=10, target_max_percent=20)
+        result = follow_up_with_case(data, client=Client({'action_ids': ['work_with_available']}))
+        self.assertFalse(result['mix_calculation']['result']['feasible'])
+        self.assertIn('No single addition', result['answer'])
+        self.assertIn('Plan with available material', result['next_steps'][0])
+        self.assertIn('Check the changing component', result['next_steps'][1])
 
-    def test_negative_instructions_and_different_stock_are_untouched(self):
-        data = response(True)
-        data['answer'] = ("Do not add 0.88 to 1.15 kg of 5%-A stock. "
-                          "Don't add 0.88 to 1.15 kg of 5%-A stock. "
-                          "Avoid adding 0.88 to 1.15 kg of 5%-A stock. "
-                          "It is not true that 0.88 to 1.15 kg of 5%-A stock keeps the target. "
-                          "Add 0.88 to 1.15 kg of sugar.")
-        result = follow_up_with_case(wide_case(), client=Client(data))
-        self.assertEqual(result['answer'], data['answer'])
-        self.assertNotIn('mix_guidance_adjusted', result)
+    def test_infeasible_result_always_keeps_a_within_stock_route(self):
+        data = case()
+        data['mix_calculation']['inputs'].update(addition_percent=30, target_min_percent=0, target_max_percent=1)
+        for operation in (follow_up_with_case, help_with_case):
+            result = operation(data, client=Client({'action_ids': ['compare_costs']}))
+            self.assertFalse(result['mix_calculation']['result']['feasible'])
+            self.assertIn('Plan with available material', result['next_steps'][0])
+            self.assertIn('Check the changing component', result['next_steps'][1])
+            self.assertIn('Compare making costs', result['next_steps'][2])
+            self.assertLessEqual(len(result['next_steps']), 3)
+            self.assertIn('if safe handling is available', result['next_steps'][0])
+            self.assertIn('Keeping the same entered percentages', result['next_steps'][0])
+            if operation is help_with_case:
+                self.assertIn('another portion may have a different composition', result['material_routes'][0]['why'])
 
-    def test_unattached_calculation_does_not_change_prose(self):
-        request = wide_case(); request.pop('mix_calculation')
-        data = response(True); data['answer'] = 'Add 0.88 to 1.15 kg of 5%-A stock.'
-        result = follow_up_with_case(request, client=Client(data))
-        self.assertEqual(result['answer'], data['answer'])
-        self.assertNotIn('mix_guidance_adjusted', result)
+    def test_invalid_response_falls_back_but_network_errors_still_surface(self):
+        class FailedClient:
+            def __init__(self, failure): self.failure = failure
+            def generate(self, *args, **kwargs): raise self.failure
+        result = follow_up_with_case(case(), client=FailedClient(MetaValidationError('invalid JSON')))
+        self.assertEqual(result['provider'], 'local')
+        self.assertTrue(result['next_steps'])
+        with self.assertRaises(MetaAPIError):
+            follow_up_with_case(case(), client=FailedClient(MetaAPIError('connection unavailable')))
 
-    def test_hypothetical_and_question_are_not_recast_as_recommendations(self):
-        data = response(True)
-        data['answer'] = ("If the target changed, add 0.88 to 1.15 kg of 5%-A stock. "
-                          "When the target changes, add 0.88 to 1.15 kg of 5%-A stock. "
-                          "Would 0.88 to 1.15 kg of 5%-A stock keep the target? "
-                          "Should I add 0.88 to 1.15 kg of 5%-A stock. "
-                          "Suppose we add 0.88 to 1.15 kg of 5%-A stock.")
-        result = follow_up_with_case(wide_case(), client=Client(data))
-        self.assertEqual(result['answer'], data['answer'])
-        self.assertNotIn('mix_guidance_adjusted', result)
+    def test_fallback_diagnostics_never_log_provider_text(self):
+        class FailedClient:
+            def generate(self, *args, **kwargs): raise MetaValidationError('cut short PRIVATE_RESPONSE')
+        with self.assertLogs('reshivo.advisor', level='WARNING') as logs:
+            result = follow_up_with_case(case(), client=FailedClient())
+        self.assertIn('truncated', ' '.join(logs.output))
+        self.assertNotIn('PRIVATE_RESPONSE', ' '.join(logs.output))
+        self.assertEqual(result['provider'], 'local')
+        self.assertGreaterEqual(result['elapsed_ms'], 0)
 
-    def test_earlier_or_other_case_is_not_rewritten(self):
-        data = response(True)
-        data['answer'] = ('For the earlier batch, add 0.88 to 1.15 kg of 5%-A stock. '
-                          'For another plan, add 0.88 to 1.15 kg of 5%-A stock.')
-        result = follow_up_with_case(wide_case(), client=Client(data))
-        self.assertEqual(result['answer'], data['answer'])
-        self.assertNotIn('mix_guidance_adjusted', result)
-
-    def test_different_stated_input_mass_is_not_rewritten(self):
-        data = response(True)
-        data['answer'] = 'For 5 kg input, add 0.88 to 1.15 kg of 5%-A stock.'
-        result = follow_up_with_case(wide_case(), client=Client(data))
-        self.assertEqual(result['answer'], data['answer'])
-        self.assertNotIn('mix_guidance_adjusted', result)
+    def test_without_attachment_general_model_answer_is_unchanged(self):
+        data = case(); data.pop('mix_calculation')
+        generated = response(True)
+        result = follow_up_with_case(data, client=Client(generated))
+        self.assertEqual(result['answer'], generated['answer'])
+        self.assertEqual(result['next_steps'], generated['next_steps'])
 
 
 if __name__ == '__main__':

@@ -86,6 +86,8 @@ class FixtureClient:
         self.calls.append((json.loads(prompt), schema, candidates, options))
         if self.failure:
             raise self.failure
+        if "action_ids" in schema.get("properties", {}):
+            return Generation({"action_ids": ["work_with_available", "check_fraction", "compare_specimens"]}, "fixture-model", False, {}, "fixture-project-context", 2)
         return Generation(response(self.followup), "fixture-model", False, {}, "fixture-project-context", 2)
 
 

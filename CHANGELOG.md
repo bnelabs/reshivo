@@ -2,6 +2,13 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.10.0 — 2026-11-03
+
+### Changed
+
+- Build calculation-backed mix plans from the checked result and validated action choices; general AI questions remain available separately.
+- Keep attached calculations in context when comparing their suggested actions, and identify earlier unchecked mix advice as historical.
+
 ## 0.9.0 — 2026-11-04
 
 ### Added
