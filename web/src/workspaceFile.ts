@@ -228,7 +228,7 @@ function plan(value: unknown, caseDetails: unknown): void {
   if (row.quarantined_answer !== undefined) strings(row.quarantined_answer, `${label} removed paragraphs`, 0, 100, 3000)
   const ids = new Set<string>()
   for (const kind of ['material_routes', 'engineering_routes']) {
-    for (const item of array(row[kind], `${label} ${kind}`, 2, 3)) {
+    for (const item of array(row[kind], `${label} ${kind}`, 1, 3)) {
       route(item, `${label} route`)
       const id = (item as ObjectValue).id as string
       if (ids.has(id)) fail(label, 'route identifiers must be different')

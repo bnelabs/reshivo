@@ -346,6 +346,42 @@ class TrialTests(unittest.TestCase):
 
 
 class AdvisorTests(unittest.TestCase):
+    def test_one_material_and_one_engineering_route_are_usable(self):
+        data = response_data()
+        data['material_routes'] = data['material_routes'][:1]
+        data['engineering_routes'] = data['engineering_routes'][:1]
+        result = help_with_case(brief_request(), FixtureClient(data))
+        self.assertEqual(len(result['material_routes']), 1)
+        self.assertEqual(len(result['engineering_routes']), 1)
+        self.assertTrue(result['material_routes'][0]['id'].startswith('material:'))
+        self.assertTrue(result['engineering_routes'][0]['id'].startswith('engineering:'))
+
+    def test_previous_three_route_responses_remain_usable(self):
+        data = response_data()
+        data['material_routes'].append(route('material-3'))
+        data['engineering_routes'].append(route('engineering-3'))
+        result = help_with_case(brief_request(), FixtureClient(data))
+        self.assertEqual(len(result['material_routes']), 3)
+        self.assertEqual(len(result['engineering_routes']), 3)
+        data['material_routes'].append(route('material-4'))
+        with self.assertRaises(MetaValidationError):
+            help_with_case(brief_request(), FixtureClient(data))
+
+    def test_binder_requests_reach_provider_with_specific_decision_requirements(self):
+        request = brief_request()
+        request['brief'].update(input='mixed plastic bottles, types unknown', product='sound panel',
+                                use_case='less speech through an apartment wall')
+        request['question'] = 'What binder family, binding process and equipment could I consider?'
+        client = FixtureClient()
+        help_with_case(request, client)
+        case, _, _, options = client.calls[0]
+        self.assertIn('binder family', case['question'])
+        prompt = options['system_prompt']
+        for requirement in ('conceptual binding method', 'type of equipment',
+                            'Do not ask again for information the user already supplied',
+                            'compatibility information is missing', 'not a claim of adhesion'):
+            self.assertIn(requirement, prompt)
+
     def test_unverified_target_assurance_is_quarantined_without_losing_routes(self):
         data = response_data()
         data["answer"] = "You can hit your targets by not relying on a fixed recipe.\n\nCompare the proposed options."
@@ -377,7 +413,8 @@ class AdvisorTests(unittest.TestCase):
         self.assertEqual(result["sources"], [SOURCE_REGISTRY["nist-weighing-tare"]])
         sent, schema, count, options = client.calls[0]
         self.assertEqual(sent["brief"], validate_request(request)["brief"])
-        self.assertEqual(schema["properties"]["material_routes"]["minItems"], 2)
+        self.assertEqual(schema["properties"]["material_routes"]["minItems"], 1)
+        self.assertEqual(schema["properties"]["material_routes"]["maxItems"], 2)
         self.assertEqual(options["schema_name"], "material_and_engineering_routes")
         self.assertEqual(options["system_prompt"], SYSTEM_PROMPT)
         self.assertIn("Do not make missing measurements the end", SYSTEM_PROMPT)
@@ -433,7 +470,7 @@ class AdvisorTests(unittest.TestCase):
         cases = [None, {**response_data(), "performance_verified": True}, {**response_data(), "source_ids": ["invented-paper"]},
                  {**response_data(), "source_ids": ["cecon2021", "cecon2021"]}]
         request = response_data()
-        request["material_routes"] = [route("only-one")]
+        request["material_routes"] = []
         cases.append(request)
         request = response_data()
         request["engineering_routes"][1]["id"] = request["engineering_routes"][0]["id"]

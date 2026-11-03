@@ -48,6 +48,9 @@ assert.throws(()=>serializeProjectWorkspace({...planned,trial_ideas:{'AB@2':{...
 assert.throws(()=>serializeProjectWorkspace({...planned,trial_ideas:{'AB@2':{...planned.trial_ideas['AB@2'],performance_verified:true}}}),/unsupported/)
 const text = serializeProjectWorkspace(original)
 const restored = parseProjectWorkspace(text)
+const discussion = 'Question: What sound?\nAnswer: Voices through the wall.'
+assert.equal(parseProjectWorkspace(serializeProjectWorkspace({ ...original, intake_notes: discussion })).intake_notes, discussion, 'setup answers survive a project backup')
+assert.throws(() => serializeProjectWorkspace({ ...original, intake_notes: 'a'.repeat(20001) }), /20000/, 'setup answers remain bounded')
 const legacyPercentage = fixture()
 legacyPercentage.configurations[0].materials[0].amount = '150'
 assert.equal(parseProjectWorkspace(JSON.stringify(legacyPercentage)).configurations[0].materials[0].amount, '150', 'older project files remain openable for correction')

@@ -43,6 +43,23 @@ const original = snapshot()
 const originalJSON = JSON.stringify(original)
 const encoded = serializeWorkspaceFile(original)
 const decoded = parseWorkspaceFile(encoded)
+const oneIdea = snapshot()
+oneIdea.plan.material_routes = oneIdea.plan.material_routes.slice(0, 1)
+oneIdea.plan.engineering_routes = oneIdea.plan.engineering_routes.slice(0, 1)
+oneIdea.selected_route = null
+oneIdea.trial = null
+assert.equal(parseWorkspaceFile(serializeWorkspaceFile(oneIdea)).plan.material_routes.length, 1, 'a single idea in each category survives save and open')
+const noIdea = structuredClone(oneIdea)
+noIdea.plan.material_routes = []
+assert.throws(() => serializeWorkspaceFile(noIdea), /between 1 and 3/, 'an empty category is rejected')
+const threeIdeas = structuredClone(oneIdea)
+for (const section of ['material_routes', 'engineering_routes']) {
+  const first = threeIdeas.plan[section][0]
+  threeIdeas.plan[section].push({ ...first, id: `${first.id}-2` }, { ...first, id: `${first.id}-3` })
+}
+assert.equal(parseWorkspaceFile(serializeWorkspaceFile(threeIdeas)).plan.material_routes.length, 3, 'older three-idea categories remain loadable')
+threeIdeas.plan.material_routes.push({ ...threeIdeas.plan.material_routes[0], id: 'material:fourth' })
+assert.throws(() => serializeWorkspaceFile(threeIdeas), /between 1 and 3/, 'more than three saved routes are rejected')
 assert.equal(decoded.format, WORKSPACE_FORMAT)
 assert.equal(decoded.version, 1)
 assert.equal(new Date(decoded.saved_at).toISOString(), decoded.saved_at)

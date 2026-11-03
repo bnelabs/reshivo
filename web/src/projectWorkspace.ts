@@ -56,6 +56,7 @@ export type ProjectWorkspace = {
   costs: Record<string, CostDraft>
   record_exclusions?: Record<string, string>
   advice_notes?: ProjectAdviceNote[]
+  intake_notes?: string
   trial_ideas?: Record<string,TrialIdea>
   mix_adjustment_drafts?: SavedMixAdjustmentDraft[]
 }
@@ -168,10 +169,11 @@ export function currentConfigurations(workspace: ProjectWorkspace): TrialConfigu
 }
 
 export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
-  const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes', 'trial_ideas', 'mix_adjustment_drafts'], 'Workspace')
+  const root = object(value, ['schema', 'case_id', 'project', 'configurations', 'checks', 'records', 'costs'], ['record_exclusions', 'advice_notes', 'trial_ideas', 'mix_adjustment_drafts', 'intake_notes'], 'Workspace')
   if (root.schema !== PROJECT_WORKSPACE_SCHEMA) throw new Error('This is not a supported Reshivo project workspace.')
   text(root.case_id, 'Case identifier', 160, true)
   validateProjectDraft(root.project, 'Project details')
+  if (root.intake_notes !== undefined) text(root.intake_notes, 'Project discussion', 20000)
   list(root.configurations, 100, 'Configurations'); list(root.checks, 50, 'Checks'); list(root.records, 1000, 'Records')
   const configurations = new Map<string, Record<string, unknown>>()
   for (const entry of root.configurations) {

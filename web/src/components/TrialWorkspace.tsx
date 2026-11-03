@@ -46,7 +46,7 @@ type Props = {
   readingKind: 'synthetic' | 'user_reported'
   onReadingKindChange: (kind: 'synthetic' | 'user_reported') => void
   onAskIdea: (configuration: TrialConfiguration, idea: TrialIdea) => void
-  onAdjustMix: () => void
+  onChooseCheck: (configuration: TrialConfiguration, idea: TrialIdea) => void
   onExploreMaterial: () => void
   onGoToPlans: () => void
   onDownloadSummary: () => void
@@ -54,6 +54,7 @@ type Props = {
   showHistoricalIdeas: boolean
   checkingPlanningMode: boolean
   preparedCheckName: string
+  preparedCheckSuggestion: string
   onPreparedCheckUsed: () => void
 }
 export function TrialWorkspace({
@@ -63,7 +64,7 @@ export function TrialWorkspace({
   readingKind: kind,
   onReadingKindChange,
   onAskIdea,
-  onAdjustMix,
+  onChooseCheck,
   onExploreMaterial,
   onGoToPlans,
   onDownloadSummary,
@@ -71,6 +72,7 @@ export function TrialWorkspace({
   showHistoricalIdeas,
   checkingPlanningMode,
   preparedCheckName,
+  preparedCheckSuggestion,
   onPreparedCheckUsed,
 }: Props) {
   const system = useUnitSystem()
@@ -126,6 +128,13 @@ export function TrialWorkspace({
   const [checkDrafts, setCheckDrafts] = useState<Record<string, ProductCheck>>({})
   const [editingCheckId, setEditingCheckId] = useState('')
   const checkEditorRef = useRef<HTMLElement | null>(null)
+  const newCheckRef = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    if (section === 'checks' && preparedCheckSuggestion && newCheckRef.current) {
+      newCheckRef.current.scrollIntoView({ block: 'start' })
+      newCheckRef.current.focus({ preventScroll: true })
+    }
+  }, [section, preparedCheckSuggestion])
   const readingSectionRef = useRef<HTMLElement | null>(null)
   useEffect(() => {
     if (editingCheckId) checkEditorRef.current?.focus()
@@ -383,12 +392,11 @@ export function TrialWorkspace({
           {setups.length > 0 && !editing && (
             <div className="pw-next-step">
               <div>
-                <strong>What would you like to do next?</strong>
-                <p>Explore ways to use your material, or calculate an addition if you plan to blend in something else.</p>
+                <strong>Your plan is ready to review</strong>
+                <p>Review the idea below, then choose what you want to check.</p>
               </div>
               <div className="pw-actions">
-                <button className="pw-primary" type="button" onClick={onExploreMaterial}>Explore my material</button>
-                <button type="button" onClick={onAdjustMix}>Calculate an addition</button>
+                <button type="button" onClick={onExploreMaterial}>Explore more ideas</button>
               </div>
             </div>
           )}
@@ -452,6 +460,9 @@ export function TrialWorkspace({
                         <p>
                           <strong>Next check:</strong> {idea.check}
                         </p>
+                        <button type="button" className="pw-primary" onClick={() => onChooseCheck(c, idea)}>
+                          Choose what to check
+                        </button>
                         <button
                           onClick={() => onAskIdea(structuredClone(c), structuredClone(idea))}
                         >
@@ -953,8 +964,13 @@ export function TrialWorkspace({
             </section>
           )}
           <div className="pw-card-grid pw-spaced">
-            <section className="pw-card">
+            <section className="pw-card" ref={newCheckRef} tabIndex={-1}>
               <h2>Add a product check</h2>
+              {preparedCheckSuggestion && <div className="pw-notice">
+                <strong>Suggested for your plan</strong>
+                <p>{preparedCheckSuggestion}</p>
+                <p>Choose what you want to check below. Nothing is saved until you add it.</p>
+              </div>}
               {preparedCheckName && (
                 <div className="pw-notice">
                   <p>Your proposed check name: <strong>{preparedCheckName}</strong></p>

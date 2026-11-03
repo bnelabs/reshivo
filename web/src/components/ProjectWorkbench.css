@@ -840,3 +840,7 @@
 }
 
 .pw-section-hint { margin: 12px 0 0; color: var(--pw-muted); font-size: 14px; }
+
+.pw-layout.pw-layout--answer {
+  grid-template-columns: minmax(0, 1fr);
+}

@@ -5,6 +5,7 @@ const field = value => ({ value, source: 'user_review', quote: value })
 const w = newProjectWorkspace()
 w.project.product = field('Floor mat')
 w.project.input = field('HDPE and rubber')
+w.intake_notes = 'Question: Which sound?\nAnswer: Voices through a wall.'
 w.configurations = [{ id:'a', revision:1, name:'Layered idea', materials:[{id:'m',name:'HDPE',amount:'5',unit:'kg'}], process:'Heat', geometry:'Flat', notes:'' }]
 w.trial_ideas = {'a@1':{ title:'Layered idea', change:'Add a layer', why:'Separate materials', steps:['Shape the layer'], tradeoffs:['More work'], check:'Measure thickness', provider:'meta', model:'example'}}
 w.costs['a@1'] = { ...newCostDraft(), currency:'EUR', prices:{m:'2'}, energy_kwh:'999', process_statuses:{energy:'unknown', labor:'excluded'} }
@@ -12,6 +13,7 @@ w.checks = [{id:'c',name:'Thickness',unit:'mm',minimum:'4',maximum:'6',method:'C
 w.records = [{id:'r',case_id:w.case_id,configuration_id:'a',configuration_revision:1,check_id:'c',unit:'mm',method:'Caliper',data_kind:'synthetic',conditions_confirmed:true,readings:[{value:'5'}]}]
 const visible = formatProjectSummary(w,true)
 for (const text of ['Floor mat','Shape the layer','Measure thickness','Thickness','example data','Energy: unknown','Labour: excluded','2 EUR/kg']) assert.ok(visible.includes(text),text)
+assert.ok(visible.includes(w.intake_notes), 'the report retains the user’s setup answers')
 assert.ok(!visible.includes('999'), 'an unknown cost must not expose stale values as known')
 const hidden = formatProjectSummary(w,false)
 assert.ok(!hidden.includes('Shape the layer'))

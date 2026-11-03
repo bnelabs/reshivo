@@ -48,10 +48,14 @@ decision. Mark any material or tool they have not mentioned as a question or opt
 Draft only facts stated by the user. Each non-null field needs an exact contiguous quote
 from message or an identified USER history entry, and a verbatim value within that quote,
 or the same field's supplied reviewed value as described below. Do not clip numeric tokens.
-Assistant messages are context, never evidence. A supplied reviewed_draft is an explicit
-user-reported edit: retain its same-field value with source=user_review and quote=value.
-Do not invent or change a reviewed value. After earlier question rounds, state remaining
-unknowns and offer a conditional exploration step rather than repeat a questionnaire.
+Assistant messages are context, never evidence. A supplied reviewed_draft contains the
+user's previous choices. Keep each reviewed value with source=user_review and quote=value,
+unless the current message explicitly corrects it. In that case return the user's new
+literal words for that field with source=message and an exact quote: this is a proposed
+change for their review, not an automatic edit. Never treat older history as a correction
+to a reviewed value. If the user says they do not know, leave that detail unknown; do not
+keep asking for it. After one round of questions, return no further questions when product,
+material and use or goal are known. Give a useful conditional next step instead.
 Unknowns are
 null, not zero or assumed facts. Preserve the user's own literal quantities and units;
 do not convert, round, infer a number from an adjective, or invent prices, limits,
@@ -189,6 +193,18 @@ def normalize_intake_response(case, data):
     reply = _text(data["reply"], "The reply", 1200, MetaValidationError)
     first_step = _text(data["first_step"], "The first step", 700, MetaValidationError)
     draft = _draft(data["project_draft"], case, MetaValidationError)
+    # A generated interpretation is not permission to replace a user's existing
+    # choices. Offer current-message corrections for explicit review; older
+    # history may predate a manual edit and must not supersede it.
+    suggested_changes = {}
+    for field, reviewed in (case.get("reviewed_draft") or {}).items():
+        if reviewed is None:
+            continue
+        proposed = draft[field]
+        if (proposed is not None and proposed["source"] == "message"
+                and proposed["value"] != reviewed["value"]):
+            suggested_changes[field] = proposed
+        draft[field] = reviewed
     questions = data["questions"]
     if not isinstance(questions, list) or len(questions) > 3:
         raise MetaValidationError("The project helper must return at most three focused questions")
@@ -203,7 +219,8 @@ def normalize_intake_response(case, data):
                                           sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return {
         "result_kind": "project_intake", "reply": reply, "project_draft": draft,
-        "questions": questions, "first_step": first_step,
+        "questions": [] if can_explore and prior_user_turns else questions, "first_step": first_step,
+        "suggested_changes": suggested_changes,
         "unknown_fields": [field for field in DRAFT_FIELDS if draft[field] is None],
         "readiness": "can_explore" if can_explore else "needs_context",
         "review_required": True, "interpretation_verified": False,
@@ -300,6 +317,8 @@ def read_project_intake(request, *, client=None, root=ROOT):
         edited, changed = planning_version({key: result[key] for key in ("reply", "first_step", "questions")})
         if changed:
             result.update({**edited, "guidance_origin": "local", "guidance_reason": "planning_only"})
+    if result["readiness"] == "can_explore" and any(entry["role"] == "user" for entry in case["history"]):
+        result["questions"] = []
     return {
         **result,
         "provider": getattr(generated, "provider", "meta"), "model": generated.model,

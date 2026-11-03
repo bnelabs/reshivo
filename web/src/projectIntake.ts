@@ -15,6 +15,7 @@ export type ProjectIntakeResult = {
   result_kind: 'project_intake'
   reply: string
   project_draft: ProjectIntakeDraft
+  suggested_changes?: Partial<Record<ProjectIntakeField, ProjectIntakeRecord>>
   questions: string[]
   first_step: string
   unknown_fields: ProjectIntakeField[]
@@ -75,11 +76,24 @@ function validDraft(value: unknown): value is ProjectIntakeDraft {
   })
 }
 
+function validSuggestions(value: unknown, message: string): boolean {
+  if (value === undefined) return true
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  return Object.entries(value).every(([field, record]) => {
+    if (!PROJECT_INTAKE_FIELDS.includes(field as ProjectIntakeField) || !record || typeof record !== 'object') return false
+    const item = record as Record<string, unknown>
+    return Object.keys(item).sort().join(',') === 'quote,source,value' && item.source === 'message'
+      && typeof item.value === 'string' && !!item.value.trim() && item.value.length <= 1000
+      && typeof item.quote === 'string' && !!item.quote.trim() && item.quote.length <= 1500
+      && item.quote.includes(item.value) && message.includes(item.quote)
+  })
+}
+
 export async function requestProjectIntake(request: ProjectIntakeRequest, signal?: AbortSignal): Promise<ProjectIntakeResult> {
   if (!request.message.trim() || request.message.length > 4000) throw new Error('Describe your idea in 4,000 characters or fewer.')
   const body = { ...request, history: recentIntakeHistory(request.history ?? [], request.message) }
   const result = await api<ProjectIntakeResult>('/api/project/intake', body, signal)
-  if (result?.result_kind !== 'project_intake' || !validDraft(result.project_draft)
+  if (result?.result_kind !== 'project_intake' || !validDraft(result.project_draft) || !validSuggestions(result.suggested_changes, request.message)
     || typeof result.reply !== 'string' || !result.reply.trim() || result.reply.length > 1200
     || typeof result.first_step !== 'string' || !result.first_step.trim() || result.first_step.length > 700
     || !Array.isArray(result.questions) || result.questions.length > 3

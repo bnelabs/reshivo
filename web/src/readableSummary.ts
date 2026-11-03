@@ -15,6 +15,7 @@ export function formatProjectSummary(workspace: ProjectWorkspace, includeIdeas: 
     ['Product', 'product'], ['Materials', 'input'], ['What changes', 'variation'],
     ['Use', 'use'], ['What matters', 'priorities'], ['Process', 'process'], ['Constraints', 'constraints'],
   ] as const) lines.push(`${label}: ${shown(workspace.project[field]?.value)}`)
+  if (workspace.intake_notes?.trim()) lines.push('', 'Setup answers', workspace.intake_notes.trim())
   lines.push('', 'Plans')
   const setups = currentConfigurations(workspace)
   if (!setups.length) lines.push('No plans recorded yet.')

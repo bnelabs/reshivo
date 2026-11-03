@@ -173,6 +173,45 @@ class ProjectIntakeTests(unittest.TestCase):
             expected = None if value is None else record(value["value"], source="user_review")
             self.assertEqual(normalized["reviewed_draft"][field], expected)
 
+    def test_current_correction_is_proposed_without_overwriting_reviewed_material(self):
+        reviewed = {**empty_draft(), "product": record("sound sheet", source="user_review"),
+                    "input": record("fabric offcuts", source="user_review"),
+                    "use": record("between apartments", source="user_review")}
+        text = "I only have mixed plastic bottles, thirty tonnes; no fabric."
+        request = {"message": text, "reviewed_draft": reviewed, "history": [
+            {"role": "user", "content": "I want a sound sheet."},
+            {"role": "assistant", "content": "What material do you have?"}]}
+        response = {"reply": "Let's compare sheet ideas.",
+                    "project_draft": {**reviewed, "input": record("mixed plastic bottles", text)},
+                    "questions": ["Can you tell me more?"],
+                    "first_step": "Compare possible sheet designs and what needs checking."}
+        result = read_project_intake(request, client=FixtureClient(response))
+        self.assertEqual(result["project_draft"], reviewed)
+        self.assertEqual(result["suggested_changes"], {"input": record("mixed plastic bottles", text)})
+        self.assertEqual(result["questions"], [])
+
+    def test_history_and_null_do_not_overwrite_reviewed_values(self):
+        reviewed = {**empty_draft(), "product": record("sound sheet", source="user_review"),
+                    "input": record("mixed plastic", source="user_review"),
+                    "use": record("between apartments", source="user_review")}
+        request = {"message": "I don't know yet.", "reviewed_draft": reviewed,
+                   "history": [{"role": "user", "content": "I have fabric offcuts."}]}
+        response = {"reply": "Let's compare options.",
+                    "project_draft": {**reviewed, "input": record("fabric offcuts", source="history.0"), "use": None},
+                    "questions": ["What is your use?"], "first_step": "Compare designs."}
+        result = read_project_intake(request, client=FixtureClient(response))
+        self.assertEqual(result["project_draft"], reviewed)
+        self.assertEqual(result["suggested_changes"], {})
+        self.assertEqual(result["questions"], [])
+
+    def test_unquoted_correction_is_not_accepted_as_a_suggestion(self):
+        reviewed = {**empty_draft(), "input": record("fabric", source="user_review")}
+        request = {"message": "I have mixed plastic.", "reviewed_draft": reviewed}
+        response = {**simple_response(), "project_draft": {**empty_draft(),
+                    "input": record("HDPE", "mixed plastic")}}
+        with self.assertRaises(MetaValidationError):
+            read_project_intake(request, client=FixtureClient(response))
+
     def test_invented_converted_or_clipped_quantities_are_rejected(self):
         request = {"message": "I have 1.250 kg and a very thin sheet; my recorded setting is 26.000000000000000005%."}
         for value in ("1250 g", "1.25 kg", "2 mm", "26%", "26.00000000000000000"):

@@ -6,11 +6,12 @@ import { ProviderSettings } from './ProviderSettings'
 import { ConceptSketch } from './ConceptSketch'
 import { CheckedMixAdvice } from './CheckedMixAdvice'
 import { SoundGuidance } from './SoundGuidance'
+import { isSoundProject } from '../soundGuidance'
 import { MixAdjustment } from './MixAdjustment'
 import { CheckSuggestionHandoff } from './CheckSuggestionHandoff'
 import { TrialWorkspace, currentSetups } from './TrialWorkspace'
 import { CostWorkspace } from './CostWorkspace'
-import { emptyProjectDraft, PROJECT_INTAKE_FIELDS, reviewProjectDraft } from '../projectIntake'
+import { emptyProjectDraft, hasProjectContext, PROJECT_INTAKE_FIELDS, reviewProjectDraft } from '../projectIntake'
 import type { ProjectIntakeDraft, ProjectIntakeField, ProjectIntakeResult } from '../projectIntake'
 import {
   newProjectWorkspace,
@@ -39,6 +40,37 @@ const FIELD_LABEL: Record<ProjectIntakeField, string> = {
   process: 'What tools and processes can you use?',
   constraints: 'Other limits or unknowns',
 }
+function usableAdvice(value: unknown): value is AdvisorResult | AdvisorFollowupResult | LocalPlanningResult {
+  if (!value || typeof value !== 'object') return false
+  const item = value as Record<string, unknown>
+  const strings = (input: unknown) => Array.isArray(input) && input.every((part) => typeof part === 'string')
+  const routeList = (input: unknown) => Array.isArray(input) && input.every((route) => {
+    if (!route || typeof route !== 'object') return false
+    const r = route as Record<string, unknown>
+    return ['id', 'title', 'change', 'why', 'check'].every((key) => typeof r[key] === 'string') && strings(r.steps) && strings(r.tradeoffs)
+  })
+  if (!['engineering_proposals', 'engineering_followup', 'local_planning_guidance'].includes(String(item.result_kind))
+    || typeof item.answer !== 'string' || !item.answer.trim() || typeof item.provider !== 'string' || typeof item.model !== 'string'
+    || !strings(item.next_steps) || !(item.next_steps as string[]).length || !strings(item.questions)) return false
+  if (item.result_kind === 'engineering_proposals' && (!routeList(item.material_routes) || !routeList(item.engineering_routes))) return false
+  if (item.mix_calculation !== undefined && item.mix_calculation !== null) {
+    const mix = item.mix_calculation as Record<string, unknown>
+    if (typeof mix !== 'object' || !mix.result || typeof mix.result !== 'object' || !mix.inputs || typeof mix.inputs !== 'object'
+      || typeof (mix.result as Record<string, unknown>).feasible !== 'boolean' || typeof (mix.inputs as Record<string, unknown>).addition_name !== 'string') return false
+  }
+  return true
+}
+
+function intakeHistory(notes?: string) {
+  if (!notes?.trim()) return []
+  const characters = Array.from(notes)
+  const messages: { role: 'user'; content: string }[] = []
+  for (let start = 0; start < characters.length; start += 5000) {
+    messages.push({ role: 'user', content: `Earlier setup details; current project fields take precedence:\n${characters.slice(start, start + 5000).join('')}` })
+  }
+  return messages
+}
+
 export function ProjectWorkbench() {
   const { system, setSystem } = useUnitSettings()
   const [w, setW] = useState<ProjectWorkspace>(() => newProjectWorkspace())
@@ -59,7 +91,16 @@ export function ProjectWorkbench() {
   const [notice, setNotice] = useState('')
   const [manual, setManual] = useState<ProjectIntakeDraft>(emptyProjectDraft)
   const [advice, setAdvice] = useState<AdvisorResult | AdvisorFollowupResult | LocalPlanningResult | null>(null)
+  const [showWorkspaceTools, setShowWorkspaceTools] = useState(false)
   const adviceResult = useRef<HTMLElement>(null)
+  const questionDetails = useRef<HTMLDetailsElement>(null)
+  const routeDetails = useRef<HTMLDetailsElement>(null)
+  const [showAnswerRoutes, setShowAnswerRoutes] = useState(false)
+  const [showAnswerFollowup, setShowAnswerFollowup] = useState(false)
+  useEffect(() => {
+    setShowAnswerRoutes(false)
+    setShowAnswerFollowup(false)
+  }, [advice])
   const pendingAdviceFocus = useRef<{ result: AdvisorResult | AdvisorFollowupResult | LocalPlanningResult; question: string } | null>(null)
   const currentPage = useRef(page)
   currentPage.current = page
@@ -75,6 +116,7 @@ export function ProjectWorkbench() {
     idea: TrialIdea
   } | null>(null)
   const [preparedCheckName, setPreparedCheckName] = useState('')
+  const [preparedCheckSuggestion, setPreparedCheckSuggestion] = useState<{ caseId: string; key: string; text: string } | null>(null)
   const [workspaceOpenEpoch, setWorkspaceOpenEpoch] = useState(0)
   const [mixQuestionContext, setMixQuestionContext] = useState<string | null>(null)
   const [preparedMix, setPreparedMix] = useState<PreparedMixCalculation | null>(null)
@@ -97,6 +139,7 @@ export function ProjectWorkbench() {
   const currentProject = JSON.stringify(w.project)
   const currentAdviceContext = JSON.stringify({
     project: w.project,
+    intake_notes: w.intake_notes,
     configurations: w.configurations,
     checks: w.checks,
     records: w.records,
@@ -111,7 +154,10 @@ export function ProjectWorkbench() {
   const planningPayload = {
     brief: briefFrom(w.project),
     question,
-    ...(advice && adviceCase === currentAdviceContext && adviceQuestion ? { history: [{ role: 'user', content: adviceQuestion }] } : {}),
+    ...((w.intake_notes?.trim() || (advice && adviceCase === currentAdviceContext && adviceQuestion)) ? { history: [
+      ...intakeHistory(w.intake_notes),
+      ...(advice && adviceCase === currentAdviceContext && adviceQuestion ? [{ role: 'user', content: adviceQuestion }] : []),
+    ] } : {}),
     project_context: { configurations: currentSetups(w.configurations).map((c) => ({
       id: c.id, revision: c.revision, process: c.process, geometry: c.geometry,
       materials: c.materials.map((m) => ({ name: m.name })),
@@ -241,10 +287,11 @@ export function ProjectWorkbench() {
     setW(next)
     setNotice('Unsaved changes. Save a project file to keep this work.')
   }
-  function apply(d: ProjectIntakeDraft, intake?: ProjectIntakeResult) {
+  function apply(d: ProjectIntakeDraft, intake?: ProjectIntakeResult, discussion?: string) {
     request.current?.abort()
     if (question.trim()) setPreviousQuestion(question)
     setPreparedCheckName('')
+    setPreparedCheckSuggestion(null)
     setMixQuestionContext(null)
     setPreparedMix(null)
     setRecentMixContext(null)
@@ -259,9 +306,11 @@ export function ProjectWorkbench() {
       text: [intake.reply, `First step: ${intake.first_step}`, ...intake.questions.map((q) => `Question to resolve: ${q}`)].join('\n\n'),
       kind: localIntakeGuidance ? 'local_guidance' : 'model_proposal',
     } : null
-    const withNote = (project: ProjectWorkspace): ProjectWorkspace =>
-      note && (project.advice_notes?.length ?? 0) < 30
-        ? { ...project, advice_notes: [...(project.advice_notes ?? []), note] } : project
+    const withNote = (project: ProjectWorkspace): ProjectWorkspace => {
+      const updated = discussion?.trim() ? { ...project, intake_notes: discussion } : project
+      return note && (updated.advice_notes?.length ?? 0) < 30
+        ? { ...updated, advice_notes: [...(updated.advice_notes ?? []), note] } : updated
+    }
     const changed = JSON.stringify(d) !== currentProject
     if (w.project.product?.value !== d.product?.value && w.configurations.length) {
       try {
@@ -396,13 +445,16 @@ export function ProjectWorkbench() {
         {
           brief: briefFrom(w.project),
           question: prompt,
-          history:
+          history: [
+            ...intakeHistory(w.intake_notes),
+            ...(
             advice && adviceCase === currentAdviceContext && adviceQuestion && !lastAdviceUsedIdea && !activeIdea
               ? [
                   { role: 'user', content: adviceQuestion },
                   ...(showCurrentGuidance ? [{ role: 'assistant', content: [advice.answer, ...advice.questions].join('\n').slice(0, 3000) }] : []),
                 ]
-              : [],
+              : []),
+          ],
           ...(w.configurations.length
             ? {
                 project_context: {
@@ -427,8 +479,10 @@ export function ProjectWorkbench() {
         controller.signal,
       )
       if (request.current === controller && !controller.signal.aborted) {
+        if (!usableAdvice(result)) throw new Error('We could not use that reply. Your project is still here; please try again.')
         pendingAdviceFocus.current = currentPage.current === 'options' ? { result, question } : null
         setAdvice(result)
+        setShowWorkspaceTools(false)
         setStartingGuidance(null)
         setLastAdviceUsedIdea(Boolean(activeIdea))
         setSelectedIdea(null)
@@ -621,6 +675,7 @@ export function ProjectWorkbench() {
     void explore(forceOptions)
   }
   const hasProject = Boolean(w.project.product || w.project.input)
+  const answerFocused = page === 'options' && modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance') && !showWorkspaceTools
   return (
     <div className="project-workbench" ref={workbench}>
       <header className="pw-header">
@@ -741,6 +796,7 @@ export function ProjectWorkbench() {
         <PromptProjectStart
           key={w.case_id + currentProject}
           initialDraft={hasProject ? w.project : undefined}
+          initialDiscussion={w.intake_notes}
           onApply={apply}
           onManualEntry={manualEntry}
           providerStatus={statusLoaded ? status : undefined}
@@ -753,6 +809,7 @@ export function ProjectWorkbench() {
             Use everyday words. Unknown details can stay blank. These details will follow you
             through the workspace.
           </p>
+          <p>To continue, add a product, materials, and either where it will be used or what it should do.</p>
           {PROJECT_INTAKE_FIELDS.map((k) => (
             <label key={k}>
               {FIELD_LABEL[k]}
@@ -773,7 +830,7 @@ export function ProjectWorkbench() {
           <div className="pw-actions">
             <button
               className="pw-primary"
-              disabled={!manual.product?.value || !manual.input?.value}
+              disabled={!hasProjectContext(manual)}
               onClick={() => apply(manual)}
             >
               Use this project
@@ -797,8 +854,8 @@ export function ProjectWorkbench() {
           </Suspense>
         </main>
       ) : (
-        <div className="pw-layout">
-          <aside className="pw-project-rail">
+        <div className={`pw-layout${answerFocused ? ' pw-layout--answer' : ''}`}>
+          {!answerFocused && <aside className="pw-project-rail">
             <span className="pw-overline">Your project</span>
             <h2>{w.project.product?.value ?? 'Product not named'}</h2>
             {(['input', 'use', 'priorities', 'variation'] as const).map((k) => (
@@ -822,9 +879,10 @@ export function ProjectWorkbench() {
               {currentSetups(w.configurations).length} current plan(s) · {w.checks.length}{' '}
               product check(s)
             </small>
-          </aside>
+          </aside>}
           <main className="pw-main">
-            <div className="pw-topbar">
+            {answerFocused && <div className="pw-actions pw-spaced"><button type="button" onClick={manualEntry}>Edit project</button><button type="button" onClick={() => setShowWorkspaceTools(true)}>Project &amp; tools</button></div>}
+            {!answerFocused && <div className="pw-topbar">
               <nav aria-label="Project workspace">
                 {(['options', 'trials', 'adjust', 'checks', 'costs'] as const).map((k) => (
                   <button
@@ -848,18 +906,19 @@ export function ProjectWorkbench() {
                 <button onClick={() => file.current?.click()}>Open backup</button>
                 <button onClick={save}>Save backup</button>
               </div>
-            </div>
-            <p className="pw-section-hint">Choose any section; you can return whenever you need.</p>
+            </div>}
+            {showWorkspaceTools && page === 'options' && advice && adviceProject === currentProject && <button type="button" onClick={() => setShowWorkspaceTools(false)}>Focus on answer</button>}
+            {!answerFocused && <p className="pw-section-hint">Choose any section; you can return whenever you need.</p>}
             {page === 'options' && (
               <section className="pw-section">
-                <div className="pw-section-heading">
+                {!answerFocused && <div className="pw-section-heading">
                   <div>
                     <h1 ref={optionsHeading} tabIndex={-1}>Find a way to use what you have</h1>
                     <p>
                       Get ideas for using your material. Add details if you have them; unknowns can stay blank.
                     </p>
                   </div>
-                </div>
+                </div>}
                 {modeReady && startingGuidance && !advice && (showCurrentGuidance || startingGuidance.origin === 'local' || startingGuidance.guidance_origin === 'local') && (
                   <section className="pw-answer" aria-live="polite">
                     <span className="pw-overline">{startingGuidance.origin === 'local' ? 'Local planning guide · no AI call' : startingGuidance.guidance_origin === 'local' ? `Local next step · project draft by ${startingGuidance.provider} / ${startingGuidance.model}` : `Starting suggestion · ${startingGuidance.provider} / ${startingGuidance.model}`}</span>
@@ -881,9 +940,134 @@ export function ProjectWorkbench() {
                     </div>
                   </section>
                 )}
-                <section className="pw-card">
-                  <h2>Start with ideas for your material</h2>
+                {modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance') && (
+                  <>
+                    {adviceCase !== currentAdviceContext && (
+                      <p className="pw-notice">
+                        These suggestions were made before your latest setup, check or cost changes.
+                        Ask again to include the new information.
+                      </p>
+                    )}
+                    <section className="pw-answer" aria-live="polite" aria-label="Your planning result" ref={adviceResult} tabIndex={-1}>
+                      <h2>Your answer</h2>
+                      {'mix_calculation' in advice && advice.mix_calculation && adviceCase === currentAdviceContext && (
+                        <CheckedMixAdvice feasible={advice.mix_calculation.result.feasible} bounds={advice.mix_calculation.result.exact_addition_kg} stock={advice.mix_calculation.inputs.addition_name} system={system} />
+                      )}
+                      <span className="pw-overline">
+                        {advice.result_kind==='local_planning_guidance'?'Local planning guide · no AI call':`Proposed next steps · ${advice.provider} / ${advice.model}${advice.guidance_adjusted ? ' · locally adapted for planning' : ''}`}
+                      </span>
+                      {'mix_guidance_adjusted' in advice && advice.mix_guidance_adjusted && (
+                        <p className="pw-notice" role="status">A mix amount was corrected using your calculation.</p>
+                      )}
+                      {advice.answer
+                        .split('\n')
+                        .filter(Boolean)
+                        .map((p, i) => (
+                          <p key={i}>{p}</p>
+                        ))}
+                      <h2>Start here</h2>
+                      <p>{advice.next_steps[0]}</p>
+                      {advice.next_steps.length > 1 && !answerFocused && <details>
+                        <summary>See the other suggested steps</summary>
+                        <ol start={2}>
+                          {advice.next_steps.slice(1).map((step, i) => <li key={i}>{step}</li>)}
+                        </ol>
+                      </details>}
+                      <div className="pw-actions pw-spaced">
+                        <button className="pw-primary" type="button" onClick={() => {
+                          if ('material_routes' in advice) {
+                            setShowAnswerRoutes(true)
+                            requestAnimationFrame(() => routeDetails.current?.scrollIntoView({ block: 'start' }))
+                          } else setPage('trials')
+                        }}>
+                          {'material_routes' in advice ? 'Compare ideas' : 'Open plans'}
+                        </button>
+                        <button type="button" onClick={() => {
+                          setShowAnswerFollowup(true)
+                          requestAnimationFrame(() => {
+                            if (questionDetails.current) questionDetails.current.open = true
+                            helpQuestion.current?.scrollIntoView({ block: 'center' })
+                            helpQuestion.current?.focus({ preventScroll: true })
+                          })
+                        }}>Ask a follow-up</button>
+                      </div>
+                      {advice.questions.length > 0 && (!answerFocused || showAnswerFollowup) && (
+                        <details className="pw-question-box">
+                          <summary>Questions you can answer later</summary>
+                          <ul>
+                            {advice.questions.map((q, i) => (
+                              <li key={i}>{q}</li>
+                            ))}
+                          </ul>
+                          <button
+                            onClick={() => {
+                              setQuestion('')
+                              setMixQuestionContext(null)
+                              setShowAnswerFollowup(true)
+                              requestAnimationFrame(() => {
+                                if (questionDetails.current) questionDetails.current.open = true
+                                helpQuestion.current?.scrollIntoView({ block: 'center' })
+                                helpQuestion.current?.focus({ preventScroll: true })
+                              })
+                            }}
+                          >
+                            Answer or ask a question
+                          </button>
+                        </details>
+                      )}
+                      {currentReportAdvice && <div className="pw-actions pw-spaced">
+                        <button type="button" onClick={downloadSummary}>Download summary</button>
+                        <button type="button" onClick={printSummary}>Print / Save as PDF</button>
+                      </div>}
+                    </section>
+                    {'material_routes' in advice && (!answerFocused || showAnswerRoutes) && <details open={showAnswerRoutes} ref={routeDetails} className="pw-card pw-spaced">
+                      <summary>See the material and design ideas</summary>
+                      <p>Compare the ideas, then save one as a plan if you want to explore it.</p>
+                      {
+                      [
+                        { title: 'Materials and preparation', routes: advice.material_routes },
+                        { title: 'Shape and assembly', routes: advice.engineering_routes },
+                      ].map((group) => (
+                        <section key={group.title}>
+                          <h2>{group.title}</h2>
+                          <div className="pw-card-grid">
+                            {group.routes.map((r) => (
+                              <article key={r.id} className="pw-card">
+                                <h3>{r.title}</h3>
+                                <p>{r.change}</p>
+                                <details>
+                                  <summary>How it works and what to check</summary>
+                                  <p className="pw-muted">{r.why}</p>
+                                  <ol>
+                                    {r.steps.map((s, i) => (
+                                      <li key={i}>{s}</li>
+                                    ))}
+                                  </ol>
+                                  <ul>
+                                    {r.tradeoffs.map((t, i) => (
+                                      <li key={i}>{t}</li>
+                                    ))}
+                                  </ul>
+                                  <CheckSuggestionHandoff suggestion={r.check} onPrepare={(name) => { setPreparedCheckName(name); setPage('checks') }} />
+                                </details>
+                                <button onClick={() => useRoute(r)}>Save as a plan</button>
+                              </article>
+                            ))}
+                          </div>
+                        </section>
+                      ))}
+                    </details>}
+                  </>
+                )}
+                {(!answerFocused || showAnswerFollowup) && <details className="pw-card" ref={questionDetails} open={showAnswerFollowup || !(modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance'))}>
+                  <summary>{advice && adviceProject === currentProject ? 'Ask another question or explore more ideas' : 'Get ideas for your material'}</summary>
                   <p>We’ll use the product and materials in your project. Add a question if you want to focus the answer.</p>
+                  {w.intake_notes && <details>
+                    <summary>Your setup answers</summary>
+                    <p>These answers are included when you ask for ideas. Edit them if anything has changed.</p>
+                    <textarea aria-label="Your setup answers" maxLength={20000} rows={4} value={w.intake_notes}
+                      onChange={(event) => update({ ...w, intake_notes: event.target.value })} />
+                  </details>}
                   {showHistoricalIdeas && selectedIdea && (
                     <div className="pw-notice">
                       <strong>Earlier idea selected for this question</strong>
@@ -994,103 +1178,12 @@ export function ProjectWorkbench() {
                   {modeReady && planningMode?.planningOnly && <p className="pw-notice">Earlier AI ideas are kept but hidden while this material needs local planning.</p>}
                   {savedNeedsReview && <p className="pw-notice">Some saved ideas are unavailable. You can still explore new options.</p>}
                   {savedGuidanceReview?.key === savedReviewKey && savedGuidanceReview.failed && <p role="alert">Saved suggestions could not be checked. Reopen the project and try again.</p>}
-                </section>
-                <SoundGuidance project={w.project} question={question} />
-                {modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance') && (
-                  <>
-                    {adviceCase !== currentAdviceContext && (
-                      <p className="pw-notice">
-                        These suggestions were made before your latest setup, check or cost changes.
-                        Ask again to include the new information.
-                      </p>
-                    )}
-                    <section className="pw-answer" aria-live="polite" aria-label="Your planning result" ref={adviceResult} tabIndex={-1}>
-                      {'mix_calculation' in advice && advice.mix_calculation && adviceCase === currentAdviceContext && (
-                        <CheckedMixAdvice feasible={advice.mix_calculation.result.feasible} bounds={advice.mix_calculation.result.exact_addition_kg} stock={advice.mix_calculation.inputs.addition_name} system={system} />
-                      )}
-                      <span className="pw-overline">
-                        {advice.result_kind==='local_planning_guidance'?'Local planning guide · no AI call':`Proposed next steps · ${advice.provider} / ${advice.model}${advice.guidance_adjusted ? ' · locally adapted for planning' : ''}`}
-                      </span>
-                      {'mix_guidance_adjusted' in advice && advice.mix_guidance_adjusted && (
-                        <p className="pw-notice" role="status">A mix amount was corrected using your calculation.</p>
-                      )}
-                      {advice.answer
-                        .split('\n')
-                        .filter(Boolean)
-                        .map((p, i) => (
-                          <p key={i}>{p}</p>
-                        ))}
-                      <h2>What to do next</h2>
-                      <ol>
-                        {advice.next_steps.map((step, i) => (
-                          <li key={i}>{step}</li>
-                        ))}
-                      </ol>
-                      <button onClick={() => setPage('trials')}>
-                        Record or update a plan
-                      </button>
-                      {advice.questions.length > 0 && (
-                        <div className="pw-question-box">
-                          <h2>To make the next step useful</h2>
-                          <ul>
-                            {advice.questions.map((q, i) => (
-                              <li key={i}>{q}</li>
-                            ))}
-                          </ul>
-                          <button
-                            onClick={() => {
-                              setQuestion('')
-                              setMixQuestionContext(null)
-                              document
-                                .querySelector<HTMLTextAreaElement>('.pw-main textarea')
-                                ?.focus()
-                            }}
-                          >
-                            Answer or ask above
-                          </button>
-                        </div>
-                      )}
-                      {currentReportAdvice && <div className="pw-actions pw-spaced">
-                        <button type="button" onClick={downloadSummary}>Download summary</button>
-                        <button type="button" onClick={printSummary}>Print / Save as PDF</button>
-                      </div>}
-                    </section>
-                    {'material_routes' in advice &&
-                      [
-                        { title: 'Materials and preparation', routes: advice.material_routes },
-                        { title: 'Shape and assembly', routes: advice.engineering_routes },
-                      ].map((group) => (
-                        <section key={group.title}>
-                          <h2>{group.title}</h2>
-                          <div className="pw-card-grid">
-                            {group.routes.map((r) => (
-                              <article key={r.id} className="pw-card">
-                                <h3>{r.title}</h3>
-                                <p>{r.change}</p>
-                                <p className="pw-muted">{r.why}</p>
-                                <ol>
-                                  {r.steps.map((s, i) => (
-                                    <li key={i}>{s}</li>
-                                  ))}
-                                </ol>
-                                <details>
-                                  <summary>Trade-offs and next check</summary>
-                                  <ul>
-                                    {r.tradeoffs.map((t, i) => (
-                                      <li key={i}>{t}</li>
-                                    ))}
-                                  </ul>
-                                  <CheckSuggestionHandoff suggestion={r.check} onPrepare={(name) => { setPreparedCheckName(name); setPage('checks') }} />
-                                </details>
-                                <button onClick={() => useRoute(r)}>Save as a plan</button>
-                              </article>
-                            ))}
-                          </div>
-                        </section>
-                      ))}
-                  </>
-                )}
-                {visibleSavedNotes.length > 0 && (
+                </details>}
+                {!answerFocused && isSoundProject(w.project, question) && <details className="pw-spaced">
+                  <summary>About sound checks</summary>
+                  <SoundGuidance project={w.project} question={question} />
+                </details>}
+                {!answerFocused && visibleSavedNotes.length > 0 && (
                   <details className="pw-card pw-spaced">
                     <summary>Saved planning notes ({visibleSavedNotes.length})</summary>
                     <p>Ideas saved with earlier project details.</p>
@@ -1113,7 +1206,7 @@ export function ProjectWorkbench() {
                     ))}
                   </details>
                 )}
-                {status.provider === 'meta' && status.configured && <ConceptSketch image={currentSketch} onImage={(image) => setSketch(image ? { caseId: w.case_id, product: w.project.product?.value ?? '', image } : null)} />}
+                {!answerFocused && status.provider === 'meta' && status.configured && <ConceptSketch image={currentSketch} onImage={(image) => setSketch(image ? { caseId: w.case_id, product: w.project.product?.value ?? '', image } : null)} />}
               </section>
             )}
             <div hidden={page !== 'trials' && page !== 'checks'}>
@@ -1125,7 +1218,10 @@ export function ProjectWorkbench() {
                 readingKind={adviceKind}
                 onReadingKindChange={setAdviceKind}
                 onAskIdea={askAboutIdea}
-                onAdjustMix={() => { setCalculatorOpenRequest((current) => current + 1); setPage('adjust') }}
+                onChooseCheck={(configuration, idea) => {
+                  setPreparedCheckSuggestion({ caseId: w.case_id, key: `${configuration.id}@${configuration.revision}`, text: idea.check })
+                  setPage('checks')
+                }}
                 onExploreMaterial={exploreMyMaterial}
                 onGoToPlans={() => setPage('trials')}
                 onDownloadSummary={downloadSummary}
@@ -1133,6 +1229,7 @@ export function ProjectWorkbench() {
                 showHistoricalIdeas={showHistoricalIdeas}
                 checkingPlanningMode={!modeReady || !savedReviewReady}
                 preparedCheckName={showCurrentGuidance ? preparedCheckName : ''}
+                preparedCheckSuggestion={showHistoricalIdeas && preparedCheckSuggestion?.caseId === w.case_id && w.trial_ideas?.[preparedCheckSuggestion.key]?.check === preparedCheckSuggestion.text ? preparedCheckSuggestion.text : ''}
                 onPreparedCheckUsed={() => setPreparedCheckName('')}
               />
             </div>

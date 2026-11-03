@@ -2,6 +2,19 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.4.0 — 2026-11-03
+
+### Fixed
+
+- Make it easier to continue from project setup without answering repeated questions.
+- Offer corrections from a later answer for review while keeping the existing project details until accepted.
+- Keep unfinished answers visible and give users a clear way to include them before continuing.
+- Keep setup answers with the project and include them when asking for ideas.
+- Put the answer and a starting action ahead of optional questions and detailed ideas.
+- Ask for fewer, more distinct ideas and for practical binder, process and equipment details when relevant.
+- Keep later tools out of the way while the essential project details are missing, then focus the screen on the answer.
+- Guide a saved idea to an editable product check without treating the suggestion as a result.
+
 ## 0.3.1 — 2026-11-03
 
 ### Fixed
