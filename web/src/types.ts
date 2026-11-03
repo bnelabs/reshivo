@@ -395,6 +395,9 @@ export type AdvisorTrialResult = {
   physical_product_tested: false
   performance_verified: false
 }
+export type AdvisorFollowupResult = Omit<AdvisorResult, 'result_kind' | 'material_routes' | 'engineering_routes'> & {
+  result_kind: 'engineering_followup'
+}
 export type MassTrimResult = {
   result_kind: 'calculation'
   current_mass_kg: number

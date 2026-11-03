@@ -17,6 +17,10 @@ export function useUnitSystem() {
   return useContext(UnitContext).system
 }
 
+export function useUnitSettings() {
+  return useContext(UnitContext)
+}
+
 export function UnitSystemToggle() {
   const { system, setSystem } = useContext(UnitContext)
   return (

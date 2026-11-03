@@ -29,7 +29,15 @@
 .measurement-next-trial > label { margin-top: 12px; }
 .composition-result > p.composition-action { font-size: 20px; line-height: 1.5; color: #183e34; }
 .composition-result > p { font-size: 14px; line-height: 1.55; }
+.workshop-weight-tool.composition-tool > p { color: #526976; font-size: 14px; line-height: 1.55; }
+.workshop-weight-tool.composition-tool label { color: #304f59; font-size: 13px; }
+.workshop-weight-tool.composition-tool input, .workshop-weight-tool.composition-tool select { min-height: 44px; font-size: 14px; }
+.workshop-weight-tool.composition-tool input::placeholder { color: #526976; }
+.workshop-weight-tool.composition-tool .measurement-help { color: #526976; font-size: 13px; }
+.workshop-weight-tool.composition-tool .outline-button { min-height: 44px; color: #226854; font-size: 13px; }
+.workshop-weight-tool.composition-tool .workshop-trim-result > strong { font-size: 13px; font-weight: 600; }
 .measurement-share-summary { margin: 12px 0; font-size: 13px; }
 .measurement-share-summary pre { max-height: 200px; overflow: auto; padding: 10px; border-radius: 5px; background: #fff; color: #294650; font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .measurement-comparison button:focus-visible, .measurement-comparison input:focus-visible, .measurement-comparison select:focus-visible, .measurement-comparison textarea:focus-visible { outline: 3px solid #173e64; outline-offset: 2px; }
 @media (max-width: 600px) { .measurement-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .workshop-weight-tool.composition-tool .product-pair { grid-template-columns: minmax(0, 1fr); } }

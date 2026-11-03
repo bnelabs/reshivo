@@ -1,8 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
+import { commandGrams } from '../quantity'
 import { CaseSummary } from './CaseDetails'
 import { UnitInput, toDisplay, unitLabel, useUnitSystem } from '../units'
-import type { BalanceMixRequest, BalanceMixResult, MeasuredCompositionTrial, WorkshopCase } from '../types'
+import type {
+  BalanceMixRequest,
+  BalanceMixResult,
+  MeasuredCompositionTrial,
+  WorkshopCase,
+} from '../types'
+import type { CompositionDraft } from '../workspaceFile'
 
 const quantity = (value: number) => String(value)
 const initial = {
@@ -23,6 +30,8 @@ export function BalanceMix({
   canAsk = false,
   onAsk,
   onDraftChange,
+  initialDraft,
+  onSnapshot,
 }: {
   caseData: WorkshopCase
   onEditCase: () => void
@@ -31,16 +40,28 @@ export function BalanceMix({
   canAsk?: boolean
   onAsk?: (question: string) => void
   onDraftChange?: () => void
+  initialDraft?: CompositionDraft | null
+  onSnapshot?: (draft: CompositionDraft) => void
 }) {
   const system = useUnitSystem()
-  const mass = (value: number) => system === 'metric' ? `${quantity(value)} kg` : `approximately ${toDisplay(String(value), 'kg', system)} lb (${quantity(value)} kg)`
+  const mass = (value: number) =>
+    system === 'metric'
+      ? value < 1
+        ? `${commandGrams(value)} g`
+        : `${quantity(value)} kg`
+      : `approximately ${toDisplay(String(value), 'kg', system)} lb (${quantity(value)} kg)`
   const components = caseData.details.components.filter((row) => row.name.trim())
   const binders = components.filter((row) => row.role === 'binder')
-  const [componentId, setComponentId] = useState(
-    () => (binders.length === 1 ? binders[0].id : components[0]?.id) ?? null,
+  const [componentId, setComponentId] = useState(() =>
+    initialDraft
+      ? initialDraft.component_id
+      : ((binders.length === 1 ? binders[0].id : components[0]?.id) ?? null),
   )
   const component = components.find((row) => row.id === componentId)
-  const linkedTrial = preparedTrial && JSON.stringify(preparedTrial.workshop_case) === JSON.stringify(caseData) ? preparedTrial : null
+  const linkedTrial =
+    preparedTrial && JSON.stringify(preparedTrial.workshop_case) === JSON.stringify(caseData)
+      ? preparedTrial
+      : null
   const total = caseData.details.components.reduce((sum, row) => sum + Number(row.amount), 0)
   const complete = caseData.details.components.every(
     (row) =>
@@ -56,24 +77,35 @@ export function BalanceMix({
       return Math.abs(total - 100) <= 0.000001 ? row.amount : ''
     return total > 0 ? String((Number(row.amount) * 100) / total) : ''
   }
-  const [fields, setFields] = useState(() => ({
-    ...initial,
-    input_mass_kg: complete && caseData.details.amount_unit === 'g' ? String(total / 1000) : '',
-    input_min_percent: sharedFraction(componentId),
-    input_max_percent: sharedFraction(componentId),
-  }))
+  const [fields, setFields] = useState(
+    () =>
+      initialDraft?.fields ?? {
+        ...initial,
+        input_mass_kg: complete && caseData.details.amount_unit === 'g' ? String(total / 1000) : '',
+        input_min_percent: sharedFraction(componentId),
+        input_max_percent: sharedFraction(componentId),
+      },
+  )
   const [result, setResult] = useState<BalanceMixResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const request = useRef<AbortController | null>(null)
+  const resultArea = useRef<HTMLDivElement | null>(null)
+  const previousSerial = useRef(linkedTrial?.serial)
   useEffect(() => () => request.current?.abort(), [])
+  useEffect(() => {
+    if (result) resultArea.current?.scrollIntoView({ block: 'start' })
+  }, [result])
   useLayoutEffect(() => {
+    if (previousSerial.current === linkedTrial?.serial) return
+    previousSerial.current = linkedTrial?.serial
     onDraftChange?.()
     request.current?.abort()
     setBusy(false)
     setResult(null)
     setError('')
-    const id = linkedTrial?.componentId ?? ((binders.length === 1 ? binders[0].id : components[0]?.id) ?? null)
+    const id =
+      linkedTrial?.componentId ?? (binders.length === 1 ? binders[0].id : components[0]?.id) ?? null
     setComponentId(id)
     const fraction = sharedFraction(id)
     setFields({
@@ -85,6 +117,9 @@ export function BalanceMix({
       target_max_percent: linkedTrial?.calculatorLevel ?? '',
     })
   }, [linkedTrial?.serial])
+  useLayoutEffect(() => {
+    onSnapshot?.({ component_id: componentId, fields })
+  }, [componentId, fields, onSnapshot])
   function change(key: keyof typeof initial, value: string) {
     onDraftChange?.()
     request.current?.abort()
@@ -94,28 +129,34 @@ export function BalanceMix({
     setFields((current) => ({ ...current, [key]: value }))
   }
 
-  const reviewQuestion = linkedTrial && result ? `Review this proposed composition trial and suggest the next practical preparation, process and property checks. These are synthetic or user-reported reference readings, not a validated recipe. The composition calculation is not a property prediction. Keep the current product targets; do not infer batch independence, invent a dose-response link, or promise finished properties. Trial summary:\n${JSON.stringify({
-    reading_type: linkedTrial.comparison.data_kind,
-    reference: {
-      property: linkedTrial.comparison.property_name,
-      unit: linkedTrial.comparison.property_unit,
-      target_min: linkedTrial.comparison.target_min,
-      target_max: linkedTrial.comparison.target_max,
-      method: linkedTrial.comparison.method,
-      setting_id: linkedTrial.settingId,
-      input: linkedTrial.comparison.input_name,
-      input_unit: linkedTrial.comparison.input_unit,
-      recorded_level: linkedTrial.exactLevel,
-      observed_min: linkedTrial.comparison.setting.observed_min,
-      observed_max: linkedTrial.comparison.setting.observed_max,
-      reading_count: linkedTrial.comparison.setting.reading_count,
-      in_target_count: linkedTrial.comparison.setting.in_target_count,
-      grouping: 'Identifiers omitted from this summary; do not infer specimens, runs or batches.',
-    },
-    proposed_trial: result,
-    original_case_unchanged: true,
-    new_mix_property_tested: false,
-  })}` : ''
+  const reviewQuestion =
+    linkedTrial && result
+      ? `Review this proposed composition trial and suggest the next practical preparation, process and property checks. These are synthetic or user-reported reference readings, not a validated recipe. The composition calculation is not a property prediction. Keep the current product targets; do not infer batch independence, invent a dose-response link, or promise finished properties. Trial summary:\n${JSON.stringify(
+          {
+            reading_type: linkedTrial.comparison.data_kind,
+            reference: {
+              property: linkedTrial.comparison.property_name,
+              unit: linkedTrial.comparison.property_unit,
+              target_min: linkedTrial.comparison.target_min,
+              target_max: linkedTrial.comparison.target_max,
+              method: linkedTrial.comparison.method,
+              setting_id: linkedTrial.settingId,
+              input: linkedTrial.comparison.input_name,
+              input_unit: linkedTrial.comparison.input_unit,
+              recorded_level: linkedTrial.exactLevel,
+              observed_min: linkedTrial.comparison.setting.observed_min,
+              observed_max: linkedTrial.comparison.setting.observed_max,
+              reading_count: linkedTrial.comparison.setting.reading_count,
+              in_target_count: linkedTrial.comparison.setting.in_target_count,
+              grouping:
+                'Identifiers omitted from this summary; do not infer specimens, runs or batches.',
+            },
+            proposed_trial: result,
+            original_case_unchanged: true,
+            new_mix_property_tested: false,
+          },
+        )}`
+      : ''
   const percentages = [
     'input_min_percent',
     'input_max_percent',
@@ -180,7 +221,10 @@ export function BalanceMix({
     if (!result || !linkedTrial) return
     const record = {
       result_kind: 'proposed_composition_trial',
-      label: linkedTrial.comparison.data_kind === 'synthetic' ? 'Simulation of synthetic entered readings and composition arithmetic' : 'Simulation using user-reported readings and composition arithmetic',
+      label:
+        linkedTrial.comparison.data_kind === 'synthetic'
+          ? 'Simulation of synthetic entered readings and composition arithmetic'
+          : 'Simulation using user-reported readings and composition arithmetic',
       reference: linkedTrial,
       calculation: result,
       original_case_changed: false,
@@ -192,7 +236,9 @@ export function BalanceMix({
         'The stated addition fraction, no-loss mixing assumptions and starting composition need to hold for this calculation.',
       ],
     }
-    const url = URL.createObjectURL(new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' }))
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' }),
+    )
     const link = document.createElement('a')
     link.href = url
     link.download = 'rematter-proposed-composition-trial.json'
@@ -200,27 +246,191 @@ export function BalanceMix({
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
+  const resultPanel = result && (
+    <div ref={resultArea} className="workshop-trim-result composition-result" role="status">
+      <strong>
+        {linkedTrial?.comparison.data_kind === 'synthetic'
+          ? 'Simulation · synthetic composition trial'
+          : 'Simulation · composition calculation'}
+      </strong>
+      {!result.feasible && <p>{result.action}</p>}
+      {!result.feasible && linkedTrial && (
+        <p>
+          {result.input_min_percent === result.input_max_percent
+            ? 'This stock cannot reach the chosen composition. Use characterized stock on the other side of the target, or plan and test a different composition.'
+            : 'No single fixed addition reaches this exact point across the entered starting range. Characterize each portion’s composition more precisely and recalculate its dose, or run and test a different composition. Reweighing a mixed portion alone does not identify its component fraction.'}{' '}
+          The property readings do not support widening this target.
+        </p>
+      )}
+      {result.feasible && result.addition_min_kg !== null && (
+        <>
+          <p className="composition-action">
+            {result.addition_max_kg === null ? (
+              <>
+                Add at least <strong>{mass(result.addition_min_kg)}</strong> of{' '}
+                {result.addition_name}; this composition calculation has no finite upper addition
+                limit.
+              </>
+            ) : result.addition_min_kg === 0 && result.addition_max_kg === 0 ? (
+              <>No addition is needed for this trial composition.</>
+            ) : result.addition_min_kg === result.addition_max_kg ? (
+              <>
+                <strong className="composition-action-value">
+                  Add {mass(result.addition_min_kg)}
+                </strong>
+                <span className="composition-action-stock">
+                  of {result.addition_name} for this trial.
+                </span>
+              </>
+            ) : (
+              <>
+                Calculated addition:{' '}
+                <strong>
+                  {quantity(result.addition_min_kg)}–{quantity(result.addition_max_kg)} kg
+                </strong>{' '}
+                of {result.addition_name}.
+                {system === 'us' && (
+                  <>
+                    {' '}
+                    US customary endpoints: {mass(result.addition_min_kg)} to{' '}
+                    {mass(result.addition_max_kg)}.
+                  </>
+                )}
+              </>
+            )}
+          </p>
+          {result.example_addition_kg !== null &&
+            result.resulting_min_percent !== null &&
+            result.resulting_max_percent !== null && (
+              <p>
+                Example trial dose: <strong>{mass(result.example_addition_kg)}</strong> of{' '}
+                {result.addition_name}. The calculated {result.component} fraction would be{' '}
+                {result.resulting_min_percent === result.resulting_max_percent
+                  ? quantity(result.resulting_min_percent)
+                  : `${quantity(result.resulting_min_percent)}–${quantity(result.resulting_max_percent)}`}{' '}
+                mass % across the entered input range.
+              </p>
+            )}
+          <p>
+            This balances the entered composition. It does not show that a product property meets
+            its target.
+          </p>
+        </>
+      )}
+      {result.next_options.length > 0 && !linkedTrial && (
+        <>
+          <p>Useful next options:</p>
+          <ul>
+            {result.next_options.map((option, index) => (
+              <li key={index}>{option}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {linkedTrial && (
+        <button type="button" className="outline-button" onClick={downloadTrial}>
+          Download proposed trial and original readings
+        </button>
+      )}
+      {linkedTrial && onAsk && (
+        <>
+          <details className="measurement-share-summary">
+            <summary>What would be sent to Meta?</summary>
+            <p>Your current case, recent conversation and this proposed-trial summary:</p>
+            <pre>{reviewQuestion}</pre>
+          </details>
+          <button
+            type="button"
+            className="outline-button"
+            disabled={!canAsk || reviewQuestion.length > 3000}
+            onClick={() => onAsk(reviewQuestion)}
+          >
+            Ask Meta what to check for this mix trial
+          </button>
+          {reviewQuestion.length > 3000 && (
+            <p>Shorten the names or reference method before sending this summary.</p>
+          )}
+        </>
+      )}
+      <details>
+        <summary>Calculation notes</summary>
+        <ul>
+          {result.assumptions.map((note, index) => (
+            <li key={index}>{note}</li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  )
+
   return (
-    <details className="workshop-weight-tool">
+    <details className="workshop-weight-tool composition-tool">
       <summary>
         <span>{linkedTrial ? 'Prepare your next mix trial' : 'Balance a trial mix'}</span>
         <small>Use known mass fractions</small>
       </summary>
-      {linkedTrial ? <section className="measurement-case" aria-label="Recorded setting for this trial">
-        <strong>{linkedTrial.comparison.data_kind === 'synthetic' ? 'Simulation · synthetic reference' : 'Simulation · your reported reference'}</strong>
-        <p>Proposed composition: <strong>{linkedTrial.exactLevel} mass % {linkedTrial.componentName}</strong>, from {linkedTrial.settingId}.</p>
-        <p>{linkedTrial.comparison.property_name}: {linkedTrial.comparison.setting.observed_min}–{linkedTrial.comparison.setting.observed_max} {linkedTrial.comparison.property_unit}; {linkedTrial.comparison.setting.in_target_count} of {linkedTrial.comparison.setting.reading_count} entered readings in target.</p>
-        <p>This is a new trial, not a property prediction. Keep the stated process and check the new mix against every product target.</p>
-        <details><summary>Reference method and target</summary>
-          <p>{linkedTrial.comparison.method}</p>
-          <p>Target: {linkedTrial.comparison.target_max === null ? `at least ${linkedTrial.comparison.target_min}` : `${linkedTrial.comparison.target_min}–${linkedTrial.comparison.target_max}`} {linkedTrial.comparison.property_unit}. Other properties have not been checked by this calculation.</p>
+      {initialDraft && !linkedTrial && (
+        <p className="measurement-prompt">
+          Reopened quantity draft. Its saved target is a manual trial composition until you
+          reconfirm a matching recorded setting. Review the inputs and recalculate; no prior dose or
+          property result is restored.
+        </p>
+      )}
+      {resultPanel}
+      {linkedTrial ? (
+        <section className="measurement-case" aria-label="Recorded setting for this trial">
+          <strong>
+            {linkedTrial.comparison.data_kind === 'synthetic'
+              ? 'Simulation · synthetic reference'
+              : 'Simulation · your reported reference'}
+          </strong>
+          <p>
+            Proposed composition:{' '}
+            <strong>
+              {linkedTrial.exactLevel} mass % {linkedTrial.componentName}
+            </strong>
+            , from {linkedTrial.settingId}.
+          </p>
+          <p>
+            {linkedTrial.comparison.property_name}: {linkedTrial.comparison.setting.observed_min}–
+            {linkedTrial.comparison.setting.observed_max} {linkedTrial.comparison.property_unit};{' '}
+            {linkedTrial.comparison.setting.in_target_count} of{' '}
+            {linkedTrial.comparison.setting.reading_count} entered readings in target.
+          </p>
+          <p>
+            This is a new trial, not a property prediction. Keep the stated process and check the
+            new mix against every product target.
+          </p>
+          <details>
+            <summary>Reference method and target</summary>
+            <p>{linkedTrial.comparison.method}</p>
+            <p>
+              Target:{' '}
+              {linkedTrial.comparison.target_max === null
+                ? `at least ${linkedTrial.comparison.target_min}`
+                : `${linkedTrial.comparison.target_min}–${linkedTrial.comparison.target_max}`}{' '}
+              {linkedTrial.comparison.property_unit}. Other properties have not been checked by this
+              calculation.
+            </p>
+          </details>
+          <button type="button" className="text-button" onClick={onClearPrepared}>
+            Use a manual composition target instead
+          </button>
+        </section>
+      ) : (
+        <p>
+          Use known mass fractions and a trial composition you choose. This does not predict
+          strength, density or sound performance.
+        </p>
+      )}
+      {linkedTrial ? (
+        <details>
+          <summary>Review the unchanged starting case</summary>
+          <CaseSummary brief={caseData.brief} />
         </details>
-        <button type="button" className="text-button" onClick={onClearPrepared}>Use a manual composition target instead</button>
-      </section> : <p>
-        Use known mass fractions and a trial composition you choose. This does not predict strength,
-        density or sound performance.
-      </p>}
-      {linkedTrial ? <details><summary>Review the unchanged starting case</summary><CaseSummary brief={caseData.brief} /></details> : <CaseSummary brief={caseData.brief} />}
+      ) : (
+        <CaseSummary brief={caseData.brief} />
+      )}
       <p>
         Materials come from your case. A known mass recipe supplies the starting fraction; enter a
         measured range below when your trial input varies. Volume percentages are not converted to
@@ -325,7 +535,11 @@ export function BalanceMix({
             />
           </label>
         </div>
-        <p className="measurement-help">Name stock whose {component?.name || 'selected component'} mass fraction you know. An addition with none of this component is zero percent. ReMatter does not guess the stock’s composition or properties.</p>
+        <p className="measurement-help">
+          Name stock whose {component?.name || 'selected component'} mass fraction you know. An
+          addition with none of this component is zero percent. ReMatter does not guess the stock’s
+          composition or properties.
+        </p>
         <div className="product-pair">
           <label>
             Trial target minimum (mass %)
@@ -354,7 +568,12 @@ export function BalanceMix({
             />
           </label>
         </div>
-        {linkedTrial && <p className="measurement-help">Both limits stay at the recorded {linkedTrial.exactLevel} mass % point. Nearby compositions have no measured property link here.</p>}
+        {linkedTrial && (
+          <p className="measurement-help">
+            Both limits stay at the recorded {linkedTrial.exactLevel} mass % point. Nearby
+            compositions have no measured property link here.
+          </p>
+        )}
         <button type="submit" className="outline-button" disabled={!valid || busy}>
           {busy ? 'Calculating…' : 'Calculate trial addition'}
         </button>
@@ -363,78 +582,6 @@ export function BalanceMix({
         <p className="workshop-error" role="alert">
           {error}
         </p>
-      )}
-      {result && (
-        <div className="workshop-trim-result composition-result" role="status">
-          <strong>{linkedTrial?.comparison.data_kind === 'synthetic' ? 'Simulation · synthetic composition trial' : 'Simulation · composition calculation'}</strong>
-          {!result.feasible && <p>{result.action}</p>}
-          {!result.feasible && linkedTrial && <p>No single fixed addition reaches this exact point across the entered starting range. Characterize each portion more precisely and recalculate its dose, or run and test a different composition. The property readings do not support widening this target.</p>}
-          {result.feasible && result.addition_min_kg !== null && (
-            <>
-              <p className="composition-action">
-                {result.addition_max_kg === null ? (
-                  <>
-                    Add at least <strong>{mass(result.addition_min_kg)}</strong> of{' '}
-                    {result.addition_name}; this composition calculation has no finite upper
-                    addition limit.
-                  </>
-                ) : result.addition_min_kg === 0 && result.addition_max_kg === 0 ? (
-                  <>No addition is needed for this trial composition.</>
-                ) : result.addition_min_kg === result.addition_max_kg ? (
-                  <>Add <strong>{mass(result.addition_min_kg)}</strong> of {result.addition_name} for this composition trial.</>
-                ) : (
-                  <>
-                    Calculated addition:{' '}
-                    <strong>
-                      {quantity(result.addition_min_kg)}–{quantity(result.addition_max_kg)} kg
-                    </strong>{' '}
-                    of {result.addition_name}.
-                    {system === 'us' && <> US customary endpoints: {mass(result.addition_min_kg)} to {mass(result.addition_max_kg)}.</>}
-                  </>
-                )}
-              </p>
-              {result.example_addition_kg !== null &&
-                result.resulting_min_percent !== null &&
-                result.resulting_max_percent !== null && (
-                  <p>
-                    Example trial dose: <strong>{mass(result.example_addition_kg)}</strong>{' '}
-                    of {result.addition_name}. The calculated {result.component} fraction would be{' '}
-                    {result.resulting_min_percent === result.resulting_max_percent
-                      ? quantity(result.resulting_min_percent)
-                      : `${quantity(result.resulting_min_percent)}–${quantity(result.resulting_max_percent)}`} mass % across the entered input range.
-                  </p>
-                )}
-              <p>
-                This balances the entered composition. It does not show that a product property
-                meets its target.
-              </p>
-            </>
-          )}
-          {result.next_options.length > 0 && !linkedTrial && (
-            <>
-              <p>Useful next options:</p>
-              <ul>
-                {result.next_options.map((option, index) => (
-                  <li key={index}>{option}</li>
-                ))}
-              </ul>
-            </>
-          )}
-          {linkedTrial && <button type="button" className="outline-button" onClick={downloadTrial}>Download proposed trial and original readings</button>}
-          {linkedTrial && onAsk && <>
-            <details className="measurement-share-summary"><summary>Trial summary sent to Meta</summary><p>Your current case, recent conversation and this proposed-trial summary:</p><pre>{reviewQuestion}</pre></details>
-            <button type="button" className="outline-button" disabled={!canAsk || reviewQuestion.length > 3000} onClick={() => onAsk(reviewQuestion)}>Ask Meta what to check for this mix trial</button>
-            {reviewQuestion.length > 3000 && <p>Shorten the names or reference method before sending this summary.</p>}
-          </>}
-          <details>
-            <summary>Calculation notes</summary>
-            <ul>
-              {result.assumptions.map((note, index) => (
-                <li key={index}>{note}</li>
-              ))}
-            </ul>
-          </details>
-        </div>
       )}
     </details>
   )

@@ -103,6 +103,14 @@ Give a constructive next adjustment if a check misses, then require a new compar
 Keep comparisons, steps and checks concrete and short. Ask at most three questions that affect the next decision. Use only relevant supplied source IDs within their scope. Return exactly the requested trial-plan structure.
 """
 
+FOLLOWUP_PROMPT = SYSTEM_PROMPT + """
+This is a contextual follow-up on the existing case, comparison or proposed trial. The app retains the selected route and trial. For this response, the earlier instructions to generate route alternatives do not apply: return only a direct answer, one to three next steps, up to three essential questions and relevant source IDs. Do not regenerate or replace material/engineering routes or the selected plan.
+Lead with the next useful action and why it helps. Use at most three short paragraphs, without repeating the brief, full target text, inventory or warnings already visible. Keep only qualifications needed to understand this action. Do not introduce unrelated calculators or properties.
+Treat a supplied composition calculation as arithmetic on its entered inputs, not a prediction of physical properties. A new input or stock supersedes old quantities. If no calculation was actually supplied, do not say that a calculator ran. A recorded composition point is not an unmeasured interval of passing properties.
+When an input component fraction is known only as a range and no fixed addition covers it, endpoint doses apply only to portions known to have those endpoint compositions. Do not tell the user to choose an endpoint dose for an unidentified position within the range. Identify the actual portion's missing composition information and its basis before choosing its dose, using suitable characterization or reliable constituent-feed records where available. Reweighing the total mixed portion or splitting it alone does not identify its component fraction. A recycled-content provenance label may not have a direct physical assay; do not promise that a test exists without a suitable method.
+If an addition stock's fraction or identity is missing or changed, do not reuse another stock's characterization. Name the missing information and give a constructive preparation, records, characterization or separately tested design option. Keep any changed material/process configuration separate from prior property observations. Do not prescribe a fixed recipe, invent a missing measurement or imply that a proposed new mix meets a product target.
+"""
+
 
 def _object(value, allowed, label):
     if not isinstance(value, dict) or set(value) - set(allowed):
@@ -269,6 +277,20 @@ def trial_schema():
     }
 
 
+def followup_schema():
+    return {
+        "type": "object", "additionalProperties": False,
+        "required": ["answer", "next_steps", "questions", "source_ids"],
+        "properties": {
+            "answer": {"type": "string", "minLength": 1, "maxLength": 3000},
+            "next_steps": _strings(1, 3),
+            "questions": _strings(0, 3),
+            "source_ids": {"type": "array", "maxItems": len(SOURCE_REGISTRY),
+                           "items": {"type": "string", "enum": list(SOURCE_REGISTRY)}},
+        },
+    }
+
+
 def _response_strings(values, label, minimum, maximum):
     if not isinstance(values, list) or not minimum <= len(values) <= maximum:
         raise MetaValidationError(f"Meta returned an unexpected number of {label}")
@@ -350,6 +372,37 @@ def help_with_case(request, client=None, root=ROOT):
         "next_steps": _response_strings(data["next_steps"], "next steps", 2, 5),
         "questions": _response_strings(data["questions"], "questions", 0, 3),
         "sources": sources,
+        "physical_product_tested": False, "performance_verified": False,
+    }
+
+
+def follow_up_with_case(request, client=None, root=ROOT):
+    case = validate_request(request)
+    prompt = json.dumps({
+        **case,
+        "references": list(SOURCE_REGISTRY.values()),
+        "task": "Answer the latest question for the retained case and trial context. Review supplied observations or actual composition arithmetic without turning them into property predictions. Give the next useful action, necessary missing information and its purpose. Do not regenerate alternatives or replace the selected trial.",
+    }, ensure_ascii=False, allow_nan=False)
+    generated = (client or MetaClient(root=root)).generate(
+        prompt, followup_schema(), 1, system_prompt=FOLLOWUP_PROMPT,
+        schema_name="engineering_followup", max_completion_tokens=8192,
+        reasoning_effort=ADVICE_REASONING_EFFORT,
+    )
+    data = generated.data
+    if not isinstance(data, dict) or set(data) != {"answer", "next_steps", "questions", "source_ids"}:
+        raise MetaValidationError("Meta's follow-up response has an unexpected format")
+    answer, quarantined = _quarantine_assured_summary(_text(data["answer"], "answer", 3000, error=MetaValidationError))
+    if not answer:
+        raise MetaValidationError("Meta did not return usable follow-up advice. Try a more specific question.")
+    return {
+        "result_kind": "engineering_followup", "live": bool(generated.live), "provider": "meta",
+        "model": generated.model, "usage": generated.usage, "elapsed_ms": generated.elapsed_ms,
+        "request_id": generated.request_id, "requested_reasoning_effort": ADVICE_REASONING_EFFORT,
+        **({"calculation_context": case["calculation_context"]} if "calculation_context" in case else {}),
+        "answer": answer, "quarantined_answer": quarantined,
+        "next_steps": _response_strings(data["next_steps"], "next steps", 1, 3),
+        "questions": _response_strings(data["questions"], "questions", 0, 3),
+        "sources": _sources(data["source_ids"]),
         "physical_product_tested": False, "performance_verified": False,
     }
 

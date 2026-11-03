@@ -6,6 +6,7 @@ import '@fontsource/inter/latin-600.css'
 import '@fontsource/inter/latin-700.css'
 import App from './App'
 import './style.css'
+import './components/WorkshopV3.css'
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

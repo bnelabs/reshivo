@@ -183,6 +183,7 @@ class WorkbenchHandler(BaseHTTPRequestHandler):
                 "/api/products/target-check": self.server.application.target_check,
                 "/api/products/compare-readings": self.server.application.compare_readings,
                 "/api/advisor/help": self.server.application.advisor_help,
+                "/api/advisor/follow-up": self.server.application.advisor_follow_up,
                 "/api/advisor/inspect-image": self.server.application.advisor_inspect_image,
                 "/api/advisor/read-observation": self.server.application.advisor_read_observation,
                 "/api/advisor/read-engineering-note": self.server.application.advisor_read_engineering_note,

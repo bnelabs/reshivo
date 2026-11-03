@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { BalanceMix } from './BalanceMix'
 import { TrialPlan } from './TrialPlan'
@@ -7,10 +7,17 @@ import { AssemblyMassPlanner as WeightAdjustment } from './AssemblyMassPlanner'
 import { EngineeringNoteReader } from './EngineeringNoteReader'
 import { ImageIntake } from './ImageIntake'
 import { MeasurementComparison } from './MeasurementComparison'
+import type { MeasurementProgress } from './MeasurementComparison'
+import { WorkspaceFiles } from './WorkspaceFiles'
+import { FollowupAdvice } from './FollowupAdvice'
+import { MaterialCaseSummary } from './MaterialCaseSummary'
+import { useUnitSettings } from '../units'
+import type { CompositionDraft, MeasurementDraft, SavedWorkspace } from '../workspaceFile'
 import './WorkshopDecision.css'
 import type { EngineeringNotePatch } from '../engineeringNote'
 import type {
   AdvisorBrief,
+  AdvisorFollowupResult,
   AdvisorMessage,
   AdvisorResult,
   AdvisorRoute,
@@ -153,17 +160,35 @@ const optionalFields: { key: keyof AdvisorBrief; label: string; placeholder: str
 
 type Section = 'material' | 'engineering' | 'next'
 
+function sameRoute(left: AdvisorRoute | null, right: AdvisorRoute | null): boolean {
+  if (!left || !right) return false
+  return (
+    left.id === right.id &&
+    left.title === right.title &&
+    left.change === right.change &&
+    left.why === right.why &&
+    left.check === right.check &&
+    (['steps', 'tradeoffs'] as const).every(
+      (key) =>
+        left[key].length === right[key].length &&
+        left[key].every((value, index) => value === right[key][index]),
+    )
+  )
+}
+
 function RouteCard({
   route,
   selected,
   onSelect,
   onDevelop,
+  actionLabel = 'Plan a trial',
   busy,
 }: {
   route: AdvisorRoute
   selected: boolean
   onSelect: () => void
   onDevelop: () => void
+  actionLabel?: string
   busy: boolean
 }) {
   return (
@@ -196,13 +221,35 @@ function RouteCard({
         <p>{route.check}</p>
       </div>
       <button type="button" className="workshop-route-develop" disabled={busy} onClick={onDevelop}>
-        Plan a trial <span aria-hidden="true">↗</span>
+        {actionLabel} <span aria-hidden="true">↗</span>
       </button>
     </article>
   )
 }
 
 export function Workshop() {
+  const { system: unitSystem, setSystem: setUnitSystem } = useUnitSettings()
+  const [workspaceEpoch, setWorkspaceEpoch] = useState(0)
+  const [restoredDrafts, setRestoredDrafts] = useState<{
+    measurement: MeasurementDraft | null
+    mix: CompositionDraft | null
+  }>({ measurement: null, mix: null })
+  const [restoredPlan, setRestoredPlan] = useState(false)
+  const [restoredTrial, setRestoredTrial] = useState(false)
+  const [restoredFollowup, setRestoredFollowup] = useState(false)
+  const measurementSnapshot = useRef<MeasurementDraft | null>(null)
+  const mixSnapshot = useRef<CompositionDraft | null>(null)
+  const [measurementProgress, setMeasurementProgress] = useState<MeasurementProgress>('empty')
+  const recordMeasurementSnapshot = useCallback(
+    (draft: MeasurementDraft, progress: MeasurementProgress) => {
+      measurementSnapshot.current = draft
+      setMeasurementProgress(progress)
+    },
+    [],
+  )
+  const recordMixSnapshot = useCallback((draft: CompositionDraft) => {
+    mixSnapshot.current = draft
+  }, [])
   const [brief, setBrief] = useState<AdvisorBrief>(emptyBrief)
   const [calculationDetails, setCalculationDetails] =
     useState<CalculationDetails>(newCalculationDetails)
@@ -223,11 +270,14 @@ export function Workshop() {
     calculationDetails.amount_basis,
   ])
   const [section, setSection] = useState<Section>('material')
+  const [mixMode, setMixMode] = useState(false)
+  const [editingCase, setEditingCase] = useState(true)
   const [focusWorkspace, setFocusWorkspace] = useState(false)
   const [status, setStatus] = useState<AdvisorStatus | null>(null)
   const [statusAttempt, setStatusAttempt] = useState(0)
   const [statusError, setStatusError] = useState('')
   const [plan, setPlan] = useState<AdvisorResult | null>(null)
+  const [followupResult, setFollowupResult] = useState<AdvisorFollowupResult | null>(null)
   const [history, setHistory] = useState<AdvisorMessage[]>([])
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
@@ -239,7 +289,7 @@ export function Workshop() {
   const [notice, setNotice] = useState('')
   const [exampleLoaded, setExampleLoaded] = useState(false)
   const [sourceOpen, setSourceOpen] = useState(false)
-  const [activity, setActivity] = useState<'routes' | 'trial' | null>(null)
+  const [activity, setActivity] = useState<'routes' | 'trial' | 'followup' | null>(null)
   const busy = activity !== null
   const [elapsed, setElapsed] = useState(0)
   const [toolsOpen, setToolsOpen] = useState(false)
@@ -247,6 +297,7 @@ export function Workshop() {
   const comparisonRequest = useRef<AbortController | null>(null)
   const comparisonAdviceShown = useRef(false)
   const answer = useRef<HTMLElement | null>(null)
+  const caseArea = useRef<HTMLElement | null>(null)
   const followup = useRef<HTMLInputElement | null>(null)
   const comparisonArea = useRef<HTMLDivElement | null>(null)
 
@@ -262,6 +313,7 @@ export function Workshop() {
     return () => controller.abort()
   }, [statusAttempt])
   useEffect(() => () => request.current?.abort(), [])
+  useEffect(() => { if (!editingCase && caseArea.current) caseArea.current.scrollTop = 0 }, [editingCase])
   useEffect(() => {
     if (!busy) return
     const start = Date.now()
@@ -273,13 +325,20 @@ export function Workshop() {
     return () => window.clearInterval(timer)
   }, [busy])
   useEffect(() => {
-    if (plan || trial) {
+    if (plan || trial || followupResult) {
       answer.current?.focus({ preventScroll: true })
       answer.current?.scrollIntoView({ block: 'start' })
     }
-  }, [plan, trial])
+  }, [plan, trial, followupResult])
 
   function invalidate() {
+    setMixMode(false)
+    setEditingCase(true)
+    setRestoredDrafts({ measurement: null, mix: null })
+    setRestoredPlan(false)
+    setRestoredTrial(false)
+    setRestoredFollowup(false)
+    setFollowupResult(null)
     setCompositionTrial(null)
     comparisonRequest.current = null
     comparisonAdviceShown.current = false
@@ -341,6 +400,7 @@ export function Workshop() {
     setCalculationDetails(details)
   }
   function openCaseDetails() {
+    setEditingCase(true)
     setFocusWorkspace(false)
     requestAnimationFrame(() => {
       const details = document.getElementById(
@@ -388,7 +448,12 @@ export function Workshop() {
       label: 'Hypothetical PE material-development case',
       components: [
         { id: 1, name: 'Identified PCRPE resin (grade to record)', role: 'main', amount: '' },
-        { id: 2, name: 'Identified virgin MDPE resin (grade to record)', role: 'other', amount: '' },
+        {
+          id: 2,
+          name: 'Identified virgin MDPE resin (grade to record)',
+          role: 'other',
+          amount: '',
+        },
       ],
     })
     setNotice('')
@@ -439,9 +504,13 @@ export function Workshop() {
   )
   function replaceWithExample(load: () => void) {
     const hasCase = Object.values(brief).some((value) => value.trim()) || mayClearCaseData
-    if (hasCase && !window.confirm(
-      'Loading this example replaces your current case and can clear its mix details, measurements, options and trial. Continue?',
-    )) return
+    if (
+      hasCase &&
+      !window.confirm(
+        'Loading this example replaces your current case and can clear its mix details, measurements, options and trial. Continue?',
+      )
+    )
+      return
     load()
   }
 
@@ -455,7 +524,9 @@ export function Workshop() {
       pending.abort()
       comparisonRequest.current = null
       setActivity(null)
-      setNotice('Your inputs or readings changed. Stopped the request that used the previous calculation. Check the current values before asking again.')
+      setNotice(
+        'Your inputs or readings changed. Stopped the request that used the previous calculation. Check the current values before asking again.',
+      )
     }
     if (comparisonAdviceShown.current) {
       setComparisonAdviceStale(true)
@@ -473,7 +544,9 @@ export function Workshop() {
     const controller = new AbortController()
     request.current?.abort()
     request.current = controller
-    const usesComparisonContext = fromComparison || Boolean(nextQuestion.trim() && (comparisonAdviceShown.current || comparisonAdviceStale))
+    const usesComparisonContext =
+      fromComparison ||
+      Boolean(nextQuestion.trim() && (comparisonAdviceShown.current || comparisonAdviceStale))
     comparisonRequest.current = usesComparisonContext ? controller : null
     if (fromComparison) {
       setHasTrialFollowup(false)
@@ -481,6 +554,7 @@ export function Workshop() {
     const submittedQuestion =
       nextQuestion.trim() ||
       'How can I use this variable input to make the product within my targets? Propose practical material and engineering adjustments.'
+    const isFollowup = Boolean(nextQuestion.trim())
     const selectedContext: AdvisorMessage | null = trial
       ? {
           role: 'assistant',
@@ -514,24 +588,30 @@ export function Workshop() {
               .slice(0, 6000),
           }
         : null
-    const earlierHistory: AdvisorMessage[] = !nextQuestion.trim() ? [] : comparisonAdviceStale
-      ? [...history.slice(-4), {
-          role: 'assistant',
-          content: 'Earlier comparison or mix-trial advice is no longer current because the inputs changed. Do not treat its settings or quantities as current; a newly confirmed comparison or recalculated trial summary is needed.',
-        }]
-      : history
+    const earlierHistory: AdvisorMessage[] = !nextQuestion.trim()
+      ? []
+      : comparisonAdviceStale
+        ? [
+            ...history.slice(-4),
+            {
+              role: 'assistant',
+              content:
+                'Earlier comparison or mix-trial advice is no longer current because the inputs changed. Do not treat its settings or quantities as current; a newly confirmed comparison or recalculated trial summary is needed.',
+            },
+          ]
+        : history
     const recentHistory = selectedContext
       ? [...earlierHistory.slice(-5), selectedContext]
       : earlierHistory.slice(-6)
-    setActivity('routes')
+    setActivity(isFollowup ? 'followup' : 'routes')
     requestAnimationFrame(() =>
       answer.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }),
     )
     setError('')
     setNotice('')
     try {
-      const response = await api<AdvisorResult>(
-        '/api/advisor/help',
+      const response = await api<AdvisorResult | AdvisorFollowupResult>(
+        isFollowup ? '/api/advisor/follow-up' : '/api/advisor/help',
         {
           brief,
           question: submittedQuestion,
@@ -541,10 +621,21 @@ export function Workshop() {
         controller.signal,
       )
       if (!controller.signal.aborted) {
+        setEditingCase(false)
         comparisonAdviceShown.current = usesComparisonContext
-        setComparisonAdviceStale(fromComparison ? false : usesComparisonContext && comparisonAdviceStale)
+        setComparisonAdviceStale(
+          fromComparison ? false : usesComparisonContext && comparisonAdviceStale,
+        )
         setLastQuestion(displayQuestion.trim())
-        setPlan(response)
+        if (response.result_kind === 'engineering_followup') {
+          setFollowupResult(response)
+          setRestoredFollowup(false)
+        } else {
+          setPlan(response)
+          setFollowupResult(null)
+          setRestoredPlan(false)
+          setRestoredFollowup(false)
+        }
         const prompt =
           submittedQuestion ||
           'Find practical material and engineering routes for this batch and product.'
@@ -556,11 +647,11 @@ export function Workshop() {
               role: 'assistant',
               content: [
                 response.answer,
-                ...response.material_routes.map(
+                ...('material_routes' in response ? response.material_routes : []).map(
                   (route) =>
                     `Material route: ${route.title}. ${route.change} ${route.why} Next check: ${route.check}`,
                 ),
-                ...response.engineering_routes.map(
+                ...('engineering_routes' in response ? response.engineering_routes : []).map(
                   (route) =>
                     `Engineering route: ${route.title}. ${route.change} ${route.why} Next check: ${route.check}`,
                 ),
@@ -575,9 +666,12 @@ export function Workshop() {
         if (!preserveSelectedTrial) {
           setSelectedRoute(null)
           setTrial(null)
+          setRestoredTrial(false)
         }
         setHasTrialFollowup(preserveSelectedTrial && Boolean(trial))
-        setSection((current) => preserveSelectedTrial ? current : current === 'next' ? 'material' : current)
+        setSection((current) =>
+          preserveSelectedTrial ? current : current === 'next' ? 'material' : current,
+        )
       }
     } catch (failure) {
       if (!controller.signal.aborted)
@@ -608,9 +702,16 @@ export function Workshop() {
   }
   function selectRoute(route: AdvisorRoute) {
     if (busy) return
-    if (JSON.stringify(selectedRoute) !== JSON.stringify(route)) {
+    if (!sameRoute(selectedRoute, route)) {
       setTrial(null)
+      setRestoredTrial(false)
       setHasTrialFollowup(false)
+      setFollowupResult(null)
+      setRestoredFollowup(false)
+      setLastQuestion('')
+      comparisonRequest.current = null
+      comparisonAdviceShown.current = false
+      setComparisonAdviceStale(false)
     }
     setSelectedRoute(route)
     setError('')
@@ -619,6 +720,7 @@ export function Workshop() {
   async function planTrial(route: AdvisorRoute) {
     if (!briefReady || !status?.configured || busy) return
     selectRoute(route)
+    setMixMode(false)
     setSection('next')
     const controller = new AbortController()
     request.current?.abort()
@@ -639,6 +741,7 @@ export function Workshop() {
         if (response.route_id !== route.id)
           throw new Error('The trial did not match the selected route. Your route is still here.')
         setTrial(response)
+        setRestoredTrial(false)
         setSelectedRoute(response.selected_route)
       }
     } catch (failure) {
@@ -662,6 +765,7 @@ export function Workshop() {
               brief,
               calculation_details: calculationDetails,
               plan,
+              followup: followupResult,
               history,
               selected_route: selectedRoute,
               trial,
@@ -685,11 +789,80 @@ export function Workshop() {
       : plan.engineering_routes
     : []
   const chosen = selectedRoute
+  function openWorkspace(saved: SavedWorkspace) {
+    const hasCurrentWork =
+      Object.values(brief).some((value) => value.trim()) || Boolean(plan || trial)
+    if (
+      hasCurrentWork &&
+      !window.confirm(
+        'Opening this workspace replaces the current case, advice and material drafts. Save your current workspace first if you need it. Continue?',
+      )
+    )
+      return false
+    request.current?.abort()
+    comparisonRequest.current = null
+    comparisonAdviceShown.current = saved.history.length > 0
+    setActivity(null)
+    setBrief(saved.case_data.brief)
+    setCalculationDetails(saved.case_data.details)
+    setPlan(saved.plan)
+    setFollowupResult(saved.followup ?? null)
+    setSelectedRoute(saved.selected_route)
+    setTrial(saved.trial)
+    setHistory(saved.history)
+    setRestoredPlan(Boolean(saved.plan))
+    setRestoredTrial(Boolean(saved.trial))
+    setRestoredFollowup(Boolean(saved.followup))
+    setHasTrialFollowup(false)
+    setComparisonAdviceStale(Boolean(saved.history.length))
+    setCompositionTrial(null)
+    setAssemblyObservation(newAssemblyObservation())
+    setBalancePreset(undefined)
+    setExampleLoaded(false)
+    setQuestion('')
+    setLastQuestion('')
+    setError('')
+    setNotice(saved.plan || saved.trial || saved.followup ? 'Opened saved Meta records. Reconfirm readings and recalculate for the current trial.' : '')
+    setRestoredDrafts({ measurement: saved.measurement_draft, mix: saved.mix_draft })
+    measurementSnapshot.current = saved.measurement_draft
+    mixSnapshot.current = saved.mix_draft
+    setMeasurementProgress('draft')
+    setUnitSystem(saved.unit_system)
+    setWorkspaceEpoch((current) => current + 1)
+    setSection(saved.trial ? 'next' : 'material')
+    setMixMode(false)
+    setFocusWorkspace(false)
+    setEditingCase(!saved.plan && !saved.trial && !saved.followup)
+    return true
+  }
   const caseStatus = [
-    { title: 'Your case', detail: briefReady ? 'Required details added' : 'Details needed', ready: briefReady },
-    { title: 'Options', detail: plan ? 'Suggestions available' : 'Not explored yet', ready: Boolean(plan) },
-    { title: 'Trial plan', detail: trial ? 'Suggestion available' : 'Not planned yet', ready: Boolean(trial) },
-    { title: 'Measurements', detail: 'Add results when available', ready: false },
+    {
+      title: 'Your case',
+      detail: briefReady ? 'Required details added' : 'Details needed',
+      ready: briefReady,
+    },
+    {
+      title: 'Options',
+      detail: plan ? 'Suggestions available' : 'Not explored yet',
+      ready: Boolean(plan),
+    },
+    {
+      title: 'Trial plan',
+      detail: trial ? 'Suggestion available' : 'Not planned yet',
+      ready: Boolean(trial),
+    },
+    {
+      title: 'Measurements',
+      detail:
+        measurementProgress === 'synthetic'
+          ? 'Synthetic readings compared'
+          : measurementProgress === 'reported'
+            ? 'Reported readings compared'
+            : measurementProgress === 'draft'
+              ? 'Draft needs review'
+              : 'Add results when available',
+      ready: measurementProgress === 'synthetic' || measurementProgress === 'reported',
+    },
   ]
   const fieldGroups = [
     {
@@ -705,14 +878,11 @@ export function Workshop() {
   ]
 
   return (
-    <div className="workshop">
+    <div className={`workshop${briefReady ? ' has-case' : ''}`}>
       <div className="workshop-intro">
         <div>
-          <h1>Turn variable waste into a useful product</h1>
-          <p>
-            Describe your material and your goal. ReMatter helps you explore what to change, what to
-            try, and what to check.
-          </p>
+          <h1>Make the most of this material.</h1>
+          <p>Describe your material, compare practical routes, then plan a small trial.</p>
         </div>
         <div className="workshop-connection" role="status">
           <span
@@ -738,33 +908,59 @@ export function Workshop() {
           )}
         </div>
       </div>
+      <WorkspaceFiles
+        snapshot={() => ({
+          case_data: caseData,
+          unit_system: unitSystem,
+          plan,
+          followup: followupResult,
+          selected_route: selectedRoute,
+          trial,
+          history,
+          measurement_draft: measurementSnapshot.current,
+          mix_draft: mixSnapshot.current,
+        })}
+        onOpen={openWorkspace}
+      />
       <ul className="workshop-progress" aria-label="Your case at a glance">
-        {caseStatus.map((item) => (
-            <li key={item.title} className={item.ready ? 'is-ready' : ''}>
-              <span className="workshop-progress-dot" aria-hidden="true" />
-              <span>
-                <strong>{item.title}</strong>
-                <small>{item.detail}</small>
-              </span>
-            </li>
+        {caseStatus.map((item, index) => (
+          <li key={item.title} className={item.ready ? 'is-ready' : ''}>
+            <span className="workshop-progress-number" aria-hidden="true">
+              {index + 1}
+            </span>
+            <span>
+              <strong>{item.title}</strong>
+              <small>{item.detail}</small>
+            </span>
+          </li>
         ))}
       </ul>
       <main
         className={`workshop-grid${focusWorkspace ? ' is-focused' : ''}${plan ? ' has-plan' : ''}`}
       >
-        <aside className="workshop-brief" hidden={focusWorkspace}>
+        <aside ref={caseArea} className="workshop-brief" hidden={focusWorkspace}>
+          {briefReady && !editingCase && <MaterialCaseSummary caseData={caseData} onEdit={() => setEditingCase(true)} onExplore={() => void ask()} busy={busy} canExplore={Boolean(status?.configured)} />}
+          <div className="workshop-case-editor" hidden={briefReady && !editingCase}>
           <div className="workshop-brief-heading">
             <div>
-              <h2>Tell us about your case</h2>
-              <p>Start with the four marked fields. Add the rest whenever you are ready.</p>
+            <h2>{brief.product.trim() || 'Tell us about your case'}</h2>
+            <p>{briefReady ? 'Review your input and target, then explore options.' : 'Start with the four marked fields. Add the rest whenever you are ready.'}</p>
             </div>
           </div>
           <details className="workshop-examples">
             <summary>Try an example</summary>
-            <button className="workshop-example" type="button" onClick={() => replaceWithExample(loadExample)}>
+            <button
+              className="workshop-example"
+              type="button"
+              onClick={() => replaceWithExample(loadExample)}
+            >
               Explore a counterweight <span aria-hidden="true">↗</span>
             </button>
-            <button className="workshop-example" type="button" onClick={() => replaceWithExample(loadPlanterExample)}>
+            <button
+              className="workshop-example"
+              type="button"
+              onClick={() => replaceWithExample(loadPlanterExample)}
+            >
               Explore a recycled-PE product <span aria-hidden="true">↗</span>
             </button>
           </details>
@@ -776,9 +972,7 @@ export function Workshop() {
           )}
           {mayClearCaseData && (
             <p className="workshop-edit-warning" role="status">
-              Editing the material, its variation, the process or the product can clear recorded
-              measurements and plans. Changing “What you have” also clears saved mix details.
-              Download anything you need before editing.
+              Editing this case can clear linked work. Save first.
             </p>
           )}
           <form
@@ -890,6 +1084,7 @@ export function Workshop() {
               language.
             </p>
           </form>
+          </div>
         </aside>
         <section
           className="workshop-workspace"
@@ -909,7 +1104,10 @@ export function Workshop() {
                 type="button"
                 key={tab.id}
                 aria-current={section === tab.id ? 'page' : undefined}
-                onClick={() => setSection(tab.id)}
+                onClick={() => {
+                  setSection(tab.id)
+                  if (tab.id === 'next') setMixMode(false)
+                }}
               >
                 {tab.label}
               </button>
@@ -939,6 +1137,12 @@ export function Workshop() {
               then send the updated summary before using that advice for this trial.
             </p>
           )}
+          {(restoredPlan || restoredTrial) && (
+            <p className="workshop-notice" role="status">
+              Saved Meta content · these proposals were reopened from a workspace file. No new model
+              request has run to restore them.
+            </p>
+          )}
           {error && (
             <p className="workshop-error" role="alert">
               {error}
@@ -951,13 +1155,19 @@ export function Workshop() {
                 <strong>
                   {activity === 'trial'
                     ? 'Meta is planning the selected trial'
-                    : 'Meta is working through this batch'}
+                    : activity === 'followup'
+                      ? 'Meta is reviewing this trial'
+                      : 'Meta is working through this batch'}
                 </strong>
                 <p>
                   {activity === 'trial'
                     ? 'Setting out what to change, what to keep fixed and how to check the result.'
-                    : 'Comparing material routes, engineering choices and the next useful check.'}{' '}
-                  {elapsed}s {elapsed >= 10 && 'A detailed response can take over a minute. You can stop waiting.'}
+                    : activity === 'followup'
+                      ? 'Reviewing the current case, calculation and next useful check.'
+                      : 'Comparing material routes, engineering choices and the next useful check.'}{' '}
+                  {elapsed}s{' '}
+                  {elapsed >= 10 &&
+                    'A detailed response can take over a minute. You can stop waiting.'}
                 </p>
               </div>
               <button type="button" onClick={stopWaiting}>
@@ -965,268 +1175,382 @@ export function Workshop() {
               </button>
             </div>
           )}
-          {!plan ? (
-            <div className="workshop-start">
-              <h2>What happens next?</h2>
-              <p>From your case, ReMatter helps you work through three decisions.</p>
-              <div className="workshop-start-options">
-                <div>
-                  <span>2</span>
-                  <strong>Compare your options</strong>
-                  <p>See ways to adjust the material, process or product, with trade-offs.</p>
-                </div>
-                <div>
-                  <span>3</span>
-                  <strong>Plan one trial</strong>
-                  <p>Choose an approach and see what to change, observe and check.</p>
-                </div>
-                <div>
-                  <span>4</span>
-                  <strong>Check your result</strong>
-                  <p>Use your measurements in the available engineering tools.</p>
-                </div>
-              </div>
-              <p className="workshop-start-note">
-                Ideas are starting points. Your material and product still need the checks that fit
-                your case.
-              </p>
-            </div>
-          ) : (
-            <div className="workshop-plan">
-              <div className="workshop-plan-heading">
-                <div>
-                  <span className="workshop-proposal-label">
-                    {section === 'next' && trial ? 'Proposed trial' : 'Proposed routes'}
-                  </span>
-                  <h2>
-                    {section === 'material'
-                      ? 'Ways to work with this material'
-                      : section === 'engineering'
-                        ? 'Ways to make the product work'
-                        : 'A practical next run'}
-                  </h2>
-                </div>
-                <button type="button" className="workshop-download" onClick={download}>
-                  Download plan
-                </button>
-              </div>
-              <p className="workshop-proposal-note">
-                These are suggested next steps, not measured product performance. Review the
-                options and test the one you choose.
-              </p>
-              {chosen && section !== 'next' && (
-                <section className="workshop-current-decision" aria-label="Your selected approach">
-                  <p className="workshop-eyebrow">Your selected approach</p>
-                  <h3>{chosen.title}</h3>
-                  <dl>
-                    <div>
-                      <dt>Change</dt>
-                      <dd>{chosen.change}</dd>
-                    </div>
-                    <div>
-                      <dt>Check next</dt>
-                      <dd>{chosen.check}</dd>
-                    </div>
-                  </dl>
-                  <p className="workshop-decision-target"><strong>Your goal</strong> {brief.targets}</p>
-                  <button
-                    type="button"
-                    disabled={busy || !status?.configured}
-                    onClick={() => trial ? setSection('next') : void planTrial(chosen)}
-                  >
-                    {trial ? 'View this trial plan' : 'Plan this trial'} <span aria-hidden="true">→</span>
-                  </button>
-                  {!trial && <small>Meta will turn your chosen change into one proposed comparison.</small>}
-                </section>
-              )}
-              {section !== 'next' ? (
-                <>
-                  {lastQuestion && (
-                    <>
-                      <p className="workshop-last-question">You asked: {lastQuestion}</p>
-                      <section className="workshop-answer" aria-label="Meta’s response">
-                        <strong>Meta’s response</strong>
-                        {plan.answer
-                          .split(/\n\s*\n/)
-                          .filter(Boolean)
-                          .map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                      </section>
-                    </>
-                  )}
-                  {!!plan.quarantined_answer?.length && (
-                    <p role="status" className="workshop-last-question">
-                      An unverified claim about meeting your targets was removed. Review the proposed options and checks before relying on them.
-                    </p>
-                  )}
-                  <div className="workshop-routes">
-                    {routes.map((route) => (
-                      <RouteCard
-                        key={route.id}
-                        route={route}
-                        selected={JSON.stringify(selectedRoute) === JSON.stringify(route)}
-                        busy={busy}
-                        onSelect={() => selectRoute(route)}
-                        onDevelop={() => void planTrial(route)}
-                      />
-                    ))}
+          {section === 'next' && (
+            <nav className="workshop-trial-view-tabs" aria-label="Trial workspace view">
+              <button type="button" aria-pressed={!mixMode} onClick={() => setMixMode(false)}>
+                Review trial plan
+              </button>
+              <button
+                type="button"
+                aria-pressed={mixMode}
+                onClick={() => {
+                  setMixMode(true)
+                  setFocusWorkspace(false)
+                  requestAnimationFrame(() => {
+                    const details = compositionArea.current?.querySelector('details')
+                    if (details) details.open = true
+                  })
+                }}
+              >
+                Mix quantities
+              </button>
+            </nav>
+          )}
+          {followupResult && (section !== 'next' || mixMode) && (
+            <FollowupAdvice
+              result={followupResult}
+              question={lastQuestion}
+              restored={restoredFollowup}
+            />
+          )}
+          <div
+            ref={compositionArea}
+            className="workshop-mix-workspace"
+            hidden={section !== 'next' || !mixMode}
+          >
+            <BalanceMix
+              key={`${workspaceEpoch}:${JSON.stringify(caseData)}`}
+              caseData={caseData}
+              onEditCase={openCaseDetails}
+              preparedTrial={compositionTrial}
+              onClearPrepared={() => setCompositionTrial(null)}
+              canAsk={Boolean(status?.configured && briefReady && !busy)}
+              onAsk={(trialQuestion) => {
+                void ask(trialQuestion, true, 'What should I check before trying this mix?', true)
+              }}
+              onDraftChange={invalidateComparisonAdvice}
+              initialDraft={restoredDrafts.mix}
+              onSnapshot={recordMixSnapshot}
+            />
+          </div>
+          <div className="workshop-plan-zone" hidden={section === 'next' && mixMode}>
+            {!plan ? (
+            <div className="workshop-start" hidden={Boolean(followupResult) || busy}>
+                <h2>What happens next?</h2>
+                <p>From your case, ReMatter helps you work through three decisions.</p>
+                <div className="workshop-start-options">
+                  <div>
+                    <span>2</span>
+                    <strong>Compare your options</strong>
+                    <p>See ways to adjust the material, process or product, with trade-offs.</p>
                   </div>
-                  {!lastQuestion && (
-                    <details className="workshop-explanation">
-                      <summary>Read Meta’s explanation</summary>
-                      <div className="workshop-answer">
-                        {plan.answer
-                          .split(/\n\s*\n/)
-                          .filter(Boolean)
-                          .map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
-                          ))}
-                      </div>
-                    </details>
-                  )}
-                  <div className="workshop-plan-footer">
-                    <span>
-                      {plan.live ? 'Generated by Meta' : 'Proposal'} · {plan.model}
+                  <div>
+                    <span>3</span>
+                    <strong>Plan one trial</strong>
+                    <p>Choose an approach and see what to change, observe and check.</p>
+                  </div>
+                  <div>
+                    <span>4</span>
+                    <strong>Check your result</strong>
+                    <p>Use your measurements in the available engineering tools.</p>
+                  </div>
+                </div>
+                <p className="workshop-start-note">
+                  Ideas are starting points. Your material and product still need the checks that
+                  fit your case.
+                </p>
+              </div>
+            ) : (
+              <div className="workshop-plan">
+                <div className="workshop-plan-heading">
+                  <div>
+                    <span className="workshop-proposal-label">
+                      {section === 'next' && trial ? 'Proposed trial' : 'Proposed routes'}
                     </span>
-                    <span>{(plan.elapsed_ms / 1000).toFixed(1)}s</span>
+                    <h2>
+                      {section === 'material'
+                        ? 'Ways to work with this material'
+                        : section === 'engineering'
+                          ? 'Ways to make the product work'
+                          : 'A practical next run'}
+                    </h2>
                   </div>
-                  {plan.sources.length > 0 && (
-                    <details className="workshop-sources">
-                      <summary>References used for context</summary>
-                      {plan.sources.map((source) => (
-                        <div key={source.id}>
-                          <a href={source.url} target="_blank" rel="noreferrer">
-                            {source.title} ↗
-                          </a>
-                          <p>{source.scope}</p>
-                        </div>
-                      ))}
-                      <p>These references do not establish the properties of your own mix.</p>
-                    </details>
-                  )}
-                </>
-              ) : (
-                <>
-                  {trial ? (
-                    <>
-                      {hasTrialFollowup && (
-                        <div className="workshop-followup-ready" role="status">
-                          <p>Meta has follow-up advice for this case. Your original trial is unchanged.</p>
-                          <button type="button" onClick={() => setSection('material')}>
-                            Review follow-up advice →
-                          </button>
-                        </div>
-                      )}
-                      <TrialPlan trial={trial} />
-                      <section className="workshop-trial-return">
-                        <h3>Bring back your trial results</h3>
-                        <p>
-                          When you have matching measurements, compare the tested input levels
-                          with your target. Then ask Meta what to check or change next, using this
-                          selected trial and your readings.
+                  <button type="button" className="workshop-download" onClick={download}>
+                    Download plan
+                  </button>
+                </div>
+                <p className="workshop-proposal-note">
+                  These are suggested next steps, not measured product performance. Review the
+                  options and test the one you choose.
+                </p>
+              {chosen && section !== 'next' && !routes.some((route) => sameRoute(route, chosen)) && (
+                  <section
+                    className="workshop-current-decision"
+                    aria-label="Your selected approach"
+                  >
+                    <p className="workshop-eyebrow">Your selected approach</p>
+                    <h3>{chosen.title}</h3>
+                    <dl>
+                      <div>
+                        <dt>Change</dt>
+                        <dd>{chosen.change}</dd>
+                      </div>
+                      <div>
+                        <dt>Check next</dt>
+                        <dd>{chosen.check}</dd>
+                      </div>
+                    </dl>
+                    <p className="workshop-decision-target">
+                      <strong>Your goal</strong> {brief.targets}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={busy || !status?.configured}
+                      onClick={() => {
+                        if (trial) {
+                          setMixMode(false)
+                          setSection('next')
+                        } else {
+                          void planTrial(chosen)
+                        }
+                      }}
+                    >
+                      {trial ? 'View this trial plan' : 'Plan this trial'}{' '}
+                      <span aria-hidden="true">→</span>
+                    </button>
+                    {!trial && (
+                      <small>Meta will turn your chosen change into one proposed comparison.</small>
+                    )}
+                  </section>
+                )}
+                {section !== 'next' ? (
+                  <>
+                    {lastQuestion && !followupResult && (
+                      <>
+                        <p className="workshop-last-question">You asked: {lastQuestion}</p>
+                        <section className="workshop-answer" aria-label="Meta’s response">
+                          <strong>Meta’s response</strong>
+                          {plan.answer
+                            .split(/\n\s*\n/)
+                            .filter(Boolean)
+                            .map((paragraph, index) => (
+                              <p key={index}>{paragraph}</p>
+                            ))}
+                        </section>
+                      </>
+                    )}
+                    {!!plan.quarantined_answer?.length && (
+                      <p role="status" className="workshop-last-question">
+                        An unverified claim about meeting your targets was removed. Review the
+                        proposed options and checks before relying on them.
+                      </p>
+                    )}
+                    <div className="workshop-routes">
+                      {followupResult && (
+                        <p className="workshop-proposal-note">
+                          Your earlier options remain available below. The follow-up above does not
+                          replace the selected trial.
                         </p>
-                        <button type="button" onClick={openTrialMeasurements}>
-                          Compare measurements from this trial <span aria-hidden="true">→</span>
-                        </button>
-                        <small>No readings yet? Keep this as a proposed trial; the app has not tested your material.</small>
-                      </section>
-                    </>
-                  ) : (
-                    <div className="workshop-trial-start">
-                      {chosen ? (
-                        <>
-                          <p className="workshop-eyebrow">Selected route</p>
-                          <h3>{chosen.title}</h3>
-                          <p>{chosen.change}</p>
-                          <p>
-                            Turn this route into a small comparison: what to change, what to keep
-                            the same, what to record and how to check it against your targets.
-                          </p>
-                          <button
-                            type="button"
-                            className="outline-button"
-                            disabled={busy || !status?.configured}
-                            onClick={() => void planTrial(chosen)}
-                          >
-                            {activity === 'trial' ? 'Planning trial…' : 'Plan a trial'}
-                          </button>
-                          <p className="workshop-trial-action-note">
-                            Sends this brief and selected route to Meta.
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <h3>Choose one route to plan</h3>
-                          <p>
-                            Pick a material or engineering route first. The trial will stay tied to
-                            that choice and your current brief.
-                          </p>
-                          <div className="workshop-trial-choose">
+                      )}
+                      {routes.map((route) => (
+                        <RouteCard
+                          key={route.id}
+                          route={route}
+                          selected={sameRoute(selectedRoute, route)}
+                          busy={busy}
+                          onSelect={() => selectRoute(route)}
+                          actionLabel={
+                            trial && sameRoute(selectedRoute, route)
+                              ? 'View trial plan'
+                              : 'Plan a trial'
+                          }
+                          onDevelop={() => {
+                            if (trial && sameRoute(selectedRoute, route)) {
+                              setMixMode(false)
+                              setSection('next')
+                            } else {
+                              void planTrial(route)
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                    {(!lastQuestion || followupResult) && (
+                      <details className="workshop-explanation">
+                        <summary>Read Meta’s explanation</summary>
+                        <div className="workshop-answer">
+                          {plan.answer
+                            .split(/\n\s*\n/)
+                            .filter(Boolean)
+                            .map((paragraph, index) => (
+                              <p key={index}>{paragraph}</p>
+                            ))}
+                        </div>
+                      </details>
+                    )}
+                    <div className="workshop-plan-footer">
+                      <span>
+                        {restoredPlan
+                          ? 'Saved Meta proposal'
+                          : plan.live
+                            ? 'Generated by Meta'
+                            : 'Proposal'}{' '}
+                        · {plan.model}
+                      </span>
+                      <span>{(plan.elapsed_ms / 1000).toFixed(1)}s</span>
+                    </div>
+                    {plan.sources.length > 0 && (
+                      <details className="workshop-sources">
+                        <summary>References used for context</summary>
+                        {plan.sources.map((source) => (
+                          <div key={source.id}>
+                            <a href={source.url} target="_blank" rel="noreferrer">
+                              {source.title} ↗
+                            </a>
+                            <p>{source.scope}</p>
+                          </div>
+                        ))}
+                        <p>These references do not establish the properties of your own mix.</p>
+                      </details>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {trial ? (
+                      <>
+                        {hasTrialFollowup && (
+                          <div className="workshop-followup-ready" role="status">
+                            <p>
+                              Meta has follow-up advice for this case. Your original trial is
+                              unchanged.
+                            </p>
                             <button type="button" onClick={() => setSection('material')}>
-                              Material options →
-                            </button>
-                            <button type="button" onClick={() => setSection('engineering')}>
-                              Engineering →
+                              Review follow-up advice →
                             </button>
                           </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  <details className="workshop-general-next">
-                    <summary>{hasTrialFollowup ? 'Follow-up ideas & open questions' : 'Earlier ideas & open questions'}</summary>
-                    <p>{hasTrialFollowup
-                      ? 'These suggestions respond to your follow-up. Your chosen trial above is unchanged.'
-                      : 'These came from the route exploration, before choosing a trial.'}</p>
-                    <ol className="workshop-next-steps">
-                      {plan.next_steps.map((step, index) => (
-                        <li key={index}>
-                          <span>{String(index + 1).padStart(2, '0')}</span>
-                          <p>{step}</p>
-                        </li>
-                      ))}
-                    </ol>
-                    {plan.questions.length > 0 && (
-                      <ul>
-                        {plan.questions.map((item, index) => (
-                          <li key={index}>{item}</li>
-                        ))}
-                      </ul>
+                        )}
+                        <TrialPlan trial={trial} restored={restoredTrial} />
+                        <section className="workshop-trial-return">
+                          <h3>Bring back your trial results</h3>
+                          <p>
+                            When you have matching measurements, compare the tested input levels
+                            with your target. Then ask Meta what to check or change next, using this
+                            selected trial and your readings.
+                          </p>
+                          <button type="button" onClick={openTrialMeasurements}>
+                            Compare measurements from this trial <span aria-hidden="true">→</span>
+                          </button>
+                          <small>
+                            No readings yet? Keep this as a proposed trial; the app has not tested
+                            your material.
+                          </small>
+                        </section>
+                      </>
+                    ) : (
+                      <div className="workshop-trial-start">
+                        {chosen ? (
+                          <>
+                            <p className="workshop-eyebrow">Selected route</p>
+                            <h3>{chosen.title}</h3>
+                            <p>{chosen.change}</p>
+                            <p>
+                              Turn this route into a small comparison: what to change, what to keep
+                              the same, what to record and how to check it against your targets.
+                            </p>
+                            <button
+                              type="button"
+                              className="outline-button"
+                              disabled={busy || !status?.configured}
+                              onClick={() => void planTrial(chosen)}
+                            >
+                              {activity === 'trial' ? 'Planning trial…' : 'Plan a trial'}
+                            </button>
+                            <p className="workshop-trial-action-note">
+                              Sends this brief and selected route to Meta.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <h3>Choose one route to plan</h3>
+                            <p>
+                              Pick a material or engineering route first. The trial will stay tied
+                              to that choice and your current brief.
+                            </p>
+                            <div className="workshop-trial-choose">
+                              <button type="button" onClick={() => setSection('material')}>
+                                Material options →
+                              </button>
+                              <button type="button" onClick={() => setSection('engineering')}>
+                                Engineering →
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     )}
-                  </details>
-                </>
-              )}
-            </div>
-          )}
-          <div hidden={section === 'engineering'} ref={comparisonArea}>
+                    <details className="workshop-general-next">
+                      <summary>
+                        {hasTrialFollowup
+                          ? 'Follow-up ideas & open questions'
+                          : 'Earlier ideas & open questions'}
+                      </summary>
+                      <p>
+                        {hasTrialFollowup
+                          ? 'These suggestions respond to your follow-up. Your chosen trial above is unchanged.'
+                          : 'These came from the route exploration, before choosing a trial.'}
+                      </p>
+                      <ol className="workshop-next-steps">
+                        {(followupResult?.next_steps ?? plan.next_steps).map((step, index) => (
+                          <li key={index}>
+                            <span>{String(index + 1).padStart(2, '0')}</span>
+                            <p>{step}</p>
+                          </li>
+                        ))}
+                      </ol>
+                      {(followupResult?.questions ?? plan.questions).length > 0 && (
+                        <ul>
+                          {(followupResult?.questions ?? plan.questions).map((item, index) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </details>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          <div
+            hidden={section === 'engineering' || (section === 'next' && mixMode)}
+            ref={comparisonArea}
+          >
             <MeasurementComparison
+              key={workspaceEpoch}
               caseData={caseData}
               trial={trial ?? undefined}
               canAsk={Boolean(status?.configured && briefReady && !busy)}
               onAsk={(comparisonQuestion) => {
-                void ask(comparisonQuestion, true, 'What should I try next based on these trial readings?', true)
+                void ask(
+                  comparisonQuestion,
+                  true,
+                  'What should I try next based on these trial readings?',
+                  true,
+                )
               }}
               onDraftChange={comparisonDraftChanged}
+              initialDraft={restoredDrafts.measurement}
+              onSnapshot={recordMeasurementSnapshot}
               onEditCase={openCaseDetails}
               onClearComposition={() => setCompositionTrial(null)}
               onPrepareComposition={(value) => {
                 setCompositionTrial({ ...value, serial: ++compositionSerial.current })
-                setSection('material')
-                setFocusWorkspace(true)
+                setSection('next')
+                setMixMode(true)
+                setFocusWorkspace(false)
                 requestAnimationFrame(() => {
                   const details = compositionArea.current?.querySelector('details')
                   if (details) {
                     details.open = true
                     details.scrollIntoView({ block: 'start' })
-                    details.querySelector<HTMLInputElement>('input[name="addition_name"]')?.focus({ preventScroll: true })
+                    details
+                      .querySelector<HTMLInputElement>('input[name="addition_name"]')
+                      ?.focus({ preventScroll: true })
                   }
                 })
               }}
             />
           </div>
           <div hidden={section !== 'material'}>
-            <div ref={compositionArea}>
-              <BalanceMix key={materialKey} caseData={caseData} onEditCase={openCaseDetails} preparedTrial={compositionTrial} onClearPrepared={() => setCompositionTrial(null)} canAsk={Boolean(status?.configured && briefReady && !busy)} onAsk={(trialQuestion) => { void ask(trialQuestion, true, 'What should I check before trying this mix?', true) }} onDraftChange={invalidateComparisonAdvice} />
-            </div>
             <details
               className="workshop-source-example"
               onToggle={(event) => {
@@ -1250,7 +1574,11 @@ export function Workshop() {
                   <PublishedBlend
                     active={section === 'material'}
                     onAsk={(sourceQuestion) => {
-                      void ask(sourceQuestion, undefined, 'How can I develop my mix using this study as context?')
+                      void ask(
+                        sourceQuestion,
+                        undefined,
+                        'How can I develop my mix using this study as context?',
+                      )
                     }}
                     disabled={busy || !briefReady || !status?.configured}
                   />
@@ -1268,20 +1596,20 @@ export function Workshop() {
                 These checks use measurements of a stated mix or assembly. They do not tell you
                 which binder, contamination level or process will produce a material property.
               </p>
-            <EngineeringNoteReader
-              caseData={caseData}
-              active={section === 'engineering'}
-              onApply={applyEngineeringNote}
-            />
-            <WeightAdjustment
-              key={JSON.stringify([materialKey, brief.product, brief.use_case])}
-              caseData={caseData}
-              onEditCase={openCaseDetails}
-              assemblyObservation={assemblyObservation}
-              onAssemblyObservationChange={setAssemblyObservation}
-              balancePreset={balancePreset}
-              active={section === 'engineering'}
-            />
+              <EngineeringNoteReader
+                caseData={caseData}
+                active={section === 'engineering'}
+                onApply={applyEngineeringNote}
+              />
+              <WeightAdjustment
+                key={JSON.stringify([materialKey, brief.product, brief.use_case])}
+                caseData={caseData}
+                onEditCase={openCaseDetails}
+                assemblyObservation={assemblyObservation}
+                onAssemblyObservationChange={setAssemblyObservation}
+                balancePreset={balancePreset}
+                active={section === 'engineering'}
+              />
             </details>
           </div>
           <form
