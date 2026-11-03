@@ -41,6 +41,12 @@ assert.equal(draft.reference.component_id, 'paper'); assert.equal(draft.referenc
 assert.match(recordedRecipeDiscussion(next, destination, dest, w.project, (s) => s.name), /source, version 1.*exact source fraction and chosen target are 25%/i)
 const reopened = parseProjectWorkspace(serializeProjectWorkspace(next))
 assert.deepEqual(savedMixAdjustmentRecord(reopened, destination, dest).reference, draft.reference, 'source provenance survives Save/Open')
+const withinStream = updateSavedMixAdjustment(next, w.case_id, destination, dest, w.project, 'trackedComponent', 'loose paper')
+assert.equal(savedMixAdjustmentRecord(withinStream, destination, dest).reference, undefined, 'changing the tracked component clears the recipe link')
+assert.equal(useRecordedRecipeTarget(withinStream, w.case_id, destination, dest, w.project, source, src, 1), withinStream, 'a within-stream component cannot silently inherit a recipe point')
+const forgedWithinStream = JSON.parse(serializeProjectWorkspace(next))
+forgedWithinStream.mix_adjustment_drafts[0].values.trackedComponent = 'loose paper'
+assert.throws(() => parseProjectWorkspace(JSON.stringify(forgedWithinStream)), /within a stream cannot use a recorded recipe/i, 'imports cannot attach a recipe to a within-stream component')
 
 const renameBase = { ...next,
   trial_ideas: { 'source@1': { title: 'source', change: 'change', why: 'reason', steps: ['step'], tradeoffs: ['tradeoff'], check: 'check', provider: 'fixture', model: 'fixture' } },

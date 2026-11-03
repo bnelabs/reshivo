@@ -7,6 +7,7 @@ import { ConceptSketch } from './ConceptSketch'
 import { sketchFingerprint } from '../sketchContext'
 import type { RectangularSection } from '../sectionDrawing'
 import { reportResultContext, type ReportResultKind } from '../reportResults'
+import { decisionResults } from '../decisionOverview'
 import { createProjectAutosave } from '../projectAutosave'
 import { CheckedMixAdvice } from './CheckedMixAdvice'
 import { SoundGuidance } from './SoundGuidance'
@@ -75,6 +76,23 @@ function intakeHistory(notes?: string) {
     messages.push({ role: 'user', content: `Earlier setup details; current project fields take precedence:\n${characters.slice(start, start + 5000).join('')}` })
   }
   return messages
+}
+
+function CurrentCalculations({ results, earlierAnswer, onOpen }: {
+  results: ReturnType<typeof decisionResults>
+  earlierAnswer: boolean
+  onOpen: (page: 'adjust' | 'costs' | 'checks') => void
+}) {
+  if (!results.mix && !results.cost && !results.checks) return null
+  return <section className="pw-decision-results" aria-label="Your current calculations">
+    <h2>Your current calculations</h2>
+    <p>{earlierAnswer ? 'These results use your current entries. The earlier answer may not include them.' : 'Each result stays with the plan shown below.'}</p>
+    <div className="pw-decision-result-grid">
+      {results.mix && <article><h3>Mix</h3>{results.mix.summary.map((line, index) => <p key={index}>{line}</p>)}<details><summary>Calculation details</summary><p className="pw-result-details">{results.mix.detail}</p></details><button type="button" onClick={() => onOpen('adjust')}>Open mix</button></article>}
+      {results.cost && <article><h3>Cost</h3>{results.cost.summary.map((line, index) => <p key={index}>{line}</p>)}<details><summary>Cost details</summary><p className="pw-result-details">{results.cost.detail}</p></details><button type="button" onClick={() => onOpen('costs')}>Open costs</button></article>}
+      {results.checks && <article><h3>Checks</h3>{results.checks.summary.map((line, index) => <p key={index}>{line}</p>)}<details><summary>Check details</summary><p className="pw-result-details">{results.checks.detail}</p></details><button type="button" onClick={() => onOpen('checks')}>Open checks</button></article>}
+    </div>
+  </section>
 }
 
 export function ProjectWorkbench() {
@@ -725,17 +743,23 @@ export function ProjectWorkbench() {
     (showCurrentGuidance || startingGuidance.origin === 'local' || startingGuidance.guidance_origin === 'local') &&
     !PROJECT_INTAKE_FIELDS.some((field) => (startingGuidance.project_draft[field]?.value ?? '') !== (w.project[field]?.value ?? ''))
     ? startingGuidance : null
+  const resultContexts = {
+    checks: reportResultContext(w, adviceKind, showHistoricalIdeas, 'checks'),
+    cost: reportResultContext(w, adviceKind, showHistoricalIdeas, 'cost'),
+    comparison: reportResultContext(w, adviceKind, showHistoricalIdeas, 'comparison'),
+  }
+  const overviewResults = decisionResults(mixSummary, reportResults, resultContexts)
   const earlierReportNote = !currentReportAdvice && !currentReportStartingGuidance
     ? [...visibleSavedNotes].reverse().find((note) => PROJECT_INTAKE_FIELDS.every((field) =>
         (note.project_snapshot[field]?.value ?? '') === (w.project[field]?.value ?? '')))
     : undefined
+  const adviceVisible = Boolean(modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance'))
   function summaryText() {
     const guidance = formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance) || formatEarlierAdviceForReport(earlierReportNote)
     const comparedIdeas = currentReportAdvice && showHistoricalIdeas && comparisonOrigin?.context === currentAdviceContext
       ? formatAdviceForReport(comparisonOrigin.advice).replace('Ideas and next steps', 'Ideas compared') : ''
-    const context = reportResultContext(w, adviceKind, showHistoricalIdeas)
-    const results = (['checks', 'cost', 'comparison'] as const).map((kind) => reportResults[kind])
-      .filter((entry) => entry?.context === context).map((entry) => entry!.text).join('')
+    const results = (['checks', 'cost', 'comparison'] as const)
+      .map((kind) => reportResults[kind]?.context === resultContexts[kind] ? reportResults[kind]!.text : '').join('')
     return formatProjectSummary(w, showHistoricalIdeas) + guidance + comparedIdeas + (mixSummary ? `\n${mixSummary}` : '') + results + formatProjectNotes(w)
   }
   function rememberReportResult(kind: ReportResultKind, text: string, context: string) {
@@ -748,9 +772,8 @@ export function ProjectWorkbench() {
     const guidance = formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance)
     const comparedIdeas = currentReportAdvice && showHistoricalIdeas && comparisonOrigin?.context === currentAdviceContext
       ? formatAdviceForReport({ ...comparisonOrigin.advice, answer: '', next_steps: [], questions: [] }).replace('Ideas and next steps', 'Ideas compared') : ''
-    const context = reportResultContext(w, adviceKind, showHistoricalIdeas)
-    const results = (['checks', 'cost', 'comparison'] as const).map((kind) => reportResults[kind])
-      .filter((entry) => entry?.context === context).map((entry) => entry!.text).join('')
+    const results = (['checks', 'cost', 'comparison'] as const)
+      .map((kind) => reportResults[kind]?.context === resultContexts[kind] ? reportResults[kind]!.text : '').join('')
     try { printTextReport(formatPrintableProjectReport(w, showHistoricalIdeas, guidance + comparedIdeas, mixSummary, results), currentSketch, currentSection) }
     catch (e) { setError((e as Error).message) }
   }
@@ -1054,16 +1077,17 @@ export function ProjectWorkbench() {
                   <p>This answer was saved earlier. Ask again if your project details or measurements have changed.</p>
                   <p className="pw-saved-note">{earlierReportNote.text}</p>
                 </section>}
+                {!adviceVisible && <CurrentCalculations results={overviewResults} earlierAnswer={Boolean(earlierReportNote || startingGuidance)} onOpen={setPage} />}
                 {modeReady && advice && adviceProject === currentProject && (showCurrentGuidance || advice.result_kind === 'local_planning_guidance') && (
                   <>
-                    {adviceCase !== currentAdviceContext && (
+                    {adviceCase !== currentAdviceContext && !overviewResults.mix && !overviewResults.cost && !overviewResults.checks && (
                       <p className="pw-notice">
                         These suggestions were made before your latest setup, check or cost changes.
                         Ask again to include the new information.
                       </p>
                     )}
                     <section className="pw-answer" aria-live="polite" aria-label="Your planning result" ref={adviceResult} tabIndex={-1}>
-                      <h2>Your answer</h2>
+                      <h2>{adviceCase === currentAdviceContext ? 'Your answer' : 'Earlier answer'}</h2>
                       {'mix_calculation' in advice && advice.mix_calculation && adviceCase === currentAdviceContext && (
                         <CheckedMixAdvice feasible={advice.mix_calculation.result.feasible} bounds={advice.mix_calculation.result.exact_addition_kg} stock={advice.mix_calculation.inputs.addition_name} system={system} />
                       )}
@@ -1081,6 +1105,15 @@ export function ProjectWorkbench() {
                         ))}
                       {advice.next_steps.length > 0 && <><h2>What to do next</h2>
                       <ol>{advice.next_steps.map((step, i) => <li key={i}>{step}</li>)}</ol></>}
+                      <details className="pw-decision-context">
+                        <summary>Material and goal</summary>
+                        <div className="pw-decision-brief" aria-label="Your project at a glance">
+                          {w.project.input?.value && <div><strong>Your material</strong><p>{w.project.input.value}</p></div>}
+                          {w.project.variation?.value && <div><strong>What changes</strong><p>{w.project.variation.value}</p></div>}
+                          {w.project.priorities?.value && <div><strong>Your goal</strong><p>{w.project.priorities.value}</p></div>}
+                        </div>
+                      </details>
+                      <CurrentCalculations results={overviewResults} earlierAnswer={adviceCase !== currentAdviceContext} onOpen={setPage} />
                       <div className="pw-actions pw-spaced">
                         {(displayedIdeas ? displayedIdeas.material_routes.length + displayedIdeas.engineering_routes.length > 0 : advice.next_steps.length > 0) && <button className="pw-primary" type="button" onClick={() => {
                           if (displayedIdeas) routeDetails.current?.scrollIntoView({ block: 'start' })
@@ -1304,6 +1337,7 @@ export function ProjectWorkbench() {
                         {note.mix_context && <details>
                           <summary>Recorded mix context</summary>
                           <p>Destination: {note.mix_context.destination.component_name} · version {note.mix_context.destination.revision}.</p>
+                          {note.mix_context.destination.tracked_component && <p>Tracked within that material: {note.mix_context.destination.tracked_component}.</p>}
                           {note.mix_context.source_recipe && <>
                             <p>Reference: {note.mix_context.source_recipe.name} · version {note.mix_context.source_recipe.revision}. Ingredient: {note.mix_context.source_recipe.component_name}. Whole-recipe fraction: {note.mix_context.source_recipe.fraction.numerator}/{note.mix_context.source_recipe.fraction.denominator}.</p>
                             <ul>{note.mix_context.source_recipe.materials.map((item) => <li key={item.id}>{item.name}: {item.amount} {item.unit.replaceAll('_', ' ')}</li>)}</ul>
@@ -1360,7 +1394,7 @@ export function ProjectWorkbench() {
                 onDraftChange={(updateDraft) => {
                   setW((current) => updateDraft(current))
                 }}
-                onDiscuss={(prompt, calculation) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setPreparedMix(calculation); setRecentMixContext(currentMixQuestionContext); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setPage('options') }}
+                onDiscuss={(prompt, calculation) => { if (question.trim()) setPreviousQuestion(question); setSelectedIdea(null); setLastAdviceUsedIdea(true); setPreparedMix(calculation); setRecentMixContext(currentMixQuestionContext); setMixQuestionContext(currentMixQuestionContext); setQuestion(prompt); setShowAnswerFollowup(true); setFocusHelpQuestion(true); setPage('options') }}
               />
             </div>
             <div hidden={page !== 'costs'}>

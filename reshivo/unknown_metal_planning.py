@@ -40,6 +40,10 @@ def _user_texts(case):
     if isinstance(context, dict):
         texts.extend(item.get("name") for item in context.get("components", [])
                      if isinstance(item, dict) and isinstance(item.get("name"), str))
+    mix = case.get("mix_calculation")
+    destination = mix.get("destination") if isinstance(mix, dict) else None
+    if isinstance(destination, dict) and isinstance(destination.get("tracked_component"), str):
+        texts.append(destination["tracked_component"])
     plan = case.get("plan")
     plan_case = plan.get("case") if isinstance(plan, dict) else None
     if isinstance(plan_case, dict):

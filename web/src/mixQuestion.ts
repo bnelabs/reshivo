@@ -1,12 +1,13 @@
 import type { ProjectWorkspace, TrialConfiguration } from './projectWorkspace'
 import type { BalanceMixRequest } from './types'
-import { mixAdjustmentRequest, mixDraftNeedsProjectReview, recordedRecipeNeedsReview, savedMixAdjustmentRecord } from './mixAdjustment.ts'
+import { mixAdjustmentRequest, mixDraftNeedsProjectReview, recordedRecipeNeedsReview, savedMixAdjustmentRecord, trackedMixComponent } from './mixAdjustment.ts'
 
 export type PreparedMixCalculation = {
   case_id: string
   configuration_id: string
   configuration_revision: number
   component_id: string
+  tracked_component?: string
   inputs: BalanceMixRequest
   source: null | { configuration_id: string; configuration_revision: number; component_id: string; latest_revision_at_review: number; basis: 'whole_recipe' }
 }
@@ -20,10 +21,10 @@ export function prepareMixCalculation(workspace: ProjectWorkspace, setup: TrialC
     || !captured.materials.some((item) => item.id === component.id && item.name === component.name)) return null
   const draft = savedMixAdjustmentRecord(workspace, setup, component)
   if (!draft || mixDraftNeedsProjectReview(draft, workspace.project) || recordedRecipeNeedsReview(workspace, draft)
-    || JSON.stringify(mixAdjustmentRequest(component.name, draft.values)) !== JSON.stringify(inputs)) return null
+    || JSON.stringify(mixAdjustmentRequest(trackedMixComponent(component, draft.values), draft.values)) !== JSON.stringify(inputs)) return null
   const ref = draft.reference
   return { case_id: workspace.case_id, configuration_id: setup.id, configuration_revision: setup.revision,
-    component_id: component.id, inputs: structuredClone(inputs),
+    component_id: component.id, ...(draft.values.trackedComponent !== undefined ? { tracked_component: trackedMixComponent(component, draft.values) } : {}), inputs: structuredClone(inputs),
     source: ref ? { configuration_id: ref.setup_id, configuration_revision: ref.setup_revision,
       component_id: ref.component_id, latest_revision_at_review: ref.latest_revision_at_review, basis: ref.basis } : null }
 }

@@ -2,6 +2,19 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.9.0 — 2026-11-04
+
+### Added
+
+- Track a named component within an existing material stream when calculating a mix, without rebuilding the plan.
+- Show current mix, cost and check results with their plan alongside the project answer.
+- Backups containing a named component within a stream require version 0.9.0 or later to reopen; earlier backups still open.
+
+### Changed
+
+- Improve trial guidance for comparing multiple specimens and separating specimen readings from batch variation.
+- Remove repeated identical check instructions while keeping actions for different plans separate.
+
 ## 0.8.1 — 2026-11-04
 
 ### Changed

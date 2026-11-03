@@ -34,7 +34,8 @@
     "Added browser-session AI connections, clearer project flow, readable reports, and an optional concept sketch after the original export.",
     "Improved project-specific advice, sketch context and dimensioned section, and printable reports in version 0.7.0.",
     "Improved comparison flow, local project recovery, unit entry and bounded work capacity in version 0.8.0.",
-    "Refocused printable project reports and preserved plan-specific calculation and reading context in version 0.8.1."
+    "Refocused printable project reports and preserved plan-specific calculation and reading context in version 0.8.1.",
+    "Added within-stream mix tracking, a plan-aware calculation overview, and improved comparison guidance in version 0.9.0."
   ],
   "files": [
     {
@@ -44,8 +45,8 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 2550,
-      "sha256": "d6a2daf0a0b72a14e533a105162676964c88a545c0f354bf745458f03879a359"
+      "bytes": 2602,
+      "sha256": "83655bac7b1129759c4ec4b5325fba7bcc0ed911ed009f226daf3da5958d5aa0"
     },
     {
       "path": ".gitignore",
@@ -54,8 +55,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 7118,
-      "sha256": "651d5a4f4ee02308c3fa3b1f182d3ec8e50cd90223f6554a107083ae6aa71e92"
+      "bytes": 7709,
+      "sha256": "f7cbbcb4ccbdf2288dbda92d01d049c8a185366f90125bdc4ca3d4aeca64dd47"
     },
     {
       "path": "LICENSE",
@@ -1180,12 +1181,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 329,
-      "sha256": "346f959bbb71693f3b5815bb0a94ba8e49d89f5beaaee883e505bc7312ee195f"
+      "sha256": "a8f8ec607a0b265f37fb42f0a099a53a4722bed37e7a45f4fba761c10ed2fde0"
     },
     {
       "path": "reshivo/__init__.py",
       "bytes": 62,
-      "sha256": "c2f2c37715d82855b62a65911084644459e6ced2e16f1f5501a20f335d6cc0e7"
+      "sha256": "0ad734ca3fd33cf5f63bcaf274730e839f189ae08a6a09bba453560dbe3b6a38"
     },
     {
       "path": "reshivo/__main__.py",
@@ -1204,8 +1205,8 @@
     },
     {
       "path": "reshivo/advisor.py",
-      "bytes": 105322,
-      "sha256": "b953b155c12dec752f5f4cf12e3bc7e803f57e1590b5f40b29a263fab2117bd1"
+      "bytes": 110338,
+      "sha256": "94ae27e92d3304a8e0faf83b926575ced4401e04ca28f0421a34504ecf164477"
     },
     {
       "path": "reshivo/balance.py",
@@ -1349,8 +1350,8 @@
     },
     {
       "path": "reshivo/unknown_metal_planning.py",
-      "bytes": 9659,
-      "sha256": "28176e09a891462b71e3dbfd0525b6d1fc6475cc9a638ea1be24bec6b4ff8f2d"
+      "bytes": 9924,
+      "sha256": "8a29227a78dc78c612a0d1ca8373722b23b054e325a1207895014e60eeeb81f4"
     },
     {
       "path": "reshivo/walking_guidance.py",
@@ -1584,8 +1585,8 @@
     },
     {
       "path": "tests/test_mix_calculation_context.py",
-      "bytes": 5171,
-      "sha256": "e4e8bbe9d3fa023b662f9af436572e50583427be4897e8dcfb39ed239d55fa08"
+      "bytes": 8972,
+      "sha256": "bc34a4f0f54768459878f3b05b288058795b65b09a93c8aa4938cd31000d47dd"
     },
     {
       "path": "tests/test_mix_mass.py",
@@ -1693,6 +1694,11 @@
       "sha256": "da04727e19f17136c3c257cdfe8b9848539c0ddc2e89d700cbb4889b48161bbe"
     },
     {
+      "path": "tests/test_variation_advice_protocol.py",
+      "bytes": 2787,
+      "sha256": "10f4f2592c623fb8a6102a491e6a1c771c88937e6c176b11302b4edaa72bbac3"
+    },
+    {
       "path": "tests/test_vps_deployment.py",
       "bytes": 1552,
       "sha256": "d0dbc7a6d3bdd32495e3c5d82e62c0aec5535a75e22a98dde1821cbfe3bf62f7"
@@ -1743,6 +1749,11 @@
       "sha256": "030db74fa5c0b0ee611db413d879c0d8e11f97238177111fcd231aa4691b1b62"
     },
     {
+      "path": "web/checks/decision-overview.test.mjs",
+      "bytes": 1773,
+      "sha256": "dae1dc1b01b76e7c642e7d47fee0f8066c5a2a7329a10c7eaa05a0e4cb723df6"
+    },
+    {
       "path": "web/checks/engineering-note.test.mjs",
       "bytes": 1958,
       "sha256": "c33ec786857d892a33233f33e991edcc8f4f1e775d8b01642f333d2e32e86dec"
@@ -1784,8 +1795,8 @@
     },
     {
       "path": "web/checks/mix-adjustment.test.mjs",
-      "bytes": 14644,
-      "sha256": "56997993225a08e732350329fcf65286c210a0106a7e548531bfec634a829b6d"
+      "bytes": 16693,
+      "sha256": "6ab24c534ade5f6ff6eb4d62aa1d4346e23f78ec6e77d45c69d5c7837b8fb34e"
     },
     {
       "path": "web/checks/mix-candidate.test.mjs",
@@ -1804,8 +1815,8 @@
     },
     {
       "path": "web/checks/mix-question.test.mjs",
-      "bytes": 6796,
-      "sha256": "a2299baec957fe190bb20d64dc17f3c027471133b26a7d63eea216e46b3aa8a6"
+      "bytes": 8716,
+      "sha256": "4e49b8351723a8962f5edfab6afef76ea0ac4622939d7b948d71f0b65f2bf80c"
     },
     {
       "path": "web/checks/project-autosave.test.mjs",
@@ -1839,13 +1850,13 @@
     },
     {
       "path": "web/checks/reference-composition.test.mjs",
-      "bytes": 11107,
-      "sha256": "60dc337fcc974a1bc0ec68bf139867d2204af9d26ac3b5c66289a71c26847c00"
+      "bytes": 11922,
+      "sha256": "d0b7b48543545f2227ed701fa7468b87e8dc3f7114fb7e6f20f97da9dd7ccac1"
     },
     {
       "path": "web/checks/report-results.test.mjs",
-      "bytes": 3250,
-      "sha256": "a39483867add2eb3ca19cad4500d600883f34501f5c6502476341fb5e433f8b8"
+      "bytes": 5199,
+      "sha256": "540996c0aa883943b89dce26b8091fbf4fbdd986477fd111486cf58a77e50ea4"
     },
     {
       "path": "web/checks/saved-guidance-review.test.mjs",
@@ -1869,8 +1880,8 @@
     },
     {
       "path": "web/checks/trial-assessment-notices.test.mjs",
-      "bytes": 4666,
-      "sha256": "de54d2578d7e9dc027979fab51b775a5a103b6080e7ac5cc675ed739c3f9c326"
+      "bytes": 5372,
+      "sha256": "375f862516e000f9b42560487ce8fc3b906cde8b3fe59361447ae48dc4e46726"
     },
     {
       "path": "web/checks/unit-conversion.test.mjs",
@@ -1890,12 +1901,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "76afe06c9095b3c79c1887beca1217bfe2e9e59a93c071065e8487288c29e680"
+      "sha256": "2d080b8c16b9d6e3afa267c32900d648eb10631349339b4e2d7663a491995e57"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "6e1bb134e516d080507719521476b71169374c257e50d26144ab35d929e8517a"
+      "sha256": "0bd0a9b5cb1db3f6c10aee7c409e39a10d67d174a9ecee20f0cbf328bbab40cf"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -1969,8 +1980,8 @@
     },
     {
       "path": "web/src/components/CostWorkspace.tsx",
-      "bytes": 31324,
-      "sha256": "0b37a62e71f1549b0a54d477acaefb2831f795a80a8b5392e32554efe801b2c2"
+      "bytes": 31357,
+      "sha256": "8cece0e384bafad3392203ad03f22a00aa707840668f14e6b35e9aa6d9a15d1a"
     },
     {
       "path": "web/src/components/DesignViewport.tsx",
@@ -2034,8 +2045,8 @@
     },
     {
       "path": "web/src/components/MixAdjustment.tsx",
-      "bytes": 28019,
-      "sha256": "0b9001f583834d1cf0ffb98df40388d02619f2897d5d0b9394102f0e0d662664"
+      "bytes": 29474,
+      "sha256": "03d2d196e5cbd006b21f97992364861ca0daa1ceb2a40255effed567fb5aeb38"
     },
     {
       "path": "web/src/components/MyMixPlanner.tsx",
@@ -2054,13 +2065,13 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.css",
-      "bytes": 15764,
-      "sha256": "aea78b5958d01dabb067fa789aebc88d9e2e1e7073401a9c2b6c50d236390525"
+      "bytes": 16833,
+      "sha256": "1636d4c877661fd1e823dd4dcf8776182fa127fffa238cd4f72f6d93fd2694ae"
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 76387,
-      "sha256": "5a51b9f4d394011f6d00e5472f1d31b19c37c0337222a9ca6c7c2efade3c3424"
+      "bytes": 79709,
+      "sha256": "d14fa1d317c93f8b5d0ec454733167e6c3b7c62711a7244b42965a9c05e2f638"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2119,8 +2130,8 @@
     },
     {
       "path": "web/src/components/TrialAssessmentNotices.tsx",
-      "bytes": 1239,
-      "sha256": "618293bb8ef220fd0a091ab36a81fc0d96a2801d042237b82b6284eef336f377"
+      "bytes": 1286,
+      "sha256": "54b9e45372c02ae27cf51a781285f82d2be889cf842cd4290c6744edf2753a00"
     },
     {
       "path": "web/src/components/TrialPlan.tsx",
@@ -2129,8 +2140,8 @@
     },
     {
       "path": "web/src/components/TrialWorkspace.tsx",
-      "bytes": 56196,
-      "sha256": "976ba8ba1776755b1db67264cc39cba54d477fa7a9447e886d6e789f3d44c44a"
+      "bytes": 56206,
+      "sha256": "4803d88267fd78775044376df1fc4722ec57c8c5d8516f1174dcf6bcc5a01a1c"
     },
     {
       "path": "web/src/components/Workshop.tsx",
@@ -2166,6 +2177,11 @@
       "path": "web/src/costPriceUnit.ts",
       "bytes": 2305,
       "sha256": "10810499874c1303a8a4400fb2af69119cdc284b3dc12f59b94e19371a23dba7"
+    },
+    {
+      "path": "web/src/decisionOverview.ts",
+      "bytes": 2433,
+      "sha256": "a216b127c2145c6e771db43358cd0a677b217eb8e16337c41bd3a21a6b8cdd5f"
     },
     {
       "path": "web/src/engineeringNote.ts",
@@ -2209,8 +2225,8 @@
     },
     {
       "path": "web/src/mixAdjustment.ts",
-      "bytes": 18985,
-      "sha256": "a24ad4aae10b375399780927e13c4fcfc9adb94088e4d67bf3e3adfe1e62a608"
+      "bytes": 20664,
+      "sha256": "0edd94ade04149cdbd2ad3b425f83e98920041b183bfdcabc9a80f6e40dbf49b"
     },
     {
       "path": "web/src/mixCandidate.ts",
@@ -2224,8 +2240,8 @@
     },
     {
       "path": "web/src/mixQuestion.ts",
-      "bytes": 2915,
-      "sha256": "4c02d273f7ca3c3eb620c5df98eeaa58571c9090260cb9269136839bc85fe36d"
+      "bytes": 3120,
+      "sha256": "d0603a1672c2799a2c23609d1b92e073147ea6770f93905f9657adcbdd624eed"
     },
     {
       "path": "web/src/projectAutosave.ts",
@@ -2244,8 +2260,8 @@
     },
     {
       "path": "web/src/projectWorkspace.ts",
-      "bytes": 33075,
-      "sha256": "d5542314fd9f5181423d8e9beddd00c64fa59976529bdb63477f94422c073191"
+      "bytes": 33863,
+      "sha256": "1dc06a2dfce4e4220203d00f506810ee1cff8a8929898213c29434a04cc817c1"
     },
     {
       "path": "web/src/providerSettings.ts",
@@ -2269,8 +2285,8 @@
     },
     {
       "path": "web/src/reportResults.ts",
-      "bytes": 6472,
-      "sha256": "b53d7cd160726b462d20bc16d1e9a19d261980e3a0624f9e6efabaa4e0eb531e"
+      "bytes": 6742,
+      "sha256": "471e2ba8a7e872956bb1b8d27dab08d3859ba4971727fb9b2a6a115f4a54304e"
     },
     {
       "path": "web/src/savedGuidanceReview.ts",
@@ -2304,8 +2320,8 @@
     },
     {
       "path": "web/src/trialAssessmentNotices.ts",
-      "bytes": 3097,
-      "sha256": "923efa5b31d7c742bc282639f57b2ff8100a4cbe8a347bdfb5a1da4926fa6a55"
+      "bytes": 3540,
+      "sha256": "c7f4357611f034083eae7f13f3db53d33d801dcfa84b7aa74be9b589aaec4add"
     },
     {
       "path": "web/src/types.ts",

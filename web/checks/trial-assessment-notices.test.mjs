@@ -3,7 +3,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 import { fileURLToPath } from 'node:url'
-import { trialAssessmentError, trialAssessmentQuestion } from '../src/trialAssessmentNotices.ts'
+import { distinctTrialNotices, trialAssessmentError, trialAssessmentQuestion } from '../src/trialAssessmentNotices.ts'
 
 const setup = { id: 'a.with.dots', revision: 2, name: 'Setup A', materials: [], process: '', geometry: '', notes: '' }
 const second = { ...setup, id: 'another', name: 'Setup A' }
@@ -15,6 +15,8 @@ const notice = trialAssessmentQuestion(question, result, [setup, second], [check
 assert.equal(notice.text, 'Setup A · version 2 — Wet grip: Add a simulated reading and confirm its test conditions.')
 assert.equal(notice.reading.setup, setup)
 assert.equal(notice.reading.check, check)
+assert.equal(distinctTrialNotices([{ text: 'Describe the amount.' }, { text: 'Describe the amount.' }]).length, 1)
+assert.equal(distinctTrialNotices([notice, { ...notice, reading: { setup: second, check } }]).length, 2, 'different bound actions remain separate')
 assert.match(trialAssessmentQuestion(question, result, [setup], [check], 'user_reported', name).text, /Add an entered reading/)
 const review = { configurations: [{ ...result.configurations[0], checks: [{ check_id: check.id, state: 'needs_review' }] }] }
 assert.deepEqual(trialAssessmentQuestion(question, review, [setup], [check], 'synthetic', name), { text: 'Setup A · version 2 — Wet grip: Review the saved entry and confirm its test conditions.' })
@@ -48,6 +50,11 @@ try {
   assert.match(markup, />Add reading<\/button>/)
   assert.match(markup, /Review the entries above and try again/)
   assert.doesNotMatch(markup, /configurations\.|wet\.grip|a\.with\.dots|\{"field"/)
+  const duplicates = renderToStaticMarkup(React.createElement(TrialAssessmentNotices, {
+    assessment: { questions: ['Describe the stock amount.', 'Describe the stock amount.'] },
+    setups: [setup], checks: [check], kind: 'synthetic', setupName: name, onAddReading() {},
+  }))
+  assert.equal((duplicates.match(/Describe the stock amount\./g) ?? []).length, 1, 'repeated instructions appear once in the rendered page')
   console.log('Assessment questions render named next actions without internal fields and keep exact setup/check binding')
 } finally {
   await server.close()

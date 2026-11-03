@@ -109,7 +109,7 @@ export function CostWorkspace({
     }
     setBusy(true)
     setError('')
-    const reportContext = reportResultContext(w, kind, showHistoricalIdeas)
+    const reportContext = reportResultContext(w, kind, showHistoricalIdeas, compare ? 'comparison' : 'cost')
     try {
       if (compare) {
         const value = await api<any>('/api/project/compare-decisions', decisionRequest)

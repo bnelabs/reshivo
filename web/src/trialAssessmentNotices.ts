@@ -8,6 +8,17 @@ export type TrialNotice = {
   reading?: { setup: TrialConfiguration; check: ProductCheck }
 }
 
+/** Avoid repeating the same instruction while retaining separately bound actions. */
+export function distinctTrialNotices(notices: TrialNotice[]): TrialNotice[] {
+  const seen = new Set<string>()
+  return notices.filter((notice) => {
+    const key = JSON.stringify([notice.text, notice.reading?.setup.id, notice.reading?.setup.revision, notice.reading?.check.id])
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 function readable(value: unknown): string | null {
   if (typeof value !== 'string' || !value.trim()) return null
   // Raw transport objects and internal field paths are not useful instructions.

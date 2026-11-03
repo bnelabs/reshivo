@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { api } from '../api'
-import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
+import { confirmRecordedRecipeReview, confirmSavedMixAdjustment, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, originalMixStreamDescription, recordedRecipeDiscussion, recordedRecipeNeedsReview, savedMixAdjustment, savedMixAdjustmentRecord, trackedMixComponent, trackWholeMixMaterial, updateSavedMixAdjustment, useRecordedRecipeTarget } from '../mixAdjustment'
 import { describeMixOutcome } from '../mixCandidate'
 import { MixAdditionResult } from './MixAdditionResult'
 import { prepareMixCalculation } from '../mixQuestion'
@@ -61,7 +61,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const recoveredDraft = restoreCalculations ? [...(w.mix_adjustment_drafts ?? [])].reverse().find((saved) => {
     const current = setups.find((item) => item.id === saved.configuration_id && item.revision === saved.configuration_revision)
     const component = current?.materials.find((item) => item.id === saved.component_id && item.name === saved.component_name)
-    return saved.case_id === w.case_id && component && mixAdjustmentRequest(component.name, saved.values)
+    return saved.case_id === w.case_id && component && mixAdjustmentRequest(trackedMixComponent(component, saved.values), saved.values)
       && !mixAdjustmentPrecisionProblem(saved.values, saved.values.inputMassOrigin ?? system)
       && !mixDraftNeedsProjectReview(saved, w.project) && !recordedRecipeNeedsReview(w, saved)
   }) : undefined
@@ -83,13 +83,15 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const missingSelectedMaterial = Boolean(selectedMaterial && setup && !setup.materials.some((item) => item.id === selectedMaterial))
   const savedDraft = savedMixAdjustmentRecord(w, setup, material)
   const draft = savedMixAdjustment(w, setup, material)
+  const trackedName = material ? trackedMixComponent(material, draft) : ''
+  const materialDescription = material ? originalMixStreamDescription(material.name, w.project.input?.value) : ''
   const needsProjectReview = mixDraftNeedsProjectReview(savedDraft, w.project)
   const needsReferenceReview = recordedRecipeNeedsReview(w, savedDraft)
   const referenceSource = w.configurations.find((item) => item.id === savedDraft?.reference?.setup_id && item.revision === savedDraft?.reference?.setup_revision)
   const referenceLatest = w.configurations.filter((item) => item.id === savedDraft?.reference?.setup_id).reduce<typeof referenceSource>((latest, item) => !latest || item.revision > latest.revision ? item : latest, undefined)
-  const request = material ? mixAdjustmentRequest(material.name, draft) : null
+  const request = material ? mixAdjustmentRequest(trackedName, draft) : null
   const precisionProblem = mixAdjustmentPrecisionProblem(draft, draft.inputMassOrigin ?? system)
-  const inputProblems = mixInputProblems(material?.name ?? '', draft, system)
+  const inputProblems = mixInputProblems(trackedName, draft, system)
   const fullPortion = [draft.inputMin, draft.inputMax].every((value) => /^100(?:\.0+)?\s*%?$/.test(value.trim()))
   const referenceVersions = savedDraft?.reference ? w.configurations.filter((item) => item.id === savedDraft.reference?.setup_id) : []
   const signature = mixAdjustmentKey(w.case_id, { setup, project: w.project, reference: savedDraft?.reference, referenceVersions }, material?.id ?? '', draft)
@@ -165,6 +167,13 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
     const capturedProject = structuredClone(w.project)
     onDraftChange((current) => confirmSavedMixAdjustment(current, caseId, capturedSetup, capturedComponent, capturedProject))
   }
+  function trackWholeMaterial() {
+    if (!setup || !material) return
+    const capturedSetup = structuredClone(setup)
+    const capturedComponent = { id: material.id, name: material.name }
+    const capturedProject = structuredClone(w.project)
+    onDraftChange((current) => trackWholeMixMaterial(current, w.case_id, capturedSetup, capturedComponent, capturedProject))
+  }
   function confirmReferenceReview() {
     if (!setup || !material || !needsReferenceReview || !referenceLatest) return
     const caseId = w.case_id
@@ -221,12 +230,18 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
       <p className="pw-muted">Enter values you know or want to explore.</p>
       <div className="pw-card">
         <div className="pw-form-grid">
-          <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>
-          <label>Component you want to track<select value={material.id} onChange={(event) => setSelectedMaterial(event.target.value)}>{setup.materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+          {setups.length === 1 ? <p><strong>Plan:</strong> {setupName(setup)}</p> : <label>Plan<select value={setup.id} onChange={(event) => { setSelectedSetup(event.target.value); setSelectedMaterial('') }}>{setups.map((item) => <option key={setupKey(item)} value={item.id}>{setupName(item)} · version {item.revision}</option>)}</select></label>}
+          {setup.materials.length === 1 ? <p><strong>Your material:</strong> {material.name}</p> : <label>Material from your plan<select value={material.id} onChange={(event) => setSelectedMaterial(event.target.value)}>{setup.materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
         </div>
+        {materialDescription && <p><strong>Your material description:</strong> {materialDescription}</p>}
         {versionNotice && <p className="pw-notice" role="status">{versionNotice}</p>}
-        <p>Choose one material or named stream to track. The percentages below describe its share in your portion, the material you could add, and the mix you want to explore.</p>
-        <p className="pw-muted">If one plan entry names several materials and you want to track one of them, edit it in Plans and add the materials separately. You can also track a whole named stream when your percentages describe that stream in both mixtures.</p>
+        <p>Choose the material you have. You can track the whole material or name one component within it.</p>
+        {draft.trackedComponent === undefined
+          ? <button type="button" onClick={() => change('trackedComponent', '')}>Track something inside this material</button>
+          : <div className="pw-spaced"><label>What do you want to track inside this material?
+              <input maxLength={160} value={draft.trackedComponent} onChange={(event) => change('trackedComponent', event.target.value)} placeholder="For example, paper labels" />
+            </label><button type="button" onClick={trackWholeMaterial}>Track the whole material instead</button></div>}
+        <p className="pw-muted">The percentages below all describe {trackedName || 'the component you name'} by mass. Enter values you know or want to explore.</p>
         <button type="button" onClick={onAskForHelp}>Ask for help in Options</button>
         {needsProjectReview && savedDraft && <div className="pw-notice">
           <h2>Review these inputs for the changed project</h2>
@@ -243,8 +258,8 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
             <label>Mass of this portion ({massEntry.invalid ? massEntry.enteredUnit : unitLabel('kg', massEditingSystem ?? system)})<UnitInput unit="kg" value={massEntry.displayValue} disabled={massEntry.locked} maxLength={160} invalidMessage="" displaySystem={massEditingSystem ?? massEntry.origin ?? system} onFocus={() => setMassEditingSystem(massEntry.origin ?? system)} onBlur={() => setMassEditingSystem(null)} canonicalize={(display, _unit, unitSystem) => mixMassCanonical(display, unitSystem)} onChange={(value) => change('inputMass', value, massEditingSystem ?? massEntry.origin ?? system)} /></label>
           </div>
           {massEntry.invalid && <div className="pw-notice">{massEntry.origin ? <p>Finish editing this value in {massEntry.enteredUnit}.{massEntry.origin !== system && ` It will convert to ${massUnit} when you leave the field.`}</p> : <><p>This saved value has no unit recorded. Choose the unit you originally entered to finish editing it.</p><div className="pw-actions"><button type="button" onClick={() => change('inputMass', massEntry.displayValue, 'metric')}>It was kg</button><button type="button" onClick={() => change('inputMass', massEntry.displayValue, 'us')}>It was lb</button><button type="button" onClick={() => change('inputMass', '')}>Clear value</button></div></>}</div>}
-          <p>How much of this portion is {material.name}, by mass? If you know one value, enter it in both boxes.</p>
-          {fullPortion && <p className="pw-notice">100% to 100% treats the whole portion as {material.name}. It does not show how materials inside that stream vary.</p>}
+          <p>How much of this portion is {trackedName || 'the component you name'}, by mass? If you know one value, enter it in both boxes.</p>
+          {fullPortion && <p className="pw-notice">100% to 100% treats the whole portion as {trackedName || 'the named component'}. It does not show how materials inside that stream vary.</p>}
           <div className="pw-form-grid">
             <label>Lowest possible amount (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.inputMin} onChange={(event) => change('inputMin', event.target.value)} /></label>
             <label>Highest possible amount (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.inputMax} onChange={(event) => change('inputMax', event.target.value)} /></label>
@@ -252,18 +267,18 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
           <h2>2. Describe the material you could add</h2>
           <div className="pw-form-grid">
             <label>Name of the material you could add<input maxLength={120} value={draft.additionName} onChange={(event) => change('additionName', event.target.value)} placeholder="For example, a characterized recycled plastic" /></label>
-            <label>{material.name} in the material you could add (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.additionPercent} onChange={(event) => change('additionPercent', event.target.value)} /></label>
+            <label>{trackedName || 'Tracked component'} in the material you could add (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.additionPercent} onChange={(event) => change('additionPercent', event.target.value)} /></label>
           </div>
           <small>Enter zero only when you know the material you could add contains none of the tracked component.</small>
           <h2>3. Choose the composition to explore</h2>
-          <p>What range of {material.name} would you like to try, by mass?</p>
+          <p>What range of {trackedName || 'the named component'} would you like to try, by mass?</p>
           {savedDraft?.reference && <div className="pw-notice">
             <p>{savedDraft.reference.range ? `Rounded plan range: ${savedDraft.reference.range.min}–${savedDraft.reference.range.max}% (source fraction ${savedDraft.reference.range.numerator}/${savedDraft.reference.range.denominator})` : `Plan point: ${savedDraft.reference.fraction}%`} of the whole recipe from {referenceSource ? setupName(referenceSource) : 'recorded setup'} · version {savedDraft.reference.setup_revision} ({savedDraft.reference.component_name}).</p>
             {needsReferenceReview && <><p>A newer version of this reference setup exists. Compare the recipes before continuing.</p>
               <div className="pw-form-grid">{[referenceSource, referenceLatest].filter((item): item is NonNullable<typeof item> => Boolean(item)).map((item) => <div key={JSON.stringify([item.id, item.revision])}><strong>{setupName(item)} · version {item.revision}</strong><ul>{item.materials.map((ingredient) => <li key={ingredient.id}>{ingredient.name}: {ingredient.amount || 'unknown'} {ingredient.unit}</li>)}</ul><p>Process: {item.process || 'not entered'}</p><p>Shape: {item.geometry || 'not entered'}</p></div>)}</div>
               <button type="button" disabled={needsProjectReview} onClick={confirmReferenceReview}>Keep using this earlier recipe point</button></>}
           </div>}
-          <RecordedRecipeReference key={JSON.stringify([setup.id, setup.revision, material.id])} workspace={w} destination={setup} component={material} setupName={setupName} targetOccupied={Boolean(draft.targetMin.trim() || draft.targetMax.trim())} appliedReference={savedDraft?.reference} disabled={needsProjectReview || needsReferenceReview} onUse={(source, sourceComponent, latestRevision) => {
+          {draft.trackedComponent === undefined && <RecordedRecipeReference key={JSON.stringify([setup.id, setup.revision, material.id])} workspace={w} destination={setup} component={material} setupName={setupName} targetOccupied={Boolean(draft.targetMin.trim() || draft.targetMax.trim())} appliedReference={savedDraft?.reference} disabled={needsProjectReview || needsReferenceReview} onUse={(source, sourceComponent, latestRevision) => {
             const caseId = w.case_id
             const capturedSetup = structuredClone(setup)
             const capturedComponent = { id: material.id, name: material.name }
@@ -271,7 +286,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
             const capturedSource = structuredClone(source)
             const capturedSourceComponent = { id: sourceComponent.id, name: sourceComponent.name }
             onDraftChange((current) => useRecordedRecipeTarget(current, caseId, capturedSetup, capturedComponent, capturedProject, capturedSource, capturedSourceComponent, latestRevision))
-          }} />
+          }} />}
           <div className="pw-form-grid">
             <label>Minimum to explore (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMin} onChange={(event) => change('targetMin', event.target.value)} /></label>
             <label>Maximum to explore (mass %)<input type="text" maxLength={160} inputMode="decimal" value={draft.targetMax} onChange={(event) => change('targetMax', event.target.value)} /></label>

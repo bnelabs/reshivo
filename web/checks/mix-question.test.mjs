@@ -57,4 +57,18 @@ assert.equal(prepareMixCalculation(workspace, destination, component, { ...input
 const manual = updateSavedMixAdjustment(workspace, workspace.case_id, destination, component, workspace.project, 'targetMin', '19')
 const manualInputs = mixAdjustmentRequest(component.name, savedMixAdjustment(manual, destination, component))
 assert.equal(prepareMixCalculation(manual, destination, component, manualInputs).source, null, 'edited target does not inherit source')
+let custom = updateSavedMixAdjustment(workspace, workspace.case_id, destination, component, workspace.project, 'trackedComponent', ' paper labels ')
+for (const [field, value] of Object.entries({ inputMass:'20', inputMin:'2', inputMax:'5', additionName:'Clean HDPE', additionPercent:'0', targetMin:'0', targetMax:'2.9' })) custom = updateSavedMixAdjustment(custom, workspace.case_id, destination, component, workspace.project, field, value)
+const customInputs = mixAdjustmentRequest('paper labels', savedMixAdjustment(custom, destination, component))
+const customBinding = prepareMixCalculation(custom, destination, component, customInputs)
+assert.equal(customBinding.tracked_component, 'paper labels')
+assert.equal(customBinding.component_id, component.id, 'custom name stays bound to the original stream')
+assert.equal(customBinding.source, null, 'the old source reference is cleared')
+assert.deepEqual(prepareMixCalculation(parseProjectWorkspace(serializeProjectWorkspace(custom)), destination, component, customInputs), customBinding, 'custom binding survives backup and reopen')
+assert.equal(prepareMixCalculation(custom, destination, component, { ...customInputs, component:'different' }), null, 'changed component needs recalculation')
+const customSnapshot = {case_id:custom.case_id,destination:{id:destination.id,revision:destination.revision,component_id:component.id,component_name:component.name,tracked_component:'paper labels'},inputs:customInputs}
+const customNote = { ...custom, advice_notes: [{ ...withNote.advice_notes[0], mix_context:customSnapshot }] }
+assert.deepEqual(parseProjectWorkspace(serializeProjectWorkspace(customNote)).advice_notes[0].mix_context, customSnapshot)
+const forgedCustom = structuredClone(customNote); forgedCustom.advice_notes[0].mix_context.destination.tracked_component = 'other'
+assert.throws(() => parseProjectWorkspace(JSON.stringify(forgedCustom)), /tracked component/i)
 console.log('Calculation questions cannot follow changed project, setup, input or reopened file context')

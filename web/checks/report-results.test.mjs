@@ -17,6 +17,24 @@ assert.notEqual(initial, reportResultContext(workspace, 'synthetic', true))
 assert.notEqual(initial, reportResultContext(workspace, 'user_reported', false))
 assert.equal(initial, reportResultContext({ ...workspace, intake_notes: 'unrelated note' }, 'user_reported', true))
 
+const checked = reportResultContext(workspace, 'user_reported', true, 'checks')
+const priced = reportResultContext(workspace, 'user_reported', true, 'cost')
+const compared = reportResultContext(workspace, 'user_reported', true, 'comparison')
+const withCosts = { ...workspace, costs: { one: { currency: 'EUR' } } }
+assert.equal(checked, reportResultContext(withCosts, 'user_reported', true, 'checks'), 'entering costs after checking does not discard the check')
+assert.notEqual(priced, reportResultContext(withCosts, 'user_reported', true, 'cost'), 'changing cost inputs invalidates the old cost')
+assert.notEqual(compared, reportResultContext(withCosts, 'user_reported', true, 'comparison'), 'changing cost inputs invalidates a comparison')
+const withReading = { ...workspace, records: [{ id: 'new' }] }
+assert.notEqual(checked, reportResultContext(withReading, 'user_reported', true, 'checks'), 'changing readings invalidates checks')
+assert.equal(priced, reportResultContext(withReading, 'user_reported', true, 'cost'), 'changing readings does not alter the cost calculation')
+assert.notEqual(compared, reportResultContext(withReading, 'user_reported', true, 'comparison'), 'changing readings invalidates a comparison')
+for (const change of [{ ...workspace, checks: [] }, { ...workspace, configurations: [] }, { ...workspace, project: { product: { value: 'new product' } } }]) {
+  assert.notEqual(checked, reportResultContext(change, 'user_reported', true, 'checks'), 'checks retain their project, plan and check context')
+  assert.notEqual(compared, reportResultContext(change, 'user_reported', true, 'comparison'), 'comparisons retain their full context')
+}
+assert.notEqual(priced, reportResultContext({ ...workspace, configurations: [] }, 'user_reported', true, 'cost'), 'plan edits invalidate costs')
+assert.notEqual(priced, reportResultContext({ ...workspace, project: {} }, 'user_reported', true, 'cost'), 'project edits invalidate costs')
+
 const partial = { status: 'partial', costs: { entered_scope_total: null, known_subtotal: '0' },
   unit_costs: { per_usable_unit: '0.05', per_usable_kg: null }, unit_costs_scope: 'known_subtotal' }
 const cost = formatCostResult(partial, 'First plan', 1, 'EUR', 'planned')

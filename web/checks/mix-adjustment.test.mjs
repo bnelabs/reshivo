@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict'
-import { confirmSavedMixAdjustment, emptyMixAdjustmentDraft, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDecimalRoundTrips, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, savedMixAdjustment, savedMixAdjustmentRecord, updateSavedMixAdjustment } from '../src/mixAdjustment.ts'
+import { confirmSavedMixAdjustment, emptyMixAdjustmentDraft, formatMixMass, mixAdditionKind, mixAdjustmentKey, mixAdjustmentPrecisionProblem, mixAdjustmentRequest, mixDecimalRoundTrips, mixDraftNeedsProjectReview, mixMassCanonical, mixMassEntryState, originalMixStreamDescription, savedMixAdjustment, savedMixAdjustmentRecord, trackedMixComponent, trackWholeMixMaterial, updateSavedMixAdjustment } from '../src/mixAdjustment.ts'
 import { newProjectWorkspace, parseProjectWorkspace, serializeProjectWorkspace } from '../src/projectWorkspace.ts'
 import { toDisplay } from '../src/unitConversion.ts'
 
 const input = { inputMass: '1.4', inputMin: '46', inputMax: '46', additionName: 'Stock A', additionPercent: '0', targetMin: '35', targetMax: '35' }
+const longDescription = 'Mixed recovered plastics, with paper labels and other details that are unknown. '.repeat(4)
+assert.equal(originalMixStreamDescription('Project materials (see project description)', longDescription), longDescription, 'fallback shows the full original description')
+assert.equal(originalMixStreamDescription('HDPE', longDescription), '', 'an ordinary material is not silently replaced by the project description')
 assert.equal(mixAdjustmentRequest('PCRPE', emptyMixAdjustmentDraft()), null, 'unknown values are not zero')
 assert.deepEqual(mixAdjustmentRequest('PCRPE', input), { component: 'PCRPE', input_mass_kg: 1.4, input_min_percent: 46, input_max_percent: 46, addition_name: 'Stock A', addition_percent: 0, target_min_percent: 35, target_max_percent: 35 })
 const signedPercent = { inputMass: '16300', inputMin: '15%', inputMax: '20 %', additionName: 'HDPE', additionPercent: '5%', targetMin: '50%', targetMax: '95%' }
@@ -52,6 +55,21 @@ const saved = JSON.parse(serializeProjectWorkspace(edited))
 assert.deepEqual(Object.keys(saved.mix_adjustment_drafts[0]).sort(), ['case_id','component_id','component_name','configuration_id','configuration_revision','project_snapshot','values'])
 const reopened = parseProjectWorkspace(JSON.stringify(saved))
 assert.deepEqual(savedMixAdjustment(reopened, fullSetup, material), input, 'draft inputs survive Save/Open')
+let tracked = updateSavedMixAdjustment(edited, 'case', fullSetup, material, initial.project, 'trackedComponent', 'paper')
+let trackedValues = savedMixAdjustment(tracked, fullSetup, material)
+assert.equal(trackedMixComponent(material, trackedValues), 'paper')
+assert.equal(trackedValues.inputMass, input.inputMass, 'the original portion remains the same')
+assert.equal(trackedValues.additionName, input.additionName, 'the named added material remains the same')
+for (const field of ['inputMin','inputMax','additionPercent','targetMin','targetMax']) assert.equal(trackedValues[field], '', 'new component cannot inherit percentages')
+tracked = parseProjectWorkspace(serializeProjectWorkspace(tracked))
+assert.equal(savedMixAdjustment(tracked, fullSetup, material).trackedComponent, 'paper', 'user-named component survives backup and reopen')
+tracked = updateSavedMixAdjustment(tracked, 'case', fullSetup, material, initial.project, 'inputMin', '2')
+tracked = updateSavedMixAdjustment(tracked, 'case', fullSetup, material, initial.project, 'trackedComponent', 'rubber')
+assert.equal(savedMixAdjustment(tracked, fullSetup, material).inputMin, '', 'renaming does not reuse a previous component share')
+tracked = trackWholeMixMaterial(tracked, 'case', fullSetup, material, initial.project)
+trackedValues = savedMixAdjustment(tracked, fullSetup, material)
+assert.equal(trackedValues.trackedComponent, undefined)
+assert.equal(trackedMixComponent(material, trackedValues), material.name, 'whole-stream mode retains the original material identity')
 assert.equal(JSON.stringify(saved).includes('example_addition_kg'), false, 'no calculation result is persisted')
 const latest = { ...structuredClone(fullSetup), revision:2, process:'changed process' }
 reopened.configurations.push(latest)

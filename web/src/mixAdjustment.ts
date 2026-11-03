@@ -6,6 +6,7 @@ import type { UnitSystem } from './unitConversion.ts'
 import { recordedRecipeFraction, recordedRecipeTarget } from './referenceComposition.ts'
 
 export type MixAdjustmentDraft = {
+  trackedComponent?: string
   inputMass: string
   inputMassOrigin?: UnitSystem
   inputMin: string
@@ -19,6 +20,15 @@ export type MixAdjustmentDraft = {
 export const emptyMixAdjustmentDraft = (): MixAdjustmentDraft => ({
   inputMass: '', inputMin: '', inputMax: '', additionName: '', additionPercent: '', targetMin: '', targetMax: '',
 })
+
+/** A named component is user supplied and stays tied to the chosen material stream. */
+export function trackedMixComponent(component: { name: string }, draft: MixAdjustmentDraft): string {
+  return draft.trackedComponent === undefined ? component.name : draft.trackedComponent.trim()
+}
+
+export function originalMixStreamDescription(materialName: string, projectInput: string | null | undefined): string {
+  return materialName === 'Project materials (see project description)' ? projectInput ?? '' : ''
+}
 
 export function savedMixAdjustmentRecord(workspace: ProjectWorkspace, setup: TrialConfiguration | undefined, component: { id: string; name: string } | undefined): SavedMixAdjustmentDraft | undefined {
   return workspace.mix_adjustment_drafts?.find((item) => item.case_id === workspace.case_id && item.configuration_id === setup?.id && item.configuration_revision === setup?.revision && item.component_id === component?.id && item.component_name === component?.name)
@@ -47,15 +57,28 @@ export function updateSavedMixAdjustment(workspace: ProjectWorkspace, caseId: st
   const previous = index >= 0 ? old[index].values : emptyMixAdjustmentDraft()
   if (field === 'inputMass' && value.startsWith('invalid:') && massOrigin !== 'metric' && massOrigin !== 'us') return workspace
   const { inputMassOrigin: _previousOrigin, ...withoutOrigin } = previous
-  const values = field === 'inputMass'
+  const values = field === 'trackedComponent'
+    ? { ...previous, trackedComponent: value, inputMin: '', inputMax: '', additionPercent: '', targetMin: '', targetMax: '' }
+    : field === 'inputMass'
     ? { ...withoutOrigin, inputMass: value, ...(value.startsWith('invalid:') ? { inputMassOrigin: massOrigin } : {}) }
     : { ...previous, [field]: value }
   const next = { case_id: caseId, configuration_id: setup.id, configuration_revision: setup.revision,
     component_id: component.id, component_name: component.name,
     project_snapshot: index >= 0 ? old[index].project_snapshot : structuredClone(project),
     values,
-    ...(index >= 0 && old[index].reference && field !== 'targetMin' && field !== 'targetMax' ? { reference: old[index].reference } : {}) }
+    ...(index >= 0 && old[index].reference && field !== 'targetMin' && field !== 'targetMax' && field !== 'trackedComponent' ? { reference: old[index].reference } : {}) }
   return { ...workspace, mix_adjustment_drafts: index < 0 ? [...old, next] : old.map((item, i) => i === index ? next : item) }
+}
+
+/** Return to the whole material without transferring component-specific percentages. */
+export function trackWholeMixMaterial(workspace: ProjectWorkspace, caseId: string, setup: TrialConfiguration, component: { id: string; name: string }, project: ProjectIntakeDraft): ProjectWorkspace {
+  const cleared = updateSavedMixAdjustment(workspace, caseId, setup, component, project, 'trackedComponent', '')
+  if (cleared === workspace) return workspace
+  return { ...cleared, mix_adjustment_drafts: (cleared.mix_adjustment_drafts ?? []).map((draft) => {
+    if (draft.configuration_id !== setup.id || draft.configuration_revision !== setup.revision || draft.component_id !== component.id) return draft
+    const { trackedComponent: _trackedComponent, ...values } = draft.values
+    return { ...draft, values }
+  }) }
 }
 
 /** Apply an explicitly reviewed whole-recipe point without replacing existing target entries. */
@@ -73,6 +96,7 @@ export function useRecordedRecipeTarget(workspace: ProjectWorkspace, caseId: str
   const old = workspace.mix_adjustment_drafts ?? []
   const index = old.findIndex((item) => item.configuration_id === setup.id && item.configuration_revision === setup.revision && item.component_id === component.id)
   const existing = index >= 0 ? old[index] : undefined
+  if (existing?.values.trackedComponent !== undefined) return workspace
   if (existing && (existing.component_name !== component.name || JSON.stringify(existing.project_snapshot) !== JSON.stringify(project) || existing.values.targetMin.trim() || existing.values.targetMax.trim())) return workspace
   const draft: SavedMixAdjustmentDraft = {
     case_id: caseId, configuration_id: setup.id, configuration_revision: setup.revision,
@@ -89,6 +113,7 @@ export function useRecordedRecipeTarget(workspace: ProjectWorkspace, caseId: str
 export function recordedRecipeNeedsReview(workspace: ProjectWorkspace, draft: SavedMixAdjustmentDraft | undefined): boolean {
   const ref = draft?.reference
   if (!ref) return false
+  if (draft?.values.trackedComponent !== undefined) return true
   const versions = workspace.configurations.filter((item) => item.id === ref.setup_id)
   const source = versions.find((item) => item.revision === ref.setup_revision)
   const point = source && recordedRecipeFraction(source, ref.component_id)

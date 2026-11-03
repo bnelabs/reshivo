@@ -640,6 +640,30 @@
 .pw-answer > p {
   white-space: pre-wrap;
 }
+.pw-decision-brief, .pw-decision-result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+.pw-decision-brief { margin: 18px 0 24px; }
+.pw-decision-context { margin-top: 18px; color: #315d4d; }
+.pw-decision-context summary { cursor: pointer; font-weight: 600; }
+.pw-decision-brief > div, .pw-decision-result-grid > article {
+  min-width: 0;
+  padding: 15px 17px;
+  background: #f2f7f3;
+  border: 1px solid #dce8df;
+  border-radius: 8px;
+}
+.pw-decision-brief strong { color: #315d4d; font-size: 13px; }
+.pw-decision-brief p { margin: 5px 0 0; overflow-wrap: anywhere; }
+.pw-decision-results { margin: 26px 0; }
+.pw-decision-results > p { color: var(--pw-muted); }
+.pw-decision-result-grid h3 { margin: 0; font-size: 16px; }
+.pw-decision-result-grid p { overflow-wrap: anywhere; font-size: 14px; margin: 7px 0; }
+.pw-decision-result-grid .pw-result-details { white-space: pre-wrap; }
+.pw-decision-result-grid details { margin: 10px 0; }
+.pw-decision-result-grid summary { cursor: pointer; font-weight: 600; }
 .pw-saved-note {
   white-space: pre-wrap;
   font-size: 14px;

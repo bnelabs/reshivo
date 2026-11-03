@@ -57,6 +57,7 @@ jobs:
       - run: node checks/legacy-guidance-review.test.mjs
       - run: node checks/check-editing.test.mjs
       - run: node checks/trial-assessment-notices.test.mjs
+      - run: node checks/decision-overview.test.mjs
       - run: node checks/sound-guidance.test.mjs
       - run: node checks/provider-settings.test.mjs
       - run: node checks/readable-summary.test.mjs

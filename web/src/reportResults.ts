@@ -6,10 +6,13 @@ type ReadingKind = 'user_reported' | 'synthetic'
 export type ReportResultKind = 'cost' | 'comparison' | 'checks'
 
 // The result is valid only for the inputs and visibility rules present when calculated.
-export function reportResultContext(w: ProjectWorkspace, kind: ReadingKind, showHistoricalIdeas: boolean): string {
-  return JSON.stringify({ case_id: w.case_id, project: w.project, configurations: w.configurations,
-    checks: w.checks, records: w.records, record_exclusions: w.record_exclusions, costs: w.costs,
-    trial_ideas: w.trial_ideas, kind, showHistoricalIdeas })
+export function reportResultContext(w: ProjectWorkspace, kind: ReadingKind, showHistoricalIdeas: boolean, resultKind: ReportResultKind = 'comparison'): string {
+  const common = { case_id: w.case_id, project: w.project, configurations: w.configurations,
+    trial_ideas: w.trial_ideas, showHistoricalIdeas }
+  const readings = { checks: w.checks, records: w.records, record_exclusions: w.record_exclusions, kind }
+  if (resultKind === 'checks') return JSON.stringify({ ...common, ...readings })
+  if (resultKind === 'cost') return JSON.stringify({ ...common, costs: w.costs })
+  return JSON.stringify({ ...common, ...readings, costs: w.costs })
 }
 
 const states: Record<string, string> = {

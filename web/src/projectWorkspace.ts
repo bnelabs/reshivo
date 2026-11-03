@@ -33,7 +33,7 @@ export type CostDraft = {
 }
 export type SavedMixContext = {
   case_id: string
-  destination: { id: string; revision: number; component_id: string; component_name: string }
+  destination: { id: string; revision: number; component_id: string; component_name: string; tracked_component?: string }
   inputs: { component: string; input_mass_kg: number; input_min_percent: number; input_max_percent: number; addition_name: string; addition_percent: number; target_min_percent: number; target_max_percent: number }
   source_recipe?: { id: string; revision: number; name: string; component_id: string; component_name: string; basis: 'whole_recipe'; fraction: { numerator: string; denominator: string }; materials: { id: string; name: string; amount: string; unit: string }[]; process: string; geometry: string; readings_included: false }
 }
@@ -107,18 +107,23 @@ function validateProjectDraft(value: unknown, label: string): void {
 function validateSavedMixContext(value: unknown, caseId: unknown): void {
   const mix = object(value, ['case_id', 'destination', 'inputs'], ['source_recipe'], 'Saved mix context')
   if (mix.case_id !== caseId) throw new Error('A saved mix context must belong to its project.')
-  const destination = object(mix.destination, ['id', 'revision', 'component_id', 'component_name'], [], 'Saved mix destination')
+  const destination = object(mix.destination, ['id', 'revision', 'component_id', 'component_name'], ['tracked_component'], 'Saved mix destination')
   text(destination.id, 'Saved mix setup', 160, true); revision(destination.revision)
   text(destination.component_id, 'Saved mix material ID', 160, true); text(destination.component_name, 'Saved mix material', 160, true)
   const inputs = object(mix.inputs, ['component', 'input_mass_kg', 'input_min_percent', 'input_max_percent', 'addition_name', 'addition_percent', 'target_min_percent', 'target_max_percent'], [], 'Saved mix inputs')
   text(inputs.component, 'Saved mix component', 160, true); text(inputs.addition_name, 'Saved mix added stock', 120, true)
-  if (inputs.component !== (destination.component_name as string).trim()) throw new Error('A saved mix must retain its selected material.')
+  if (destination.tracked_component !== undefined) {
+    text(destination.tracked_component, 'Tracked component', 160, true)
+    if (destination.tracked_component !== (destination.tracked_component as string).trim()) throw new Error('A tracked component must use its trimmed name.')
+  }
+  if (inputs.component !== ((destination.tracked_component ?? destination.component_name) as string).trim()) throw new Error('A saved mix must retain its tracked component.')
   for (const field of ['input_mass_kg', 'input_min_percent', 'input_max_percent', 'addition_percent', 'target_min_percent', 'target_max_percent']) {
     const number = inputs[field]
     if (typeof number !== 'number' || !Number.isFinite(number) || number < 0 || (field === 'input_mass_kg' ? number === 0 || number > 1_000_000 : number > 100)) throw new Error('Saved mix inputs need valid finite numbers.')
   }
   if ((inputs.input_min_percent as number) > (inputs.input_max_percent as number) || (inputs.target_min_percent as number) > (inputs.target_max_percent as number)) throw new Error('Saved mix ranges need ordered limits.')
   if (mix.source_recipe !== undefined) {
+    if (destination.tracked_component !== undefined) throw new Error('A tracked component within a stream cannot use a recorded recipe reference.')
     const source = object(mix.source_recipe, ['id', 'revision', 'name', 'component_id', 'component_name', 'basis', 'fraction', 'materials', 'process', 'geometry', 'readings_included'], [], 'Saved recipe source')
     text(source.id, 'Saved recipe setup', 160, true); revision(source.revision); text(source.name, 'Saved recipe name', 160, true)
     text(source.component_id, 'Saved recipe ingredient ID', 160, true); text(source.component_name, 'Saved recipe ingredient', 160, true)
@@ -214,12 +219,14 @@ export function validateProjectWorkspace(value: unknown): ProjectWorkspace {
       const reference = JSON.stringify([draft.configuration_id, draft.configuration_revision, draft.component_id])
       if (references.has(reference)) throw new Error('Mix adjustment drafts must be unique for each setup version and material.')
       references.add(reference)
-      const values = object(draft.values, ['inputMass', 'inputMin', 'inputMax', 'additionName', 'additionPercent', 'targetMin', 'targetMax'], ['inputMassOrigin'], 'Mix adjustment values')
+      const values = object(draft.values, ['inputMass', 'inputMin', 'inputMax', 'additionName', 'additionPercent', 'targetMin', 'targetMax'], ['inputMassOrigin', 'trackedComponent'], 'Mix adjustment values')
       for (const field of ['inputMin', 'inputMax', 'additionPercent', 'targetMin', 'targetMax']) text(values[field], `Mix adjustment ${field}`, 160)
       text(values.inputMass, 'Mix adjustment portion mass', 168)
       text(values.additionName, 'Mix adjustment stock name', 120)
+      if (values.trackedComponent !== undefined) text(values.trackedComponent, 'Tracked component', 160)
       if (values.inputMassOrigin !== undefined && (!['metric', 'us'].includes(values.inputMassOrigin as string) || !(values.inputMass as string).startsWith('invalid:'))) throw new Error('An invalid mass draft may record only its original metric or US unit.')
       if (draft.reference !== undefined) {
+        if (values.trackedComponent !== undefined) throw new Error('A tracked component within a stream cannot use a recorded recipe reference.')
         const reference = object(draft.reference, ['setup_id', 'setup_revision', 'setup_snapshot', 'component_id', 'component_name', 'basis', 'fraction', 'latest_revision_at_review'], ['range'], 'Recorded recipe reference')
         text(reference.setup_id, 'Reference setup identifier', 160, true); revision(reference.setup_revision)
         text(reference.setup_snapshot, 'Reference setup snapshot', 100000, true)

@@ -380,7 +380,7 @@ export function TrialWorkspace({
   async function assess() {
     setBusy(true)
     setError('')
-    const reportContext = reportResultContext(w, kind, showHistoricalIdeas)
+    const reportContext = reportResultContext(w, kind, showHistoricalIdeas, 'checks')
     try {
       const result = await api<any>('/api/project/trial-records', {
         case_id: w.case_id,
