@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { version as appVersion } from '../../package.json'
 import { api } from '../api'
 import { PromptProjectStart } from './PromptProjectStart'
 import { ProviderSettings } from './ProviderSettings'
@@ -632,6 +633,7 @@ export function ProjectWorkbench() {
               >
                 Review this project’s idea
               </button>
+              <small className="pw-menu-version">Reshivo v{appVersion}</small>
             </div>
           </details>
         </div>
@@ -1064,7 +1066,7 @@ export function ProjectWorkbench() {
           </main>
         </div>
       )}
-      <footer className="pw-footer"><small>Test your product before production.</small></footer>
+      <footer className="pw-footer"><small>Test your product before production. <span aria-hidden="true">·</span> Reshivo v{appVersion}</small></footer>
     </div>
   )
 }

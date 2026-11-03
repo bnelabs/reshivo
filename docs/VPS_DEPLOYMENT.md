@@ -87,6 +87,8 @@ sudo systemctl start reshivo
 sudo systemctl status reshivo --no-pager
 ```
 
+After updating, check the version shown in the app footer and the `version` field at `/api/health` on your deployment. They should match. If they do not, rebuild the frontend and restart the service from the same checkout. For the changes in each version, see [CHANGELOG.md](../CHANGELOG.md).
+
 If the service fails, inspect `sudo journalctl -u reshivo -n 100 --no-pager`. Do not put keys in logs or issue reports. Browser-session keys are kept in memory and are not backed up. `/opt/reshivo/outputs/` holds optional server-side experiment artifacts. Users can download a project backup and open it later; back up those files separately. Never commit credentials or private outputs.
 
 The systemd and nginx configuration are deployment examples, not a tested multi-user production service. Check your own server, access controls, TLS and backup arrangement before sharing access.

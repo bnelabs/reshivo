@@ -172,6 +172,10 @@
 .pw-menu > button {
   text-align: left;
 }
+.pw-menu-version {
+  padding: 4px 8px;
+  color: var(--pw-muted);
+}
 .pw-menu details {
   padding: 8px;
 }

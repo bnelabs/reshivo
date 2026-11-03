@@ -224,7 +224,8 @@ class WorkbenchService:
             source_available = True
         except ServiceError:
             source_available = False
-        return {"status": "ok" if source_available else "degraded", "source_available": source_available, "meta": self.meta_status()}
+        from . import __version__
+        return {"status": "ok" if source_available else "degraded", "version": __version__, "source_available": source_available, "meta": self.meta_status()}
 
     def advisor_status(self):
         if self.meta_status_fn is not None:

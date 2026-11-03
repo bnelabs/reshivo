@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "prepared_utc": "2026-11-03T17:31:44.263763+00:00",
+  "prepared_utc": "2026-11-03T17:35:33.622616+00:00",
   "source_commit": "11106d2bf44b7f05fafe013bdea424593582aa75",
   "snapshot_mode": "filtered source release with subsequent changes",
   "profile": "source_only_no_acoustics_no_history_v2",
@@ -41,13 +41,18 @@
     },
     {
       "path": ".github/workflows/check.yml",
-      "bytes": 2254,
-      "sha256": "168ccbfee30bbeb3e764e6ff7a192f1278e33c2af731280221e2adbf57cbc56e"
+      "bytes": 2300,
+      "sha256": "dc5c9bd95988e72565dfc516b3d8554f3d0f43bfe6dd5fb03b78c4faa6624ea7"
     },
     {
       "path": ".gitignore",
       "bytes": 134,
       "sha256": "39a87bcdaca6edaaaed039e4261e3ac85fdcc9ce4efb9d2a56a1a4ac9d58fff0"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 1775,
+      "sha256": "001425d5a347c0d076ad0df79b8cbc37c23d99d48b8ab5a71e46e389eec662a6"
     },
     {
       "path": "LICENSE",
@@ -61,8 +66,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 4135,
-      "sha256": "acdffb2279d2f488ea104dada8dda7ca74cf699650cbccb6ffc73b75982b86ab"
+      "bytes": 4964,
+      "sha256": "903338ffa140f5aa52aac9d36bd555d137d39f9b1a41436ac949b5844a3aaf05"
     },
     {
       "path": "data/ATTRIBUTION.md",
@@ -576,8 +581,8 @@
     },
     {
       "path": "docs/VPS_DEPLOYMENT.md",
-      "bytes": 6061,
-      "sha256": "58e9ef315137b6f3b28adcd6375ce34493d80cbff1e1c86e6c42fe4c36d7abbc"
+      "bytes": 6355,
+      "sha256": "963de7d0cb8643d808705cf6001931a798b7daeb71882d0c2fb47be3c9d76d8c"
     },
     {
       "path": "docs/WORKFLOW_EVALUATION_PROTOCOL.md",
@@ -1167,12 +1172,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 362,
-      "sha256": "107346de4da0b547174a5fe869ca3c9cbfa18848c86c6a2505797c907f3ae9db"
+      "sha256": "9a83bfef8d8727c265b2f0805cb46120bbcff54d65dc45842d524cc9f1a23737"
     },
     {
       "path": "rematter/__init__.py",
       "bytes": 113,
-      "sha256": "0f33cc65351d9b890a0937d07d5627d5037d2e2f0ad0b6c27d92478345d00779"
+      "sha256": "18a8dc159d0e873fc20f85d155b096c0d7297dc0a16da47ab16becfabeab49e7"
     },
     {
       "path": "rematter/__main__.py",
@@ -1316,8 +1321,8 @@
     },
     {
       "path": "rematter/service.py",
-      "bytes": 35113,
-      "sha256": "a5e3957b03f95c2bd6c2541cac339babcdb73e929f1ddbb863cf8afe952a2193"
+      "bytes": 35171,
+      "sha256": "47ddf2f760ab7605029868b9a73b3099f54436715990785e70a61176a85f3937"
     },
     {
       "path": "rematter/target_checks.py",
@@ -1378,6 +1383,11 @@
       "path": "scripts/check_material_followup.py",
       "bytes": 5251,
       "sha256": "6069cf408d75107fedc4b9cc2e0d8bb33ee7f20c62811aa0deef2e4f9f7c4b4e"
+    },
+    {
+      "path": "scripts/check_versions.py",
+      "bytes": 2680,
+      "sha256": "4cc352aaedfd5c9eac768e9a51b297e30a2a5c5fa0052b5b097fbf67d87aec8a"
     },
     {
       "path": "scripts/decision_journey_baseline.py",
@@ -1636,8 +1646,8 @@
     },
     {
       "path": "tests/test_server.py",
-      "bytes": 6559,
-      "sha256": "aa9b29bc20ea1588ef1570aea939f886d37c147bb10592b39eb974762f766e8f"
+      "bytes": 6673,
+      "sha256": "8351ae823f1df1a0457c123b158d6343a7d246e4ebd90853a39504ad903808ab"
     },
     {
       "path": "tests/test_target_checks.py",
@@ -1817,12 +1827,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "9d0a50bbce9db551bf6abfca091df63745dec9ca83fb21bf68c635fd3f52f3f5"
+      "sha256": "f551b6a872f9fc6cba6ccb7690fa8bbca832b9d2bf48050345096e43ebc719fc"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "1b1b6a1d3afe23c6920e91e9815d676c3abd28a899a82e750bbad1480e96b11d"
+      "sha256": "b5878a2ccd3c0128d2ba1399b0d70e0323b7a680e658c7245feda8343f30c900"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -1976,13 +1986,13 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.css",
-      "bytes": 15474,
-      "sha256": "b1edaaf7327bb3ce9dafb396019dfbbf2ab6d6b2edf08719a84346a5f6de5b3b"
+      "bytes": 15541,
+      "sha256": "ea51930026cbd0241ba16b96e935eed3a38e3ee0fce270fec7ba761f55172ead"
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 51903,
-      "sha256": "a2ff31f4273e46f75ed9827929aaaaf1d1515128ae7de0aae2edba1ae78cea7e"
+      "bytes": 52098,
+      "sha256": "12fee2e1ffdcf527d17eafb92f899e7d2a01bb54882cc8d94e41a05a5e53e072"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",

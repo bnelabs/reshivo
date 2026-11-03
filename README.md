@@ -39,11 +39,18 @@ The Meta planning model tested for this project is `muse-spark-1.3-contributor`.
 
 An entered reading, a calculated composition and an AI suggestion each answer a different question. A calculated recipe does not establish how the finished product performs, and entered readings do not predict future batches. The sample data used in the demo is synthetic.
 
+## Versions
+
+The version in the app menu and footer identifies the frontend build. The `version` field at `/api/health` identifies the backend; the two should match after a deployment. Changes are listed in [CHANGELOG.md](CHANGELOG.md), and tagged source versions use the `vX.Y.Z` format. The first tagged release is `v0.2.0`; the earlier `0.1.0` package label was not a tagged release.
+
+Before a release, update the version in `pyproject.toml`, `rematter/__init__.py`, `web/package.json`, and both root version entries in `web/package-lock.json`; update the changelog; then run `python3 scripts/check_versions.py`. Use plain `X.Y.Z` versions unless any prerelease format has also been checked against Python packaging rules. Tag the tested commit with the corresponding `vX.Y.Z` tag.
+
 ## Development and checks
 
 The commit history retains dated application, frontend and test changes from the hackathon. Earlier commits were filtered to remove old research data, documents, examples and media; their commit IDs therefore changed, and those earlier snapshots may not build on their own. The latest commit contains the complete source package.
 
 ```sh
+.venv/bin/python scripts/check_versions.py
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/verify_research.py
 node web/checks/quantity.test.mjs

@@ -6,6 +6,7 @@ import unittest
 import urllib.error
 import urllib.request
 
+from rematter import __version__
 from rematter.server import build_server
 from rematter.service import WorkbenchService
 from rematter.meta import Generation, propose_and_evaluate
@@ -48,7 +49,9 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(len(data["materials"]), 8)
         self.assertEqual(data["meta"], {"configured": False, "model": "muse-spark-1.3"})
         self.assertNotIn(b"MODEL_API_KEY", raw)
-        self.assertTrue(json.loads(self.request("/api/health")[1])["source_available"])
+        health = json.loads(self.request("/api/health")[1])
+        self.assertTrue(health["source_available"])
+        self.assertEqual(health["version"], __version__)
 
     def test_search_download_and_saved_run(self):
         status, raw, _ = self.request("/api/experiments", {})
