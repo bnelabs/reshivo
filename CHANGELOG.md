@@ -2,6 +2,13 @@
 
 Notable changes to Reshivo are recorded here. Versions follow [Semantic Versioning](https://semver.org/): before 1.0, a minor version can include changes to the workflow or compatibility, and a patch version covers compatible fixes. Dates are in UTC.
 
+## 0.8.1 — 2026-11-04
+
+### Changed
+
+- Put the current plan and available calculation results first in printable project reports, followed by relevant project details and readings.
+- Remove repeated older plans and saved conversations from the print layout; the full project remains available in the backup and text summary.
+
 ## 0.8.0 — 2026-11-04
 
 ### Added

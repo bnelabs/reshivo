@@ -39,6 +39,7 @@ assert.ok(summary.includes(reason))
 assert.ok(summary.includes('16300 kg'))
 const usSummary = formatMixSummary(input,{feasible:false},'us')
 assert.ok(usSummary.includes('lb (16300 kg)'), 'Imperial report displays selected units and original mass')
+assert.ok(formatMixSummary(input,{feasible:false},'metric',{name:'Blend',revision:2}).includes('Plan: Blend · version 2'), 'mix results identify the plan they came from')
 console.log('Readable summaries keep plan details, provenance, missing costs, and real mix reasons')
 
 // Exercise the print renderer with a DOM-shaped stub: project content remains text,
@@ -64,7 +65,7 @@ const nodes = flatten(documentStub.body)
 assert.equal(printed, 1)
 assert.ok(nodes.some(node => node.tag === 'svg'), 'the report includes the Reshivo mark')
 assert.ok(nodes.some(node => node.tag === 'h2' && node.textContent === 'Plans'))
-assert.ok(nodes.some(node => node.tag === '#text' && node.textContent.includes('<script>unsafe()</script>')))
+assert.ok(nodes.some(node => node.tag === 'h1' && node.textContent.includes('<script>unsafe()</script>')))
 assert.ok(!nodes.some(node => node.tag === 'script'), 'user content cannot become executable HTML')
 console.log('Printable report preserves branding, hierarchy and safe text rendering')
 
@@ -111,3 +112,35 @@ printTextReport('Reshivo — project summary', 'data:image/svg+xml;base64,aGVsbG
 const invalidNodes = documentStub.body.children.slice(afterVisual).flatMap(flatten)
 assert.ok(!invalidNodes.some(node => node.tag === 'figure'), 'invalid images and dimensions must not make empty or unsafe figures')
 console.log('Reports include safe project visuals and reject invalid section dimensions')
+
+// The print report leads with current guidance and calculations while retaining the
+// exact revision and grouping of historical readings without repeating old plans.
+const { formatPrintableProjectReport } = await import('../src/readableSummary.ts')
+const printWorkspace = structuredClone(detailed)
+printWorkspace.trial_ideas['a@2'] = structuredClone(printWorkspace.trial_ideas['a@1'])
+const printReport = formatPrintableProjectReport(printWorkspace, true,
+  'Ideas and next steps\nSource: meta / test\nCompare the two materials.\nNext actions:\n- Weigh a sample.\n\nIdea: Layered idea\nWhat to try: Add a layer\nWhy: Separate materials\n- Shape the layer\nTrade-off: More work\nWhat to check: Measure thickness\n\nIdea: Layered idea\nWhat to try: A changed approach.\n\nIdea: A different route\nWhat to try: Sort the flakes.\nTrade-off: More time.\n\nQuestions to answer:\n- Unknown?',
+  'Reshivo — mix calculation\nPortion: 10 kg\nOne amount to explore: 2 kg.',
+  'Check results\nPlan A · version 1: In range\nWhat is the batch amount?\nWhat is the batch amount?\nPlan B · version 1: In range\nWhat is the batch amount?\n')
+assert.ok(printReport.indexOf('Compare the two materials.') < printReport.indexOf('Project details'))
+assert.ok(printReport.indexOf('One amount to explore: 2 kg.') < printReport.indexOf('Project details'))
+assert.ok(!printReport.includes('Earlier version'))
+assert.ok(!printReport.includes('What to try: Add a layer'), 'an exactly matching saved idea is not repeated as a card')
+assert.ok(printReport.includes('What to try: A changed approach.'), 'a changed idea with the same title remains visible')
+assert.ok(printReport.includes('Idea: A different route') && printReport.includes('Sort the flakes.') && printReport.includes('Trade-off: More time.'), 'new alternatives survive alongside a saved plan')
+assert.ok(printReport.includes('Questions to answer:') && printReport.includes('Unknown?'), 'current follow-up questions survive when a plan exists')
+assert.ok(printReport.includes('Layered idea v1 / Thickness'), 'historical readings keep their exact plan revision')
+assert.ok(printReport.includes('Earlier plans with readings') && printReport.includes('HDPE: 5 kg') && printReport.includes('Process: Heat') && printReport.includes('Shape and size: Flat'), 'historical readings retain their original setup details')
+assert.equal((printReport.match(/Shape the layer/g) ?? []).length, 1, 'historical setup details do not repeat idea text')
+assert.ok(printReport.includes('Specimen: S1') && printReport.includes('Batch: Batch A') && printReport.includes('Instrument was reset'))
+assert.ok(printReport.includes('Dry feed') && printReport.includes('Expected usable fraction: 0.9'))
+assert.equal((printReport.match(/What is the batch amount\?/g) ?? []).length, 2, 'duplicate questions are removed only within each plan')
+assert.ok(printReport.endsWith(`Project notes\n${printWorkspace.intake_notes}\n`), 'user-provided context remains at the end')
+const hiddenPrintReport = formatPrintableProjectReport(w, false, '', '', '')
+assert.ok(!hiddenPrintReport.includes('Layered idea') && !hiddenPrintReport.includes('Shape the layer'), 'hidden ideas remain hidden in print')
+const noPlans = newProjectWorkspace()
+noPlans.project.product = field('Panel')
+const noPlanGuidance = 'Ideas and next steps\nChoose a route.\n\nIdea: Reuse flakes\nWhat to try: Sort by type.\nTrade-off: More time.\n\nQuestions to answer:\n- What equipment is available?'
+const noPlanReport = formatPrintableProjectReport(noPlans, true, noPlanGuidance, '', '')
+for (const text of ['Idea: Reuse flakes', 'Sort by type.', 'Trade-off: More time.', 'What equipment is available?']) assert.ok(noPlanReport.includes(text), text)
+console.log('Printable project report prioritizes the current decision without losing reading provenance')

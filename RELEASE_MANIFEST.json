@@ -33,7 +33,8 @@
     "Documented that the visible development history was filtered and earlier snapshots omit source data.",
     "Added browser-session AI connections, clearer project flow, readable reports, and an optional concept sketch after the original export.",
     "Improved project-specific advice, sketch context and dimensioned section, and printable reports in version 0.7.0.",
-    "Improved comparison flow, local project recovery, unit entry and bounded work capacity in version 0.8.0."
+    "Improved comparison flow, local project recovery, unit entry and bounded work capacity in version 0.8.0.",
+    "Refocused printable project reports and preserved plan-specific calculation and reading context in version 0.8.1."
   ],
   "files": [
     {
@@ -53,8 +54,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 6791,
-      "sha256": "b861042e8d06e08409b7741fdf9e6516b5cda9603c81984f435a8bdc26e8368b"
+      "bytes": 7118,
+      "sha256": "651d5a4f4ee02308c3fa3b1f182d3ec8e50cd90223f6554a107083ae6aa71e92"
     },
     {
       "path": "LICENSE",
@@ -1179,12 +1180,12 @@
     {
       "path": "pyproject.toml",
       "bytes": 329,
-      "sha256": "1f081d212b698b2ced0cd7664818d711bd452b74f4da5534c113461f4d7284a7"
+      "sha256": "346f959bbb71693f3b5815bb0a94ba8e49d89f5beaaee883e505bc7312ee195f"
     },
     {
       "path": "reshivo/__init__.py",
       "bytes": 62,
-      "sha256": "5540743a0ee1ed4bba5fe4fc8209d96363bcb71639eca83eb3d2eab36703295a"
+      "sha256": "c2f2c37715d82855b62a65911084644459e6ced2e16f1f5501a20f335d6cc0e7"
     },
     {
       "path": "reshivo/__main__.py",
@@ -1833,8 +1834,8 @@
     },
     {
       "path": "web/checks/readable-summary.test.mjs",
-      "bytes": 9312,
-      "sha256": "fd00cf0375dce2e6efa736d21d4bc62e035aac531897885b69f332688c1ee346"
+      "bytes": 13309,
+      "sha256": "c8fa024f383e060e4a9192334225c73ac902aab35f3710f42837ec51ba9a6995"
     },
     {
       "path": "web/checks/reference-composition.test.mjs",
@@ -1889,12 +1890,12 @@
     {
       "path": "web/package-lock.json",
       "bytes": 44693,
-      "sha256": "3ffb2065271ca9c3fa96794b1b0d572ef5ed832efffa040e6cd3f73a6ebc6e32"
+      "sha256": "76afe06c9095b3c79c1887beca1217bfe2e9e59a93c071065e8487288c29e680"
     },
     {
       "path": "web/package.json",
       "bytes": 734,
-      "sha256": "2557ddfb5ac1d0923e26d8e656e06722235ab63acc2f1dd20fb3e28603baaff7"
+      "sha256": "6e1bb134e516d080507719521476b71169374c257e50d26144ab35d929e8517a"
     },
     {
       "path": "web/public/reshivo-mark.svg",
@@ -2033,8 +2034,8 @@
     },
     {
       "path": "web/src/components/MixAdjustment.tsx",
-      "bytes": 27737,
-      "sha256": "ed1358ad259b5b6846c21c917cb6cdb8e816db3246c0288d4310e6f3a60cb225"
+      "bytes": 28019,
+      "sha256": "0b9001f583834d1cf0ffb98df40388d02619f2897d5d0b9394102f0e0d662664"
     },
     {
       "path": "web/src/components/MyMixPlanner.tsx",
@@ -2058,8 +2059,8 @@
     },
     {
       "path": "web/src/components/ProjectWorkbench.tsx",
-      "bytes": 75626,
-      "sha256": "2e646e0f8c01134ba136b03422dbfe71a49d197506974a5f80a587a289fe2dca"
+      "bytes": 76387,
+      "sha256": "5a51b9f4d394011f6d00e5472f1d31b19c37c0337222a9ca6c7c2efade3c3424"
     },
     {
       "path": "web/src/components/PromptProjectStart.css",
@@ -2258,8 +2259,8 @@
     },
     {
       "path": "web/src/readableSummary.ts",
-      "bytes": 21755,
-      "sha256": "39cadfbd899368fbbf1fb36c0f8fc468f47efeb4db85f2ca4fb25c9dbafa89aa"
+      "bytes": 31230,
+      "sha256": "cfdfbe47e28b7af48529d0d441f615302870dbc784c31297c5f54bd32888bfa1"
     },
     {
       "path": "web/src/referenceComposition.ts",

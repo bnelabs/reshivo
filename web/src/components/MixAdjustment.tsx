@@ -103,11 +103,13 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
   const restoreAttempted = useRef(false)
   const massUnit = unitLabel('kg', system)
   const massEntry = mixMassEntryState(draft, system)
+  const reportPlanName = setup ? setupName(setup) : ''
+  const reportPlanRevision = setup?.revision
   const showRange = (minimum: number | null, maximum: number | null) => minimum === maximum ? String(minimum) : `${minimum}–${maximum}`
 
   useLayoutEffect(() => {
-    onSummary(visibleResult ? formatMixSummary(visibleResult.request, visibleResult.value, system) : '')
-  }, [visibleResult, system, onSummary])
+    onSummary(visibleResult && reportPlanRevision !== undefined ? formatMixSummary(visibleResult.request, visibleResult.value, system, { name: reportPlanName, revision: reportPlanRevision }) : '')
+  }, [visibleResult, system, onSummary, reportPlanName, reportPlanRevision])
 
   useEffect(() => {
     if (result && calculatorOpen && resultCard.current) {
@@ -304,7 +306,7 @@ export function MixAdjustment({ workspace: w, enabled, showHistoricalIdeas, plan
         <p>Choose what to measure for this plan.</p>
         <button type="button" onClick={onGoToChecks}>Set up product checks</button>
         <button type="button" onClick={() => downloadTextFile('reshivo-mix-result.txt', formatMixSummary(visibleResult.request, visibleResult.value, system))}>Download result as text</button>
-        <button type="button" onClick={() => { try { printTextReport(formatMixSummary(visibleResult.request, visibleResult.value, system)) } catch (e) { setError((e as Error).message) } }}>Print / Save as PDF</button>
+        <button type="button" onClick={() => { try { printTextReport(formatMixSummary(visibleResult.request, visibleResult.value, system, { name: setupName(setup), revision: setup.revision })) } catch (e) { setError((e as Error).message) } }}>Print / Save as PDF</button>
         {onDiscuss && <button onClick={discuss}>Ask about this result</button>}
       </div>}
       </details>

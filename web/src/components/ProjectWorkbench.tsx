@@ -32,7 +32,7 @@ import { canReattachMixCalculation, mixQuestionFingerprint, mixQuestionIsCurrent
 import type { PreparedMixCalculation } from '../mixQuestion'
 import { briefFrom } from '../projectBrief'
 import { savedGuidanceTexts, safeSetupName } from '../savedGuidanceReview'
-import { downloadTextFile, formatAdviceForReport, formatEarlierAdviceForReport, formatProjectNotes, formatProjectSummary, printTextReport } from '../readableSummary'
+import { downloadTextFile, formatAdviceForReport, formatEarlierAdviceForReport, formatPrintableProjectReport, formatProjectNotes, formatProjectSummary, printTextReport } from '../readableSummary'
 import './ProjectWorkbench.css'
 
 const LegacyWorkshop = lazy(() => import('./Workshop').then((m) => ({ default: m.Workshop })))
@@ -745,7 +745,13 @@ export function ProjectWorkbench() {
     downloadTextFile('reshivo-summary.txt', summaryText())
   }
   function printSummary() {
-    try { printTextReport(summaryText(), currentSketch, currentSection) }
+    const guidance = formatAdviceForReport(currentReportAdvice ?? currentReportStartingGuidance)
+    const comparedIdeas = currentReportAdvice && showHistoricalIdeas && comparisonOrigin?.context === currentAdviceContext
+      ? formatAdviceForReport({ ...comparisonOrigin.advice, answer: '', next_steps: [], questions: [] }).replace('Ideas and next steps', 'Ideas compared') : ''
+    const context = reportResultContext(w, adviceKind, showHistoricalIdeas)
+    const results = (['checks', 'cost', 'comparison'] as const).map((kind) => reportResults[kind])
+      .filter((entry) => entry?.context === context).map((entry) => entry!.text).join('')
+    try { printTextReport(formatPrintableProjectReport(w, showHistoricalIdeas, guidance + comparedIdeas, mixSummary, results), currentSketch, currentSection) }
     catch (e) { setError((e as Error).message) }
   }
   function exploreMyMaterial() {

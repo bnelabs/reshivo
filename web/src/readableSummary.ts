@@ -93,6 +93,163 @@ export function formatProjectNotes(workspace: ProjectWorkspace): string {
   return workspace.intake_notes?.trim() ? `\nProject notes\nEarlier discussion provided by you:\n${workspace.intake_notes.trim()}\n` : ''
 }
 
+function deduplicateResultQuestions(text: string): string {
+  const seen = new Set<string>()
+  return text.split('\n').filter((line) => {
+    if (/^.+ · version \d+(?::|$)/.test(line) || ['Check results', 'Cost result', 'Cost comparison'].includes(line)) seen.clear()
+    const question = line.trim()
+    if (!question.includes('?')) return true
+    if (seen.has(question)) return false
+    seen.add(question)
+    return true
+  }).join('\n')
+}
+
+/** A focused printable report. The caller supplies only guidance and results that are current. */
+export function formatPrintableProjectReport(
+  workspace: ProjectWorkspace,
+  includeIdeas: boolean,
+  guidance: string,
+  mixSummary: string,
+  results: string,
+): string {
+  const lines = ['Reshivo — project summary']
+  const add = (label: string, value: string | null | undefined) => {
+    if (value?.trim()) lines.push(`${label}: ${value.trim()}`)
+  }
+  // Keep the product line near the top: the print renderer also uses it as the title.
+  add('Product', workspace.project.product?.value)
+  const setups = currentConfigurations(workspace)
+  // Drop a route card only when that exact reviewed idea is already in a current
+  // plan below; other current alternatives and follow-up questions remain useful.
+  const savedCards = new Set(includeIdeas ? setups.flatMap((setup) => {
+    const idea = workspace.trial_ideas?.[`${setup.id}@${setup.revision}`]
+    if (!idea) return []
+    const formatted = formatAdviceForReport({ material_routes: [idea] })
+    const start = formatted.indexOf('Idea: ')
+    return start < 0 ? [] : [formatted.slice(start).trim()]
+  }) : [])
+  const guidanceLines = guidance.trim().split('\n')
+  const keptGuidance: string[] = []
+  for (let i = 0; i < guidanceLines.length;) {
+    if (!guidanceLines[i].startsWith('Idea: ')) { keptGuidance.push(guidanceLines[i++]); continue }
+    const card: string[] = [guidanceLines[i++]]
+    while (i < guidanceLines.length && !guidanceLines[i].startsWith('Idea: ') && guidanceLines[i] !== 'Questions to answer:') card.push(guidanceLines[i++])
+    if (!savedCards.has(card.join('\n').trim())) keptGuidance.push(...card)
+  }
+  const printableGuidance = keptGuidance.join('\n').trim()
+  if (printableGuidance) lines.push('', printableGuidance)
+  const plansWithIdeas = includeIdeas ? setups.filter((setup) => workspace.trial_ideas?.[`${setup.id}@${setup.revision}`]) : []
+  if (plansWithIdeas.length) {
+    lines.push('', 'Plans to explore')
+    for (const setup of plansWithIdeas) {
+      lines.push('', `${shown(setup.name)} — version ${setup.revision}`)
+      const idea = workspace.trial_ideas?.[`${setup.id}@${setup.revision}`]
+      if (idea) {
+        if (idea.provider && idea.model) lines.push(`Idea source: ${idea.provider} / ${idea.model}`)
+        add('Approach', idea.change)
+        add('Why', idea.why)
+        if (idea.steps.length) {
+          lines.push('Steps:')
+          idea.steps.forEach((step, i) => lines.push(`${i + 1}. ${step}`))
+        }
+        add('Next check', idea.check)
+        add('Trade-offs', idea.tradeoffs.join(' '))
+      }
+    }
+  }
+  if (mixSummary.trim()) lines.push('', mixSummary.trim())
+  if (results.trim()) lines.push('', deduplicateResultQuestions(results.trim()))
+
+  lines.push('', 'Project details')
+  for (const [label, field] of [
+    ['Materials', 'input'], ['What changes', 'variation'], ['Use', 'use'],
+    ['What matters', 'priorities'], ['Process', 'process'], ['Constraints', 'constraints'],
+  ] as const) add(label, workspace.project[field]?.value)
+  for (const [index, setup] of setups.entries()) {
+    const name = includeIdeas ? setup.name : safeSetupName(workspace, setup, `Plan ${index + 1}`)
+    lines.push('', `${shown(name)} — version ${setup.revision}`)
+    for (const material of setup.materials) {
+      if (material.name.trim()) lines.push(`- ${material.name.trim()}${material.amount.trim() ? `: ${material.amount.trim()} ${material.unit.replaceAll('_', ' ')}` : ': Amount not entered'}`)
+    }
+    add('Process', setup.process)
+    add('Shape and size', setup.geometry)
+    const linkedIdea = Boolean(workspace.trial_ideas?.[`${setup.id}@${setup.revision}`] || setup.notes.startsWith('Unverified trial idea:'))
+    if (setup.notes.trim() && (includeIdeas || !linkedIdea)) add('Plan notes', setup.notes)
+    const cost = workspace.costs[`${setup.id}@${setup.revision}`]
+    if (cost) {
+      lines.push(`Cost inputs (${shown(cost.currency)}; ${cost.mode === 'planned' ? 'planned' : 'actual'}):`)
+      for (const [label, value] of [
+        ['Cost basis', cost.mass_basis], ['Product and use', cost.functional_basis],
+        ['What counts as usable', cost.acceptance_basis], ['Batch mass (kg)', cost.batch_mass_kg],
+      ]) add(label, value)
+      for (const material of setup.materials) {
+        const price = cost.prices[material.id]
+        lines.push(price?.trim() ? `- ${shown(material.name)}: ${price.trim()} ${cost.currency}/${cost.price_units?.[material.id] ?? 'kg'}` : `- ${shown(material.name)}: price not entered`)
+      }
+      for (const [label, key, detail] of [
+        ['Energy', 'energy', `${shown(cost.energy_kwh)} kWh at ${shown(cost.energy_rate)} ${cost.currency}/kWh`],
+        ['Labour', 'labor', `${shown(cost.labor_hours)} hours at ${shown(cost.labor_rate)} ${cost.currency}/hour`],
+        ['Other charge', 'other', `${shown(cost.other_name)}: ${shown(cost.other_charge)} ${cost.currency}`],
+      ] as const) {
+        const status = cost.process_statuses?.[key] ?? 'unknown'
+        lines.push(`- ${label}: ${status === 'known' ? detail : status}`)
+      }
+      const output = cost.mode === 'actual'
+        ? [['Usable items', cost.usable_count], ['Usable mass (kg)', cost.usable_mass_kg], ['Usable area (m²)', cost.usable_area_m2]]
+        : [['Planned items', cost.gross_count], ['Planned mass (kg)', cost.gross_mass_kg], ['Planned area (m²)', cost.gross_area_m2], ['Expected usable fraction', cost.accepted_fraction]]
+      for (const [label, value] of output) add(label, value)
+    }
+  }
+  if (workspace.checks.length) {
+    lines.push('', 'Product checks')
+    for (const check of workspace.checks) {
+      const bounds = [check.minimum?.trim() ? `minimum ${check.minimum}` : '', check.maximum?.trim() ? `maximum ${check.maximum}` : ''].filter(Boolean).join(', ')
+      lines.push(`- ${shown(check.name)} (${shown(check.unit)})${bounds ? `: ${bounds}` : ''}; ${check.required ? 'required' : 'optional'}.`)
+      add('Method', check.method)
+    }
+  }
+  const currentKeys = new Set(setups.map((setup) => `${setup.id}@${setup.revision}`))
+  const readingKeys = new Set(workspace.records.map((record) => `${record.configuration_id}@${record.configuration_revision}`))
+  const earlierWithReadings = workspace.configurations.filter((setup) => {
+    const key = `${setup.id}@${setup.revision}`
+    return !currentKeys.has(key) && readingKeys.has(key)
+  })
+  if (earlierWithReadings.length) {
+    lines.push('', 'Earlier plans with readings')
+    for (const [index, setup] of earlierWithReadings.entries()) {
+      const name = includeIdeas ? setup.name : safeSetupName(workspace, setup, `Plan ${index + 1}`)
+      lines.push('', `${shown(name)} — version ${setup.revision}`)
+      for (const material of setup.materials) {
+        if (material.name.trim()) lines.push(`- ${material.name.trim()}${material.amount.trim() ? `: ${material.amount.trim()} ${material.unit.replaceAll('_', ' ')}` : ': Amount not entered'}`)
+      }
+      add('Process', setup.process)
+      add('Shape and size', setup.geometry)
+    }
+  }
+  if (workspace.records.length) {
+    lines.push('', 'Recorded readings')
+    for (const record of workspace.records) {
+      const setup = workspace.configurations.find((item) => item.id === record.configuration_id && item.revision === record.configuration_revision)
+      const check = workspace.checks.find((item) => item.id === record.check_id)
+      const name = setup ? (includeIdeas ? setup.name : safeSetupName(workspace, setup, 'Plan')) : 'Unknown plan'
+      const excluded = workspace.record_exclusions?.[record.id]
+      lines.push(`- ${shown(name)} v${record.configuration_revision} / ${shown(check?.name)}: ${record.readings.map((reading) => shown(reading.value)).join(', ')} ${record.unit} (${record.data_kind === 'synthetic' ? 'example data' : 'entered readings'}; ${record.conditions_confirmed ? 'conditions reviewed' : 'conditions need review'}${excluded ? '; excluded from comparisons' : ''}).`)
+      add('Method', record.method)
+      if (excluded) add('Exclusion reason', excluded)
+      record.readings.forEach((reading, index) => {
+        const groups = [
+          ['Reading ID', reading.reading_id], ['Specimen', reading.specimen_id], ['Run', reading.run_id],
+          ['Batch', reading.batch_id], ['Repeat of', reading.repeat_of],
+        ].filter(([, value]) => value?.trim()).map(([label, value]) => `${label}: ${value}`)
+        if (groups.length) lines.push(`  Reading ${index + 1}: ${shown(reading.value)} ${record.unit}; ${groups.join('; ')}`)
+      })
+    }
+  }
+  if (workspace.intake_notes?.trim()) lines.push('', 'Project notes', workspace.intake_notes.trim())
+  return `${lines.join('\n')}\n`
+}
+
 /** Include only guidance the caller has confirmed is current and visible. */
 export function formatAdviceForReport(value: unknown): string {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return ''
@@ -146,9 +303,9 @@ export function explainUnreachableMix(input: BalanceMixRequest): string | null {
   return null
 }
 
-export function formatMixSummary(input: BalanceMixRequest, result: BalanceMixResult, system: UnitSystem): string {
+export function formatMixSummary(input: BalanceMixRequest, result: BalanceMixResult, system: UnitSystem, plan?: { name: string; revision: number }): string {
   return [
-    'Reshivo — mix calculation', '', `Material tracked: ${input.component}`,
+    'Reshivo — mix calculation', '', ...(plan ? [`Plan: ${plan.name} · version ${plan.revision}`] : []), `Material tracked: ${input.component}`,
     `Portion: ${system === 'us' ? `about ${toDisplay(String(input.input_mass_kg), 'kg', system)} lb (${input.input_mass_kg} kg)` : `${input.input_mass_kg} kg`}; ${input.input_min_percent}–${input.input_max_percent}% ${input.component}`,
     `Added material: ${input.addition_name}; ${input.addition_percent}% ${input.component}`,
     `Chosen composition: ${input.target_min_percent}–${input.target_max_percent}%`, '',
@@ -202,7 +359,7 @@ export function printTextReport(text: string, sketch?: string | null, sectionDra
     img { display: block; max-width: 100%; max-height: 78mm; margin: auto; object-fit: contain; }
     figcaption { margin-top: 8px; color: #526d5f; font-size: 11px; }
     footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #d8e3da; color: #718078; font-size: 10px; }
-    @media print { section.keep-together { break-inside: avoid; } body { background: white; font-size: 10.5pt; } .actions { display: none; } main { max-width: none; margin: 0; padding: 0; box-shadow: none; } .hero { margin-top: 18px; padding: 20px 23px 23px; } h1 { font-size: 23pt; } section { margin-top: 18px; } }
+    @media print { section.keep-together { break-inside: avoid; } body { background: white; font-size: 10pt; line-height: 1.4; } .actions { display: none; } main { max-width: none; margin: 0; padding: 0; box-shadow: none; } .hero { margin-top: 18px; padding: 20px 23px 23px; } h1 { font-size: 23pt; } section { margin-top: 15px; } .line { margin: 4px 0; } }
   `
   doc.head.appendChild(style)
   const actions = doc.createElement('div'); actions.className = 'actions'
@@ -246,9 +403,9 @@ export function printTextReport(text: string, sketch?: string | null, sectionDra
   }
   if (hasVisual) main.appendChild(visuals)
   let reportSection = doc.createElement('section')
-  const firstHeading = doc.createElement('h2'); firstHeading.textContent = mixOnly ? 'Your inputs' : 'Your project'
-  reportSection.appendChild(firstHeading); main.appendChild(reportSection)
-  const headings = new Set(['Plans', 'Product checks', 'Recorded readings', 'Ideas and next steps', 'Ideas compared', 'Earlier saved guidance', 'Project notes', 'Cost results', 'Decision results', 'Cost result', 'Cost comparison', 'Check results'])
+  if (mixOnly) { const firstHeading = doc.createElement('h2'); firstHeading.textContent = 'Your inputs'; reportSection.appendChild(firstHeading) }
+  main.appendChild(reportSection)
+  const headings = new Set(['Plans', 'Plans to explore', 'Project details', 'Earlier plans with readings', 'Product checks', 'Recorded readings', 'Ideas and next steps', 'Ideas compared', 'Earlier saved guidance', 'Project notes', 'Cost results', 'Decision results', 'Cost result', 'Cost comparison', 'Check results'])
   const lines = text.split('\n')
   const mixStart = mixOnly ? 0 : lines.indexOf('Reshivo — mix calculation')
   const mixLines = mixStart >= 0 ? lines.slice(mixStart).filter((line) => line.trim()) : []
@@ -256,6 +413,7 @@ export function printTextReport(text: string, sketch?: string | null, sectionDra
   if (mixOnly && keepMixTogether) reportSection.classList.add('keep-together')
   if (lines[0] === 'Reshivo — project summary' || lines[0] === 'Reshivo — mix calculation') lines.shift()
   for (const line of lines) {
+    if (!mixOnly && line.startsWith('Product: ')) continue // Already shown in the title.
     const sectionName = line === 'Reshivo — mix calculation' ? 'Mix calculation' : line
     if (headings.has(line) || line === 'Reshivo — mix calculation') {
       reportSection = doc.createElement('section')
